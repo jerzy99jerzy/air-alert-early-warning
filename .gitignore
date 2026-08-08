@@ -1,0 +1,23 @@
+# Tier 1: raw, per-subject records. Never committed.
+data/raw/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Tier 2 (data/aggregates/) and tier 3 (docs/report.*) ARE committed.
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+*.patch
+*.diff
+.env

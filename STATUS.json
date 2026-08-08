@@ -1,0 +1,34 @@
+{
+  "project": "air-alert-early-warning",
+  "codename": "MAVO",
+  "version": "0.3.2.0",
+  "python_requires": ">=3.11",
+  "shipped_sprints": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "gate": "make verify",
+  "documents": {
+    "docs/MANUAL.md": "1.0",
+    "docs/reviews/0.2.1.0.md": "1.0",
+    "docs/reviews/0.3.0.0.md": "1.0",
+    "docs/reviews/0.3.1.0.md": "1.0",
+    "docs/reviews/0.3.2.0.md": "1.0"
+  },
+  "threat_model_rows": 11,
+  "harness_attacks": 10,
+  "measured": {
+    "tests_passing": 117,
+    "coverage_percent": 96.34,
+    "coverage_floor_percent": 95,
+    "candidate_rules_passing_gate": 0,
+    "policy_combined_alarms_per_week": 1.96,
+    "policy_total_budget_per_week": 2.0,
+    "classifier_hit_rate_on_real_messages": 0.0,
+    "real_messages_sampled": 20
+  },
+  "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except classifier_hit_rate_on_real_messages, which is pinned by tests against real channel content; nothing here is a claim about the world"
+}
