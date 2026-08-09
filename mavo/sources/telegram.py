@@ -35,7 +35,7 @@ _MESSAGE = re.compile(
 # that is comfortable at rest can skip messages during a mass alert. The post id
 # is the only thing that makes a skip observable; without it a gap and a quiet
 # channel are the same picture.
-_POST_ID = re.compile(r'data-post="[^"/]+/(\d+)"')
+POST_ID = re.compile(r'data-post="[^"/]+/(\d+)"')
 _TAG = re.compile(r"<[^>]+>")
 _ENTITY = {"&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "<br/>": "\n"}
 
@@ -187,7 +187,7 @@ class TelegramChannelSource:
         has no baseline, and a page without post ids, which is what a hostile or
         restructured page looks like.
         """
-        ids = sorted(int(found) for found in _POST_ID.findall(body))
+        ids = sorted(int(found) for found in POST_ID.findall(body))
         if not ids:
             return None, None, None
         first, last = ids[0], ids[-1]

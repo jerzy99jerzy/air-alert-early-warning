@@ -9,6 +9,60 @@ hang the earlier tags on, which would make the history lie about when the code
 existed; a stated debt is cheaper and true. Their artefacts exist only as
 hand-assembled archives with a `MANIFEST.sha256`.
 
+## 0.5.1.0 - 2026-08-09
+
+- `mavo backfill --resume` continues below the lowest id already on disk and
+  prints where it started. Without it an interrupted run re-walks everything it
+  already holds, which on the 2900-page corpus is the entire run again. It
+  refuses rather than choosing when combined with `--before`: two cursors, one
+  loop, and a start point that depends on an unprinted argument is a start point
+  the output cannot be read without.
+- T21 closed with a stated limit. 0.5 s and 0.2 s both measured clean over 20
+  requests, with `posts=400` in each, so the service was not silently truncating
+  pages. **The default was not lowered.** A burst of 20 does not license a claim
+  about a run 145 times longer, and a default is a claim; that is the F44 pattern
+  and it is refused here on purpose.
+- Channel measurements table added to `docs/METHODOLOGY.md`, including the row
+  that says what remains unmeasured.
+
+## 0.5.0.0 - 2026-08-09
+
+Sprint 6, part one. The corpus is retrieved rather than awaited.
+
+- F44: for two sprints this repository held that the corpus could only be
+  collected forward in time, because the channel page is a twenty-message
+  window. That was true of `mavo collect` and false of the channel: the web
+  preview accepts a `before` parameter and pages backwards through the full
+  history, 321,498 posts at exactly 20 per page as measured on 2026-08-09. The
+  belief shaped T19, D-011, the sprint 5 scope decision and the advice to start
+  a cron immediately. The probe that should have caught it asked for posts
+  before id 1000000 against a channel whose newest was 321498, where a working
+  parameter and an ignored one produce identical output.
+- `mavo backfill` walks history backwards and writes each page verbatim, named
+  by id range so a re-run resumes rather than duplicates. It parses nothing
+  beyond post ids: the corpus exists because the pattern table is wrong, and a
+  corpus filtered through that table would not be evidence.
+- Contiguity is computed from what is on disk and every hole is printed with its
+  id range and size, exit code 5. A corpus with holes it does not name is a
+  sample that believes it is a census.
+- Five stop conditions, each named in the report: page count exhausted,
+  `--stop-at-id` reached, a page with no posts, a page that failed to move
+  backwards, an unreachable source. A short run is never silently a short
+  history.
+- F45: the red-verification probe for this sprint passed against a scratch copy
+  of 0.4.0.0 and should not have. The editable install resolved `mavo` to the
+  working tree, so the scratch imported the new module. Ninety seconds of
+  survival, recorded because the mechanism defeats the repository's standing
+  regression rule for every sprint that adds a module. CONTRIBUTING.md now says
+  to uninstall first.
+- D-012: the design/holdout boundary is declared before any message content is
+  read. The holdout is the newest 20% of posts by id. A holdout chosen after
+  looking is not a holdout.
+- T21 added: the 1.0 second delay is a deliberately conservative guess and is
+  labelled as one. Measure the tolerated rate before the large run.
+
+New dependency count: zero.
+
 ## 0.4.0.0 - 2026-08-09
 
 Sprint 5. The evidence container before the evidence.

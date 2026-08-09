@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.4.0.0",
+  "version": "0.5.1.0",
   "python_requires": ">=3.11",
   "shipped_sprints": [
     0,
@@ -9,7 +9,8 @@
     2,
     3,
     4,
-    5
+    5,
+    6
   ],
   "gate": "make verify",
   "documents": {
@@ -18,13 +19,14 @@
     "docs/reviews/0.3.0.0.md": "1.0",
     "docs/reviews/0.3.1.0.md": "1.0",
     "docs/reviews/0.3.2.0.md": "1.0",
-    "docs/reviews/0.4.0.0.md": "1.0"
+    "docs/reviews/0.4.0.0.md": "1.0",
+    "docs/reviews/0.5.0.0.md": "1.0"
   },
   "threat_model_rows": 12,
   "harness_attacks": 11,
   "measured": {
-    "tests_passing": 127,
-    "coverage_percent": 96.2,
+    "tests_passing": 148,
+    "coverage_percent": 96.55,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 0,
     "policy_combined_alarms_per_week": 1.96,
@@ -32,7 +34,10 @@
     "classifier_hit_rate_on_real_messages": 0.0,
     "real_messages_sampled": 20,
     "harness_mutations_killed": 10,
-    "harness_attacks_without_a_mutation": 1
+    "harness_attacks_without_a_mutation": 1,
+    "channel_page_size": 20,
+    "channel_newest_post_id_2026_08_09": 321498,
+    "channel_posts_per_day_estimate": 650
   },
   "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except classifier_hit_rate_on_real_messages, which is pinned by tests against real channel content; nothing here is a claim about the world"
 }

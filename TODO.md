@@ -150,21 +150,29 @@ trace.
 **Acceptance:** consecutive polls compare message ids; a gap is reported rather
 than inferred from silence.
 
-## T19. Build the real-message corpus, forward in time
-Status: `ready`, **has a window, and is now the critical path**
-Sprint 5 made the collection trustworthy (T18) and deliberately did not redesign
-the classifier without it (D-011). Nothing else in the backlog moves until this
-runs, because the redesign, the gazetteer scope and the means-message model all
-read from it.
-The sprint-5 classifier redesign needs a week of real channel content, and the
-page is a ~20-message window (F27), so the corpus cannot be reconstructed later;
-it can only be collected from now on. Twenty messages from twenty minutes of one
-evening (the F23 measurement) are a probe, not a design basis, and fitting to
-them would repeat F23 at a smaller scale (F28).
-**Acceptance:** at least 7 consecutive days of raw snapshots in `data/raw/`
-collected via `mavo collect --save-raw`, with poll-gap statistics reported, and
-the corpus split into a design window and a holdout window before the redesign
-touches it.
+## T19. Build the real-message corpus
+Status: `ready`, **no longer time-boxed**
+`mavo backfill` reaches history rather than waiting for it (0.5.0.0). The window
+constraint that shaped D-011 and the sprint 5 scope decision did not exist (F44).
+**Acceptance:** a contiguous corpus covering at least the last 90 days, exit code
+0 from `mavo backfill`, its id range and time span recorded in `STATUS.json`, and
+the design/holdout boundary computed and written down per D-012 before any
+message content is read.
+
+## T21. Measure the tolerated request rate
+Status: `done` (0.5.1.0), with a named limit
+**Acceptance met:** measured at 0.5 s and 0.2 s over 20 requests each, both clean
+with no silent page truncation, recorded in `docs/METHODOLOGY.md` with
+provenance. The default was **not** changed: a burst of 20 does not license a
+claim about a run of 2900. What remains unmeasured is stated in the same table
+rather than left as an implication.
+Original text:
+`--delay 1.0` is a guess made deliberately conservative because the cost of being
+wrong is losing access to the only corpus this project has. A guess is not a
+measurement and is labelled as neither in the code.
+**Acceptance:** a short run at increasing rates with the response status
+recorded, the tolerated rate written into `docs/METHODOLOGY.md` with its
+provenance, and the default changed only if the measurement supports it.
 
 ## T20. OpenSky Network registration
 Status: `ready`, self-service

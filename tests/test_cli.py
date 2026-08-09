@@ -70,3 +70,73 @@ def test_collect_save_raw_failure_refuses_loudly(
     blocker.write_text("a file where the snapshot directory should be", encoding="utf-8")
     assert main(["collect", "--stub", str(page), "--save-raw", str(blocker)]) == 4
     assert "[SNAPSHOT-FAILED]" in capsys.readouterr().out
+
+
+def test_backfill_reports_a_contiguous_corpus(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    page = tmp_path / "page.html"
+    page.write_text(
+        '<div class="tgme_widget_message" data-post="air_alert_ua/900">'
+        '<time datetime="2026-08-01T21:00:00+00:00"></time>'
+        '<div class="tgme_widget_message_text js-message_text">Львівська область<br/>'
+        "Повітряна тривога</div></div>",
+        encoding="utf-8",
+    )
+    out = tmp_path / "corpus"
+    assert main(["backfill", "--out", str(out), "--pages", "1", "--delay", "0",
+                 "--stub", str(page)]) == 0
+    printed = capsys.readouterr().out
+    assert "CONTIGUITY: no gaps" in printed
+    assert "stopped:" in printed
+
+
+def test_backfill_exits_nonzero_when_the_corpus_has_a_hole(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A hole is a finding, not a warning. The exit code carries it so a wrapper
+    # script cannot read an incomplete corpus as a complete one.
+    out = tmp_path / "corpus"
+    out.mkdir()
+    (out / "page-000000001-000000020.html").write_text("", encoding="utf-8")
+    (out / "page-000000100-000000120.html").write_text("", encoding="utf-8")
+    page = tmp_path / "page.html"
+    page.write_text("<html>no posts</html>", encoding="utf-8")
+    assert main(["backfill", "--out", str(out), "--pages", "1", "--delay", "0",
+                 "--stub", str(page)]) == 5
+    assert "missing 21..99 (79 posts)" in capsys.readouterr().out
+
+
+def test_backfill_resume_starts_below_what_is_already_on_disk(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    out = tmp_path / "corpus"
+    out.mkdir()
+    (out / "page-000000100-000000119.html").write_text("", encoding="utf-8")
+    page = tmp_path / "page.html"
+    page.write_text("<html>no posts</html>", encoding="utf-8")
+    main(["backfill", "--out", str(out), "--pages", "1", "--delay", "0",
+          "--resume", "--stub", str(page)])
+    assert "resuming below id 100" in capsys.readouterr().out
+
+
+def test_backfill_refuses_resume_and_before_together(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Two cursors, one loop. Picking one silently would make the printed start
+    # point depend on an argument the reader cannot see in the output.
+    page = tmp_path / "page.html"
+    page.write_text("<html></html>", encoding="utf-8")
+    assert main(["backfill", "--out", str(tmp_path / "c"), "--pages", "1",
+                 "--resume", "--before", "500", "--stub", str(page)]) == 2
+    assert "REFUSED" in capsys.readouterr().out
+
+
+def test_backfill_resume_on_an_empty_directory_says_so(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    page = tmp_path / "page.html"
+    page.write_text("<html></html>", encoding="utf-8")
+    main(["backfill", "--out", str(tmp_path / "fresh"), "--pages", "1", "--delay", "0",
+          "--resume", "--stub", str(page)])
+    assert "nothing on disk yet" in capsys.readouterr().out

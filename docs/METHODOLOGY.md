@@ -394,6 +394,69 @@ talks to what. Recorded rather than quietly redrawn: this is the third document
 in three releases found describing an earlier version of the tree, which is
 evidence about the process and not about any one file.
 
+### F44, sprint 6. A schedule built on a probe whose failure was invisible
+
+For two sprints this repository held that the corpus could only be collected
+forward in time. It shaped T19, D-011, the sprint 5 scope decision, and the
+advice to start a cron immediately. It was wrong: the channel's web preview
+accepts a `before` parameter and pages backwards through the full history, which
+on 2026-08-09 was 321,498 posts at exactly 20 per page.
+
+The belief came from one observation, that `mavo collect` sees a twenty-message
+window, generalised from the command to the channel without a probe against the
+channel. When the probe was finally designed it asked for posts before id
+1000000 against a channel whose newest post was 321498, which returns the newest
+page. **A working parameter and an ignored parameter produce identical output at
+that value.** The probe was re-run with a cursor inside the real range and
+settled it in one request.
+
+Class: **a probe whose negative result is indistinguishable from a null result.**
+Distinct from an untested assumption, and worse, because running it produces the
+feeling of having checked. Every probe now has to answer: what would this have
+printed if the thing I am testing were false? If the answer is "the same", it is
+not a probe.
+
+Cost: two sprints of scheduling around a constraint that did not exist. Nothing
+built on it was wasted, since window-gap detection (F27) is needed either way,
+but the ordering was wrong and the corpus is two days later than it needed to be.
+
+### F45, sprint 6. The red-verification probe imported the code it was checking
+
+The sprint 6 regression suite was run against a scratch copy of 0.4.0.0 and
+passed, which would have meant the tests assert nothing. The scratch copy did not
+contain `mavo/backfill.py`; the editable install did, pointing at the working
+tree, so the scratch tests imported the new module while appearing to run against
+the old tree.
+
+Why it survived: for about ninety seconds. It is recorded because the mechanism
+is general. The repository's standing rule is to unpack the previous tag into a
+scratch directory and confirm red, and an editable install silently defeats that
+rule for every sprint that adds a module, which is most of them.
+
+Class: same family as F44. A verification step that produces the same output
+whether or not the thing it verifies is true. Remediation: the red-verification
+probe uninstalls the package first, and CONTRIBUTING.md says so.
+
+## Channel measurements, 2026-08-09
+
+Taken against the live channel from a residential connection in Warsaw. Every
+row is a measurement of that channel on that day, not a property of Telegram.
+
+| Quantity | Value | Provenance |
+| --- | --- | --- |
+| Page size | exactly 20 posts | measured, four runs, no page returned a different count |
+| Newest post id | 321498 at 08:0x, 321519 at 08:33 | measured |
+| Backwards paging | works with a cursor inside the live id range | measured. The first probe used a cursor above the range and could not distinguish a working parameter from an ignored one (F44) |
+| Channel volume | ~27 posts/hour, ~650/day, ~32 pages/day | inference from one 14.7-hour window (17:53 to 08:33) spanning an evening and a night. A campaign night is expected to be a multiple of this and has not been observed |
+| Tolerated request rate | 0.2 s between requests, clean over 20 requests | measured, burst only. `posts=400` in both the 0.5 s and 0.2 s runs, so the service was not silently truncating pages |
+| Tolerated rate over a long run | unknown | **not measured.** Twenty requests is a burst; rate limits commonly apply to sustained volume. The 2900-page run this number would authorise is 145 times longer, and generalising from the burst is the F44 pattern |
+
+The default delay stays at 1.0 s. It was not lowered to the measured burst
+figure, because a measurement of 20 requests does not license a claim about
+2900, and a default is a claim. 0.5 s is documented as the operating rate for
+long runs with that limitation stated, which is a recommendation the operator
+applies knowingly rather than a number the tool asserts.
+
 ## Verification probes run in sprint 5
 
 | Claim | Probe | Result |

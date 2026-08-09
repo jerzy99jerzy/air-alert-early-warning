@@ -22,8 +22,16 @@ sentence about what the tool does or does not do, that sentence gets a check in
 - **No astronomical variable.** See `docs/DECISIONS.md` D-002. This is enforced
   at the term level in package source.
 - **A regression test is verified to fail against the previous state**, not
-  assumed to. Unpack the last tag into a scratch directory, drop the test in,
-  confirm red. This has already caught a mis-scoped test in this repository.
+  assumed to. Unpack the last tag into a scratch directory, `pip uninstall` the
+  package, drop the test in, confirm red. The uninstall is not optional: an
+  editable install resolves `mavo` to the working tree, so a scratch copy
+  missing a new module imports it anyway and the probe passes while proving
+  nothing (F45). Prefer a failed assertion over an ImportError as evidence; an
+  ImportError shows the module is absent, not that the behaviour was.
+- **A probe must be able to come back negative.** Before running one, answer what
+  it would print if the thing being tested were false. If that is the same output
+  as success, it is not a probe. Two sprints of schedule were built on one that
+  could not fail (F44).
 - **Gate thresholds are published in the README.** Moving one is a scope change
   and the README table moves in the same commit, with the reason.
 - **A harness attack lands with a mutation, or is listed as unverified.** A new

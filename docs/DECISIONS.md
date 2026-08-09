@@ -197,3 +197,31 @@ sooner would change what the redesign can attempt but not when it should start.
 **What this costs.** The alarm tier cannot ship in September either way, because
 border crossings run at two to four a year and no four-week window validates
 recall. The schedule in `docs/MVP.md` is amended rather than quietly slipped.
+
+## D-012. The corpus is split before it is read, and the rule is written down first
+Date: 2026-08-09. Status: adopted
+
+**Decision.** The design window is everything the classifier redesign may look
+at. The holdout is everything it may not, until the redesign is frozen. The
+boundary is a post id, chosen before any message content is read, and recorded
+here: **the holdout is the newest 20% of posts by id in the corpus at the moment
+the redesign begins.** Newest rather than oldest, because the redesign must be
+tested against the channel as it writes today, not as it wrote in 2023.
+
+**Reasoning.** This project already retracted one analysis for fitting to noise.
+The corpus removes the excuse that there was nothing to fit to, and replaces it
+with the harder problem: with hundreds of thousands of messages it is possible to
+iterate a pattern table until it scores well on everything it has seen and
+nothing else. A holdout chosen after looking is not a holdout, and a holdout
+chosen by a rule written after the first disappointing result is worse, because
+it comes with a story.
+
+**What this costs.** A fifth of the corpus is unavailable during the work that
+needs it most, and the first honest score arrives only once. If the frozen table
+scores badly on the holdout, that is the finding, and the response is a recorded
+defect and a new sprint, not a second look.
+
+**What would change this.** Nothing about convenience. A change in what the
+channel emits, a restructuring that makes the newest fifth unrepresentative of
+the near future, would justify moving the boundary, and would be recorded as a
+scope change with its reason before the new boundary is used.

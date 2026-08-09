@@ -161,7 +161,62 @@ regime at all, and the recall printed above it is scoped to the regimes that are
 served. It says nothing about the crossings in the gap. Treat a policy with a
 coverage gap as a policy with a hole, not as a policy with good numbers.
 
-### 4.4 `mavo collect` — PARTIAL
+### 4.4 `mavo backfill` — BUILT
+
+Walks the channel's history backwards and writes each page to disk verbatim, one
+file per twenty-post range. This is how the corpus is built.
+
+It writes raw HTML and parses nothing beyond the post ids it needs to page. The
+corpus exists because the pattern table is wrong (F23, 0 of 20), and a corpus
+filtered through the parser it is meant to fix would not be evidence.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--out` | required | Directory for snapshots. Point it at `data/raw/`, which is git-ignored |
+| `--pages` | 10 | How many pages to fetch. One page is 20 posts |
+| `--before` | newest | Start below this post id. Omit to start from the newest page |
+| `--stop-at-id` | none | Stop once a page reaches this id or lower. The page containing it is kept whole |
+| `--resume` | off | Continue below the lowest id already in `--out`. Refuses if combined with `--before`, since they name different cursors |
+| `--delay` | 1.0 | Seconds between requests. 0.2 s was measured clean over a 20-request burst; the default stays at 1.0 because a burst does not license a claim about a long run. Use 0.5 for long runs knowingly |
+| `--stub` | none | Read a saved page instead of the network |
+
+```
+mavo backfill --out data/raw/corpus --pages 50 --delay 1.0
+pages=50 posts=1000 ids=320498..321498 span=2026-08-05T04:11:00+00:00 to 2026-08-09T09:02:00+00:00
+written=50 already_on_disk=0
+stopped: reached max_pages=50
+
+CONTIGUITY: no gaps in what is on disk
+```
+
+**The span line is the one to read first.** How far back a page count reaches is
+a property of channel volume, not arithmetic, and it varies by an order of
+magnitude between a quiet week and a campaign. Fetch fifty pages, read the span,
+then size the real run from that.
+
+**Re-running is free, but resuming should be explicit.** Snapshots are named by
+id range, so a page already on disk is counted as `already_on_disk` rather than
+fetched again. Re-running the same command still walks from the newest page down
+through everything already held, which on a 2900-page corpus means paying for
+the whole walk again. `--resume` starts below the lowest id on disk and prints
+where it started.
+
+At roughly 32 pages per day of channel volume, 90 days is about 2900 pages, which
+at 0.5 s is around 24 minutes.
+
+**Exit codes**
+
+| Code | Meaning |
+| --- | --- |
+| 0 | Ran, and what is on disk is contiguous |
+| 5 | Ran, and what is on disk has holes. Every hole is printed with its id range and size. This is a finding, not a warning: a corpus with holes it does not name is a sample that believes it is a census |
+
+The run stops for one of five reasons and always says which: the page count ran
+out, a page reached `--stop-at-id`, a page carried no posts, a page failed to
+move backwards, or the source became unreachable. Do not read a short run as a
+short history without reading the `stopped:` line.
+
+### 4.5 `mavo collect` — PARTIAL
 
 Polls the public Telegram channel once and reports what it understood. It does
 not yet write to the store; that lands with continuous collection in sprint 6.
@@ -169,7 +224,7 @@ not yet write to the store; that lands with continuous collection in sprint 6.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--stub` | none | Read a saved page from disk instead of the network. Use this to test the pattern table offline |
-| `--save-raw` | none | Write the fetched page verbatim into this directory before parsing, as `channel-<UTC timestamp>.html`. This is how the sprint-5 corpus is built (T19): the page is a ~20-message window (F27), so content not saved now is gone. Point it at `data/raw/`, which is git-ignored |
+| `--save-raw` | none | Write the fetched page verbatim into this directory before parsing, as `channel-<UTC timestamp>.html`. For building the corpus use `mavo backfill` instead, which reaches history rather than only the present; this option remains useful for capturing a live moment exactly as served. Point it at `data/raw/`, which is git-ignored |
 
 ```
 mavo collect --stub tests/fixtures/channel.html
@@ -208,7 +263,7 @@ Exit codes:
 | 3 | the source was unreachable. Distinct from reachable and quiet |
 | 4 | `--save-raw` was requested and the snapshot could not be written. Loud rather than silent, because a snapshot that quietly fails to land is a quiet loss of exactly the evidence the redesign needs |
 
-### 4.5 `mavo watch` — NOT BUILT (sprint 7)
+### 4.6 `mavo watch` — NOT BUILT (sprint 7)
 
 Will run the decision policy continuously and emit to an output channel. Until
 shadow mode has run its full window, this command will refuse to send anything.
@@ -269,7 +324,7 @@ three minutes late halves the product.
 
 Live collection exists in one direction only: `mavo collect` fetches and parses
 on demand, and there is no continuous collector yet, so its failure modes are the
-rows above plus the exit codes in section 4.4. Sections for the continuous
+rows above plus the exit codes in sections 4.4 and 4.5. Sections for the continuous
 collector will be written when it exists, in sprint 6.
 
 ## 8. Reporting a problem — NARRATIVE

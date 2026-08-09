@@ -16,11 +16,13 @@ import namespace is `mavo` because it must be unique rather than descriptive. Th
 codename lives in documentation and conversation. Stated here rather than left
 implicit, because that is where the inconsistency otherwise lives.
 
-Status: pre-alpha. Sprints 0 to 5 shipped. A live Telegram adapter is wired;
+Status: pre-alpha. Sprints 0 to 6 shipped. A live Telegram adapter is wired;
 measured against real channel content its classifier scored **0 of 20**, and the
 failure is pinned as assertions. The redesign waits for a corpus rather than a
-schedule (D-011), because the only content in hand is twenty messages from one
-evening and fitting to it would repeat the defect it would claim to fix.
+schedule (D-011), because fitting to the twenty messages in hand would repeat
+the defect it would claim to fix. The corpus is now retrievable rather than
+awaited: `mavo backfill` pages backwards through the channel's history, which
+was 321,498 posts on 2026-08-09.
 
 ---
 
@@ -140,10 +142,11 @@ mavo/
   evaluate.py      scoring against ground truth; shared with the future shadow mode
   errors.py        the refusal taxonomy; there is no warning type in this codebase
   transport.py     the only file that reaches the network
+  backfill.py      retrieves channel history backwards, verbatim, resumable
   sources/
     fixture.py     synthetic scenarios, shipped as a CLI command
     telegram.py    the public channel adapter; its pattern table is under redesign
-  cli.py           fixture / gate / policy / collect
+  cli.py           fixture / gate / policy / backfill / collect
 tests/
   test_<domain>.py behaviour
   test_sprint<N>.py regression, one file per sprint, verified red before it is fixed
@@ -196,8 +199,8 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: 127 tests passing, of which 11 are harness attacks.
-  Coverage 96.20% against a floor of 95. The margin sprint 2 had is gone:
+- `make verify` green: 143 tests passing, of which 11 are harness attacks.
+  Coverage 96.46% against a floor of 95. The margin sprint 2 had is gone:
   `transport.py` carries the one genuinely network-bound function, and it drags
   the total toward the floor. Whether to exclude it from the measurement is an
   open decision recorded in the 0.3.2.0 review, not something to resolve by

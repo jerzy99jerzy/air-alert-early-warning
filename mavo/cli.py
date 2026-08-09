@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from mavo import __version__
+from mavo.backfill import backfill, contiguity_gaps, lowest_on_disk
 from mavo.errors import BudgetOverrun, SourceUnavailable
 from mavo.evaluate import plan_policy, run_policy, run_rule
 from mavo.policy import Regime, equal_split
@@ -75,6 +76,45 @@ def _cmd_policy(args: argparse.Namespace) -> int:
         policy = DEFAULT_POLICY
     print(f"allocation: {args.allocation}")
     print(run_policy(policy, nights).summary())
+    return 0
+
+
+def _cmd_backfill(args: argparse.Namespace) -> int:
+    transport: Transport = StubTransport(Path(args.stub).read_text(encoding="utf-8")) \
+        if args.stub else UrllibTransport()
+    out = Path(args.out)
+    before = args.before
+    if args.resume:
+        if before is not None:
+            print("REFUSED: --resume and --before both given; they name different cursors")
+            return 2
+        before = lowest_on_disk(out)
+        # Stated, not inferred. A 2900-page run that is interrupted otherwise
+        # costs a full re-walk of what is already on disk, and a command whose
+        # start point depends on directory contents has to say where it started.
+        print(f"resuming below id {before}" if before is not None
+              else "resume requested; nothing on disk yet, starting from the newest page")
+    report = backfill(
+        transport,
+        out,
+        max_pages=args.pages,
+        before=before,
+        delay_s=args.delay,
+        stop_at_id=args.stop_at_id,
+    )
+    print(report.summary())
+
+    gaps = list(contiguity_gaps(Path(args.out)))
+    if gaps:
+        # Printed, never summed away. A corpus with holes is usable; a corpus
+        # with holes it does not name is not.
+        print(f"\nCONTIGUITY: {len(gaps)} gap(s) in what is on disk")
+        for first, last in gaps[:20]:
+            print(f"  missing {first}..{last} ({last - first + 1} posts)")
+        if len(gaps) > 20:
+            print(f"  ... and {len(gaps) - 20} more")
+        return 5
+    print("\nCONTIGUITY: no gaps in what is on disk")
     return 0
 
 
@@ -147,6 +187,21 @@ def build_parser() -> argparse.ArgumentParser:
     policy.add_argument("--seed", type=int, default=1968)
     policy.add_argument("--allocation", choices=["equal", "demand"], default="equal")
     policy.set_defaults(func=_cmd_policy)
+
+    fill = subparsers.add_parser(
+        "backfill",
+        help="walk channel history backwards, writing raw pages",
+    )
+    fill.add_argument("--out", required=True, help="directory for raw page snapshots")
+    fill.add_argument("--pages", type=int, default=10, help="how many pages to fetch")
+    fill.add_argument("--before", type=int, help="start below this post id (default: newest)")
+    fill.add_argument("--stop-at-id", type=int, help="stop once a page reaches this id or lower")
+    fill.add_argument("--delay", type=float, default=1.0,
+                      help="seconds between requests; the tolerated rate is unknown")
+    fill.add_argument("--resume", action="store_true",
+                      help="continue below the lowest id already in --out")
+    fill.add_argument("--stub", help="read a saved page instead of the network")
+    fill.set_defaults(func=_cmd_backfill)
 
     collect = subparsers.add_parser(
         "collect", help="poll the public channel once and report what was understood"
