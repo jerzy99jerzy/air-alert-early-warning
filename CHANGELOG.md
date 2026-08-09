@@ -16,6 +16,53 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.7.2.0 - 2026-08-09
+
+- `docs/DEPLOYMENT.md`, a plan with open decisions marked as open. The daemon is
+  the first component of this project with an identity on a machine: it
+  persists, it is scheduled by the operating system, and it makes outbound
+  requests on a timer with nobody present. Security tooling forms an opinion
+  about that object whether or not anyone declares an intent, so the document
+  states the full egress inventory, the endpoint identity work on each platform,
+  and what each costs.
+- The scheduling shape is called out as the part that goes wrong. A timer-shaped
+  job would run, log cleanly and silently deliver none of M0's value: the
+  skipped-message counter is computed by comparing post ids between consecutive
+  polls of one live source, so a process respawned every minute resolves it to
+  `unknown` forever, and that counter is the reason the daemon exists.
+- Containers get a case rather than a verdict. Not for dependency isolation, of
+  which there is none to isolate, and not as a committed artifact with a base
+  image pin that no audit here checks. Yes as an instrument for the T7 onboarding
+  probe now, and yes as the unit of deployment at Audience D.
+- A defect found by reading rather than running, and recorded as unproven:
+  `DirectoryLock` decides liveness with `os.kill(pid, 0)`, and pids are per
+  namespace, so two containers on one volume could both hold the lock. T26 is to
+  reproduce it before it becomes a threat-model row, and to record the negative
+  result if it does not.
+- T25 (where the daemon lives), T26 (the lock), T27 (jitter from the first
+  commit of M0, because adding it later invalidates the interval measurements
+  that would justify tightening the poll).
+
+## 0.7.1.0 - 2026-08-09
+
+- `docs/OBSERVABILITY.md`, a plan and marked as one. Shadow mode's product is a
+  record of decisions that were never sent, so at M0 the log stops being a
+  diagnostic and becomes the deliverable. A JSONL sink at DEBUG independent of
+  console flags, because an audit trail whose completeness depends on which flag
+  someone passed is not evidence; a reader that imports the stage vocabulary and
+  is imported by nothing, because a progress indicator wired into the run would
+  be a second statement about where the run is and would start by disagreeing
+  with the log.
+- Two constraints in it are this project's own rather than the pattern's. The
+  renderer distinguishes three outcomes, not two: a stage that could not measure
+  prints `unknown` and a stage that measured nothing prints `0`, and an
+  acceptance test fails a rendering that shows `skipped=0`. And the sink carries
+  no message text by default, because a log echoing bodies would put holdout
+  content in front of the author during ordinary operation and spend the D-012a
+  split without a decision to spend it.
+- T23 and T24 record the work and the guarantee, with acceptance written before
+  the code so it cannot be adjusted to whatever the code turns out to do.
+
 ## 0.7.0.0 - 2026-08-09
 
 A scope correction, and the two documentation defects that hid behind it.

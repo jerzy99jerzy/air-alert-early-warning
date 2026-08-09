@@ -239,7 +239,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 14 | 2,293 |
 | Tests | 25 | 2,366 |
 | Tools | 3 | 573 |
-| Documentation | 26 | 6,834 |
+| Documentation | 28 | 7,429 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -256,7 +256,7 @@ confidence interval attached.
 | Threat-model rows | 13, each with a control or a named acceptance |
 | Defects logged with their class | 38, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 14 |
-| Releases | 17, of which 6 carry tags |
+| Releases | 19, of which 8 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 
 ## Documentation
@@ -272,6 +272,8 @@ confidence interval attached.
 | `docs/MECHANISMS.md` | Every mechanism with its rejected alternative |
 | `docs/COMPUTATION.md` | The statistical machinery the thesis stands on, with its stated weaknesses |
 | `docs/MOBILE.md` | The notification channel: technology choice, phases, and what gates distribution |
+| `docs/OBSERVABILITY.md` | The durable run log and how a cycle is watched. Plan, not built |
+| `docs/DEPLOYMENT.md` | Egress inventory, endpoint identity, containers, and where the daemon lives. Plan and open decisions |
 | `docs/ARCHITECTURE.md` | The infrastructure architecture: components, boundaries, dependency rules, process shape |
 | `docs/DECISIONS.md` | What was rejected, and what would reopen it |
 | `docs/MVP.md` | Release criteria per audience, and the schedule to autumn |

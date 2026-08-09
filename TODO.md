@@ -207,3 +207,59 @@ names and pinned counts; nothing checks the rest of the backticked identifiers.
 identifier pattern from `docs/*.md` and the README, and fails on any that appear
 in no package source, with an explicit allow-list for names that are deliberately
 hypothetical. Verified red by citing a fabricated symbol in a scratch copy.
+
+
+## T23. The observability sink and its reader
+Status: `ready`
+Blocks nothing today and blocks everything at M0: shadow mode's deliverable is a
+record of decisions that were never sent, so the log is the product rather than a
+diagnostic. Designed in `docs/OBSERVABILITY.md` with acceptance written before
+the code.
+**Acceptance:** the seven criteria in that document's section 9, each as a test.
+The two that are not merely plumbing: identical JSONL under `-q` and `-vv`, and
+a rendering that prints `unknown` where a stage could not measure, verified by a
+fixture whose parse report has no baseline.
+
+## T24. Keep the run log out of the holdout
+Status: `ready`
+The design and holdout split was frozen before any message content was read
+(D-012a). A run log echoing message bodies spends that split without anyone
+deciding to spend it.
+**Acceptance:** a hostile fixture carrying a recognisable token in every message
+body produces no occurrence of that token in the sink under default settings,
+and the debug switch that lifts this writes its own line into the record.
+
+
+## T25. Decide where the daemon lives
+Status: `decision`
+`docs/MOBILE.md` assumes an operator-controlled always-on host and does not say
+which. A laptop that sleeps is not one: shadow mode on a sleeping machine writes
+a record whose holes look like quiet nights, which is the defect this project
+exists to refuse, arriving through the scheduler. The answer changes what M0
+costs by more than any other open item: a Mac needs a signed wrapper, a
+`KeepAlive` plist and a TCC-safe data directory, while a Linux host gets the
+same attribution from a named systemd unit for free.
+**Acceptance:** a decision entry in `docs/DECISIONS.md` naming the host and the
+supervision mechanism, with the reopen condition stated.
+
+## T26. Reproduce the pid-namespace hole in DirectoryLock, then fix it
+Status: `ready`
+`DirectoryLock._alive` calls `os.kill(pid, 0)`. Pids are per namespace, so two
+containers on one data volume can both hold the lock while each believes it owns
+it, disabling the control that keeps the request rate against the upstream from
+doubling. Reasoned from the code, not observed (`docs/DEPLOYMENT.md` section 9).
+**Acceptance:** two containers on one mounted volume, both attempting the lock,
+with the outcome recorded either way. If it reproduces: a host identifier beside
+the pid or `flock` on a descriptor, a regression verified red against the
+current implementation, and a threat-model row. If it does not reproduce, the
+negative result is recorded in `docs/METHODOLOGY.md` and this entry closes.
+
+## T27. Jitter the poll interval from the first commit of M0
+Status: `ready`
+A fixed 60-second period is both a beacon profile to a sensor and a perfectly
+regular load on an upstream with which there is no agreement. Ten to twenty
+percent jitter addresses both and costs one line. It goes in first because
+adding it later invalidates every interval measurement taken before it, and
+those measurements are the evidence that would justify tightening the poll.
+**Acceptance:** the interval is drawn per cycle, the draw is recorded in the run
+log, and the recorded distribution over 72 hours matches the configured range.

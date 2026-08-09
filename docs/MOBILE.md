@@ -137,7 +137,7 @@ polls. `mavo collect` is one-shot by design; the daemon is new.
   inference by restating it (F55). Window turnover during a mass alert is
   therefore minutes, and the skip counts the daemon records are the measurement
   that licenses tightening the interval, not the estimate.
-- Runs under systemd on an operator-controlled always-on host. Credentials
+- Runs under supervision on an operator-controlled always-on host. Which host, and therefore which supervision mechanism, is an open decision (T25); the endpoint identity, egress inventory and container question are `docs/DEPLOYMENT.md`. Credentials
   (the ntfy token) live outside the tree; the repository stays runnable by
   someone who has neither credentials nor network, as the CLI docstring
   requires.
