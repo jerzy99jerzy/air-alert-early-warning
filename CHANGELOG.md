@@ -9,6 +9,114 @@ hang the earlier tags on, which would make the history lie about when the code
 existed; a stated debt is cheaper and true. Their artefacts exist only as
 hand-assembled archives with a `MANIFEST.sha256`.
 
+**0.5.0.0 and 0.5.1.0 also carry no tags.** They were cut and verified but never
+pushed: the corpus retrieval work moved fast enough that three releases happened
+between one push and the next, and reconstructing commits for tree states that
+were never published would be inventing history to satisfy a rule the rule does
+not ask for. Their entries stay below because the defects they record are real.
+The first tag after 0.4.0.0 is v0.5.2.0.
+
+## 0.5.5.0 - 2026-08-09
+
+Documentation raised to the level a contributor joining cold actually needs, and
+two new checks so the additions cannot rot.
+
+- `docs/MECHANISMS.md` rewritten from eight sections to twenty-five, one per
+  mechanism, each with its code location, its constants, **the alternative that
+  was rejected and why**, the failure it prevents, and the harness attack that
+  guards it. The rejected alternative is the part that was missing: a document
+  saying what the code does is a worse document than one saying what it does not
+  do and why not.
+- `docs/ARCHITECTURE.md` gains a module reference with the public surface and
+  invariant of every module, a section naming **the four boundaries** and what
+  each one buys, extension points with what landing each one requires, and the
+  repository layout beyond the package.
+- `docs/METHODOLOGY.md` gains a generated defect index and a section on **the
+  four recurring defect classes**. Thirty-two entries reduce to four shapes, and
+  a contributor who learns the shapes will recognise the next one faster than
+  the last one was recognised.
+- `docs/THREAT-MODEL.md`, `docs/MVP.md` and `docs/DECISIONS.md` gain header
+  blocks in the same convention as the rest.
+- README gains badges, a statistics table, and a reading map by intent. Only the
+  CI badge is live; **the static ones are claims**, so `docs_audit` now fails the
+  gate when a badge value disagrees with `STATUS.json`. Verified red by inflating
+  the coverage badge to 99.90%.
+- `docs_audit` also resolves every in-document anchor link. Six documents now
+  carry a contents index, which is six new surfaces for the drift class that has
+  produced four defects here already. Verified red by renaming a section.
+- Statistics pinned in `STATUS.json`: 2,184 lines of package against 4,890 of
+  documentation, a ratio that is deliberate.
+
+## 0.5.4.0 - 2026-08-09
+
+The corpus exists, and the boundary is frozen before anything reads it.
+
+- Corpus retrieved: ids 260841 to 321520, 60,680 posts across 3,034 pages,
+  2026-04-13 to 2026-08-09, contiguous, 313 MB.
+- D-012a computes and freezes the design/holdout boundary at id 309381:
+  48,540 posts for design, 12,140 for holdout, 20.0%. Computed
+  from post ids with no message content read, which is the only thing that makes
+  it a holdout rather than a test set chosen with hindsight.
+- **Campaign nights are invisible in a daily count and visible hourly.** Daily
+  volume is flat: median 590, max 764, a ratio of 1.29. Hourly volume runs a
+  median of 25 against a maximum of 112. Routine alert and all-clear pairs from
+  the whole country dominate the daily figure. The redesign must label candidate
+  campaign windows by hour; the plan of finding them by day would have found
+  nothing and concluded there was nothing to find.
+- The hourly tail thins smoothly rather than stopping at a round number, so the
+  channel has no throughput ceiling. This matters before anyone computes a
+  vector from an activation sequence, because a capped channel would reorder
+  and batch under load.
+- Daily volume drifts about 20% upward from April to August with no step change,
+  so the channel did not alter its format inside the corpus and the older window
+  is usable for design.
+- F49: the sixfold volume change reported while reading the backfill output was a
+  division error, corrected to 25%. Recorded because the wrong number was the
+  interesting one, and interesting is how a number reaches a document.
+
+## 0.5.3.0 - 2026-08-09
+
+Three defects in `backfill`, all found by running it against the real channel
+for twenty-five minutes rather than by reading it. None of them threatened the
+corpus; all three were in what the tool tells the operator.
+
+- F46: interruption was not one of the five stop conditions, so Ctrl-C produced a
+  stack trace and a run that had retrieved 1150 pages did not say so. It is now
+  the sixth, named in the report like the others. Every stop condition in the
+  original list was one the channel produces; the operator was not modelled as a
+  source of endings at all.
+- F47: two runs could share one output directory silently. The corpus survives it
+  because snapshots are named by id range, but the request rate doubles against a
+  service whose tolerance is measured only over a burst of twenty. An advisory
+  lock carrying the holder's pid now refuses with exit code 6, and takes over
+  from a dead holder rather than requiring a cleanup step nobody remembers.
+- F48: a 2800-page run printed nothing for twenty-five minutes, so working and
+  hung looked the same. Progress goes to stderr every 25 pages; stdout still
+  carries only the report, so a redirect yields a clean artefact. `--quiet`
+  suppresses it.
+
+## 0.5.2.0 - 2026-08-09
+
+Documentation for contributors. No behaviour changed.
+
+- `docs/FOUNDATIONS.md`: the observations and assumptions the project rests on,
+  six assumptions each with its falsifier, the provenance table, and the section
+  that says what would make this project stop. Includes the assumption most
+  likely to be argued with, that attention is a finite resource owned by the
+  recipient, recorded together with the challenge to it rather than as settled.
+- `docs/DATA-FLOW.md`: the data architecture. One message from byte to verdict
+  across seven stages, the corpus as a parallel pipeline that deliberately stops
+  early, the three data tiers, and a closing table of every stage that can lose
+  information and how that loss is made visible. Invisible loss is the defect
+  class this repository exists to attack, so it gets its own table.
+- `docs/ARCHITECTURE.md` restructured as the infrastructure document: components,
+  the four dependency rules with what enforces each, process and deployment
+  shape, and a section naming what is deliberately absent. Architecture and data
+  flow were one document and answered two questions badly.
+- `docs/MANUAL.md` gains the header block, contents index and glossary in the
+  `pirx` convention, plus a section 9 glossary of twenty-two terms.
+- `CONTRIBUTING.md` gains a reading order.
+
 ## 0.5.1.0 - 2026-08-09
 
 - `mavo backfill --resume` continues below the lowest id already on disk and

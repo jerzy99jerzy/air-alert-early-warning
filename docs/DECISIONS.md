@@ -1,5 +1,16 @@
 # DECISIONS
 
+```
+Document:  docs/DECISIONS.md, version 2.0
+Audience:  a contributor about to propose something that was already rejected,
+           and anyone asking why an obvious approach was not taken
+Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
+           (the assumptions underneath), METHODOLOGY (what went wrong anyway)
+Note:      every entry carries what would reopen it. A decision without a reopen
+           condition is a preference wearing a decision's clothes
+```
+
+
 One entry per decision, including the ones that felt obvious. The last field is
 the one usually omitted and the one that keeps a decision from becoming dogma.
 
@@ -225,3 +236,25 @@ defect and a new sprint, not a second look.
 channel emits, a restructuring that makes the newest fifth unrepresentative of
 the near future, would justify moving the boundary, and would be recorded as a
 scope change with its reason before the new boundary is used.
+
+## D-012a. The boundary, computed and frozen
+Date: 2026-08-09. Status: adopted, applies D-012
+
+The corpus was retrieved on 2026-08-09: post ids 260841 to 321520, 60,680 posts
+across 3,034 pages, spanning 2026-04-13 to 2026-08-09, contiguous with no
+holes. The boundary below was computed from those ids **before any message
+content was read**, which is the only property that makes it a holdout rather
+than a test set chosen with hindsight.
+
+| Window | Post ids | Posts | Share |
+| --- | --- | --- | --- |
+| Design | 260841 to 309380 | 48,540 | 80.0% |
+| Holdout | 309381 to 321520 | 12,140 | 20.0% |
+
+The boundary falls on a page edge because a page is the indivisible unit on
+disk. That is why the split is 80.0% rather than exactly 80%.
+
+**Frozen.** Moving this boundary after seeing a result is not a refinement, it
+is the retraction this project was built around, repeated with more data. If the
+frozen table scores badly on the holdout, the response is a recorded defect and
+a new sprint.

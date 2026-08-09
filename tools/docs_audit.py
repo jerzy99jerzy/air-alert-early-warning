@@ -96,6 +96,55 @@ def check_harness_catalogue(status: dict[str, object]) -> list[str]:
     return problems
 
 
+def check_contents_anchors_resolve() -> list[str]:
+    """Every in-document link points at a heading that exists.
+
+    Six documents now carry a contents index, which is six new surfaces for
+    class-1 drift: a renamed section leaves a link that renders as a link and
+    goes nowhere. GitHub's anchor rules are reimplemented here rather than
+    assumed, and the reimplementation is the risk this check carries.
+    """
+    problems: list[str] = []
+    for document in sorted(ROOT.glob("docs/*.md")) + [ROOT / "README.md"]:
+        text = document.read_text(encoding="utf-8")
+        headings = {
+            "#" + re.sub(r"[^a-z0-9 -]", "", heading.lower()).replace(" ", "-")
+            for heading in re.findall(r"^#{1,4} (.+)$", text, re.M)
+        }
+        for link in set(re.findall(r"\]\((#[a-z0-9-]+)\)", text)):
+            if link not in headings:
+                problems.append(f"{document.name} links to {link}, which is not a heading in it")
+    return problems
+
+
+def check_badges_match_the_pins(status: dict[str, object]) -> list[str]:
+    """Static badge values agree with STATUS.json.
+
+    A live CI badge tells the truth by construction. A static one is a claim
+    typed by hand, which is the shape of F31: a measurement block updated field
+    by field until the flattering field is the stale one. Coverage is the one
+    that would embarrass this repository most, so it is checked first.
+    """
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    measured = status["measured"]
+    assert isinstance(measured, dict)
+    statistics = status.get("statistics", {})
+    assert isinstance(statistics, dict)
+
+    expected = {
+        "tests": f"tests-{measured['tests_passing']}-",
+        "coverage": f"coverage-{measured['coverage_percent']:.2f}%25-",
+        "harness": f"harness-{status['harness_attacks']}%20attacks",
+        "mutations": f"{measured['harness_mutations_killed']}%20mutation--verified",
+        "runtime dependencies": f"runtime%20dependencies-{statistics.get('runtime_dependencies', 0)}-",
+    }
+    return [
+        f"README badge for {label} does not match STATUS.json (expected {fragment!r})"
+        for label, fragment in expected.items()
+        if fragment not in readme
+    ]
+
+
 def check_cited_tests_exist() -> list[str]:
     """Every ``file.py::test_name`` cited in documentation resolves to a test.
 
@@ -133,6 +182,8 @@ def main() -> int:
         + check_threat_model_numbering(status)
         + check_harness_catalogue(status)
         + check_cited_tests_exist()
+        + check_badges_match_the_pins(status)
+        + check_contents_anchors_resolve()
     )
     for problem in problems:
         print(f"docs-audit: {problem}", file=sys.stderr)

@@ -14,7 +14,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from mavo import __version__
-from mavo.backfill import backfill, contiguity_gaps, lowest_on_disk
+from mavo.backfill import (
+    DirectoryBusy,
+    DirectoryLock,
+    backfill,
+    contiguity_gaps,
+    lowest_on_disk,
+)
 from mavo.errors import BudgetOverrun, SourceUnavailable
 from mavo.evaluate import plan_policy, run_policy, run_rule
 from mavo.policy import Regime, equal_split
@@ -94,14 +100,31 @@ def _cmd_backfill(args: argparse.Namespace) -> int:
         # start point depends on directory contents has to say where it started.
         print(f"resuming below id {before}" if before is not None
               else "resume requested; nothing on disk yet, starting from the newest page")
-    report = backfill(
-        transport,
-        out,
-        max_pages=args.pages,
-        before=before,
-        delay_s=args.delay,
-        stop_at_id=args.stop_at_id,
-    )
+    def show_progress(pages: int, lowest: int) -> None:
+        # stderr, so a redirected stdout still holds only the report. A run of
+        # 2800 pages takes 25 minutes and printed nothing until it finished,
+        # which made working and hung indistinguishable (F48).
+        if pages % 25 == 0:
+            print(f"  {pages} pages, at id {lowest}", file=sys.stderr, flush=True)
+
+    lock = DirectoryLock(out)
+    try:
+        lock.acquire()
+    except DirectoryBusy as busy:
+        print(f"REFUSED: {busy}")
+        return 6
+    try:
+        report = backfill(
+            transport,
+            out,
+            max_pages=args.pages,
+            before=before,
+            delay_s=args.delay,
+            stop_at_id=args.stop_at_id,
+            progress=None if args.quiet else show_progress,
+        )
+    finally:
+        lock.release()
     print(report.summary())
 
     gaps = list(contiguity_gaps(Path(args.out)))
@@ -198,6 +221,8 @@ def build_parser() -> argparse.ArgumentParser:
     fill.add_argument("--stop-at-id", type=int, help="stop once a page reaches this id or lower")
     fill.add_argument("--delay", type=float, default=1.0,
                       help="seconds between requests; the tolerated rate is unknown")
+    fill.add_argument("--quiet", action="store_true",
+                      help="suppress the progress lines on stderr")
     fill.add_argument("--resume", action="store_true",
                       help="continue below the lowest id already in --out")
     fill.add_argument("--stub", help="read a saved page instead of the network")

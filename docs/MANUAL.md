@@ -1,8 +1,24 @@
-# MANUAL
+# MAVO manual
 
-Operator's manual for MAVO. Written from the first sprint rather than at the end,
-because a manual written afterwards documents what was built instead of what was
-promised, and the gap between the two is the interesting part.
+> Codename **MAVO** (package `mavo`, distribution `air-alert-early-warning`).
+> In Lem's *His Master's Voice* a team spends years deciding whether a signal
+> from outside carries a message or is noise that happens to look like one.
+> This document is the part of that work you can run.
+
+```
+Document:  docs/MANUAL.md, version 3.0
+Audience:  the operator - the person who runs MAVO, reads what it prints, and
+           is asked afterwards what it knew and when. Assumes competence, not
+           familiarity
+Companion: README (what MAVO is and is not), FOUNDATIONS (what it rests on),
+           ARCHITECTURE (how it is built), DATA-FLOW (what happens to a
+           message), THREAT-MODEL (what it defends against and what it does
+           not)
+Note:      every constant, exit code and output line here was read out of the
+           code, not recalled. `tools/manual_audit.py` fails the gate when a
+           command exists with no section here, and when a threshold quoted
+           here is not the one the code enforces
+```
 
 **How to read the status markers.** Every section carries one:
 
@@ -13,8 +29,23 @@ promised, and the gap between the two is the interesting part.
   relied on.
 - **NARRATIVE** describes no behaviour at all. Framing and orientation only.
 
-`tests/lint_domain.py` fails if a CLI subcommand exists with no section here, so
-this document cannot silently fall behind the tool.
+## Contents
+
+1. [What this tool is for](#1-what-this-tool-is-for--narrative)
+2. [Installation](#2-installation--built)
+3. [First run, with no credentials](#3-first-run-with-no-credentials--built)
+4. [Commands](#4-commands--narrative)
+   1. [`mavo fixture`](#41-mavo-fixture--built)
+   2. [`mavo gate`](#42-mavo-gate--built)
+   3. [`mavo policy`](#43-mavo-policy--built)
+   4. [`mavo backfill`](#44-mavo-backfill--built)
+   5. [`mavo collect`](#45-mavo-collect--partial)
+   6. [`mavo watch`](#46-mavo-watch--not-built-sprint-7)
+5. [Interpreting an alarm](#5-interpreting-an-alarm--not-built-sprint-7)
+6. [Operational limits](#6-operational-limits--built-where-noted)
+7. [Troubleshooting](#7-troubleshooting--partial)
+8. [Reporting a problem](#8-reporting-a-problem--narrative)
+9. [Glossary](#9-glossary--narrative)
 
 ---
 
@@ -176,6 +207,7 @@ filtered through the parser it is meant to fix would not be evidence.
 | `--pages` | 10 | How many pages to fetch. One page is 20 posts |
 | `--before` | newest | Start below this post id. Omit to start from the newest page |
 | `--stop-at-id` | none | Stop once a page reaches this id or lower. The page containing it is kept whole |
+| `--quiet` | off | Suppress the progress lines. They go to stderr, so a redirected stdout holds only the report |
 | `--resume` | off | Continue below the lowest id already in `--out`. Refuses if combined with `--before`, since they name different cursors |
 | `--delay` | 1.0 | Seconds between requests. 0.2 s was measured clean over a 20-request burst; the default stays at 1.0 because a burst does not license a claim about a long run. Use 0.5 for long runs knowingly |
 | `--stub` | none | Read a saved page instead of the network |
@@ -209,11 +241,15 @@ at 0.5 s is around 24 minutes.
 | Code | Meaning |
 | --- | --- |
 | 0 | Ran, and what is on disk is contiguous |
+| 6 | Another run holds this output directory. Two runs against one directory do not corrupt the corpus, since snapshots are named by id range, but they double the request rate against a service whose tolerance was measured over a burst of twenty |
 | 5 | Ran, and what is on disk has holes. Every hole is printed with its id range and size. This is a finding, not a warning: a corpus with holes it does not name is a sample that believes it is a census |
 
-The run stops for one of five reasons and always says which: the page count ran
+The run stops for one of six reasons and always says which: the page count ran
 out, a page reached `--stop-at-id`, a page carried no posts, a page failed to
-move backwards, or the source became unreachable. Do not read a short run as a
+move backwards, the source became unreachable, or **you interrupted it**. The
+last one is the most common in practice and was not one of the five until
+0.5.3.0, so Ctrl-C produced a stack trace and a run that had retrieved 1150
+pages did not say so. Do not read a short run as a
 short history without reading the `stopped:` line.
 
 ### 4.5 `mavo collect` — PARTIAL
@@ -333,3 +369,81 @@ collector will be written when it exists, in sprint 6.
 can be walked through, a path where `UNKNOWN` behaves as `CLEAR`, or a
 documentation claim the tree does not implement. Include the input that
 demonstrates it. A probe is worth more than a reading.
+
+---
+
+## 9. Glossary — NARRATIVE
+
+**Alarm tier.** The only tier permitted to interrupt anyone. Reserved for the
+missile regime and for a rule that cleared the gate. Nothing has ever reached
+it, because no rule has cleared the gate on real data.
+
+**Area.** One administrative unit an alert applies to. The channel emits at
+oblast and raion level; the model currently normalises to a single `area_id`
+string and the raion layer is unused (F24).
+
+**Backfill.** Retrieval of channel history backwards through the web preview's
+`before` cursor, twenty posts at a time. Distinct from collection, which is
+forward and continuous.
+
+**Base rate.** How often the event happens with no rule at all. Roughly 57% of
+days carry a campaign against western Ukraine, which is why a rule that fires
+on campaigns is a calendar.
+
+**Contingency table.** The four counts a rule is judged on: fired-and-crossed,
+fired-and-not, missed, and correctly quiet. Everything the gate measures is
+derived from these four numbers.
+
+**Corpus.** Raw channel pages on disk, unparsed. It exists because the pattern
+table is wrong, so a corpus filtered through the pattern table would be
+evidence about the table rather than about the channel.
+
+**Coverage gap.** Crossings of a kind no regime serves. Counted and printed
+rather than folded into a denominator, because a policy with a hole and a
+policy with good numbers must not look alike.
+
+**Design window and holdout.** The corpus split declared before any content is
+read (D-012). The holdout is the newest 20% of posts by id and is not looked at
+until the redesign is frozen.
+
+**Fisher exact test, one-sided.** The association test the gate uses. Exact
+rather than approximate because the positive class is roughly a dozen events,
+and one-sided because the question is whether a rule beats chance, not whether
+it differs from it.
+
+**Gate.** Three conditions a rule must clear before it may raise an alarm:
+recall, alarm rate, association. Any failure is decisive. Also the name of the
+`make verify` target, which is a different gate; context distinguishes them.
+
+**Lift.** Precision divided by the unconditional rate. A lift near 1.0 means the
+rule added nothing to what a calendar already told you.
+
+**Observation tier.** Ambient, silent, high volume. Where the drone regime
+lives, and where any rule that fails the gate but is still informative belongs.
+Not built.
+
+**Poison suppression.** A hard control: eight or more distinct areas activating
+inside 120 seconds suppresses every rule. Not a scoring penalty, because
+inducing alarms is free for an adversary.
+
+**Provenance.** The label every load-bearing number carries: measured,
+reported, inference or speculation. Alert state from a feed is always reported,
+never measured.
+
+**Regime.** A timing class, defined by transit time rather than munition
+taxonomy. Missile is roughly six minutes of warning, drone roughly
+thirty-three. One threshold cannot serve both.
+
+**Replay.** Reconstruction of any past moment from the append-only store. The
+backtest and the live correlator run this same path, so a rule cannot behave
+differently in test than in production.
+
+**Shadow mode.** Running the full decision path against live data while sending
+nothing, for four weeks, to measure the real alarm rate. Not started.
+
+**Skipped window.** Posts that passed between two polls without being seen.
+Reported as a count when measurable and as `unknown` when not, never as zero.
+
+**Window (page).** The channel's web preview serves exactly twenty posts per
+page. This is the reason a skip is possible and the reason `before` paging
+exists.

@@ -1,5 +1,25 @@
 # MVP
 
+```
+Document:  docs/MVP.md, version 2.0
+Audience:  anyone asking when this is finished, including the author on a day
+           when another sprint feels justified
+Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
+           each release actually did)
+Note:      blockers are typed. Engineering blockers shrink when code is written;
+           access and decision blockers do not shrink at all, and counting
+           sprints toward a goal gated by one is a category error
+```
+
+## Contents
+
+1. [Audience A: the author, personal use](#audience-a-the-author-personal-use)
+2. [Audience B: a small trusted group](#audience-b-a-small-trusted-group)
+3. [Audience C: public repository as a portfolio artefact](#audience-c-public-repository-as-a-portfolio-artefact)
+4. [Amending these criteria](#amending-these-criteria)
+5. [Schedule to autumn](#schedule-to-autumn)
+
+
 What finished means, per audience. A codebase always yields another defect, so
 without exit criteria every sprint can be justified as the next one indefinitely.
 

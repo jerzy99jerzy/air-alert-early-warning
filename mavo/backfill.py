@@ -18,6 +18,7 @@ evidence. Parsing happens later, from disk, as many times as the redesign needs.
 
 from __future__ import annotations
 
+import os
 import re
 import time
 from collections.abc import Callable, Iterator
@@ -138,6 +139,7 @@ def backfill(
     delay_s: float = DEFAULT_DELAY_S,
     sleep: Callable[[float], None] = time.sleep,
     stop_at_id: int | None = None,
+    progress: Callable[[int, int], None] | None = None,
 ) -> BackfillReport:
     """Walk history backwards, writing each page verbatim.
 
@@ -149,6 +151,11 @@ def backfill(
     alternative is a loop that fetches the same page until the page count runs
     out and then reports a number of pages that is true and a coverage that is
     not.
+
+    An operator interrupting the run is the sixth stop condition and the most
+    common one in practice. It was not one of the five until 0.5.3.0, so
+    ``KeyboardInterrupt`` travelled through this function and a run that had
+    retrieved 1150 pages reported a stack trace instead of saying so (F46).
     """
     directory.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
@@ -164,6 +171,9 @@ def backfill(
             page = fetch_page(transport, channel_url, cursor)
         except SourceUnavailable as unreachable:
             reason = f"source unreachable: {unreachable}"
+            break
+        except KeyboardInterrupt:
+            reason = f"interrupted by the operator after {pages} page(s)"
             break
         if page is None:
             reason = "page carried no posts; treating as the start of history"
@@ -188,12 +198,18 @@ def backfill(
         lowest = page.first_id if lowest is None else min(lowest, page.first_id)
         highest = page.last_id if highest is None else max(highest, page.last_id)
         cursor = page.first_id
+        if progress is not None:
+            progress(pages, page.first_id)
 
         if stop_at_id is not None and page.first_id <= stop_at_id:
             reason = f"reached stop_at_id={stop_at_id}"
             break
         if delay_s > 0:
-            sleep(delay_s)
+            try:
+                sleep(delay_s)
+            except KeyboardInterrupt:
+                reason = f"interrupted by the operator after {pages} page(s)"
+                break
 
     ordered = sorted(timestamps)
     return BackfillReport(
@@ -207,6 +223,74 @@ def backfill(
         skipped_existing=skipped,
         stopped_because=reason,
     )
+
+
+class DirectoryBusy(RuntimeError):
+    """Another process holds this output directory.
+
+    A refusal rather than a warning. Two runs against one directory do not
+    corrupt the corpus, because snapshot names are derived from id ranges, but
+    they double the request rate against a service whose tolerance for the
+    single rate is measured only over a burst (T21). Discovered by doing it
+    (F47).
+    """
+
+
+class DirectoryLock:
+    """Advisory lock over an output directory, holding the owning pid.
+
+    Advisory rather than enforced by the filesystem: this guards against the
+    operator starting a second run, which is what happened, and not against an
+    adversary. A stale lock from a killed process is detected by checking
+    whether that pid is alive, and is taken over rather than requiring a manual
+    cleanup step nobody will remember at 02:00.
+    """
+
+    def __init__(self, directory: Path) -> None:
+        self.path = directory / ".backfill.lock"
+        self.acquired = False
+
+    def _holder(self) -> int | None:
+        try:
+            return int(self.path.read_text(encoding="utf-8").strip())
+        except (OSError, ValueError):
+            return None
+
+    @staticmethod
+    def _alive(pid: int) -> bool:
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        return True
+
+    def acquire(self, pid: int | None = None) -> None:
+        """Take the lock, or raise ``DirectoryBusy`` naming the holder."""
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        holder = self._holder()
+        if holder is not None and holder != (pid or os.getpid()) and self._alive(holder):
+            raise DirectoryBusy(
+                f"{self.path.parent} is held by pid {holder}. Two runs against one "
+                "directory double the request rate against a service whose tolerance "
+                "was measured over a burst of twenty"
+            )
+        self.path.write_text(str(pid or os.getpid()), encoding="utf-8")
+        self.acquired = True
+
+    def release(self) -> None:
+        """Drop the lock if this object took it."""
+        if self.acquired:
+            self.path.unlink(missing_ok=True)
+            self.acquired = False
+
+    def __enter__(self) -> DirectoryLock:
+        self.acquire()
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.release()
 
 
 def lowest_on_disk(directory: Path) -> int | None:

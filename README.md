@@ -2,6 +2,23 @@
 
 # air-alert-early-warning
 
+[![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
+[![tests 155](https://img.shields.io/badge/tests-155-brightgreen)](tests/)
+[![coverage 95.80%](https://img.shields.io/badge/coverage-95.80%25-brightgreen)](Makefile)
+[![harness 11 attacks, 10 mutation-verified](https://img.shields.io/badge/harness-11%20attacks%2C%2010%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
+[![defects logged 32](https://img.shields.io/badge/defects%20logged-32-informational)](docs/METHODOLOGY.md)
+[![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
+[![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
+[![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
+[![status pre-alpha](https://img.shields.io/badge/status-pre--alpha-orange)](docs/MVP.md)
+
+Only the first badge is live. **The rest are static, and static badges are
+claims**, so every number in them is pinned in `STATUS.json` and
+`tools/docs_audit.py` fails the gate when a badge and the pin disagree. A
+coverage badge that flatters by a release is the defect class this repository
+exists to attack, and it would be an embarrassing one to ship in the README.
+
+
 **Codename MAVO.** Cross-border early warning built on Ukrainian air-alert feeds,
 with a base-rate gate that a rule must pass before it is allowed to wake anyone up.
 
@@ -158,7 +175,9 @@ tools/
   harness_mutation.py  disables each control and fails if its attack stays green
 docs/
   MANUAL.md        operator's manual; every section declares BUILT or NOT BUILT
-  ARCHITECTURE.md  what talks to what, with a block index
+  FOUNDATIONS.md   the observations and assumptions, each with its falsifier
+  ARCHITECTURE.md  infrastructure: components, boundaries, dependency rules
+  DATA-FLOW.md     data: one message from byte to verdict, and where it is lost
   MECHANISMS.md    how each mechanism works
   METHODOLOGY.md   what may be claimed, plus the defect log
   THREAT-MODEL.md  adversaries against this tool
@@ -166,15 +185,46 @@ docs/
   DECISIONS.md     what was rejected, and what would reopen it
 ```
 
+## The repository in numbers
+
+Measured by `tools/docs_audit.py` at each release and pinned in `STATUS.json`.
+
+| | Files | Lines |
+| --- | --- | --- |
+| Package `mavo/` | 14 | 2,184 |
+| Tests | 24 | 2,101 |
+| Tools | 3 | 449 |
+| Documentation | 20 | 4,890 |
+
+**Documentation outweighs the package roughly two to one**, and that ratio is
+deliberate rather than accidental. The product of this project is a measurement,
+and a measurement whose method is not written down is an opinion with a
+confidence interval attached.
+
+| | |
+| --- | --- |
+| Runtime dependencies | **0** |
+| Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
+| Tests | 155, of which 11 are scripted attacks |
+| Coverage | 95.80% against a floor of 95, a ratchet that is never lowered |
+| Mutation-verified controls | 10 of 11 attacks; the eleventh is printed as unverified on every run |
+| Threat-model rows | 12, each with a control or a named acceptance |
+| Defects logged with their class | 32 |
+| Decisions recorded with reopen conditions | 13 |
+| Releases | 13, of which 3 carry tags |
+| Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
+
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
-| **`docs/MANUAL.md`** | **Start here to use it.** Install, every command, how to read the output, operational limits. Each section declares BUILT, PARTIAL, NOT BUILT or NARRATIVE |
+| **`docs/MANUAL.md`** | **Start here to use it.** Install, every command, how to read the output, operational limits, glossary. Each section declares BUILT, PARTIAL, NOT BUILT or NARRATIVE |
+| **`docs/FOUNDATIONS.md`** | **Start here to contribute.** The observations and assumptions everything rests on, each with its provenance label and what would falsify it |
+| `docs/DATA-FLOW.md` | The data architecture: one message from byte to verdict, every transformation, and a table of exactly where information can be lost |
 | `docs/METHODOLOGY.md` | What may be claimed, the defect log, and the probes that were run rather than read |
 | `docs/THREAT-MODEL.md` | MT1 to MT12, each with a control or a named acceptance and the test that measures it |
 | `docs/MECHANISMS.md` | Why this statistic and not another |
-| `docs/ARCHITECTURE.md` | What talks to what, with a block index |
+| `docs/ARCHITECTURE.md` | The infrastructure architecture: components, boundaries, dependency rules, process shape |
 | `docs/DECISIONS.md` | What was rejected, and what would reopen it |
 | `docs/MVP.md` | Release criteria per audience, and the schedule to autumn |
 | `docs/reviews/` | Pre-push review per version, every finding dispositioned |
@@ -199,8 +249,8 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: 143 tests passing, of which 11 are harness attacks.
-  Coverage 96.46% against a floor of 95. The margin sprint 2 had is gone:
+- `make verify` green: 155 tests passing, of which 11 are harness attacks.
+  Coverage 95.80% against a floor of 95. The margin sprint 2 had is gone:
   `transport.py` carries the one genuinely network-bound function, and it drags
   the total toward the floor. Whether to exclude it from the measurement is an
   open decision recorded in the 0.3.2.0 review, not something to resolve by
@@ -217,6 +267,17 @@ A number appears in this documentation only when the code produced it.
   eleven carries no mutation and is listed as unverified rather than assumed.
 - Every number above except the classifier hit rate was produced against a
   synthetic history. None of them is a claim about the world.
+
+### Where to start
+
+| If you are | Read |
+| --- | --- |
+| Running it | [`docs/MANUAL.md`](docs/MANUAL.md) |
+| Deciding whether to believe it | [`docs/FOUNDATIONS.md`](docs/FOUNDATIONS.md), then [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) |
+| Changing how something works | [`docs/MECHANISMS.md`](docs/MECHANISMS.md) |
+| Adding a component | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Following the data | [`docs/DATA-FLOW.md`](docs/DATA-FLOW.md) |
+| Attacking it | [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) and [`tests/harness/CATALOGUE.md`](tests/harness/CATALOGUE.md) |
 
 ## License
 

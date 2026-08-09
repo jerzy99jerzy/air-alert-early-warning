@@ -1,5 +1,33 @@
 # METHODOLOGY
 
+What may be claimed, what was measured, and every defect this repository has
+found in itself.
+
+```
+Document:  docs/METHODOLOGY.md, version 2.0
+Audience:  a contributor deciding what a number is allowed to mean, and anyone
+           auditing whether this repository is as careful as it says
+Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
+           DECISIONS (what was rejected), reviews/ (per-release dispositions)
+Note:      the defect log is the most useful document here for a new
+           contributor. Read the classes rather than the incidents: most of the
+           entries are variations on four or five recurring shapes
+```
+
+## Contents
+
+1. [What may be claimed](#what-may-be-claimed)
+2. [The recurring defect classes](#the-recurring-defect-classes)
+3. [Defect index](#defect-index)
+4. [Defect log](#defect-log)
+5. [Corpus measurements, 2026-08-09](#corpus-measurements-2026-08-09)
+6. [Channel measurements, 2026-08-09](#channel-measurements-2026-08-09)
+7. [Verification probes run in sprint 5](#verification-probes-run-in-sprint-5)
+8. [Measurement of the pattern table, 2026-08-08](#measurement-of-the-pattern-table-2026-08-08)
+9. [Sprint 3 finding](#sprint-3-finding)
+10. [Verification probes run in sprint 2](#verification-probes-run-in-sprint-2)
+11. [Sprint 2 finding](#sprint-2-finding)
+
 ## What may be claimed
 
 | Claim | Status |
@@ -17,6 +45,78 @@
 Nothing produced against the synthetic history is evidence about reality. It
 validates the machinery, not the hypothesis. That sentence is printed by the CLI
 so it travels with the output.
+
+## The recurring defect classes
+
+Forty-odd entries, four shapes. A contributor who internalises these will predict
+most of what this repository is fussy about, and will recognise the next one
+faster than the last one was recognised.
+
+**Class 1: a document describing a tree that has moved on.** The portfolio's
+founding defect (ANANKE's README claiming a protection the code lacked) and four
+of this repository's own: F32, F33, F42, F43. Every check in the gate that
+touches documentation checks *shape* rather than *reference* (counts, numbering,
+parseability, version pins), and prose stays uncovered. The citation resolver in
+`docs_audit` is the first check that resolves a claim to the thing it names.
+
+**Class 2: a check that cannot fail.** F38 (an assertion satisfied by the failure
+it was meant to detect), F39 (a test that never reached its code), F40 (the same,
+found the same day), F44 (a probe whose negative result was indistinguishable
+from its positive one), F45 (a red-verification that imported what it was
+verifying). The remediation is a question rather than a tool: **what would this
+have printed if the thing I am testing were false?**
+
+**Class 3: absence read as success.** F8 (a coverage gap folded into a
+denominator), F26 (a contradiction resolving to all-clear), F27 (a skipped window
+leaving no trace), F46 (an interrupted run reporting nothing about what it had
+retrieved). This is the class the whole product is about, which is why it keeps
+appearing inside the tooling as well as in the domain.
+
+**Class 4: a number that drifted from what produced it.** F31 (a measurement
+block updated field by field), F36 (a version string duplicated outside its
+source of truth), F37 (a manifest proving completeness and read as proving
+currency), F49 (arithmetic in prose with nothing to check it).
+
+**One entry belongs to none of them and is worth reading on its own:** F1, the
+fixture that flattered the rule it was meant to test. It is the closest this
+repository has come to the mistake it was built after.
+
+## Defect index
+
+| Entry | Found in | What it was |
+| --- | --- | --- |
+| [F1](#f1-sprint-2-the-fixture-flattered-the-rule-it-was-meant-to-test) | sprint 2 | The fixture flattered the rule it was meant to test |
+| [F2](#f2-sprint-2-a-lint-failed-on-the-document-explaining-its-own-exclusion) | sprint 2 | A lint failed on the document explaining its own exclusion |
+| [F3](#f3-sprint-2-a-regression-test-passed-against-the-bug-it-documented) | sprint 2 | A regression test passed against the bug it documented |
+| [F4](#f4-sprint-2-the-hygiene-guard-fired-on-the-document-that-defines-it) | sprint 2 | The hygiene guard fired on the document that defines it |
+| [F5](#f5-sprint-3-two-contradictory-verdicts-printed-on-one-rule) | sprint 3 | Two contradictory verdicts printed on one rule |
+| [F6](#f6-sprint-3-an-average-across-two-populations-read-as-one-weak-rule) | sprint 3 | An average across two populations read as one weak rule |
+| [F7](#f7-sprint-3-the-budget-was-treated-as-a-property-of-the-rule) | sprint 3 | The budget was treated as a property of the rule |
+| [F8](#f8-sprint-3-a-coverage-gap-folded-into-the-denominator) | sprint 3 | A coverage gap folded into the denominator |
+| [F23](#f23-sprint-4-measurement-the-area-table-matched-nothing-at-all) | sprint 4 measurement | The area table matched nothing at all |
+| [F24](#f24-sprint-4-measurement-the-geographic-model-has-a-missing-artifact) | sprint 4 measurement | The geographic model has a missing artifact |
+| [F25](#f25-sprint-4-measurement-means-of-attack-is-a-separate-message-class) | sprint 4 measurement | Means of attack is a separate message class |
+| [F26](#f26-sprint-4-measurement-there-is-a-fourth-state) | sprint 4 measurement | There is a fourth state |
+| [F27](#f27-sprint-4-measurement-the-page-is-a-window-not-a-stream) | sprint 4 measurement | The page is a window, not a stream |
+| [F31](#f31-0320-audit-a-measured-pin-went-stale-field-by-field) | 0.3.2.0 audit | A measured pin went stale field by field |
+| [F32](#f32-0320-audit-the-readme-described-the-release-before-last) | 0.3.2.0 audit | The README described the release before last |
+| [F33](#f33-0320-audit-a-threat-model-row-cited-a-decision-that-was-never-written) | 0.3.2.0 audit | A threat-model row cited a decision that was never written |
+| [F34](#f34-0320-audit-one-document-contradicted-itself-across-two-sections) | 0.3.2.0 audit | One document contradicted itself across two sections |
+| [F35](#f35-0320-audit-a-stated-rule-applied-to-two-of-three-cases) | 0.3.2.0 audit | A stated rule applied to two of three cases |
+| [F36](#f36-0320-audit-a-version-string-lived-outside-its-single-source-of-truth) | 0.3.2.0 audit | A version string lived outside its single source of truth |
+| [F37](#f37-0321-a-manifest-proves-completeness-not-currency) | 0.3.2.1 | A manifest proves completeness, not currency |
+| [F38](#f38-sprint-5-an-attack-that-could-not-fail) | sprint 5 | An attack that could not fail |
+| [F39](#f39-sprint-5-an-attack-that-never-reached-the-code-it-tested) | sprint 5 | An attack that never reached the code it tested |
+| [F40](#f40-sprint-5-a-new-attack-with-the-same-defect-caught-the-same-day) | sprint 5 | A new attack with the same defect, caught the same day |
+| [F41](#f41-sprint-5-ci-restated-the-gate-it-claimed-not-to-restate) | sprint 5 | CI restated the gate it claimed not to restate |
+| [F42](#f42-0400-audit-a-threat-row-cited-a-test-that-has-never-existed) | 0.4.0.0 audit | A threat row cited a test that has never existed |
+| [F43](#f43-0400-audit-the-architecture-diagram-omitted-the-only-live-source) | 0.4.0.0 audit | The architecture diagram omitted the only live source |
+| [F44](#f44-sprint-6-a-schedule-built-on-a-probe-whose-failure-was-invisible) | sprint 6 | A schedule built on a probe whose failure was invisible |
+| [F45](#f45-sprint-6-the-red-verification-probe-imported-the-code-it-was-checking) | sprint 6 | The red-verification probe imported the code it was checking |
+| [F46](#f46-0530-interruption-was-not-one-of-the-stop-conditions) | 0.5.3.0 | Interruption was not one of the stop conditions |
+| [F47](#f47-0530-two-runs-could-share-one-output-directory) | 0.5.3.0 | Two runs could share one output directory |
+| [F48](#f48-0530-a-twenty-five-minute-run-printed-nothing-until-it-ended) | 0.5.3.0 | A twenty-five minute run printed nothing until it ended |
+| [F49](#f49-0540-a-dramatic-finding-produced-by-a-division-error) | 0.5.4.0 | A dramatic finding produced by a division error |
 
 ## Defect log
 
@@ -436,6 +536,90 @@ rule for every sprint that adds a module, which is most of them.
 Class: same family as F44. A verification step that produces the same output
 whether or not the thing it verifies is true. Remediation: the red-verification
 probe uninstalls the package first, and CONTRIBUTING.md says so.
+
+### F46, 0.5.3.0. Interruption was not one of the stop conditions
+
+`backfill` named five reasons a run can end and reported whichever applied. The
+sixth, and the most frequent in practice, is the operator pressing Ctrl-C, and it
+was not among them. `KeyboardInterrupt` travelled through the loop, so a run that
+had retrieved 1150 pages printed sixty lines of stack trace and said nothing
+about the 1150.
+
+Why it survived: every stop condition in the list is a condition the *channel*
+produces. The operator was not modelled as a source of stop conditions at all,
+which is the same blind spot as a threat model that covers adversaries and not
+users.
+
+Class: **a report that exists for every ending except the likely one.** The
+adjacent instance is a summary that prints on success and not on failure, which
+this repository would have caught; this one hid behind an exception type nobody
+thought of as an ending.
+
+### F47, 0.5.3.0. Two runs could share one output directory
+
+Starting a second `backfill` against a directory an existing run was writing was
+possible and silent. The corpus survives it, because snapshot names derive from
+id ranges and the second writer produces identical bytes, but the request rate
+doubles against a service whose tolerance is measured only over a burst of twenty
+(T21).
+
+Why it survived: the tool was written to be idempotent, and idempotence was read
+as covering concurrency. It covers repetition. Found by doing it.
+
+Class: a property proven for one axis and assumed on another. An advisory lock
+with the holder's pid now refuses, and takes over from a dead holder rather than
+requiring a cleanup step nobody remembers.
+
+### F48, 0.5.3.0. A twenty-five minute run printed nothing until it ended
+
+The report is written at the end. For a five-page probe that is invisible; for
+2800 pages it means `tail -f` shows an empty file for twenty-five minutes and
+working is indistinguishable from hung.
+
+Class: an output shape validated at one scale and shipped for another. Progress
+now goes to stderr every 25 pages, leaving stdout carrying only the report so a
+redirect still yields a clean artefact.
+
+### F49, 0.5.4.0. A dramatic finding produced by a division error
+
+Reading the backfill report, I calculated that the channel had emitted 4.3 posts
+per hour in April against 27 now, called it a sixfold change, and offered it as a
+measured finding with consequences for whether the older corpus was usable at
+all. The arithmetic was wrong: 34,000 posts over 71 days is 479 per day and 20
+per hour, against roughly 25 now. A 25% drift, not a 600% one.
+
+Caught by computing the daily distribution, which showed a flat series with a
+median of 590 and a maximum of 764, incompatible with the claim already made.
+
+Why it survived even briefly: the wrong number was interesting. A sixfold change
+implies a story about format changes and unusable history; the true number
+implies nothing and needs no story. Nothing in the pipeline was harmed, because
+the claim was made in conversation rather than committed, but a claim made
+confidently in conversation is how a claim reaches a document.
+
+Class: **arithmetic in prose, uncounted by anything.** Every number in this
+repository that a check touches has been right; this one had no check because it
+was spoken rather than written. The remediation is not a tool, it is the rule
+already in this document applied to conversation as well as to files: a
+derived number is inference and is labelled, and an inference that implies a
+consequence gets recomputed before the consequence is stated.
+
+## Corpus measurements, 2026-08-09
+
+Metadata only. No message content was read before the holdout boundary was
+frozen (D-012a).
+
+| Quantity | Value | Provenance |
+| --- | --- | --- |
+| Range | ids 260841 to 321520, 60,680 posts, 3,034 pages | measured |
+| Span | 2026-04-13 to 2026-08-09, 118 days | measured, from `datetime` attributes |
+| Contiguity | no gaps | measured, `mavo backfill` exit 0 |
+| Size on disk | 313 MB | measured |
+| Daily volume | median 590, min 382, max 764 | measured over 45 days |
+| Daily volume trend | about +20% from April to August, gradual | inference. No step change, so the channel did not alter its format or cadence inside the corpus, and the older window is usable for design |
+| Hourly volume | median about 25, maximum 112 | measured |
+| Ceiling | none | inference. The hourly tail thins smoothly to 112 with one hour per value rather than stopping at a round number, which is what a throughput cap would look like |
+| Campaign visibility | visible hourly at roughly 4.5x the median hour, invisible daily | **inference, and it changes the unit.** Routine alert and all-clear pairs from the whole country dominate a daily count and dissolve a campaign into it. Candidate campaign windows must be labelled by hour, not by day |
 
 ## Channel measurements, 2026-08-09
 

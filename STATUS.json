@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.5.1.0",
+  "version": "0.5.5.0",
   "python_requires": ">=3.11",
   "shipped_sprints": [
     0,
@@ -14,19 +14,27 @@
   ],
   "gate": "make verify",
   "documents": {
-    "docs/MANUAL.md": "1.0",
+    "docs/MANUAL.md": "3.0",
     "docs/reviews/0.2.1.0.md": "1.0",
     "docs/reviews/0.3.0.0.md": "1.0",
     "docs/reviews/0.3.1.0.md": "1.0",
     "docs/reviews/0.3.2.0.md": "1.0",
     "docs/reviews/0.4.0.0.md": "1.0",
-    "docs/reviews/0.5.0.0.md": "1.0"
+    "docs/reviews/0.5.0.0.md": "1.0",
+    "docs/FOUNDATIONS.md": "1.0",
+    "docs/DATA-FLOW.md": "1.0",
+    "docs/ARCHITECTURE.md": "2.0",
+    "docs/MECHANISMS.md": "2.0",
+    "docs/METHODOLOGY.md": "2.0",
+    "docs/THREAT-MODEL.md": "2.0",
+    "docs/MVP.md": "2.0",
+    "docs/DECISIONS.md": "2.0"
   },
   "threat_model_rows": 12,
   "harness_attacks": 11,
   "measured": {
-    "tests_passing": 148,
-    "coverage_percent": 96.55,
+    "tests_passing": 155,
+    "coverage_percent": 95.8,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 0,
     "policy_combined_alarms_per_week": 1.96,
@@ -39,5 +47,30 @@
     "channel_newest_post_id_2026_08_09": 321498,
     "channel_posts_per_day_estimate": 650
   },
-  "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except classifier_hit_rate_on_real_messages, which is pinned by tests against real channel content; nothing here is a claim about the world"
+  "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except classifier_hit_rate_on_real_messages, which is pinned by tests against real channel content; nothing here is a claim about the world",
+  "corpus": {
+    "retrieved": "2026-08-09",
+    "post_id_low": 260841,
+    "post_id_high": 321520,
+    "posts": 60680,
+    "pages": 3034,
+    "span_days": 118,
+    "contiguous": true,
+    "size_mb": 313,
+    "design_window_high_id": 309380,
+    "holdout_low_id": 309381,
+    "holdout_share": 0.2001,
+    "content_read_before_freeze": false
+  },
+  "statistics": {
+    "package_lines": 2184,
+    "package_files": 14,
+    "test_lines": 2101,
+    "test_files": 24,
+    "tool_lines": 449,
+    "tool_files": 3,
+    "documentation_lines": 4890,
+    "documentation_files": 20,
+    "runtime_dependencies": 0
+  }
 }

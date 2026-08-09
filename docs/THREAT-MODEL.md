@@ -1,5 +1,23 @@
 # THREAT-MODEL
 
+```
+Document:  docs/THREAT-MODEL.md, version 2.0
+Audience:  a contributor adding a control, and anyone trying to break this
+Companion: MECHANISMS (how each control works), tests/harness/CATALOGUE.md (the
+           scripted attack per row), METHODOLOGY (what was found by trying)
+Note:      every row carries a control or a **named acceptance**, and every
+           acceptance carries the trigger that would reopen it. An accepted risk
+           with no trigger is an unaddressed one with better manners
+```
+
+## Contents
+
+1. [Who benefits from the output being wrong](#who-benefits-from-the-output-being-wrong)
+2. [Rows](#rows)
+3. [Residual, stated rather than hidden](#residual-stated-rather-than-hidden)
+4. [What the maintainer can do](#what-the-maintainer-can-do)
+
+
 Adversaries against this tool, not against the world. Rows are numbered MT1
 upward with no gaps, each carrying either a control or a named acceptance, and
 the test that measures it. `tools/docs_audit.py` fails on a gap or a count that

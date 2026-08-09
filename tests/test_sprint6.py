@@ -13,9 +13,14 @@ looked identical to a null result, and nothing re-probed it for two sprints
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
+import pytest
+
 from mavo.backfill import (
+    DirectoryBusy,
+    DirectoryLock,
     backfill,
     contiguity_gaps,
     fetch_page,
@@ -196,3 +201,54 @@ def test_the_lowest_id_on_disk_is_found_and_malformed_names_ignored(tmp_path: Pa
 def test_the_lowest_id_on_an_empty_directory_is_none(tmp_path: Path) -> None:
     # Not zero. There is no lowest id, which is different from a lowest id of 0.
     assert lowest_on_disk(tmp_path) is None
+
+
+def test_an_interrupted_run_reports_what_it_retrieved(tmp_path: Path) -> None:
+    # F46. Interruption is the sixth stop condition and the most common one in
+    # practice. Until it was named, a run that had retrieved 1150 pages reported
+    # a stack trace instead of saying so, and the operator could not tell from
+    # the output whether anything had landed.
+    def interrupt_after_two(_: float) -> None:
+        nonlocal calls
+        calls += 1
+        if calls >= 2:
+            raise KeyboardInterrupt
+
+    calls = 0
+    report = backfill(WalkingTransport(newest=1000), tmp_path, max_pages=50,
+                      delay_s=0.1, sleep=interrupt_after_two)
+    assert report.pages == 2
+    assert report.stopped_because == "interrupted by the operator after 2 page(s)"
+    assert len(report.written) == 2
+
+
+def test_the_lock_refuses_a_second_live_run(tmp_path: Path) -> None:
+    # F47. Two runs against one directory do not corrupt the corpus, but they
+    # double the request rate against a service whose tolerance is measured only
+    # over a burst.
+    held = DirectoryLock(tmp_path)
+    held.acquire(pid=os.getpid())
+    with pytest.raises(DirectoryBusy):
+        DirectoryLock(tmp_path).acquire(pid=os.getpid() + 1)
+    held.release()
+
+
+def test_the_lock_is_taken_over_from_a_dead_holder(tmp_path: Path) -> None:
+    # A lock a killed process left behind must not require a cleanup step the
+    # operator will not remember. Refusing forever is how lock files get deleted
+    # by reflex, which is how they stop protecting anything.
+    (tmp_path / ".backfill.lock").write_text("999999", encoding="utf-8")
+    DirectoryLock(tmp_path).acquire()
+    assert (tmp_path / ".backfill.lock").read_text(encoding="utf-8") == str(os.getpid())
+
+
+def test_a_corrupt_lock_file_does_not_block_a_run(tmp_path: Path) -> None:
+    (tmp_path / ".backfill.lock").write_text("not a pid", encoding="utf-8")
+    DirectoryLock(tmp_path).acquire()
+
+
+def test_progress_is_reported_as_it_goes(tmp_path: Path) -> None:
+    seen: list[tuple[int, int]] = []
+    backfill(WalkingTransport(newest=1000), tmp_path, max_pages=3,
+             delay_s=0, sleep=lambda _: None, progress=lambda p, i: seen.append((p, i)))
+    assert [pages for pages, _ in seen] == [1, 2, 3]

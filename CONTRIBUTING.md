@@ -3,6 +3,18 @@
 Invariants a change must not break. `make verify` enforces most of them; the rest
 are here because they are judgement rather than syntax.
 
+## Read these first, in this order
+
+1. `docs/FOUNDATIONS.md`. What the project rests on, and what would falsify each
+   assumption. A change that contradicts an assumption is not wrong, but it has
+   to say which one and why.
+2. `docs/DATA-FLOW.md`. What happens to a message. Read the last table first:
+   every stage that can lose information and how that loss is made visible.
+3. `docs/ARCHITECTURE.md`. Components, boundaries and the four dependency rules.
+4. `docs/METHODOLOGY.md`. The defect log. Forty-five entries, each with a class,
+   and most of them are variations on three or four classes that keep coming
+   back. It is the fastest way to learn what this repository is careful about.
+
 ## The one principle
 
 A claim the repository makes about itself is executable. If a change adds a

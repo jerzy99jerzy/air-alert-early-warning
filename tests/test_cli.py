@@ -140,3 +140,30 @@ def test_backfill_resume_on_an_empty_directory_says_so(
     main(["backfill", "--out", str(tmp_path / "fresh"), "--pages", "1", "--delay", "0",
           "--resume", "--stub", str(page)])
     assert "nothing on disk yet" in capsys.readouterr().out
+
+
+def test_backfill_refuses_a_directory_another_run_holds(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import os
+    out = tmp_path / "corpus"
+    out.mkdir()
+    # The parent process: alive, and not us. pid+1 is usually neither, and a
+    # lock naming a dead holder is taken over by design.
+    (out / ".backfill.lock").write_text(str(os.getppid()), encoding="utf-8")
+    page = tmp_path / "page.html"
+    page.write_text("<html></html>", encoding="utf-8")
+    assert main(["backfill", "--out", str(out), "--pages", "1", "--delay", "0",
+                 "--stub", str(page)]) == 6
+    assert "REFUSED" in capsys.readouterr().out
+
+
+def test_backfill_releases_the_lock_when_it_finishes(tmp_path: Path) -> None:
+    # A lock left behind by a clean exit is a lock the next run has to reason
+    # about, which is how a control becomes a nuisance and then gets deleted.
+    out = tmp_path / "corpus"
+    page = tmp_path / "page.html"
+    page.write_text("<html></html>", encoding="utf-8")
+    main(["backfill", "--out", str(out), "--pages", "1", "--delay", "0",
+          "--stub", str(page)])
+    assert not (out / ".backfill.lock").exists()
