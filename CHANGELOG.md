@@ -16,6 +16,27 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.11.2.0 - 2026-08-09
+
+**Documentation release, plus the check that would have caught it being wrong.**
+
+- `docs/reviews/0.11.1.0.md`. The external review that produced F61 to F63,
+  written to the convention every review session in this repository follows. It
+  records what was repaired, the one finding raised and deliberately left for a
+  sprint (T38, the border predicates that cannot fire on real input), four
+  findings left untouched because each is a measurement or an owner decision,
+  and what the review did not do. It describes 0.11.1.0 and is not updated
+  afterwards: a review is a record of a moment, not a living document.
+- **F64. A pin that nothing compared against the tree.** `STATUS.json` carries a
+  `documents` block, eleven checks read `STATUS.json`, and none of them read that
+  block against `docs/`. A document could be added unpinned and the gate would
+  still print `pins hold` — which is exactly what it did while this release's own
+  review document sat unpinned. The block looked like a check and was a sentence
+  in JSON. `docs_audit` now compares it against the tree in both directions.
+- The coverage figure quoted in the new review names the interpreter that
+  measured it, applying that review's own finding about environment-dependent
+  pins to its own numbers.
+
 ## 0.11.1.0 - 2026-08-09
 
 **External code review.** Three defects found by composing contracts rather than

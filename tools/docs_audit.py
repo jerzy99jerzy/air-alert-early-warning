@@ -221,6 +221,38 @@ def check_readme_links_resolve() -> list[str]:
     return problems
 
 
+def check_every_document_is_pinned(status: dict[str, object]) -> list[str]:
+    """Every document in the tree appears in the ``documents`` block, and vice versa.
+
+    The block was a hand-maintained list that nothing compared against the tree,
+    so a document could be added and be invisible to this gate: its version
+    marker could drift, or it could carry no marker at all, and every check here
+    would still pass. A pin nobody checks is the same shape as a README claim the
+    code does not implement, which is the one thing this repository says it will
+    not ship (F66). Raised by the reader of `docs/reviews/0.11.1.0.md` on the
+    release that added that very document.
+
+    Top-level documents are deliberately out of scope: they are versioned by the
+    release rather than by a marker of their own.
+    """
+    documents = status.get("documents")
+    if not isinstance(documents, dict):
+        return ["STATUS.json has no documents block"]
+    on_disk = {
+        str(path.relative_to(ROOT)) for path in sorted((ROOT / "docs").rglob("*.md"))
+    }
+    pinned = set(documents)
+    problems = [
+        f"{name} is in the tree and not pinned in STATUS.json"
+        for name in sorted(on_disk - pinned)
+    ]
+    problems += [
+        f"{name} is pinned in STATUS.json and not in the tree"
+        for name in sorted(pinned - on_disk)
+    ]
+    return problems
+
+
 def check_defect_count_is_pinned(status: dict[str, object]) -> list[str]:
     """The defect badge equals the count of F-entries in the methodology.
 
@@ -308,6 +340,7 @@ def main() -> int:
         + check_harness_catalogue(status)
         + check_cited_tests_exist()
         + check_readme_links_resolve()
+        + check_every_document_is_pinned(status)
         + check_defect_count_is_pinned(status)
         + check_statistics_match_the_tree(status)
         + check_measured_block_is_recomputed(status)

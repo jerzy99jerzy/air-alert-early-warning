@@ -6,7 +6,7 @@
 [![tests 173](https://img.shields.io/badge/tests-173-brightgreen)](tests/)
 [![coverage 96.78%](https://img.shields.io/badge/coverage-96.78%25-brightgreen)](Makefile)
 [![harness 12 attacks, 11 mutation-verified](https://img.shields.io/badge/harness-12%20attacks%2C%2011%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 46](https://img.shields.io/badge/defects%20logged-46-informational)](docs/METHODOLOGY.md)
+[![defects logged 47](https://img.shields.io/badge/defects%20logged-47-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)

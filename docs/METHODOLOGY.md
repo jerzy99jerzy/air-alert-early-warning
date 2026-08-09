@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.3
+Document:  docs/METHODOLOGY.md, version 2.4
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -142,6 +142,7 @@ repository has come to the mistake it was built after.
 | [F61](#f61-01110-a-timestamp-that-parses-cleanly-became-an-outage-one-layer-up) | 0.11.1.0 | A timestamp that parses cleanly became an outage one layer up |
 | [F62](#f62-01110-the-transport-would-read-the-filesystem-when-handed-the-wrong-string) | 0.11.1.0 | The transport would read the filesystem when handed the wrong string |
 | [F63](#f63-01110-a-duplicated-tag-in-the-map-resolved-by-file-order) | 0.11.1.0 | A duplicated tag in the map resolved by file order |
+| [F64](#f64-01120-a-pin-that-nothing-compared-against-the-tree) | 0.11.2.0 | A pin that nothing compared against the tree |
 
 ## Defect log
 
@@ -974,6 +975,33 @@ Class: **a key with multiple values, resolved by accident rather than reported**
 — the same class as F59, one layer earlier in the pipeline. Repaired with a
 refusal: `DuplicateTag` at load, before any resolution can happen.
 `tests/test_areas.py::test_f63_a_duplicate_tag_in_the_map_is_refused` holds it.
+
+
+### F64, 0.11.2.0. A pin that nothing compared against the tree
+
+`STATUS.json` carries a `documents` block naming every design document and its
+version, and eleven checks in `tools/docs_audit.py` read `STATUS.json`. None of
+them read this block against the tree. A document could be added and be entirely
+invisible to the gate: unpinned, or pinned at a version its own header no longer
+carried, and every check would still pass and print `pins hold`.
+
+**Why it survived.** The block looks like a check because it sits beside real
+ones. It was maintained by hand on every release that touched a document, and
+hand maintenance that happens to be correct is indistinguishable from a check,
+right up to the release where somebody forgets. This release is that release:
+`docs/reviews/0.11.1.0.md` was written, added, and not pinned, and the gate said
+`pins hold at 0.11.1.0`.
+
+Class: **a claim the repository makes about itself that is not executable**,
+which is the failure ENGINEERING.md section 0 exists to name. The block was a
+sentence in JSON.
+
+Repaired by comparing the block against `docs/**/*.md` in both directions: a
+document in the tree and not in the block fails, and a pin naming a document that
+no longer exists fails too, because a stale pin is a claim about a file nobody
+can read. Top-level documents stay out of scope deliberately: they are versioned
+by the release rather than by a marker of their own, and pretending otherwise
+would add four pins that mean nothing.
 
 
 ## Corpus measurements, 2026-08-09
