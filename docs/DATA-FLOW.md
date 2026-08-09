@@ -166,7 +166,7 @@ cannot be fixed quietly.
 | --- | --- | --- |
 | `ACTIVE` | An alert-start marker matched | |
 | `CLEAR` | An all-clear marker matched and no continuation marker did | |
-| `PARTIAL_CLEAR` | An area is both cleared and named in the continuation list, or a continuation list resolves to no area at all | resolves to CLEAR, is actionable |
+| `PARTIAL_CLEAR` | All-clear **and** continuation markers both matched | resolves to CLEAR, is actionable |
 | `UNKNOWN` | The source told us nothing about this area | resolves to CLEAR, is actionable |
 
 The partial check runs first and is decisive. A message carrying both markers is
@@ -350,8 +350,8 @@ project exists to attack.**
 | Transport | Content past 4 MB | `SourceUnavailable` | A truncated page would parse as a short one |
 | Page window | Messages beyond 20 between polls | `skipped=N`, or `unknown` | A skip would read as a quiet channel (MT12) |
 | Message regex | A page whose structure changed | `messages=0` | A restructured page would read as no news |
-| Classification | Every area but the first, in a message naming several | **Closed at 0.12.0.0.** One event per named area | 13.3% of comparable messages name two to eight areas. Each is now its own `ThreatEvent` (T37) |
-| Classification | The continuation list of an all-clear: areas where the alert is still running | **Closed at 0.12.0.0.** Read from the prose after the marker, stored with `AreaRole.CONTINUATION` | 5.2% of comparable messages carry one, naming 4,064 areas in the design window. The list is written in prose while the subject is written as a tag, which is why the tag path could not see it at all (T37, MT15) |
+| Classification | Every area but the first, in a message naming several | **Nothing. This loss is currently invisible** | 13.3% of comparable messages name two to eight areas, and only the first reaches an event (T37) |
+| Classification | The continuation list of an all-clear: areas where the alert is still running | **Nothing. This loss is currently invisible** | 5.2% of comparable messages carry one, naming 4,064 areas in the design window. The message says *still dangerous there* and nothing records it. For a report whose product is completeness this is the sharpest loss in this table (T37) |
 | Classifier | Any wording the table lacks | `unparsed` count, kept as text | A stale table would read as a quiet channel (F23) |
 | State layer | The difference between silence and contradiction | `UNKNOWN` against `PARTIAL_CLEAR` | An ambiguous all-clear would read as an all-clear (F26) |
 | Store | Nothing | | |

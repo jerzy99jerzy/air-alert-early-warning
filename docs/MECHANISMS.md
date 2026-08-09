@@ -394,7 +394,7 @@ sprint 6 and has not been taken.
 | --- | --- | --- |
 | `ACTIVE` | An alert-start marker matched | |
 | `CLEAR` | An all-clear marker matched and no continuation marker did | |
-| `PARTIAL_CLEAR` | One area both cleared and listed as still running, or a continuation list that resolves to no area | resolves to CLEAR, is actionable |
+| `PARTIAL_CLEAR` | Both an all-clear and a continuation marker matched | resolves to CLEAR, is actionable |
 | `UNKNOWN` | The source has told us nothing about this area | resolves to CLEAR, is actionable |
 
 **`is_clear` is affirmative, never a negation.** Written as a function rather

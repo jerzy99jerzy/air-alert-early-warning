@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.12.0.0",
+  "version": "0.12.2.0",
   "python_requires": ">=3.11",
   "shipped_sprints": [
     0,
@@ -26,9 +26,9 @@
     "docs/DATA-FLOW.md": "1.0",
     "docs/ARCHITECTURE.md": "2.0",
     "docs/MECHANISMS.md": "2.0",
-    "docs/METHODOLOGY.md": "2.5",
+    "docs/METHODOLOGY.md": "2.4",
     "docs/THREAT-MODEL.md": "2.2",
-    "docs/MVP.md": "3.1",
+    "docs/MVP.md": "3.2",
     "docs/DECISIONS.md": "2.1",
     "docs/COMPUTATION.md": "1.1",
     "docs/MOBILE.md": "1.2",
@@ -39,9 +39,9 @@
     "docs/CHANNEL.md": "1.2",
     "docs/reviews/0.10.1.0.md": "1.0",
     "docs/reviews/0.11.1.0.md": "1.0",
-    "docs/FEED-SPEC.md": "1.0"
+    "docs/FEED-SPEC.md": "1.3"
   },
-  "threat_model_rows": 15,
+  "threat_model_rows": 14,
   "harness_attacks": 13,
   "measured": {
     "tests_passing": 184,
@@ -75,7 +75,12 @@
     "messages_with_tag_but_no_prose_area": 9701,
     "share_of_messages_naming_one_area": 0.867,
     "messages_with_continuation_list": 2000,
-    "continuation_areas_discarded": 4064
+    "continuation_areas_discarded": 4064,
+    "open_data_catalogue_resources_searched": 1510768,
+    "open_data_catalogue_alerting_datasets_found": 29,
+    "open_data_catalogue_alerting_streams_found": 0,
+    "rcb_catalogue_resources": 4,
+    "rcb_catalogue_openness_level": 3
   },
   "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except classifier_hit_rate_on_real_messages, which is pinned by tests against real channel content; nothing here is a claim about the world",
   "corpus": {
@@ -97,14 +102,11 @@
     "package_files": 15,
     "test_lines": 2876,
     "test_files": 28,
-    "tool_lines": 1874,
+    "tool_lines": 1871,
     "tool_files": 8,
-    "documentation_lines": 9593,
+    "documentation_lines": 9616,
     "documentation_files": 32,
     "runtime_dependencies": 0
   },
-  "defects_logged": 49,
-  "partial_sprints": {
-    "8": "T37 and T38 delivered; T32 (border distance) outstanding, needs OSM geometry"
-  }
+  "defects_logged": 47
 }

@@ -111,11 +111,10 @@ each release.
 | `AlertState` | enum, 4 members | ACTIVE, CLEAR, UNKNOWN, PARTIAL_CLEAR |
 | `ThreatKind` | enum | MISSILE, DRONE, UNKNOWN |
 | `Provenance` | enum | measured, reported, inference, speculation |
-| `ThreatEvent` | frozen dataclass | area_id, oblast, state, kind, role, ts_source, ts_ingest, source_id, provenance |
+| `ThreatEvent` | frozen dataclass | area, state, kind, ts_source, ts_ingest, source_id, provenance |
 | `ThreatSource` | runtime-checkable Protocol | `source_id: str`, `poll() -> Sequence[ThreatEvent]` |
 | `is_clear`, `is_actionable` | predicates | Affirmative, never negations |
-| `AreaRole` | enum, 2 members | SUBJECT, CONTINUATION. Why an area appears in the message that named it (T37) |
-| `BORDER_OBLASTS` | frozenset | Oblast **slugs**, matched against `ThreatEvent.oblast`, never against `area_id` (T38) |
+| `BORDER_OBLASTS` | frozenset | The areas a crossing could originate from |
 
 **Imports:** standard library only. **Invariant:** no module here imports from
 `sources/`. The vocabulary cannot depend on who speaks it.
@@ -123,7 +122,7 @@ each release.
 ### `mavo/errors.py` (50 lines)
 
 **Owns** the refusal taxonomy. `SourceUnavailable`, `NaiveTimestamp`,
-`UnknownScenario`, `DuplicateTag`, `SchemaMismatch`. The two budget refusals left with the budget (D-014). **There is no warning type**, and adding one is a change this
+`UnknownScenario`. The two budget refusals left with the budget (D-014). **There is no warning type**, and adding one is a change this
 repository rejects rather than reviews.
 
 **Invariant:** `SourceUnavailable` is raised for reachability only. A content

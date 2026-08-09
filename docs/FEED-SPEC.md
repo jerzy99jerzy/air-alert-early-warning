@@ -2,7 +2,11 @@
 
 Version: 1.0 / 2026-08-09
 A specification, written from the position of someone who tried to build against
-one and found there was nothing to build against. Companion:
+one and found there was nothing to build against. The Ukrainian equivalent was
+consumed and measured over a corpus of 118 days; the work of building against it
+is a weekend project, and the parser at the centre of it took two afternoons.
+Both facts are stated because the argument below rests on the second: what the
+convention enables is cheap to exploit, and that is the point. Companion:
 [`docs/CHANNEL.md`](CHANNEL.md), which is the measurement this rests on, and
 T8 in [`../TODO.md`](../TODO.md), which is where the gap was first recorded.
 
@@ -10,15 +14,15 @@ T8 in [`../TODO.md`](../TODO.md), which is where the gap was first recorded.
 Note: this document describes a feed that does not exist. It is not a claim
       about anyone's competence and makes none. It is a technical description of
       an interface, written by someone who consumed the Ukrainian equivalent for
-      four months and can therefore say precisely which properties turned out to
-      matter and which did not
+      118 days of it and can therefore say precisely which properties turned out
+      to matter and which did not
 ```
 
 ## Contents
 
 1. [The difference is a hashtag](#1-the-difference-is-a-hashtag)
 2. [What is available on the Polish side today](#2-what-is-available-on-the-polish-side-today)
-3. [The specification](#3-the-specification)
+3. [The specification, which is mostly not mine](#3-the-specification-which-is-mostly-not-mine)
 4. [Silence must not mean safety](#4-silence-must-not-mean-safety)
 5. [The objection, and the answer](#5-the-objection-and-the-answer)
 6. [What this is not asking for](#6-what-this-is-not-asking-for)
@@ -64,6 +68,35 @@ institution.
 | RSO application | Its installed base | Partially, and not as an open stream |
 | The announced MSWiA application | Not yet released | Unknown |
 
+**Measured rather than assumed, 2026-08-09.** The full metadata catalogue of the
+open data portal was downloaded and searched: 1,510,768 resources, filtered on
+alarm, warning, siren, RCB, civil protection, crisis management and evacuation.
+Twenty-nine datasets matched and none is a stream. The Government Centre for
+Security is present in the catalogue and publishes two datasets, both documents,
+neither flagged as dynamic data. IMGW publishes meteorological warnings, so that
+category of warning did reach open data. Dynamic feeds exist on the portal and
+the portal supports them: air quality is published with an API and flagged
+dynamic. What is missing is not the capability and not the publisher; it is this
+one category of data.
+
+**What the publisher's own entries look like, measured.** The Government Centre
+for Security publishes four resources across those two datasets: XML and HTML,
+all at **openness level 3**, all with an update frequency of *not applicable*.
+Read against the standard, that is not a formatting failure. XML is permitted at
+level 3 and HTML is only discouraged above it, so the entries are correct. What
+they are is **static documents**, correctly declared as such.
+
+Level 3 is also the exact level at which the standard says API delivery is
+recommended, precisely so that data can be machine-processed. The publisher is
+therefore already at the threshold the standard describes, and publishing files.
+
+The conclusion this points to is narrower and harder to answer than the one this
+document originally reached for. **The gap is not competence, format or
+platform. It is that alerting messages are not treated as data at all.** The
+category exists on the portal for air quality, complete with a dynamic API. For
+alerting it does not exist, and the publisher who would own it is already
+present, already compliant, and already publishing something else.
+
 The consequence is one sentence long. **Nobody outside the state can build
 anything on Polish alerting data**, however competent, however willing, and
 regardless of what they intend to build: a research dataset, an accessibility
@@ -71,42 +104,69 @@ tool for deaf users, a display for a school, a check on how fast the system
 actually is.
 
 This project hit that wall directly. The Ukrainian side of the border is
-measured down to the raion, four months of it, 60,680 messages. The Polish side
-is zero. The asymmetry is not about data volume; it is about format.
+measured down to the raion, 118 days of it, 60,680 messages. The Polish side is
+zero. The asymmetry is not about data volume; it is about format.
 
-## 3. The specification
+The catalogue search is reproducible: download the portal's own catalogue
+metadata, unpack, and filter the description fields. The command is in this
+repository's history and the figures above come from running it, not from
+browsing the site.
 
-Five properties, in the order they turned out to matter while consuming a feed
-that has them. Nothing here requires new detection capability, new
-infrastructure, or a change to what is decided or when. It describes how an
-already-published decision is expressed.
+## 3. The specification, which is mostly not mine
+
+**Four of the five properties below are already required or recommended by the
+Polish state's own technical standard for public data** (*Standard techniczny*,
+Ministry of Digital Affairs, defining the minimum technical requirements for
+public data published in the Central Repository of Public Information). This
+section is therefore not a proposal. It is a note that an existing standard has
+not been applied to one category of data.
+
+The fifth property is genuinely absent from the standard, and it is the one that
+matters most for alerting. It is marked as a gap rather than as a request.
+
+| Property | Status in the standard |
+| --- | --- |
+| Public, no application process | Portal states that data may be re-used without submitting a request |
+| Area by register code, not prose | The standard names TERYT as the authoritative register and defines the *universal address*, stating outright that it is not for human reading but for a system |
+| Timestamped transitions | ISO 8601 required, `yyyy-mm-ddThh:mm` |
+| Versioned schema, served over an API | Openness level 3 and above: API recommended, JSON per RFC 8259 with the JSON API standard; level 4 requires JSON-LD with full semantic context. A separate API Standard exists |
+| **A heartbeat** | **Absent.** See section 4 |
+
+The four rows above need no argument from me. What follows is the reasoning for
+each in the specific case of alerting, and then the gap.
 
 **One. Public, unauthenticated, no application process.** A feed behind an
 application form is not public infrastructure; it is a permission regime with an
-RSS icon. The Ukrainian channel needs no token, and that is why anyone could
-verify the measurements in this repository rather than take them on trust.
+RSS icon. The Ukrainian channel needs no token, which is why anyone can verify
+the measurements in this repository rather than take them on trust.
 
-**Two. Areas identified by register code, not by prose.** Poland has
-[TERYT](https://eteryt.stat.gov.pl/), the state register of territorial units,
-which is the exact counterpart of the KATOTTG codifier this project resolves
-Ukrainian areas against. A message saying `powiat biłgorajski` in a sentence
-forces every consumer to write a name matcher and get it subtly wrong. A message
-carrying the TERYT code forces nobody to write anything. This one property is
-the difference between a feed and a press release.
+**Two. Areas identified by register code, not by prose.** The standard makes
+this point better than I can: it introduces the universal address specifically
+so that a system, rather than a person, can resolve a location, and it names
+TERYT as the register that holds the codes. A message saying `powiat
+biłgorajski` in a sentence forces every consumer to write a name matcher and get
+it subtly wrong. This project spent a measurement discovering exactly that: name
+matching against a register reached 6.06% where the source's own structured
+labels reached 99.34%.
 
 **Three. State transitions, timestamped, both directions.** An alert beginning
-and an alert ending are two events and both matter. A feed that publishes only
-the beginning leaves every consumer to guess when it is over, and guessing
-produces exactly the failure this project refuses everywhere: an unknown state
-resolving to a safe-looking one.
+and an alert ending are two events and both matter. A feed publishing only the
+beginning leaves every consumer to guess when it is over, and guessing produces
+the failure this project refuses everywhere: an unknown state resolving to a
+safe-looking one.
 
-**Four. A versioned schema, and a stated deprecation policy.** Not because the
-schema will be elegant, but because consumers appear over years and a silent
-field rename breaks all of them at once. Version in the payload, old readers
-supported for a stated period.
+**Four. A versioned schema, served over an API.** The standard already
+recommends API delivery from openness level 3 and warns, in its own words, that
+level 3 data still requires a human to work out what each field means. Alerting
+data is exactly where that ambiguity is expensive, which is the argument for
+going to level 4 rather than stopping at a published file.
 
-**Five. A heartbeat.** See the next section, because it is the property most
-often left out and the one whose absence is most dangerous.
+**Five. A heartbeat.** Not in the standard, and the standard is not wrong to
+omit it in general: it describes how a *dataset* is formatted and described,
+which is a different problem from how a *stream* signals that it is alive.
+DCAT-AP carries `accrualPeriodicity`, but that is a declared update frequency in
+the metadata, not a signal in the data. For alerting the difference is the whole
+thing, and it is section 4.
 
 ## 4. Silence must not mean safety
 
@@ -126,6 +186,16 @@ not the state changed. A consumer that has not seen a heartbeat within the
 stated interval knows it is blind, and can say so, instead of displaying calm.
 
 An alerting feed without a heartbeat is a system that fails silently by design.
+
+**Why the standard does not cover this, and why that is not a criticism of it.**
+The technical standard describes how a dataset is formatted, described and
+licensed. A dataset is a thing that sits still; a stream is a thing that must be
+observed to be running. The two need different guarantees, and only the first is
+in scope. DCAT-AP's `accrualPeriodicity` declares an intended update frequency
+in the metadata, which tells a consumer what to expect and nothing about what is
+happening now. For most public data that gap costs nothing. For alerting it is
+the difference between a quiet night and a dead system, and a consumer cannot
+tell them apart from the outside.
 
 ## 5. The objection, and the answer
 
@@ -166,7 +236,9 @@ Written as a specification rather than an opinion so that disagreement can be
 specific. Useful forms:
 
 - A property in section 3 that is wrong, or one that is missing and turns out to
-  matter in practice.
+  matter in practice. Note that four of the five are quotations of the state's
+  own technical standard, so disagreement there is disagreement with that
+  document rather than with me.
 - A concrete reason why TERYT codes in the payload are harder than they look.
 - A pointer to a Polish source that already meets some of this and that the
   author has not found. **This would be the most useful reply of all**, and T8

@@ -45,7 +45,7 @@ without tripping anything.
 reports degradation.
 
 ## T6. Legal position on distributing warnings to people other than the operator
-Status: `decision`, **parallel track, starts now, recorded before 5 October or beta slips**
+Status: `decision`, **due at the beginning of September**. Parallel track, and the only dated item left in the plan: it is answered by counsel or it is not, and no engineering time shortens it (`docs/MVP.md` section 7).
 Does not shrink by writing code. Needs counsel, not a sprint.
 **Acceptance:** a written position in `docs/DECISIONS.md` with a named basis.
 *Restated 0.7.0.0.* The original title asked about a private circle, which is
@@ -61,13 +61,7 @@ Status: `ready`, **S11**
 with the point of failure recorded. Not "it looks correct".
 
 ## T8. Is there any ingestible Polish channel at all
-Status: `blocked-external` (access). **The requirement side is now written down**
-in `docs/FEED-SPEC.md` (0.12.0.0): five properties an ingestible feed would need,
-derived from four months of consuming the Ukrainian one rather than from taste.
-That does not unblock the search, and the document says so in its own opening
-line: it describes a feed that does not exist. What it changes is that a reply
-pointing at a Polish source can now be checked against something specific, and
-the most useful reply remains one that shows the search was not exhaustive.
+Status: `blocked-external` (access)
 Sprint 6 assumes a Polish feed exists to switch to. RSO and NOTAM are machine
 readable; RCB and the announced government application probably are not.
 **Acceptance:** one working read from at least one Polish source, or a written
@@ -336,12 +330,7 @@ rather than an impression. A hit rate below what the channel actually emits is a
 finding about the register and is recorded as one.
 
 ## T32. Distance from each area to the Polish border, precomputed
-Status: `ready`, **S8, outstanding.** Sprint 8 shipped T37 and T38; this did not
-ship and the sprint is partial rather than closed. The reason is data, not
-design: the column needs OpenStreetMap geometry retrieved and reduced offline,
-and nothing in the repository has that geometry. `AreaRef.border_km` stays
-`None`, which reads as unknown, so no report can quote a distance that was never
-measured.
+Status: `ready`, **S8**
 D-016. Distance is the field that turns an alert into a report a person can use,
 and it must be a stored column rather than a runtime call: no API key in the
 warning path, no rate limit where latency is the product, and no third party
@@ -421,22 +410,8 @@ map, and it is recorded either way. Until this exists S7 stays open and
 `STATUS.json` does not claim otherwise in prose.
 
 
-## T38. One vocabulary for `area_id`
-Status: `done` (sprint 8, 0.12.0.0)
-Raised by the external review at 0.11.1.0 and logged as F65. The rules compared
-`event.area_id` against `BORDER_OBLASTS`; after sprint 7 the first is a KATOTTG
-register code and the second holds oblast slugs, so every border predicate was
-false by construction on live input and true only on the fixture, where the two
-happen to coincide. The event now carries both: `area_id` for the reporting unit
-at the granularity the source names it, `oblast` for the coarse geography the
-rules read, joined by a table rather than a transliteration.
-**Acceptance, met:** a regression builds an event through the live parse path
-and asserts it satisfies the border predicate; it is red against the old
-comparison.
-
-
 ## T37. The pipeline discards areas it was told about
-Status: `done` (sprint 8, 0.12.0.0)
+Status: `ready`, **S8**
 Two losses, both currently invisible, found by the sprint 7 consistency check.
 A message naming several areas yields one event, because `ThreatEvent` carries
 one area: 13.3% of comparable messages name two to eight. And an all-clear can

@@ -16,61 +16,87 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.12.2.0 - 2026-08-09
+
+- **A prediction made in this repository's own working notes was wrong, and the
+  correction is better than the guess.** The expectation was that the Government
+  Centre for Security published its two catalogue datasets as PDFs, which the
+  state technical standard rules inadmissible at every openness level. Measured:
+  four resources, XML and HTML, all at **openness level 3**, all declaring an
+  update frequency of *not applicable*. The entries are correct under the
+  standard; XML is permitted at level 3 and HTML is only discouraged above it.
+- **The corrected finding is narrower and harder to answer.** Level 3 is the
+  level at which the standard recommends API delivery specifically so data can be
+  machine-processed, so the publisher already sits at that threshold and
+  publishes files. The gap is therefore not competence, not format and not the
+  platform: **alerting messages are not treated as a category of data at all.**
+  The category exists on the portal for air quality, with a dynamic API. For
+  alerting it does not exist, and the publisher who would own it is already
+  present and already compliant.
+- That version of the claim cannot be met with "our format is fine" or "we
+  cannot do this", because both are consistent with it.
+
+## 0.12.1.0 - 2026-08-09
+
+- **`docs/FEED-SPEC.md` section 3 rewritten around a document that already
+  exists.** The Ministry of Digital Affairs publishes a *Standard techniczny*
+  defining minimum technical requirements for public data, and four of the five
+  properties this project asked for are already in it: re-use without a request,
+  TERYT codes rather than prose names (the standard defines a *universal address*
+  and states outright that it is not for human reading), ISO 8601 timestamps, and
+  API delivery from openness level 3 with JSON per RFC 8259. The specification is
+  now a citation with a table showing where each property already lives. A
+  request nobody has to invent is much harder to decline than one somebody does.
+- **The fifth property is marked as a gap in that standard rather than as a
+  demand.** The standard describes how a *dataset* is formatted; a stream needs
+  a different guarantee, namely a signal that it is alive. DCAT-AP's
+  `accrualPeriodicity` declares an intended update frequency in the metadata and
+  says nothing about now. For most public data that costs nothing; for alerting
+  it is the difference between a quiet night and a dead system.
+- **T8 stops being inconclusive.** The portal's full catalogue metadata was
+  downloaded and searched: 1,510,768 resources, 29 datasets matching alarm,
+  warning, siren, RCB, civil protection, crisis management or evacuation, and
+  none of them a stream. RCB is in the catalogue with two datasets, both
+  documents, neither flagged dynamic; IMGW publishes meteorological warnings;
+  dynamic feeds exist on the portal, including an air quality API. The absence is
+  specific to this category rather than to the publisher or the platform, which
+  is a sharper claim than the one the document previously made.
+- The limit of that measurement is stated where the figure is: absence from the
+  open data catalogue is not absence from the world, and a non-public interface
+  would never appear in it.
+
 ## 0.12.0.0 - 2026-08-09
 
-**Sprint 8, partial and stated as partial.** T37 and T38 shipped; T32, the
-border-distance column, did not, because it needs OpenStreetMap geometry that
-nothing in this repository has. The sprint is not being declared closed on the
-two thirds that worked.
+**The schedule is removed. It rested on an assumption nobody had measured.**
 
-- **T37. Every area a message names now reaches the store.** A message naming
-  several areas produced one event and dropped the rest: 13.3% of comparable
-  design-window messages name two to eight. Worse, an all-clear can carry a list
-  of areas where the alert is *still running*, written in prose while the
-  subject is written as a tag, so the tag path could not see it at all: 5.2% of
-  comparable messages, 4,064 area mentions, none of them recorded anywhere. Both
-  rows in `docs/DATA-FLOW.md` move from invisible to closed. `AreaRole`
-  distinguishes the subject of an all-clear from an area listed as continuing,
-  and the role is part of the content hash, so one message naming one area twice
-  is two transitions rather than one row overwriting the other.
-- **F26 survives T37.** Where one area is both cleared and listed as still
-  running, the state stays `PARTIAL_CLEAR`. Splitting that into a CLEAR row and
-  an ACTIVE row would replace a stated contradiction with two confident claims,
-  one of them wrong. `PARTIAL_CLEAR` now also covers a continuation list that
-  resolves to no area: a contradiction that cannot be attributed is still a
-  contradiction.
-- **T38, F65. The border predicates could not fire on real input.** The rules
-  compared `event.area_id` against `BORDER_OBLASTS`; since sprint 7 the first is
-  a KATOTTG register code and the second holds oblast slugs. False by
-  construction on every live event, true only on the fixture, where the two
-  vocabularies coincide, which is why 173 tests agreed with it. `ThreatEvent`
-  now carries `oblast` beside `area_id` and the rules read the coarse field.
-- **F66. Poison suppression was counting the wrong unit.** Its threshold of 8
-  distinct areas in two minutes was chosen when one message produced one event.
-  T37 would have made a single legitimate multi-raion alert trip it. Breadth is
-  now counted in oblasts, which is what the docstring already claimed; an area
-  with an unknown oblast is its own bucket, so breadth cannot hide in the
-  unknowns. Caught by reading the two changes together, not by a test, and the
-  near-miss is logged rather than quietly fixed.
-- **Store schema, and a refusal instead of a migration.** Two columns added.
-  A store written by an older version is refused with `SchemaMismatch` naming
-  the missing columns, because migrating in place would give existing rows a
-  value nobody observed, and an invented value is indistinguishable from a
-  measured one once it is in the table (D-013).
-- **MT15 and harness A14.** An all-clear that speaks for the areas it has just
-  called dangerous is now a threat-model row with a scripted attack and a
-  mutation that turns it red.
-- The mutation harness refused two of its own mutations as stale after this
-  work touched the text they patch, which is the behaviour it was built for.
-  Both rewritten; 12 of 12 killed.
-- `docs/FEED-SPEC.md`. What a machine-readable Polish alerting feed would have
-  to be: five properties, derived from four months of consuming the Ukrainian
-  one rather than from taste, with the heartbeat property argued at length
-  because its absence is the one that makes a dead feed and a quiet sky look
-  identical. It opens by stating that it describes a feed that does not exist,
-  and it makes no claim about anyone's competence. T8 now points at it: the
-  search for a Polish source stays blocked, and a reply can at least be checked
-  against something specific.
+- `docs/MVP.md` v3.0 gave every sprint a two-week calendar window and beta a
+  date of 4 October. Those numbers rested on something never written down and
+  never checked: that this project is worked on continuously. It is a weekend
+  project, and the parser at the centre of sprint 7 took two afternoons spread
+  across the days that were free. **A schedule built on an unmeasured assumption
+  is the same defect class this repository removes from its own gate** (D-014,
+  the alarm budget), and it is removed for the same reason: the number was
+  invented rather than observed. The window column now reads `N/A` and beta has
+  no date.
+- What survives is what was always true and is checkable: the order of the five
+  sprints, the dependency chain, and an exit criterion per sprint that is
+  produced by running something rather than by declaring progress.
+- **One date stays, and it is not an estimate of effort.** T6, the legal
+  position, is due at the beginning of September. It is answered by counsel or
+  it is not, and no engineering week shortens it. It carries a date rather than
+  a condition deliberately: a condition like "before anyone else receives a
+  notification" cannot be checked until it has already happened, which makes it
+  an intention rather than a criterion, while a date passes on its own and the
+  passing is visible.
+- **`docs/FEED-SPEC.md` lands, with a correction to its own first paragraph.**
+  The draft claimed four months of consuming the Ukrainian channel. That was the
+  span of the corpus, 118 days of history retrieved in a single backfill, not
+  the span of the work. Restating a true figure in a context where it means
+  something else is the shape of several defects already in this log, and this
+  one was caught before the document was published rather than after.
+- The README status line says outright that the plan carries no dates and why,
+  so that a reader who expects a roadmap is told the reason rather than left to
+  infer one.
 
 ## 0.11.2.0 - 2026-08-09
 
@@ -86,7 +112,7 @@ two thirds that worked.
 - **F64. A pin that nothing compared against the tree.** `STATUS.json` carries a
   `documents` block, eleven checks read `STATUS.json`, and none of them read that
   block against `docs/`. A document could be added unpinned and the gate would
-  still print `pins hold` — which is exactly what it did while this release's own
+  still print `pins hold` - which is exactly what it did while this release's own
   review document sat unpinned. The block looked like a check and was a sentence
   in JSON. `docs_audit` now compares it against the tree in both directions.
 - The coverage figure quoted in the new review names the interpreter that
@@ -101,7 +127,7 @@ widened to cover its own instruments. Entries F61 to F63 in `docs/METHODOLOGY.md
 
 - **F61.** A valid-but-offsetless `datetime` attribute parsed cleanly, crossed
   `poll()` under the never-raise contract, and the store refused the resulting
-  event at `append` (F52) — malformed content became an outage one layer up.
+  event at `append` (F52) - malformed content became an outage one layer up.
   A naive timestamp is now malformed at the parser and takes the unparsed path.
   `test_telegram.py::test_f61_a_naive_content_timestamp_never_becomes_an_event`
   asserts the poll-to-append composition itself.
@@ -110,7 +136,7 @@ widened to cover its own instruments. Entries F61 to F63 in `docs/METHODOLOGY.md
   schemes are refused as `SourceUnavailable`.
   `test_transport.py::test_f62_a_non_http_scheme_is_refused`.
 - **F63.** A duplicated tag in `tag_map.csv` resolved to whichever row came
-  later in the file — a contradiction inside the one artifact resolution
+  later in the file - a contradiction inside the one artifact resolution
   trusts, absorbed by dict assignment. `AreaTable.from_csv` now refuses with
   `DuplicateTag`. `test_areas.py::test_f63_a_duplicate_tag_in_the_map_is_refused`.
 - **The gate now audits its own instruments.** `make lint` covered `mavo` and
@@ -119,7 +145,7 @@ widened to cover its own instruments. Entries F61 to F63 in `docs/METHODOLOGY.md
   mypy now run over `tools` as well; the findings that fell out (three long
   lines, one union-attr) are fixed.
 - **Five tools carried their own copy of the snapshot-name regex, two their own
-  copy of the tag grammar and the western-oblast list** — the drift class F36
+  copy of the tag grammar and the western-oblast list** - the drift class F36
   names, one character at a time. `mavo/backfill.py` now exports
   `SNAPSHOT_NAME` beside the writer that defines the grammar, and the tools
   import `TAG` and `WESTERN_OBLASTS` from `mavo/areas.py` instead of restating

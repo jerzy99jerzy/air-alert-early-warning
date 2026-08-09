@@ -6,7 +6,7 @@
 [![tests 184](https://img.shields.io/badge/tests-184-brightgreen)](tests/)
 [![coverage 96.79%](https://img.shields.io/badge/coverage-96.79%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 49](https://img.shields.io/badge/defects%20logged-49-informational)](docs/METHODOLOGY.md)
+[![defects logged 47](https://img.shields.io/badge/defects%20logged-47-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -33,7 +33,7 @@ import namespace is `mavo` because it must be unique rather than descriptive. Th
 codename lives in documentation and conversation. Stated here rather than left
 implicit, because that is where the inconsistency otherwise lives.
 
-Status: pre-alpha, five sprints from beta on the plan in `docs/MVP.md` (beta target 18 October 2026). Sprints 0 to 6 shipped. A live Telegram adapter is wired;
+Status: pre-alpha, five sprints from beta on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate. Sprints 0 to 6 shipped. A live Telegram adapter is wired;
 measured against real channel content its classifier scored **0 of 20**, and the
 failure is pinned as assertions. The redesign waits for a corpus rather than a
 schedule (D-011), because fitting to the twenty messages in hand would repeat
@@ -301,8 +301,8 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | --- | --- | --- |
 | Package `mavo/` | 15 | 2,788 |
 | Tests | 28 | 2,876 |
-| Tools | 8 | 1,874 |
-| Documentation | 32 | 9,593 |
+| Tools | 8 | 1,871 |
+| Documentation | 32 | 9,616 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -315,9 +315,9 @@ confidence interval attached.
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
 | Tests | 184, of which 13 are scripted attacks |
 | Coverage | 96.79% against a floor of 95, a ratchet that is never lowered |
-| Mutation-verified controls | 12 of 13 attacks; the thirteenth is printed as unverified on every run |
-| Threat-model rows | 15, each with a control or a named acceptance |
-| Defects logged with their class | 49, the count pinned against the log itself |
+| Mutation-verified controls | 12 of 13 attacks; the twelfth is printed as unverified on every run |
+| Threat-model rows | 14, each with a control or a named acceptance |
+| Defects logged with their class | 47, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 17 |
 | Releases | 30, of which 19 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
@@ -331,12 +331,12 @@ confidence interval attached.
 | [**`docs/FOUNDATIONS.md`**](docs/FOUNDATIONS.md) | **Start here to contribute.** The observations and assumptions everything rests on, each with its provenance label and what would falsify it |
 | [`docs/DATA-FLOW.md`](docs/DATA-FLOW.md) | The data architecture: one message from byte to verdict, every transformation, and a table of exactly where information can be lost |
 | [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) | What may be claimed, the defect log, and the probes that were run rather than read |
-| [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) | MT1 to MT15, each with a control or a named acceptance and the test that measures it |
+| [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) | MT1 to MT14, each with a control or a named acceptance and the test that measures it |
 | [`docs/MECHANISMS.md`](docs/MECHANISMS.md) | Every mechanism with its rejected alternative |
 | [`docs/COMPUTATION.md`](docs/COMPUTATION.md) | The statistical machinery the thesis stands on, with its stated weaknesses |
 | [`docs/MOBILE.md`](docs/MOBILE.md) | The notification channel: technology choice, phases, and what gates distribution |
+| [`docs/FEED-SPEC.md`](docs/FEED-SPEC.md) | What a machine-readable Polish alerting feed would have to be, written from consuming the Ukrainian one |
 | [`docs/CHANNEL.md`](docs/CHANNEL.md) | What the source actually emits, measured, and the join to the state register |
-| [`docs/FEED-SPEC.md`](docs/FEED-SPEC.md) | What a machine-readable Polish alerting feed would have to be, and why the gap is format rather than information. Describes a feed that does not exist |
 | [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) | The durable run log and how a cycle is watched. Plan, not built |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Egress inventory, endpoint identity, containers, and where the daemon lives. Plan and open decisions |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The infrastructure architecture: components, boundaries, dependency rules, process shape |
