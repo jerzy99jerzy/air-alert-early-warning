@@ -126,14 +126,24 @@ layer joins it to alerts by area and time window rather than reading it off the
 alert.
 
 ## T17. The fourth state: a partial all-clear
-Status: `ready`
+Status: `done` (sprint 5, 0.4.0.0)
+**Acceptance met:** `AlertState.PARTIAL_CLEAR` exists, `classify_state` returns
+it for a message carrying both an all-clear and a continuation marker, and
+`test_sprint5.py` asserts it never resolves to CLEAR or to actionable. The lint
+behind the README claim enumerates the enum, so a fifth state is covered on the
+day it is added.
+Original text:
 F26. "Відбій тривоги... тривога ще триває у:" is an all-clear that says the alert
 continues. `AlertState` has no member for it.
 **Acceptance:** a partial all-clear is a distinct state, and a test asserts it
 never resolves to CLEAR.
 
 ## T18. Detect a skipped message window
-Status: `ready`
+Status: `done` (sprint 5, 0.4.0.0)
+**Acceptance met:** consecutive polls compare post ids and report the skipped
+count; where it cannot be measured, on a first poll or a page without ids, it is
+reported as unknown rather than zero. MT12 and harness A11.
+Original text:
 F27. The page serves roughly the last twenty messages. During a mass alert the
 channel emits more than that in a short period, and a skipped message leaves no
 trace.
@@ -141,7 +151,11 @@ trace.
 than inferred from silence.
 
 ## T19. Build the real-message corpus, forward in time
-Status: `ready`, **has a window**
+Status: `ready`, **has a window, and is now the critical path**
+Sprint 5 made the collection trustworthy (T18) and deliberately did not redesign
+the classifier without it (D-011). Nothing else in the backlog moves until this
+runs, because the redesign, the gazetteer scope and the means-message model all
+read from it.
 The sprint-5 classifier redesign needs a week of real channel content, and the
 page is a ~20-message window (F27), so the corpus cannot be reconstructed later;
 it can only be collected from now on. Twenty messages from twenty minutes of one

@@ -48,14 +48,22 @@ def test_a3_one_fabricated_alert_cannot_raise_an_alarm() -> None:
 
 
 def test_a4_perfect_recall_does_not_buy_past_the_alarm_budget() -> None:
-    """MT4. Attention exhaustion is refused even by a rule that never misses."""
+    """MT4. Attention exhaustion is refused even by a rule that never misses.
+
+    F38. The earlier table failed the gate on association as well as on alarm
+    rate, and the assertion looked for the substring "alarm rate", which the
+    *passing* reason also contains. Both halves were satisfiable with the alarm
+    budget disabled. The table now clears recall and association, so alarm rate
+    is the only condition left to fail, and the assertion names the failure.
+    """
     assessment = assess_rule(
-        "exhauster", Contingency(a=8, b=600, c=0, d=100), observation_weeks=100
+        "exhauster", Contingency(a=20, b=200, c=0, d=800), observation_weeks=100
     )
     verdict = gate(assessment)
     assert assessment.recall == 1.0
+    assert assessment.p_value < 0.05, "the table must clear association, or this proves nothing"
     assert verdict.passes is False
-    assert any("alarm rate" in reason for reason in verdict.reasons)
+    assert any("exceeds" in reason for reason in verdict.reasons)
 
 
 def test_a5_budget_cannot_be_spent_twice() -> None:
@@ -115,19 +123,25 @@ def test_a9_hostile_bodies_to_the_live_adapter_do_not_raise() -> None:
     from mavo.sources.telegram import TelegramChannelSource
     from mavo.transport import StubTransport
 
-    txt = "<div class='tgme_widget_message_text'>"
+    # F39. These were single-quoted, and the page serves double quotes, so the
+    # message regex matched nothing and every hostile body was absorbed without
+    # the parser ever seeing it. The attack passed by not arriving.
+    txt = '<div class="tgme_widget_message_text js-message_text">'
     hostile = [
         "",
         "not html",
-        f"<time datetime='nonsense'></time>{txt}Львів тривога</div>",
+        f'<time datetime="nonsense"></time>{txt}Львів тривога</div>',
         f"{txt}{'А' * 80_000}</div>",
         f"{txt}\x00\x01\x02</div>",
-        f"<time datetime='2026-09-01T21:00:00+00:00'></time>{txt}wording nobody anticipated</div>",
+        f'<time datetime="2026-09-01T21:00:00+00:00"></time>{txt}wording nobody anticipated</div>',
     ]
+    reached = 0
     for body in hostile:
         source = TelegramChannelSource(StubTransport(body))
         assert source.poll() is not None
         assert source.report.parsed <= source.report.messages
+        reached += source.report.messages
+    assert reached > 0, "no hostile body reached the parser; this attack proves nothing"
 
 
 def test_a10_an_unreachable_source_is_not_a_quiet_one() -> None:
@@ -138,3 +152,41 @@ def test_a10_an_unreachable_source_is_not_a_quiet_one() -> None:
 
     with pytest.raises(SourceUnavailable):
         TelegramChannelSource(FailingTransport()).poll()
+
+
+def test_a11_a_skipped_window_cannot_pass_as_a_quiet_channel() -> None:
+    """MT12. A mass alert overflows the page; the skip must be observable.
+
+    Two failure shapes in one attack. Messages that pass between polls are
+    counted, and a page that carries no post ids reports unknown rather than
+    zero, because losing the observable must not look like observing calm.
+    """
+    from mavo.sources.telegram import TelegramChannelSource
+    from mavo.transport import StubTransport
+
+    def page(ids: list[int]) -> str:
+        txt = '<div class="tgme_widget_message_text js-message_text">'
+        return "".join(
+            f'<div class="tgme_widget_message" data-post="air_alert_ua/{post}">'
+            f'<time datetime="2026-09-01T21:00:00+00:00"></time>'
+            f"{txt}Львівська область<br/>Повітряна тривога</div></div>"
+            for post in ids
+        )
+
+    source = TelegramChannelSource(StubTransport(page([500, 501])))
+    source.poll()
+    source.transport = StubTransport(page([560, 561]))
+    source.poll()
+    assert source.report.skipped == 58, "a skipped window passed as continuity"
+    assert source.report.gap_is_known is True
+
+    # F40. The first version of this attack asserted unknown only for a page
+    # with no ids, which `_window` answers before reaching the code that decides
+    # unknown-versus-zero. The first-poll case is the one that governs it.
+    fresh = TelegramChannelSource(StubTransport(page([700, 701])))
+    fresh.poll()
+    assert fresh.report.skipped is None, "a first poll invented a baseline it does not have"
+
+    blind = TelegramChannelSource(StubTransport("<html>no post ids</html>"))
+    blind.poll()
+    assert blind.report.skipped is None, "an unmeasurable gap reported as zero"

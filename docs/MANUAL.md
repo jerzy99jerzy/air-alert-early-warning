@@ -164,7 +164,7 @@ coverage gap as a policy with a hole, not as a policy with good numbers.
 ### 4.4 `mavo collect` — PARTIAL
 
 Polls the public Telegram channel once and reports what it understood. It does
-not yet write to the store; that lands with continuous collection in sprint 5.
+not yet write to the store; that lands with continuous collection in sprint 6.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
@@ -173,8 +173,16 @@ not yet write to the store; that lands with continuous collection in sprint 5.
 
 ```
 mavo collect --stub tests/fixtures/channel.html
-messages=3 parsed=2 unparsed=1 latency=0.001s
+messages=3 parsed=2 unparsed=1 skipped=unknown latency=0.001s
 ```
+
+**`skipped` is unknown, not zero, and the difference is the point.** The channel
+page serves a window of roughly the last twenty messages, so during a mass alert
+more than twenty can pass between two polls and the extras leave no trace. Post
+ids make a skip observable, and consecutive polls of the same source report how
+many passed unseen. This command builds a fresh source on every invocation, so
+it has no previous poll to compare against and says so; the count becomes a
+measurement under continuous collection, which holds the source open.
 
 **`unparsed` is the number to watch.** Messages that match no pattern are counted
 and printed, never dropped. A rising count means the pattern table is drifting
@@ -188,7 +196,7 @@ The state markers were correct (15 of 20), the means markers partly correct (4 o
 and hromadas while the table was keyed on oblasts.
 
 So this command currently reports `parsed=0` against live content, and that is
-the honest state rather than a bug to be surprised by. The redesign is sprint 5;
+the honest state rather than a bug to be surprised by. The redesign is sprint 6;
 see F23 to F27 in `docs/METHODOLOGY.md`. Until then, `--stub` against the bundled
 fixture is the only path that parses anything.
 
@@ -200,12 +208,12 @@ Exit codes:
 | 3 | the source was unreachable. Distinct from reachable and quiet |
 | 4 | `--save-raw` was requested and the snapshot could not be written. Loud rather than silent, because a snapshot that quietly fails to land is a quiet loss of exactly the evidence the redesign needs |
 
-### 4.5 `mavo watch` — NOT BUILT (sprint 6)
+### 4.5 `mavo watch` — NOT BUILT (sprint 7)
 
 Will run the decision policy continuously and emit to an output channel. Until
 shadow mode has run its full window, this command will refuse to send anything.
 
-## 5. Interpreting an alarm — NOT BUILT (sprint 6)
+## 5. Interpreting an alarm — NOT BUILT (sprint 7)
 
 This section is deliberately empty. No alarm has ever been produced by this tool,
 no threshold has been calibrated against real data, and writing guidance for a
@@ -235,6 +243,12 @@ wrong or silent upstream. Do not read a two-source agreement as confirmation. Th
 is why the ADS-B channel matters: it is the only planned input that observes
 independently.
 
+**The page is a window, not a feed.** The channel page carries roughly the last
+twenty messages. A poll interval comfortable at rest can skip messages during a
+mass alert, which is exactly when it matters. `mavo collect` reports how many
+passed unseen, and reports `unknown` rather than `0` when it has no baseline to
+measure against. Do not read `skipped=unknown` as `skipped=0`.
+
 **Feed latency.** The store records both the source timestamp and the ingest
 timestamp because the difference consumes the warning budget directly. In the
 missile regime the whole budget is about six minutes, so a feed that publishes
@@ -249,8 +263,14 @@ three minutes late halves the product.
 | `mavo policy --allocation demand` exits 1 | Measured demand exceeds the total budget | This is the designed answer, not a fault. Demote a regime |
 | Store grows on every poll | Content hash changed | Check that `ts_ingest` is still excluded from the hash |
 | A metric prints `unknown` | The quantity is genuinely undefined | Do not substitute zero. Find out why it is undefined |
+| `harness-mutation` reports an attack PASSED | A control was disabled and the attack guarding it stayed green | The attack does not measure its control. Fix the attack, not the mutation. Three of these were found on the tool's first run |
+| `harness-mutation` reports a stale mutation | The code it substitutes has been rewritten | The attack is unverified until the mutation is rewritten against the new shape |
+| `docs-audit` cites a test that does not exist | A document names a test that was renamed or never written | Fix the citation or write the test. A threat row naming a missing test is an unmeasured control |
 
-Sections for live-collection failures will be written when live collection exists.
+Live collection exists in one direction only: `mavo collect` fetches and parses
+on demand, and there is no continuous collector yet, so its failure modes are the
+rows above plus the exit codes in section 4.4. Sections for the continuous
+collector will be written when it exists, in sprint 6.
 
 ## 8. Reporting a problem — NARRATIVE
 

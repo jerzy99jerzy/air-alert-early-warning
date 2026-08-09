@@ -107,7 +107,14 @@ def _cmd_collect(args: argparse.Namespace) -> int:
         print(f"snapshot={snapshot}")
     report, _ = probe(StubTransport(body))
     print(f"messages={report.messages} parsed={report.parsed} "
-          f"unparsed={report.unparsed_count} latency={fetch_s:.3f}s")
+          f"unparsed={report.unparsed_count} {report.window_line()} "
+          f"latency={fetch_s:.3f}s")
+    if not report.gap_is_known:
+        # One-shot by construction: this command builds a fresh source, so there
+        # is no previous poll to compare ids against. Continuous collection holds
+        # the source open and the count becomes a measurement (sprint 6).
+        print("NOTE: skipped is unknown, not zero. A single poll has no baseline "
+              "to measure a skipped window against.")
     for sample in report.unparsed[:5]:
         print(f"  unparsed: {sample}")
     if report.unparsed_count:

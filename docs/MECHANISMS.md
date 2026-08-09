@@ -53,3 +53,36 @@ deliberately excludes ingest time. A feed polled every thirty seconds repeats an
 unchanged transition constantly; without this the log grows without bound and the
 replay stops reconstructing the past, which would silently break every backtest
 built on it.
+
+## Four states, because three could not hold a contradiction
+
+A three-state model has ACTIVE, CLEAR and UNKNOWN, and UNKNOWN carries the whole
+weight of "we do not know". Real channel content produced a case it cannot hold:
+a message announcing an all-clear for an area and saying in the same message that
+the alert continues there.
+
+Folding that into CLEAR is wrong in the dangerous direction. Folding it into
+UNKNOWN is wrong in a subtler one: UNKNOWN means the source told us nothing, and
+this source told us two things that disagree. A contradiction is evidence about
+the source, and evidence discarded is evidence that cannot later be counted.
+`PARTIAL_CLEAR` keeps the two distinguishable. Neither resolves to CLEAR and
+neither is actionable for an alarm.
+
+## The window gap, and why unknown is not zero
+
+The channel page serves roughly the last twenty messages. At rest a thirty-second
+poll sees every one; during a mass alert the channel can emit more than twenty
+between two polls, and the extras are simply gone. Nothing downstream would
+notice, because a message that was never fetched and a message that was never
+sent produce identical silence.
+
+Post ids make the difference observable. Consecutive polls compare the lowest id
+of this page against the highest id of the last, and the difference is the number
+that passed unseen.
+
+The load-bearing part is what happens when that cannot be computed. On a first
+poll there is no previous highest id, and on a page carrying no ids there is
+nothing to compare. Both report `unknown`, never `0`. Zero is a measurement
+meaning "nothing was missed"; printing it when nothing was measured would make an
+unmonitored window indistinguishable from a monitored quiet one, which is the
+same defect as UNKNOWN resolving to CLEAR, one layer out.

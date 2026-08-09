@@ -1,4 +1,4 @@
-"""Behaviour of the event schema and the tri-state."""
+"""Behaviour of the event schema and its four alert states."""
 
 from __future__ import annotations
 

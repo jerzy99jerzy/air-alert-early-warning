@@ -163,7 +163,7 @@ discovered later.
 **Which surface is upstream of which is not established.** The working model,
 that the channel feeds the APIs, is an inference from public statements, not a
 measurement. The correlation conclusion holds under any internal topology; the
-relative latency of channel versus APIs does not, and is measured in sprint 5
+relative latency of channel versus APIs does not, and is measured in sprint 6
 rather than assumed.
 
 **What would change this.** Either service moving to its own independent
@@ -171,3 +171,29 @@ acquisition; the ADS-B channel landing as a genuinely independent observation
 (T14); or a Polish source with a stated availability commitment (T8), any of
 which would demote this from an accepted single point of failure to one input
 among several.
+
+## D-011. The classifier redesign waits for the corpus, not for the schedule
+Date: 2026-08-09. Status: adopted
+
+**Decision.** Sprint 5 was scheduled as the pattern-table redesign and did not
+run it. The redesign waits until at least a week of real channel content exists
+(T19). Sprint 5 instead built the parts of the source layer that determine
+whether that content, once collected, can be trusted: the fourth state and
+window-gap detection.
+
+**Reasoning.** The table can only be rewritten against observed content, and the
+only content in hand is twenty messages from twenty minutes of one evening,
+covering four eastern oblasts and no western one. Fitting to it would reproduce
+F23 at a smaller scale, which F28 already refused once. Meanwhile the corpus has
+a property the code does not: it can only be collected forward in time, because
+the page is a twenty-message window. A week spent redesigning against a sample
+is a week the corpus is not being collected, and an undetected skip during a
+mass alert would put holes in it that nothing downstream could see.
+
+**What would change this.** Seven consecutive days of snapshots with gap
+statistics, split into a design window and a holdout window. A gazetteer arriving
+sooner would change what the redesign can attempt but not when it should start.
+
+**What this costs.** The alarm tier cannot ship in September either way, because
+border crossings run at two to four a year and no four-week window validates
+recall. The schedule in `docs/MVP.md` is amended rather than quietly slipped.

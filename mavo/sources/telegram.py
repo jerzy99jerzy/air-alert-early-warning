@@ -31,6 +31,11 @@ _MESSAGE = re.compile(
     r'<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>',
     re.S,
 )
+# F27. The page serves a window of roughly twenty messages, so a poll interval
+# that is comfortable at rest can skip messages during a mass alert. The post id
+# is the only thing that makes a skip observable; without it a gap and a quiet
+# channel are the same picture.
+_POST_ID = re.compile(r'data-post="[^"/]+/(\d+)"')
 _TAG = re.compile(r"<[^>]+>")
 _ENTITY = {"&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "<br/>": "\n"}
 
@@ -48,6 +53,11 @@ AREAS: dict[str, str] = {
 START_MARKERS = ("повітряна тривога", "оголошено тривогу")
 CLEAR_MARKERS = ("відбій тривоги", "відбій повітряної тривоги")
 
+# F26. An all-clear that says the alert continues. The channel emits this as a
+# yellow message; reading it as CLEAR would be actively wrong, and reading it as
+# UNKNOWN would discard the fact that the source spoke.
+CONTINUES_MARKERS = ("тривога ще триває", "тривога триває")
+
 KIND_MARKERS: dict[str, ThreatKind] = {
     "балістик": ThreatKind.MISSILE,
     "ракет": ThreatKind.MISSILE,
@@ -64,16 +74,36 @@ class ParseReport:
 
     Unparsed messages are counted rather than discarded, because a silent drop
     turns a stale pattern table into an apparently quiet channel.
+
+    ``skipped`` is the number of messages that passed between this poll and the
+    previous one without being seen. **None means unknown, never zero.** It is
+    unknown on the first poll of a source, because there is no baseline to
+    measure against, and on any page that carries no post ids. Printing zero in
+    either case would be the flattering default this project exists to refuse.
     """
 
     messages: int = 0
     parsed: int = 0
     unparsed: tuple[str, ...] = field(default_factory=tuple)
+    first_id: int | None = None
+    last_id: int | None = None
+    skipped: int | None = None
 
     @property
     def unparsed_count(self) -> int:
         """How many messages matched no pattern."""
         return len(self.unparsed)
+
+    @property
+    def gap_is_known(self) -> bool:
+        """Whether the skipped count is a measurement rather than an absence."""
+        return self.skipped is not None
+
+    def window_line(self) -> str:
+        """One line describing the window, with unknown printed as unknown."""
+        if self.skipped is None:
+            return "skipped=unknown"
+        return f"skipped={self.skipped}"
 
 
 def _strip(html: str) -> str:
@@ -90,6 +120,30 @@ def _parse_timestamp(raw: str) -> datetime | None:
         return None
 
 
+def classify_state(text: str) -> AlertState | None:
+    """Map one message to a state, or None when no state marker is present.
+
+    Split out of ``classify`` in sprint 5 so the state layer can be measured
+    independently of the area layer, which currently matches nothing (F23). It
+    was the one layer of three that was already correct on real content, and it
+    was only testable through a conjunct that fails.
+
+    The partial check runs first and is decisive. A message carrying both an
+    all-clear marker and a continuation marker is a contradiction, and the
+    weaker reading has to win: a state that means "we were told the alert
+    continues" must never be reachable from the branch that means "clear".
+    """
+    lowered = text.lower()
+    has_clear = any(marker in lowered for marker in CLEAR_MARKERS)
+    if has_clear and any(marker in lowered for marker in CONTINUES_MARKERS):
+        return AlertState.PARTIAL_CLEAR
+    if has_clear:
+        return AlertState.CLEAR
+    if any(marker in lowered for marker in START_MARKERS):
+        return AlertState.ACTIVE
+    return None
+
+
 def classify(text: str) -> tuple[str, AlertState, ThreatKind] | None:
     """Map one message to an area, a state and a means. None when nothing matches.
 
@@ -103,11 +157,8 @@ def classify(text: str) -> tuple[str, AlertState, ThreatKind] | None:
     if area is None:
         return None
 
-    if any(marker in lowered for marker in CLEAR_MARKERS):
-        state = AlertState.CLEAR
-    elif any(marker in lowered for marker in START_MARKERS):
-        state = AlertState.ACTIVE
-    else:
+    state = classify_state(text)
+    if state is None:
         return None
 
     kind = next(
@@ -126,6 +177,25 @@ class TelegramChannelSource:
         self.transport = transport
         self.url = url
         self.report = ParseReport()
+        self._last_id: int | None = None
+
+    def _window(self, body: str) -> tuple[int | None, int | None, int | None]:
+        """Post-id bounds of this page and how many messages were skipped.
+
+        Returns ``None`` for the skipped count whenever it cannot be measured
+        rather than assuming continuity. The two cases are a first poll, which
+        has no baseline, and a page without post ids, which is what a hostile or
+        restructured page looks like.
+        """
+        ids = sorted(int(found) for found in _POST_ID.findall(body))
+        if not ids:
+            return None, None, None
+        first, last = ids[0], ids[-1]
+        skipped: int | None = None
+        if self._last_id is not None:
+            skipped = max(0, first - self._last_id - 1)
+        self._last_id = max(last, self._last_id or last)
+        return first, last, skipped
 
     def poll(self) -> Sequence[ThreatEvent]:
         """Fetch and parse. Never raises on content, only on an unreachable source.
@@ -136,6 +206,7 @@ class TelegramChannelSource:
         """
         body = self.transport.fetch(self.url)
         now = datetime.now(UTC)
+        first_id, last_id, skipped = self._window(body)
 
         events: list[ThreatEvent] = []
         unparsed: list[str] = []
@@ -163,7 +234,12 @@ class TelegramChannelSource:
             )
 
         self.report = ParseReport(
-            messages=len(found), parsed=len(events), unparsed=tuple(unparsed)
+            messages=len(found),
+            parsed=len(events),
+            unparsed=tuple(unparsed),
+            first_id=first_id,
+            last_id=last_id,
+            skipped=skipped,
         )
         return events
 

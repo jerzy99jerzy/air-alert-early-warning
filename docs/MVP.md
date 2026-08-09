@@ -16,10 +16,10 @@ budget, and the median lead time on any true positive in that window is recorded
 | Blocker | Type |
 | --- | --- |
 | alerts.in.ua API token | **access**, application submitted, one follow-up ~20 Aug. No longer on the critical path: gates cross-source comparison and API history (T10), not ingestion |
-| Live feed latency measurement | engineering. Unblocked by sprint 4: the Telegram adapter reaches the shared upstream without a token. First measurement owned by sprint 5 |
+| Live feed latency measurement | engineering. Unblocked by sprint 4: the Telegram adapter reaches the shared upstream without a token. First measurement owned by sprint 6 |
 | Regime split, missile and drone paths | engineering, **done** (sprint 3, D-009: missile alarms, drone demoted) |
-| Working classifier against real channel content | engineering. The shipped table scored 0 of 20 (F23); redesign is sprint 5 and needs the corpus (T19) |
-| Signal output channel | engineering (sprint 6) |
+| Working classifier against real channel content | engineering. The shipped table scored 0 of 20 (F23); redesign is sprint 6 and needs the corpus (T19), which is now the critical path |
+| Signal output channel | engineering (sprint 7) |
 
 *Amended 2026-08-08 (0.3.2.0).* The original table gated latency measurement on
 the token, which sprint 4 made false and this document did not follow. Recorded
@@ -78,10 +78,11 @@ failure mode this project exists to prevent.
 | Window | Sprint | Capability or defect class | Blocker |
 | --- | --- | --- | --- |
 | 6 to 12 Aug | S4 | Live ingestion without waiting on anyone: `TelegramChannelSource` against the public Ajax channel, which is the shared upstream of both APIs. **Shipped 0.3.0.0.** OpenSky account still outstanding | none |
-| 13 to 19 Aug | S5 | Hostile input as an outage vector: never-raise contract made executable across every adapter. First live latency measurement | none |
-| 20 to 23 Aug | S6 | Output channel as an attack surface: Signal delivery, guard test on message content, sender-side rate limit. Follow-ups sent if still silent | none |
-| 24 Aug to 21 Sep | S7 | Shadow mode, four weeks, nothing sent. Measures alarm rate on real data | calendar only |
-| 22 to 30 Sep | S8 | Threshold correction, observation tier to a small group, manual completed for every shipped command | T11 |
+| 6 to 9 Aug | S5 | **Shipped 0.4.0.0.** Not the scheduled classifier redesign. The evidence container instead: fourth state (F26), window-gap detection (F27), harness mutation-verified (F14, after two slips). Scope change recorded as D-011 | none |
+| 10 to 19 Aug | S6 | Corpus collection running (T19) and the classifier redesign against it, not against a sample. First live latency measurement | corpus needs seven days of wall clock |
+| 20 to 23 Aug | S7 | Output channel as an attack surface: Signal delivery, guard test on message content, sender-side rate limit. Follow-ups sent if still silent | none |
+| 24 Aug to 21 Sep | S8 | Shadow mode, four weeks, nothing sent. Measures alarm rate on real data | calendar only |
+| 22 to 30 Sep | S9 | Threshold correction, observation tier to a small group, manual completed for every shipped command | T11 |
 
 **T11 is promoted to a blocker.** The alarm threshold is calibrated against a
 recipient's tolerance and no recipient has been asked. Those two conversations

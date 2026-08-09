@@ -16,10 +16,11 @@ import namespace is `mavo` because it must be unique rather than descriptive. Th
 codename lives in documentation and conversation. Stated here rather than left
 implicit, because that is where the inconsistency otherwise lives.
 
-Status: pre-alpha. Sprints 0 to 4 shipped, plus a measurement release (0.3.1.0).
-A live Telegram adapter is wired; measured against real channel content its
-classifier scored **0 of 20**, the failure is pinned as assertions, and the
-redesign is sprint 5. See F23 to F27 in `docs/METHODOLOGY.md`.
+Status: pre-alpha. Sprints 0 to 5 shipped. A live Telegram adapter is wired;
+measured against real channel content its classifier scored **0 of 20**, and the
+failure is pinned as assertions. The redesign waits for a corpus rather than a
+schedule (D-011), because the only content in hand is twenty messages from one
+evening and fitting to it would repeat the defect it would claim to fix.
 
 ---
 
@@ -48,9 +49,12 @@ The section a competent reader reads first. Each bullet is registered in
   This is an exclusion, not an omission: the hypothesis was tested on 738 attack
   nights and 87,093 munitions and returned a null (Rayleigh R = 0.013, p = 0.95).
   See `docs/DECISIONS.md`. (lint: no_lunar_variable)
-- It will not read a silent feed as an all-clear. An area whose status is unknown
-  stays `UNKNOWN` and contributes to no alarm in either direction.
-  (lint: unknown_not_clear)
+- It will not read a silent feed as an all-clear, and will not read a partial
+  all-clear as a whole one. An area whose status is unknown stays `UNKNOWN`; a
+  message that announces an all-clear while saying the alert continues is
+  `PARTIAL_CLEAR`. Neither contributes to an alarm in either direction, and the
+  lint enumerates the enum, so a fifth state would be covered on the day it is
+  added. (lint: unknown_not_clear)
 - It will not fit a model to the positive events. There are roughly a dozen of
   them across four years; a model trained on that would reproduce the
   overfitting that invalidated this project's first analysis. Rules are explicit
@@ -142,8 +146,13 @@ mavo/
   cli.py           fixture / gate / policy / collect
 tests/
   test_<domain>.py behaviour
-  test_sprint<N>.py regression, one file per sprint
+  test_sprint<N>.py regression, one file per sprint, verified red before it is fixed
   lint_*.py        executable claims about the repository itself
+  harness/         one scripted attack per threat-model row, plus its catalogue
+tools/
+  docs_audit.py    fails when a pin in STATUS.json disagrees with the tree
+  manual_audit.py  fails when the manual describes a command the CLI does not have
+  harness_mutation.py  disables each control and fails if its attack stays green
 docs/
   MANUAL.md        operator's manual; every section declares BUILT or NOT BUILT
   ARCHITECTURE.md  what talks to what, with a block index
@@ -160,7 +169,7 @@ docs/
 | --- | --- |
 | **`docs/MANUAL.md`** | **Start here to use it.** Install, every command, how to read the output, operational limits. Each section declares BUILT, PARTIAL, NOT BUILT or NARRATIVE |
 | `docs/METHODOLOGY.md` | What may be claimed, the defect log, and the probes that were run rather than read |
-| `docs/THREAT-MODEL.md` | MT1 to MT11, each with a control or a named acceptance and the test that measures it |
+| `docs/THREAT-MODEL.md` | MT1 to MT12, each with a control or a named acceptance and the test that measures it |
 | `docs/MECHANISMS.md` | Why this statistic and not another |
 | `docs/ARCHITECTURE.md` | What talks to what, with a block index |
 | `docs/DECISIONS.md` | What was rejected, and what would reopen it |
@@ -176,28 +185,33 @@ make verify
 ```
 
 That is the only gate. CI calls it rather than restating its steps. It runs the
-test suite with a coverage floor, ruff, mypy strict, four repository lints, and
-two audits that fail when documentation drifts from the code.
+test suite with a coverage floor, ruff, mypy strict, four repository lints, two
+audits that fail when documentation drifts from the code, and a mutation run that
+disables each guarded control in a scratch tree and fails if the attack guarding
+it stays green. The mutation run costs roughly seven seconds of the gate's
+eleven, which is stated because a check nobody can afford is a check that gets
+moved out of the gate and then stops running.
 
 ## Measured claims
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green on Python 3.12: 117 tests passing, of which 10 are harness
-  attacks. Coverage 96.34% against a floor of 95. The margin sprint 2 had is
-  gone: `transport.py` carries the one genuinely network-bound function, and it
-  drags the total toward the floor. Whether to exclude it from the measurement
-  is an open decision recorded in the 0.3.2.0 review, not something to resolve
-  by quietly moving either number.
+- `make verify` green: 127 tests passing, of which 11 are harness attacks.
+  Coverage 96.20% against a floor of 95. The margin sprint 2 had is gone:
+  `transport.py` carries the one genuinely network-bound function, and it drags
+  the total toward the floor. Whether to exclude it from the measurement is an
+  open decision recorded in the 0.3.2.0 review, not something to resolve by
+  quietly moving either number.
 - Every candidate rule fails the gate individually. The two-regime policy passes
   at 1.96 alarms per week against a budget of 2.00, which is a 2% margin and not
   a comfortable one.
 - The classifier hit rate on real channel content is **0 of 20**, pinned as
   assertions so it cannot be fixed quietly. See F23 in `docs/METHODOLOGY.md`.
-- The harness has **never been observed failing**. `pirx` verifies its harness by
-  mutation; this one is not yet verified that way, and until it is, a green
-  harness is weaker evidence than it looks. Owner: 0.4.0.0, after slipping at
-  0.3.0.0 and 0.3.1.0; a third slip weakens the claim instead.
+- The harness is mutation-verified as of 0.4.0.0, after slipping twice. Ten
+  controls disabled one at a time; the guarding attack must go red. **The first
+  run killed 7 of 10**, and the three survivors were defects in the attacks
+  themselves (F38 to F40), one of them written the same afternoon. One attack of
+  eleven carries no mutation and is listed as unverified rather than assumed.
 - Every number above except the classifier hit rate was produced against a
   synthetic history. None of them is a claim about the world.
 

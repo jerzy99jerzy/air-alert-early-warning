@@ -40,22 +40,32 @@ class Provenance(Enum):
 
 
 class AlertState(Enum):
-    """Tri-state alert status for one administrative area.
+    """Alert status for one administrative area. Four states, not three.
 
     UNKNOWN is a distinct state and never resolves to CLEAR. A feed that goes
     silent has not told us the sky is empty.
+
+    PARTIAL_CLEAR is the fourth, added in sprint 5 after real channel content
+    showed a message that announces an all-clear and says in the same breath
+    that the alert continues (F26). It is deliberately not folded into UNKNOWN:
+    UNKNOWN means the source has told us nothing, PARTIAL_CLEAR means it has
+    told us two things that do not agree. Collapsing them would lose the
+    difference between silence and contradiction, and a contradiction is
+    evidence while silence is not.
     """
 
     ACTIVE = "active"
     CLEAR = "clear"
     UNKNOWN = "unknown"
+    PARTIAL_CLEAR = "partial_clear"
 
 
 def is_clear(state: AlertState) -> bool:
     """True only for an affirmatively reported all-clear.
 
     Written as a function rather than ``state != ACTIVE`` at every call site
-    because the negation is the defect: it silently folds UNKNOWN into CLEAR.
+    because the negation is the defect: it silently folds UNKNOWN, and now
+    PARTIAL_CLEAR, into CLEAR.
     """
     return state is AlertState.CLEAR
 
@@ -63,8 +73,8 @@ def is_clear(state: AlertState) -> bool:
 def is_actionable(state: AlertState) -> bool:
     """True when the state may contribute to a warning decision.
 
-    UNKNOWN is actionable for degradation reporting but never for an alarm; the
-    decision layer must ask which, so both predicates exist.
+    UNKNOWN and PARTIAL_CLEAR are actionable for degradation reporting but never
+    for an alarm; the decision layer must ask which, so both predicates exist.
     """
     return state is AlertState.ACTIVE
 

@@ -2,6 +2,97 @@
 
 All notable changes to this project. Entries state the defect, not the change.
 
+**Releases 0.1.0 to 0.3.1.0 have no tags, and that is a debt rather than an
+oversight.** They predate this repository being under version control, so the
+first tagged release is 0.3.2.0. The alternative was reconstructing commits to
+hang the earlier tags on, which would make the history lie about when the code
+existed; a stated debt is cheaper and true. Their artefacts exist only as
+hand-assembled archives with a `MANIFEST.sha256`.
+
+## 0.4.0.0 - 2026-08-09
+
+Sprint 5. The evidence container before the evidence.
+
+The sprint that was scheduled here was the classifier redesign. It was not run,
+because the corpus it needs does not exist yet and twenty messages from twenty
+minutes of one evening are a probe, not a design basis (F28, D-011). What can be
+built without the corpus is the part of the source layer that decides whether
+the corpus, once collected, will be trustworthy.
+
+- F26 closed: `AlertState.PARTIAL_CLEAR`. A message announcing an all-clear
+  while saying the alert continues had nowhere to go in a three-state model and
+  would have resolved to CLEAR. It is deliberately not folded into UNKNOWN:
+  UNKNOWN is silence, PARTIAL_CLEAR is contradiction, and a contradiction is
+  evidence while silence is not.
+- F27 closed: post ids are compared across polls and the skipped count is
+  reported. **Unknown is printed as unknown, never as zero.** A first poll has no
+  baseline and a page without ids has no observable, and in both cases claiming
+  continuity would be the flattering default. MT12 and harness A11 added.
+- `classify_state` split out of `classify`. The state layer was the one of three
+  that was correct on real content (15 of 20) and could only be exercised through
+  an area conjunct that matches nothing, so it was untestable in practice.
+- F14 closed after two slips: the harness is mutation-verified. Ten controls
+  disabled one at a time in a scratch tree; the guarding attack must go red.
+  `tools/harness_mutation.py`, in `make verify`, measured at roughly 7 seconds.
+- F38: A4 did not measure the alarm-rate gate. Its contingency table failed on
+  association as well, and its assertion looked for the substring "alarm rate",
+  which the *passing* reason also contains. Both halves survived the budget being
+  disabled. Found by the mutation run on its first execution.
+- F39: A9 did not reach the parser it claimed to test. Its six hostile bodies
+  used single-quoted class attributes and the page serves double quotes, so the
+  message regex matched nothing and every body was absorbed unparsed. The attack
+  passed by not arriving. Present since 0.3.0.0, where it was recorded as
+  closing MT7 for the Telegram adapter.
+- F40: A11, written in this sprint, tested the unknown-versus-zero decision on
+  the one path that returns before reaching it. The tool caught a defect in an
+  attack written the same afternoon.
+- F41: `ci.yml` carried `hygiene`, `docs-audit` and `manual-audit` as separate
+  jobs restating steps `verify` already runs, in a repository whose README says
+  CI does not restate the gate. Removed. This is the ENGINEERING section 2 drift
+  in the repository that quotes it.
+- The lint behind the unknown-not-clear claim now enumerates `AlertState` rather
+  than naming UNKNOWN, so the fourth state was covered on the day it landed and
+  a fifth would be too.
+
+Documentation audited against the tree in the same release, since three of the
+last four releases found a document describing an earlier version of it:
+
+- F42: MT8 cited a test that has never existed under that name. The control was
+  tested; the row's account of how was false for three releases. `docs_audit`
+  now resolves every `file.py::test_name` cited in `docs/`, the README and the
+  catalogue, and was verified red against the defect before it was fixed.
+- F43: `ARCHITECTURE.md` omitted the Telegram adapter, the transport layer,
+  `policy.py` and `evaluate.py`, and labelled two blocks with sprint numbers the
+  schedule had moved past. `lint_mermaid` checks that a diagram parses, not that
+  it is true.
+- MT2 widened to the fourth state. `SECURITY.md` and `CONTRIBUTING.md` now state
+  the state guarantee over the enumeration rather than over a list of names.
+  `MECHANISMS.md` gained the two mechanisms this sprint shipped. The manual's
+  sprint labels, operational limits and troubleshooting table were corrected.
+
+Not done, and not a slip: the pattern table still scores 0 of 20 and its pins
+still hold. The gazetteer (T15) needs a reference dataset this repository does
+not have, and the means-as-message-class rework (T16) needs the corpus to answer
+how a means message joins an alert by area and time window.
+
+## 0.3.2.1 - 2026-08-08
+
+A transfer defect, not a code change. The tree is identical to 0.3.2.0 except
+for the two files 0.3.2.0 was supposed to contain.
+
+- F37: the archive unpacked onto the workstation was the build before last. It
+  lacked `data/aggregates/.gitkeep` and the CHANGELOG paragraph recording that
+  releases 0.1.0 to 0.3.1.0 carry no tags. The initial commit's message then
+  asserted that paragraph was in CHANGELOG.md, which it was not: a commit
+  message claiming a document the tree does not contain, which is the same
+  class as a changelog entry claiming a protection the code does not implement.
+  Survived because the manifest check passed: an archive is internally
+  consistent with its own manifest whichever build it came from, so
+  `shasum -c` proves completeness and says nothing about currency.
+- The manifest is regenerated here. Class fix deferred to 0.4.0.0 as a decision:
+  either the manifest carries the version it was built from, or the archive
+  filename is not the only place the build is identified.
+
 ## 0.3.2.0 - 2026-08-08
 
 Consistency audit. The documentation had drifted from the tree in six places,

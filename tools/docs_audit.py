@@ -96,6 +96,34 @@ def check_harness_catalogue(status: dict[str, object]) -> list[str]:
     return problems
 
 
+def check_cited_tests_exist() -> list[str]:
+    """Every ``file.py::test_name`` cited in documentation resolves to a test.
+
+    F42. `docs/THREAT-MODEL.md` cited a test measuring MT8 that has never existed
+    in this repository under that name, and it survived three releases because
+    nothing resolves a citation. A threat row naming a test that does not exist
+    is a control that nobody is measuring while the table says otherwise, which
+    is the same class as a README claim the tree does not implement.
+    """
+    problems: list[str] = []
+    pattern = re.compile(r"([a-z_0-9]+\.py)::(test_[a-z_0-9]+)")
+    for document in sorted(ROOT.glob("docs/*.md")) + [
+        ROOT / "README.md",
+        ROOT / "tests" / "harness" / "CATALOGUE.md",
+    ]:
+        if not document.exists():
+            continue
+        for filename, test_name in pattern.findall(document.read_text(encoding="utf-8")):
+            candidates = list((ROOT / "tests").rglob(filename))
+            if not candidates:
+                problems.append(f"{document.name} cites {filename}, which does not exist")
+                continue
+            if not any(f"def {test_name}(" in path.read_text(encoding="utf-8")
+                       for path in candidates):
+                problems.append(f"{document.name} cites {filename}::{test_name}, which does not")
+    return problems
+
+
 def main() -> int:
     """Run every audit. Returns a process exit code."""
     status = _status()
@@ -104,6 +132,7 @@ def main() -> int:
         + check_every_shipped_sprint_has_a_regression_file(status)
         + check_threat_model_numbering(status)
         + check_harness_catalogue(status)
+        + check_cited_tests_exist()
     )
     for problem in problems:
         print(f"docs-audit: {problem}", file=sys.stderr)

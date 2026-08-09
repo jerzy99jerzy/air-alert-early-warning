@@ -8,8 +8,13 @@ security defect rather than a bug:
 1. **Suppression guarantees.** A source claiming implausibly broad activation
    must not produce alarms. If you can construct a feed state that raises an
    alarm through the suppression, that is a defect.
-2. **State guarantees.** An unknown area state must never contribute to an
-   all-clear or an alarm. A path where `UNKNOWN` behaves as `CLEAR` is a defect.
+2. **State guarantees.** No state other than `CLEAR` may read as an all-clear,
+   and none other than `ACTIVE` may drive an alarm. A path where `UNKNOWN`
+   behaves as `CLEAR` is a defect, and so is one where `PARTIAL_CLEAR` does: a
+   message announcing an all-clear while saying the alert continues is a
+   contradiction, not an all-clear. The guarantee is written over the state
+   enumeration rather than over a list of state names, so it covers a state
+   added after this sentence.
 3. **Claim guarantees.** Every limitation in the README is registered in
    `tests/lint_limitations.py`. A claim in the documentation that the tree does
    not implement is a defect, and historically the most likely one.

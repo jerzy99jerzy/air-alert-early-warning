@@ -49,12 +49,28 @@ def check_no_lunar_variable() -> str | None:
 
 
 def check_unknown_not_clear() -> str | None:
-    """UNKNOWN must not resolve to CLEAR, and must not be tested by negation."""
+    """No non-clear state may resolve to CLEAR, and none by negation.
+
+    Widened in 0.4.0.0 from UNKNOWN alone to every state that is not CLEAR. The
+    claim was written when the model had three states; a fourth arrived (F26)
+    and the check would not have covered it. Enumerating the enum rather than
+    naming states means the next member is covered on the day it is added.
+    """
     sys.path.insert(0, str(ROOT))
     from mavo.schema import AlertState, is_actionable, is_clear
 
-    if is_clear(AlertState.UNKNOWN) or is_actionable(AlertState.UNKNOWN):
-        return "AlertState.UNKNOWN is treated as a safe or actionable state"
+    offenders = [
+        state.name
+        for state in AlertState
+        if state is not AlertState.CLEAR and is_clear(state)
+    ]
+    offenders += [
+        state.name
+        for state in AlertState
+        if state is not AlertState.ACTIVE and is_actionable(state)
+    ]
+    if offenders:
+        return f"states treated as safe or actionable when they are not: {offenders}"
     return None
 
 

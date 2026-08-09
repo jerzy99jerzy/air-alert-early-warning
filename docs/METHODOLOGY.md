@@ -187,6 +187,9 @@ Class: the same family as UNKNOWN resolving to CLEAR, and found the same way:
 by looking at what the source actually says rather than at what the model
 expects it to say.
 
+**Closed in 0.4.0.0.** `AlertState.PARTIAL_CLEAR`, kept distinct from UNKNOWN
+because silence and contradiction are different evidence.
+
 ### F27, sprint 4 measurement. The page is a window, not a stream
 
 The channel page serves roughly the last twenty messages. During a mass alert the
@@ -194,6 +197,9 @@ channel emits far more than twenty in a short period, so a poll interval that is
 comfortable at rest can silently skip messages exactly when the messages matter.
 Not detected, and not currently detectable, because a skipped message leaves no
 trace.
+
+**Closed in 0.4.0.0.** Post ids compared across polls, with the unmeasurable case
+reported as unknown rather than zero. MT12, harness A11.
 
 ### F31, 0.3.2.0 audit. A measured pin went stale field by field
 
@@ -270,6 +276,131 @@ now, same wording as the others.
 
 Class: duplicated state drifts on the first update it is not part of. The same
 reason `pyproject.toml` is the single dependency source of truth.
+
+### F37, 0.3.2.1. A manifest proves completeness, not currency
+
+The archive unpacked onto the workstation was the build before last: no
+`data/aggregates/.gitkeep`, no CHANGELOG paragraph about the untagged releases.
+`shasum -c` passed, because an archive is internally consistent with its own
+manifest whichever build produced it. The initial commit was then made with a
+message asserting a paragraph the tree did not contain.
+
+Why it survived: the transfer rule in ENGINEERING.md answers "did every file
+arrive intact" and was read as answering "is this the current build". Two
+different questions with one check between them.
+
+Class: an integrity check mistaken for a freshness check. The same shape as
+absence read as success, one layer out from the code.
+
+### F38, sprint 5. An attack that could not fail
+
+A4 asserted that a rule with perfect recall still fails the gate on alarm rate.
+Its contingency table also failed the association condition, so `verdict.passes`
+stayed False with the alarm budget disabled, and its second assertion looked for
+the substring "alarm rate", which the *passing* reason ("alarm rate 6.08/week
+within budget") also contains. Two independent reasons the attack could not
+distinguish a working control from a removed one.
+
+Why it survived: it was green, and a green attack looks like a passing control.
+Nothing in a passing test distinguishes "the control held" from "the assertion
+cannot fail". Found by disabling the control and watching the test stay green.
+
+Class: **an assertion satisfied by the failure it is meant to detect.** Every
+harness assertion now names the specific failure rather than a substring shared
+by both outcomes, and the table is constructed so exactly one condition fails.
+
+### F39, sprint 5. An attack that never reached the code it tested
+
+A9 fed six hostile bodies to the Telegram adapter and asserted nothing raised.
+The bodies used `<div class='...'>` with single quotes; the message regex is
+written against the double quotes the page actually serves. Nothing matched, so
+`messages=0`, the parser was never entered, and `parsed <= messages` held as
+`0 <= 0`. The attack passed by not arriving.
+
+Why it survived: present since 0.3.0.0, where the review recorded A9 as closing
+MT7 for the live adapter. The hostile fixtures were written by hand next to a
+regex neither was checked against.
+
+Class: **a test that exercises no code passes for the wrong reason.** A9 now
+counts the messages that reached the parser and fails if the count is zero, so
+the attack asserts its own arrival before asserting anything about behaviour.
+
+### F40, sprint 5. A new attack with the same defect, caught the same day
+
+A11 was written in this sprint to guard MT12. Its unknown-versus-zero assertion
+used a page with no post ids, which `_window` answers by returning early, before
+the code that decides whether an unmeasured gap is unknown or zero. The
+governing case is a first poll with ids, which the attack did not cover.
+
+Why it survived: about two hours, between writing the attack and running the
+mutation tool for the first time.
+
+Class: same as F38. Worth its own entry because it is evidence about the tool
+rather than about the attack: the mutation run caught a defect in an attack
+written by the same person on the same afternoon, which is the case a review by
+reading is least likely to catch.
+
+### F41, sprint 5. CI restated the gate it claimed not to restate
+
+`ci.yml` ran `hygiene`, `docs-audit` and `manual-audit` as separate jobs
+duplicating steps `make verify` already runs, while README.md and ENGINEERING.md
+both state that CI calls the gate rather than restating its steps.
+
+Why it survived: each job was added in the same commit as the check it mirrors,
+which felt like belt and braces rather than duplication. The failure mode is the
+one ENGINEERING section 2 names: two lists of checks drift, and the weaker one is
+what actually runs.
+
+Class: a claim about the repository contradicted by a file in it. The same class
+as F32, one directory over.
+
+### F42, 0.4.0.0 audit. A threat row cited a test that has never existed
+
+MT8 named a test in `test_store.py` called `repeated_polling_does_not_grow_the_log`
+as the measurement of idempotence. No test of that name has ever been in this
+repository; the real one is `repoll_with_new_ingest_time_does_not_duplicate`.
+The control exists and is tested, so nothing was unguarded, but the table's claim
+about how it was guarded was false for three releases.
+
+Why it survived: nothing resolved documentation citations. `docs_audit` checked
+row counts, numbering gaps and catalogue-to-test correspondence by number, and a
+row citing a plausible-sounding test name passed all three.
+
+Class: same as F33, one level of indirection down. F33 was a document citing a
+document that did not exist; this is a document citing a test that does not
+exist, and the consequence is worse, because a named test reads as a measurement.
+`docs_audit.check_cited_tests_exist` now resolves every module-and-test citation
+in `docs/`, the README and the catalogue, and was verified red against this
+defect before the citation was corrected. It also refuses a dead citation written
+inside a defect log, which is why this entry names the old test without citing it
+in the usual form: the check has no exemption list, and adding one for prose
+about defects is how exemption lists start.
+
+### F43, 0.4.0.0 audit. The architecture diagram omitted the only live source
+
+`docs/ARCHITECTURE.md` drew four sources, none of them the Telegram adapter that
+sprint 4 shipped and that is the only wired live feed. It also carried no
+transport node, no `policy.py` and no `evaluate.py`, labelled the alarm tier
+"sprint 4" after sprint 4 shipped without it, and labelled the Polish adapter
+"sprint 6" after the schedule moved. The block index, whose stated purpose is
+that a rename leaves a visibly stale row, had gained no row since sprint 2.
+
+Why it survived: `lint_mermaid` validates that diagrams parse, not that they
+describe the tree. A diagram that is syntactically clean and semantically two
+releases old passes every check in the gate.
+
+Class: the ANANKE class again, in the document whose entire job is to say what
+talks to what. Recorded rather than quietly redrawn: this is the third document
+in three releases found describing an earlier version of the tree, which is
+evidence about the process and not about any one file.
+
+## Verification probes run in sprint 5
+
+| Claim | Probe | Result |
+| --- | --- | --- |
+| The sprint 5 regression tests are red against 0.3.2.1 | Scratch copy of the previous tag with a shim reproducing the old state semantics, so the red is behavioural rather than an import error | 7 of 9 red. Two are guards rather than regressions: they assert an ordinary all-clear is still CLEAR and an unrecognised message is still None, and they pass both before and after by design |
+| The harness measures its controls | Ten controls disabled one at a time in a scratch tree, guarding attack run against each | 7 of 10 killed on the first run. F38, F39 and F40 found. 10 of 10 after they were fixed |
+| A7 has no mutation | Attempted: the fixture source generates rather than parses, so any mutation that makes it raise is an injected fault rather than a removed control | Recorded as unverified rather than given a flattering mutation. 1 of 11 attacks carries no mutation |
 
 ## Measurement of the pattern table, 2026-08-08
 

@@ -15,28 +15,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
       # CI calls the single gate. It does not restate its steps.
+      #
+      # It used to. Until 0.4.0.0 this file also carried `hygiene`, `docs-audit`
+      # and `manual-audit` as separate jobs, restating three checks that `verify`
+      # already runs, in a repository whose README says CI does not do that. The
+      # jobs were added when each check was, which is exactly how the drift in
+      # ENGINEERING.md section 2 happens: a check added in one place and mirrored
+      # in another, until the two disagree and the weaker one is what runs.
       - run: make verify
-
-  hygiene:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: python3 tests/lint_hygiene.py
-
-  docs-audit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-      - run: python3 tools/docs_audit.py
-
-  manual-audit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-      - run: pip install -e "." && python3 tools/manual_audit.py
