@@ -20,6 +20,7 @@ difference stated below.
 | A10 | MT11 | The source is unreachable rather than quiet | `SourceUnavailable`, never an empty result |
 | A11 | MT12 | A mass alert overflows the twenty-message window between two polls | The skipped count is reported; an unmeasurable gap is unknown, never zero |
 | A13 | MT14 | A message tagging an area the map does not know, with an oblast named in prose | Classification returns nothing rather than the prose guess; the unknown tag is the only outcome |
+| A14 | MT15 | An all-clear whose continuation list names another area as still under alert | Both areas reach the store, the continuation one distinguishable by its role; a single all-clear event fails |
 | A12 | MT13 | Two messages in the live footer-time order, exact timestamps asserted | Each event carries its own footer's timestamp; a one-message shift in either direction fails |
 
 ## The honest difference from `pirx`

@@ -84,6 +84,12 @@ def _event(
         source_id=source_id,
         kind=kind,
         provenance=Provenance.REPORTED,
+        # The generator works at oblast granularity, so the two fields carry the
+        # same slug here. On the live path they differ: `area_id` is a raion or
+        # hromada register code and `oblast` is the coarse geography the rules
+        # read (T38). Setting both keeps the fixture honest about which field
+        # the rules are actually testing.
+        oblast=area,
     )
 
 

@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.4
+Document:  docs/METHODOLOGY.md, version 2.5
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -143,6 +143,8 @@ repository has come to the mistake it was built after.
 | [F62](#f62-01110-the-transport-would-read-the-filesystem-when-handed-the-wrong-string) | 0.11.1.0 | The transport would read the filesystem when handed the wrong string |
 | [F63](#f63-01110-a-duplicated-tag-in-the-map-resolved-by-file-order) | 0.11.1.0 | A duplicated tag in the map resolved by file order |
 | [F64](#f64-01120-a-pin-that-nothing-compared-against-the-tree) | 0.11.2.0 | A pin that nothing compared against the tree |
+| [F65](#f65-01200-two-vocabularies-met-at-a-set-membership-test) | 0.12.0.0 | Two vocabularies met at a set membership test |
+| [F66](#f66-01200-a-threshold-was-denominated-in-a-unit-that-changed-underneath-it) | 0.12.0.0 | A threshold was denominated in a unit that changed underneath it |
 
 ## Defect log
 
@@ -1003,6 +1005,58 @@ can read. Top-level documents stay out of scope deliberately: they are versioned
 by the release rather than by a marker of their own, and pretending otherwise
 would add four pins that mean nothing.
 
+
+### F65, 0.12.0.0. Two vocabularies met at a set membership test
+
+Every border rule tested `event.area_id in BORDER_OBLASTS`. After sprint 7,
+`classify` emits a KATOTTG register code for a raion or hromada
+(`UA46060000000042587`) while `BORDER_OBLASTS` holds coarse slugs (`lviv`), so
+on any real event that test was false by construction. The border predicates
+were unsatisfiable on live input, permanently and silently.
+
+**Why it survived.** Every test that exercises a rule builds its events from the
+fixture generator, and the fixture works at oblast granularity, so `area_id` and
+the slug coincide there. The suite measured the rules against the one input in
+which the defect cannot appear. Sprint 7 changed what `area_id` means and no
+test asked whether anything downstream still agreed, because the rules do not
+run on live events yet: the defect was dormant, not absent, and would have woken
+on the first sprint that connected the two.
+
+**A rule that cannot fire is worse than a rule that fires wrongly**, because it
+produces the output the system is designed to produce most of the time. Silence
+is the correct answer on almost every night, so a permanently silent predicate
+looks exactly like a working one.
+
+Class: **one identifier, two meanings, joined by an equality test.** Repaired by
+giving the event both: `area_id` identifies the reporting unit at whatever
+granularity the source names it, `oblast` is the coarse geography the rules
+read, and the register-name-to-slug join is a table (`OBLAST_SLUGS`) rather than
+a transliteration function, because a function would invent a slug for a name it
+had never seen and the invented slug would match nothing.
+`tests/test_sprint8.py::test_t38_a_real_classified_event_can_satisfy_the_border_predicate`
+asserts on a live-shaped event and is red against the old comparison.
+
+
+### F66, 0.12.0.0. A threshold was denominated in a unit that changed underneath it
+
+Poison suppression refuses a night when a source claims `POISON_AREA_THRESHOLD`
+distinct areas within two minutes. The threshold is 8, and it was chosen when a
+message produced exactly one event. T37 made a message produce one event per
+named area, and 13.3% of comparable messages name two to eight: a single
+legitimate multi-raion alert now reaches the threshold on its own. The control
+that exists to distinguish an implausible claim from real traffic would have
+started firing on the traffic.
+
+Caught before release, by reading the two changes together rather than by a
+test. Recorded anyway, because the near-miss is the instructive part: the
+mutation harness would not have caught it either, since the control was still
+present and still killable.
+
+Class: **a constant whose unit is defined somewhere else.** Repaired by counting
+breadth in oblasts rather than in reporting units, which is what the docstring
+already claimed the control measured. An area whose oblast is unknown is its own
+bucket rather than merged with the other unknowns, so breadth cannot hide inside
+them.
 
 ## Corpus measurements, 2026-08-09
 

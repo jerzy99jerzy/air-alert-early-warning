@@ -43,6 +43,66 @@ WESTERN_OBLASTS = (
     "Тернопільська", "Рівненська", "Хмельницька", "Чернівецька",
 )
 
+# T38. The register writes an oblast name; the rules reason in slugs. This is
+# the one place the two vocabularies are joined, and it is a table rather than a
+# transliteration function because a function would invent a slug for a name it
+# had never seen and the invented slug would match nothing, silently. A name
+# missing from this table resolves to "" — unknown, and visible as unknown.
+#
+# All 23 oblasts the corpus tags, in the register's nominative spelling.
+OBLAST_SLUGS: dict[str, str] = {
+    "Вінницька": "vinnytsia",
+    "Волинська": "volyn",
+    "Дніпропетровська": "dnipropetrovsk",
+    "Донецька": "donetsk",
+    "Житомирська": "zhytomyr",
+    "Закарпатська": "zakarpattia",
+    "Запорізька": "zaporizhzhia",
+    "Івано-Франківська": "ivano-frankivsk",
+    "Київська": "kyiv",
+    "Кіровоградська": "kirovohrad",
+    "Львівська": "lviv",
+    "Миколаївська": "mykolaiv",
+    "Одеська": "odesa",
+    "Полтавська": "poltava",
+    "Рівненська": "rivne",
+    "Сумська": "sumy",
+    "Тернопільська": "ternopil",
+    "Харківська": "kharkiv",
+    "Херсонська": "kherson",
+    "Хмельницька": "khmelnytskyi",
+    "Черкаська": "cherkasy",
+    "Чернівецька": "chernivtsi",
+    "Чернігівська": "chernihiv",
+}
+
+
+def oblast_slug(name: str) -> str:
+    """Canonical slug for a register oblast name, or "" when it is not known.
+
+    Empty is the unknown state and never a match: a rule asking whether an area
+    sits in a border oblast gets ``False`` from an unknown, and the emptiness
+    stays in the row for a reader to see (T38).
+    """
+    return OBLAST_SLUGS.get(name.strip(), "")
+
+
+# T37. An all-clear can carry a continuation list: `Відбій ... Зверніть увагу,
+# тривога ще триває у: - Запорізька область - Пологівський район`. Everything
+# after this marker names areas where the alert is *still running*, which is the
+# opposite of what the message is otherwise announcing. Promoted into the package
+# from `tools/consistency_check.py`, where it was measured: reading the two parts
+# as one set produced 1,203 false disagreements over the design window, and
+# separating them moved tag-prose agreement from 96.972% to 99.997%.
+CONTINUES = re.compile(r"тривога\s+ще\s+трива[єе]|ще\s+трива[єе]\s+у")
+
+# Prose names are matched by taking the tokens before a unit word and keeping
+# only joins the register already knows. A pattern that decides what *looks*
+# like a place is the guess sprint 7 replaced (F59): `район` is also an ordinary
+# noun, and `район старої частини` is the old town, not an administrative unit.
+UNIT = re.compile(r"\b(район|громад[аи]|област[ьі])\b")
+TOKEN = re.compile(r"[\w\u0400-\u04FF’'-]+")
+
 # Nominative, underscores for spaces, unit word explicit. No stemming, because
 # the tag is not inflected. The alternative, matching register names in prose,
 # was measured at 6.06% against 99.34% for this and needed a truncation length
@@ -69,6 +129,16 @@ class AreaRef:
         return any(term in self.oblast for term in WESTERN_OBLASTS)
 
 
+def normalise_name(name: str) -> str:
+    """Strip everything that differs between the two spellings of one name.
+
+    The tag drops apostrophes and hyphens (``#КамянецьПодільський_район``) where
+    the prose keeps them (``Кам'янець-Подільський район``). Reducing both to
+    letters is what lets them be compared without a table of spelling variants.
+    """
+    return re.sub(r"[^\w]", "", name.replace("’", "").replace("'", "")).lower()
+
+
 def parse_tags(text: str) -> tuple[str, ...]:
     """Every `#Name_unit` tag in a message, in order, without duplicates."""
     seen: dict[str, None] = {}
@@ -87,6 +157,14 @@ class AreaTable:
     def __init__(self, rows: dict[str, AreaRef], unresolved: frozenset[str]) -> None:
         self._rows = rows
         self.unresolved = unresolved
+        # T37. Normalised tag stem to the areas carrying it. A list rather than
+        # a value: a stem shared by two areas is ambiguous, and an ambiguous
+        # prose name resolves to nothing rather than to whichever row came
+        # first. That is the F59 defect, and it is not being repeated one
+        # sprint later in a different function.
+        self._by_name: dict[str, list[AreaRef]] = {}
+        for area in rows.values():
+            self._by_name.setdefault(normalise_name(area.tag.rsplit("_", 1)[0]), []).append(area)
 
     @classmethod
     def from_csv(cls, path: Path | None = None) -> AreaTable:
@@ -157,6 +235,39 @@ class AreaTable:
             else:
                 found.append(area)
         return tuple(found), tuple(unknown)
+
+    def resolve_prose(self, text: str) -> tuple[AreaRef, ...]:
+        """Areas named in prose, verified against names the register knows.
+
+        Up to four tokens before each unit word are joined longest-first and the
+        first join the register knows wins. Four covers the longest real form,
+        ``м. Харків та Харківська територіальна громада``, and stops well short
+        of swallowing a sentence. A unit word with no known name before it is
+        ignored, and a name shared by two areas resolves to neither: an
+        ambiguous name is unknown, not a coin toss (F59).
+
+        Used for the continuation list, which the channel writes in prose rather
+        than as tags, so the tag path cannot see it at all (T37).
+        """
+        found: dict[str, AreaRef] = {}
+        tokens = [(match.group(0), match.end()) for match in TOKEN.finditer(text)]
+        ends = {end: index for index, (_word, end) in enumerate(tokens)}
+        for unit in UNIT.finditer(text):
+            index = ends.get(unit.end())
+            if index is None:
+                continue
+            for span in (4, 3, 2, 1):
+                start = index - span
+                if start < 0:
+                    continue
+                candidate = normalise_name("".join(word for word, _e in tokens[start:index]))
+                matches = self._by_name.get(candidate)
+                if matches is None:
+                    continue
+                if len(matches) == 1:
+                    found.setdefault(matches[0].code, matches[0])
+                break
+        return tuple(found.values())
 
     def western(self, text: str) -> tuple[AreaRef, ...]:
         """Only the areas a Polish reader has reason to be told about."""

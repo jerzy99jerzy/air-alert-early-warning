@@ -14,8 +14,18 @@ from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 
-from mavo.errors import NaiveTimestamp
-from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind
+from mavo.errors import NaiveTimestamp, SchemaMismatch
+from mavo.schema import AlertState, AreaRole, Provenance, ThreatEvent, ThreatKind
+
+# Bumped whenever a column is added. A store written by an older version is
+# refused rather than migrated: D-013 already says a re-reading is done by
+# rebuilding from the raw corpus, so an in-place migration would invent values
+# for columns the old rows never carried and the invented value would be
+# indistinguishable from a measured one.
+EXPECTED_COLUMNS = (
+    "content_hash", "area_id", "state", "ts_source", "ts_ingest",
+    "source_id", "kind", "provenance", "raw_fields", "oblast", "role",
+)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
@@ -27,7 +37,9 @@ CREATE TABLE IF NOT EXISTS events (
     source_id    TEXT NOT NULL,
     kind         TEXT NOT NULL,
     provenance   TEXT NOT NULL,
-    raw_fields   TEXT NOT NULL
+    raw_fields   TEXT NOT NULL,
+    oblast       TEXT NOT NULL,
+    role         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_events_ts_source ON events (ts_source);
 CREATE INDEX IF NOT EXISTS idx_events_area ON events (area_id, ts_source);
@@ -60,6 +72,26 @@ class EventStore:
         with closing(self._connect()) as conn:
             conn.executescript(_SCHEMA)
             conn.commit()
+            self._refuse_an_older_schema(conn)
+
+    @staticmethod
+    def _refuse_an_older_schema(conn: sqlite3.Connection) -> None:
+        """Refuse a store whose columns predate this version.
+
+        ``CREATE TABLE IF NOT EXISTS`` is silent about a table that already
+        exists with fewer columns, so without this check an older store would
+        open cleanly and then fail one row at a time, or worse, read back events
+        with fields that were never written. The refusal names the missing
+        columns and the remedy, which is a rebuild rather than a migration.
+        """
+        found = tuple(row[1] for row in conn.execute("PRAGMA table_info(events)"))
+        missing = [column for column in EXPECTED_COLUMNS if column not in found]
+        if missing:
+            raise SchemaMismatch(
+                f"store is missing column(s) {', '.join(missing)}; it was written by an "
+                "older version. Rebuild it from the raw corpus rather than migrating "
+                "it, so no row carries a value that was never observed (D-013)"
+            )
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.path)
@@ -84,6 +116,8 @@ class EventStore:
                 event.kind.value,
                 event.provenance.name,
                 json.dumps(event.raw_fields, sort_keys=True),
+                event.oblast,
+                event.role.value,
             )
             for event in events
         ]
@@ -93,8 +127,8 @@ class EventStore:
             before = conn.total_changes
             conn.executemany(
                 "INSERT OR IGNORE INTO events (content_hash, area_id, state, ts_source, "
-                "ts_ingest, source_id, kind, provenance, raw_fields) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "ts_ingest, source_id, kind, provenance, raw_fields, oblast, role) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 rows,
             )
             conn.commit()
@@ -105,7 +139,8 @@ class EventStore:
         with closing(self._connect()) as conn:
             cursor = conn.execute(
                 "SELECT area_id, state, ts_source, ts_ingest, source_id, kind, "
-                "provenance, raw_fields FROM events ORDER BY ts_source, area_id"
+                "provenance, raw_fields, oblast, role "
+                "FROM events ORDER BY ts_source, area_id"
             )
             # Iterated, not fetchall(): the docstring promises an iterator
             # and materializing the whole log first would quietly break that
@@ -120,6 +155,8 @@ class EventStore:
                     kind=ThreatKind(row[5]),
                     provenance=Provenance[row[6]],
                     raw_fields=json.loads(row[7]),
+                    oblast=row[8],
+                    role=AreaRole(row[9]),
                 )
 
     def count(self) -> int:

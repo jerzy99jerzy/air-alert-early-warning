@@ -34,8 +34,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from mavo.areas import AreaTable
-from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind
+from mavo.areas import CONTINUES, AreaTable, oblast_slug
+from mavo.schema import AlertState, AreaRole, Provenance, ThreatEvent, ThreatKind
 from mavo.transport import Transport
 
 CHANNEL_URL = "https://t.me/s/air_alert_ua"
@@ -189,52 +189,127 @@ def classify_state(text: str) -> AlertState | None:
     return None
 
 
+@dataclass(frozen=True, slots=True)
+class AreaMention:
+    """One area a message named, with the state and role it named it in."""
+
+    area_id: str
+    oblast: str
+    state: AlertState
+    kind: ThreatKind
+    role: AreaRole
+
+
+def classify_message(text: str, areas: AreaTable | None = None) -> tuple[AreaMention, ...]:
+    """Every area a message named, not just the first one (T37).
+
+    Two losses closed here, both measured over the design window and both
+    previously invisible in the output rather than reported:
+
+    **A message can name several areas.** 13.3% of comparable messages name two
+    to eight, and the pipeline kept the first tag and dropped the rest. Each tag
+    is now its own mention.
+
+    **An all-clear can carry a continuation list.** 5.2% of comparable messages
+    carry one, naming 4,064 areas in the design window, none of which reached
+    the store. The tag names what was cleared; the prose after the continuation
+    marker names where the alert is *still running*. They are written in
+    different vocabularies — tags for the subject, prose for the list — so the
+    tag path could not see the list at all.
+
+    **Where the two overlap, the message contradicts itself and the weaker
+    reading wins.** The real message that produced F26 clears one raion and
+    lists that same raion as still under alert. That area is ``PARTIAL_CLEAR``,
+    exactly as before: one area told two things that do not agree. Splitting it
+    into a CLEAR row and an ACTIVE row would replace a stated contradiction with
+    two confident claims, one of them wrong.
+
+    Tags are read from the whole text, not from the part before the marker: the
+    channel puts them last, after the continuation list, so a positional split
+    would file the subject's own tag under the continuation.
+    """
+    lowered = text.lower()
+    has_continues = any(marker in lowered for marker in CONTINUES_MARKERS)
+    # The unattributed reading, deliberately not `classify_state`: that function
+    # folds any continuation marker into PARTIAL_CLEAR for the whole message,
+    # which was the only honest answer while nothing could tell *which* area the
+    # continuation was about. Here it can, so the contradiction is resolved per
+    # area and PARTIAL_CLEAR is kept for the two cases that are still genuinely
+    # contradictory: an area that is both cleared and listed as still running,
+    # and a continuation list that resolves to no area at all.
+    if any(marker in lowered for marker in CLEAR_MARKERS):
+        subject_state: AlertState | None = AlertState.CLEAR
+    elif any(marker in lowered for marker in START_MARKERS):
+        subject_state = AlertState.ACTIVE
+    else:
+        subject_state = None
+    kind = next(
+        (value for pattern, value in KIND_MARKERS.items() if pattern in text.lower()),
+        ThreatKind.UNKNOWN,
+    )
+
+    if areas is None:
+        area = next(
+            (code for pattern, code in AREAS.items() if pattern in text.lower()), None
+        )
+        state = classify_state(text)
+        if area is None or state is None:
+            return ()
+        return (AreaMention(area, "", state, kind, AreaRole.SUBJECT),)
+
+    resolved, unknown = areas.resolve_all(text)
+    split = CONTINUES.search(text)
+    still_running = areas.resolve_prose(text[split.end() :]) if split else ()
+    continuing = {ref.code for ref in still_running}
+
+    mentions: list[AreaMention] = []
+    if resolved and subject_state is not None:
+        for ref in resolved:
+            contradicted = ref.code in continuing or (has_continues and not still_running)
+            state = (
+                AlertState.PARTIAL_CLEAR
+                if contradicted and subject_state is AlertState.CLEAR
+                else subject_state
+            )
+            mentions.append(
+                AreaMention(ref.code, oblast_slug(ref.oblast), state, kind, AreaRole.SUBJECT)
+            )
+    elif unknown:
+        # F60. The channel named an area the map cannot read. Falling through to
+        # the prose path here would answer a question the channel already
+        # answered, with a guess, and leave the unknown tag no mark on the
+        # result. The whole message is refused; the tag is reported separately.
+        return ()
+
+    subjects = {mention.area_id for mention in mentions}
+    for ref in still_running:
+        if ref.code in subjects:
+            continue
+        # The alert is running there and the message said so. ACTIVE is what the
+        # source stated, not an inference from the all-clear next to it.
+        mentions.append(
+            AreaMention(
+                ref.code, oblast_slug(ref.oblast), AlertState.ACTIVE, kind, AreaRole.CONTINUATION
+            )
+        )
+    return tuple(mentions)
+
+
 def classify(
     text: str, areas: AreaTable | None = None
 ) -> tuple[str, AlertState, ThreatKind] | None:
-    """Map one message to an area, a state and a means. None when nothing matches.
+    """The first area a message named, or None when it named none.
 
-    Returns None rather than a default: an unclassified message is unknown, and
-    an unknown that resolves to a state is the defect this project is built
-    around.
-
-    **Sprint 7 changed where the area comes from.** When an ``AreaTable`` is
-    supplied, the area is the first tag the channel itself attached, resolved
-    through the versioned map. The oblast-name table below remains only as the
-    fallback for messages carrying no tag at all, which is 0.66% of the design
-    window and is being read by hand under T34. The fallback is kept rather than
-    deleted because deleting it would silently change what an untagged message
-    means before anyone has looked at one.
+    Kept as the single-area reading for callers and tests that predate T37, and
+    delegating rather than reimplementing: two functions deciding the same thing
+    is how the state layer and the area layer drifted apart in the first place.
+    A caller that wants everything the message said wants ``classify_message``.
     """
-    lowered = text.lower()
-
-    area: str | None = None
-    if areas is not None:
-        resolved, unknown = areas.resolve_all(text)
-        if resolved:
-            area = resolved[0].code
-        elif unknown:
-            # F60. The channel named an area and the map did not know it. Falling
-            # back to the oblast table here would answer a question the channel
-            # already answered, with a guess drawn from the table that scores 0
-            # of 20 (F23), and the unknown tag would leave no mark on the result.
-            # The fallback exists for messages with no tags at all, and only for
-            # those.
-            return None
-    if area is None:
-        area = next((code for pattern, code in AREAS.items() if pattern in lowered), None)
-    if area is None:
+    mentions = classify_message(text, areas)
+    if not mentions:
         return None
-
-    state = classify_state(text)
-    if state is None:
-        return None
-
-    kind = next(
-        (value for pattern, value in KIND_MARKERS.items() if pattern in lowered),
-        ThreatKind.UNKNOWN,
-    )
-    return area, state, kind
+    first = mentions[0]
+    return first.area_id, first.state, first.kind
 
 
 class TelegramChannelSource:
@@ -296,27 +371,32 @@ class TelegramChannelSource:
             if self.areas is not None:
                 _resolved, unknown = self.areas.resolve_all(text)
                 unknown_tags.extend(tag for tag in unknown if tag not in unknown_tags)
-            classified = classify(text, self.areas)
-            if ts is None or classified is None:
+            mentions = classify_message(text, self.areas)
+            if ts is None or not mentions:
                 unparsed.append(text[:120])
                 continue
-            area, state, kind = classified
-            events.append(
+            # One event per area the message named, not per message (T37). A
+            # message naming eight raions is eight transitions; keeping the
+            # first was a silent loss of seven.
+            events.extend(
                 ThreatEvent(
-                    area_id=area,
-                    state=state,
+                    area_id=mention.area_id,
+                    state=mention.state,
                     ts_source=ts,
                     ts_ingest=now,
                     source_id=self.source_id,
-                    kind=kind,
+                    kind=mention.kind,
                     provenance=Provenance.REPORTED,
                     raw_fields={"text": text[:200]},
+                    oblast=mention.oblast,
+                    role=mention.role,
                 )
+                for mention in mentions
             )
 
         self.report = ParseReport(
             messages=len(found),
-            parsed=len(events),
+            parsed=len(found) - len(unparsed),
             unparsed=tuple(unparsed),
             first_id=first_id,
             last_id=last_id,

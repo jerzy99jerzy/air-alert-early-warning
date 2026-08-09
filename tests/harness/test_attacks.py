@@ -257,3 +257,37 @@ def test_a13_an_unknown_tag_is_not_replaced_by_a_prose_guess() -> None:
     misleading = "Львівська область #Вигаданський_район Повітряна тривога"
     assert classify(misleading, table) is None, "a prose guess replaced an unknown tag"
     assert classify(misleading) is not None, "the untagged fallback must still work"
+
+
+def test_a14_a_still_dangerous_area_is_not_silently_dropped() -> None:
+    """MT15. An all-clear must not speak for the areas it says are still alight.
+
+    The channel writes the cleared area as a tag and the areas where the alert
+    continues as prose after a marker. Reading only the tags produced an
+    all-clear and nothing else, which is the system going quiet about a place
+    its own source had just called dangerous. The attack is the message itself,
+    verbatim in shape from the corpus.
+    """
+    from mavo.areas import AreaTable
+    from mavo.schema import AlertState, AreaRole
+    from mavo.sources.telegram import TelegramChannelSource
+    from mavo.transport import StubTransport
+
+    text = (
+        "🟢 15:53 Відбій тривоги в Куп’янський район.\n"
+        "Зверніть увагу, тривога ще триває у:\n- Пологівський район\n#Купянський_район"
+    )
+    body = (
+        '<div class="tgme_widget_message" data-post="air_alert_ua/7001">'
+        f'<div class="tgme_widget_message_text js-message_text">{text}</div>'
+        '<a class="tgme_widget_message_date">'
+        '<time datetime="2026-09-01T21:00:00+00:00"></time></a></div>'
+    )
+    events = TelegramChannelSource(StubTransport(body), areas=AreaTable.from_csv()).poll()
+
+    continuing = [event for event in events if event.role is AreaRole.CONTINUATION]
+    assert continuing, "the still-running area left no trace; the all-clear spoke alone"
+    assert all(event.state is AlertState.ACTIVE for event in continuing)
+    cleared = [event for event in events if event.role is AreaRole.SUBJECT]
+    assert [event.state for event in cleared] == [AlertState.CLEAR]
+    assert continuing[0].area_id != cleared[0].area_id

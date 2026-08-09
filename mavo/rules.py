@@ -46,7 +46,15 @@ def is_poisoned(night: Night) -> bool:
             for event in active[index:]
             if event.ts_source - anchor.ts_source <= POISON_WINDOW
         ]
-        if len({event.area_id for event in window}) >= POISON_AREA_THRESHOLD:
+        # Breadth is counted in oblasts, not in reporting units (T37). Once a
+        # message naming eight raions became eight events, a single legitimate
+        # multi-raion alert reached this threshold on its own and would have
+        # suppressed the night: the control would have started firing on exactly
+        # the traffic it exists to distinguish itself from. An area whose oblast
+        # is unknown is its own bucket rather than merged with the other
+        # unknowns, because collapsing unknowns would let breadth hide in them.
+        breadth = {event.oblast or f"?{event.area_id}" for event in window}
+        if len(breadth) >= POISON_AREA_THRESHOLD:
             return True
     return False
 
@@ -56,7 +64,7 @@ def r1_border_active(night: Night) -> datetime | None:
     if is_poisoned(night):
         return None
     for event in sorted(_active(night.events), key=lambda e: e.ts_source):
-        if event.area_id in BORDER_OBLASTS:
+        if event.oblast in BORDER_OBLASTS:
             return event.ts_source
     return None
 
@@ -66,7 +74,7 @@ def r3_border_missile(night: Night) -> datetime | None:
     if is_poisoned(night):
         return None
     for event in sorted(_active(night.events), key=lambda e: e.ts_source):
-        if event.area_id in BORDER_OBLASTS and event.kind is ThreatKind.MISSILE:
+        if event.oblast in BORDER_OBLASTS and event.kind is ThreatKind.MISSILE:
             return event.ts_source
     return None
 
@@ -85,11 +93,11 @@ def r2_westward_escalation(night: Night) -> datetime | None:
             if event.ts_source - candidate.ts_source <= ESCALATION_WINDOW
         ]
         seen.append(event)
-        ranked = [candidate for candidate in seen if candidate.area_id in order]
-        areas = {candidate.area_id for candidate in ranked}
+        ranked = [candidate for candidate in seen if candidate.oblast in order]
+        areas = {candidate.oblast for candidate in ranked}
         if len(areas) < ESCALATION_MIN_AREAS:
             continue
-        positions = [order[candidate.area_id] for candidate in ranked]
+        positions = [order[candidate.oblast] for candidate in ranked]
         if positions[-1] > positions[0]:
             return event.ts_source
     return None
@@ -100,7 +108,7 @@ def r4_border_drone(night: Night) -> datetime | None:
     if is_poisoned(night):
         return None
     for event in sorted(_active(night.events), key=lambda e: e.ts_source):
-        if event.area_id in BORDER_OBLASTS and event.kind is ThreatKind.DRONE:
+        if event.oblast in BORDER_OBLASTS and event.kind is ThreatKind.DRONE:
             return event.ts_source
     return None
 

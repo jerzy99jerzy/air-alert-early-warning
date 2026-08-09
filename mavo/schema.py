@@ -103,7 +103,33 @@ class ThreatKind(Enum):
     UNKNOWN = "unknown"
 
 
+class AreaRole(Enum):
+    """Why an area appears in the message that named it.
+
+    Sprint 8, T37. An all-clear can carry a continuation list: the tag names the
+    area that was cleared, and the list names areas where the alert is *still
+    running*. Both are areas the source spoke about and both must reach the
+    store, but reading them as one thing would announce an all-clear over a
+    place the message called dangerous. The role is a field rather than a note
+    in ``raw_fields`` because a consumer must be able to match on it.
+    """
+
+    SUBJECT = "subject"
+    CONTINUATION = "continuation"
+
+
 # Oblasts bordering Poland, and the second-order ring behind them.
+#
+# **These are oblast slugs, not area ids** (T38). Until 0.12.0.0 the rules below
+# tested ``event.area_id`` against this set, and that comparison could only ever
+# be false on a real event: ``classify`` emits a KATOTTG register code for a
+# raion or hromada (``UA46060000000042587``) while these are coarse slugs, so
+# every border predicate was silently unsatisfiable outside the fixture. Two
+# vocabularies met at a set membership test and the answer was "no" forever.
+#
+# The split is now deliberate and typed: ``area_id`` identifies the reporting
+# unit at whatever granularity the source names it, ``oblast`` is the coarse
+# geography the rules reason about, and both live on the event.
 BORDER_OBLASTS: frozenset[str] = frozenset({"volyn", "lviv", "zakarpattia"})
 SECOND_RING_OBLASTS: frozenset[str] = frozenset({"rivne", "ternopil", "ivano-frankivsk"})
 
@@ -125,6 +151,15 @@ class ThreatEvent:
     kind: ThreatKind = ThreatKind.UNKNOWN
     provenance: Provenance = Provenance.REPORTED
     raw_fields: dict[str, str] = field(default_factory=dict)
+    # T38. The oblast this area sits in, as a canonical slug, or "" when the
+    # source did not say and nothing could resolve it. Empty means unknown and
+    # is never treated as a match: a rule asking "is this a border oblast" gets
+    # "no" from an unknown, and the unknown is visible in the row rather than
+    # dressed as a negative answer.
+    oblast: str = ""
+    # T37. Whether the message was about this area or listed it as still under
+    # alert while clearing another.
+    role: AreaRole = AreaRole.SUBJECT
 
     @property
     def latency_s(self) -> float:
@@ -138,7 +173,12 @@ class ThreatEvent:
         second row. An offset-aware timestamp is normalized to UTC first, so the
         same instant reported as ``+02:00`` by one poll and ``+00:00`` by
         another hashes identically; two spellings of one moment are one
-        transition, not two (F52). Deliberately still excludes ``kind`` and the
+        transition, not two (F52). ``role`` is part of the identity from 0.12.0.0
+        (T37): one message can name one area twice, clearing it and listing it
+        as still under alert, and those are two transitions rather than one
+        row overwriting the other. ``oblast`` stays out, because it is derived
+        from ``area_id`` rather than an independent fact about the moment.
+        Deliberately still excludes ``kind`` and the
         raw text: identity means "this area entered this state at this moment
         according to this source", and a reclassification of the same transition
         is a better *reading*, not a new *event* — see D-013 for why re-reading
@@ -147,7 +187,9 @@ class ThreatEvent:
         """
         ts = self.ts_source
         stamp = (ts.astimezone(UTC) if ts.tzinfo is not None else ts).isoformat()
-        payload = "|".join([self.area_id, self.state.value, stamp, self.source_id])
+        payload = "|".join(
+            [self.area_id, self.state.value, stamp, self.source_id, self.role.value]
+        )
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 

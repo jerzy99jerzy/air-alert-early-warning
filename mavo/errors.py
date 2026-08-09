@@ -54,3 +54,15 @@ class DuplicateTag(MavoRefusal):
     """
 
     code = "refusal.duplicate_tag"
+
+
+class SchemaMismatch(MavoRefusal):
+    """A store on disk was written by a version with a different column set.
+
+    Refused rather than migrated. Adding a column in place would give every
+    existing row a value nobody observed, and an invented value is
+    indistinguishable from a measured one once it is in the table. A re-reading
+    is a rebuild from the raw corpus (D-013).
+    """
+
+    code = "refusal.schema_mismatch"

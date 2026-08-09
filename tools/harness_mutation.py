@@ -47,6 +47,14 @@ class Mutation:
 
 MUTATIONS: tuple[Mutation, ...] = (
     Mutation(
+        attack="test_a14_a_still_dangerous_area_is_not_silently_dropped",
+        row="MT15",
+        path="mavo/sources/telegram.py",
+        old="    still_running = areas.resolve_prose(text[split.end() :]) if split else ()",
+        new="    still_running = ()",
+        disables="reading the continuation list an all-clear carries",
+    ),
+    Mutation(
         attack="test_a1_broad_simultaneous_activation_raises_nothing",
         row="MT1",
         path="mavo/rules.py",
@@ -96,10 +104,13 @@ MUTATIONS: tuple[Mutation, ...] = (
         attack="test_a8_replaying_a_feed_does_not_grow_the_log",
         row="MT8",
         path="mavo/schema.py",
-        old='        payload = "|".join([self.area_id, self.state.value, stamp, self.source_id])',
+        old=(
+            '            [self.area_id, self.state.value, stamp, self.source_id,'
+            ' self.role.value]'
+        ),
         new=(
-            '        payload = "|".join([self.area_id, self.state.value, stamp,'
-            ' self.source_id, self.ts_ingest.isoformat()])'
+            '            [self.area_id, self.state.value, stamp, self.source_id,'
+            ' self.role.value, self.ts_ingest.isoformat()]'
         ),
         disables="idempotence by content hash",
     ),
@@ -128,8 +139,8 @@ MUTATIONS: tuple[Mutation, ...] = (
         attack="test_a13_an_unknown_tag_is_not_replaced_by_a_prose_guess",
         row="MT14",
         path="mavo/sources/telegram.py",
-        old="        elif unknown:",
-        new="        elif False:",
+        old="    elif unknown:",
+        new="    elif False:",
         disables="the refusal to guess an area the channel named and the map cannot read",
     ),
     Mutation(

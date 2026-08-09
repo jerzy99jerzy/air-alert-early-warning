@@ -16,6 +16,62 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.12.0.0 - 2026-08-09
+
+**Sprint 8, partial and stated as partial.** T37 and T38 shipped; T32, the
+border-distance column, did not, because it needs OpenStreetMap geometry that
+nothing in this repository has. The sprint is not being declared closed on the
+two thirds that worked.
+
+- **T37. Every area a message names now reaches the store.** A message naming
+  several areas produced one event and dropped the rest: 13.3% of comparable
+  design-window messages name two to eight. Worse, an all-clear can carry a list
+  of areas where the alert is *still running*, written in prose while the
+  subject is written as a tag, so the tag path could not see it at all: 5.2% of
+  comparable messages, 4,064 area mentions, none of them recorded anywhere. Both
+  rows in `docs/DATA-FLOW.md` move from invisible to closed. `AreaRole`
+  distinguishes the subject of an all-clear from an area listed as continuing,
+  and the role is part of the content hash, so one message naming one area twice
+  is two transitions rather than one row overwriting the other.
+- **F26 survives T37.** Where one area is both cleared and listed as still
+  running, the state stays `PARTIAL_CLEAR`. Splitting that into a CLEAR row and
+  an ACTIVE row would replace a stated contradiction with two confident claims,
+  one of them wrong. `PARTIAL_CLEAR` now also covers a continuation list that
+  resolves to no area: a contradiction that cannot be attributed is still a
+  contradiction.
+- **T38, F65. The border predicates could not fire on real input.** The rules
+  compared `event.area_id` against `BORDER_OBLASTS`; since sprint 7 the first is
+  a KATOTTG register code and the second holds oblast slugs. False by
+  construction on every live event, true only on the fixture, where the two
+  vocabularies coincide, which is why 173 tests agreed with it. `ThreatEvent`
+  now carries `oblast` beside `area_id` and the rules read the coarse field.
+- **F66. Poison suppression was counting the wrong unit.** Its threshold of 8
+  distinct areas in two minutes was chosen when one message produced one event.
+  T37 would have made a single legitimate multi-raion alert trip it. Breadth is
+  now counted in oblasts, which is what the docstring already claimed; an area
+  with an unknown oblast is its own bucket, so breadth cannot hide in the
+  unknowns. Caught by reading the two changes together, not by a test, and the
+  near-miss is logged rather than quietly fixed.
+- **Store schema, and a refusal instead of a migration.** Two columns added.
+  A store written by an older version is refused with `SchemaMismatch` naming
+  the missing columns, because migrating in place would give existing rows a
+  value nobody observed, and an invented value is indistinguishable from a
+  measured one once it is in the table (D-013).
+- **MT15 and harness A14.** An all-clear that speaks for the areas it has just
+  called dangerous is now a threat-model row with a scripted attack and a
+  mutation that turns it red.
+- The mutation harness refused two of its own mutations as stale after this
+  work touched the text they patch, which is the behaviour it was built for.
+  Both rewritten; 12 of 12 killed.
+- `docs/FEED-SPEC.md`. What a machine-readable Polish alerting feed would have
+  to be: five properties, derived from four months of consuming the Ukrainian
+  one rather than from taste, with the heartbeat property argued at length
+  because its absence is the one that makes a dead feed and a quiet sky look
+  identical. It opens by stating that it describes a feed that does not exist,
+  and it makes no claim about anyone's competence. T8 now points at it: the
+  search for a Polish source stays blocked, and a reply can at least be checked
+  against something specific.
+
 ## 0.11.2.0 - 2026-08-09
 
 **Documentation release, plus the check that would have caught it being wrong.**
