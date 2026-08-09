@@ -16,6 +16,41 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.7.0.0 - 2026-08-09
+
+A scope correction, and the two documentation defects that hid behind it.
+
+- **F53. The notification plan declared public distribution out of scope.** The
+  project's target scope is a publicly available warning system, so that
+  sentence misstated the destination with the confidence of a decision. It
+  survived a full release because everything around it agreed: MVP.md topped out
+  at a portfolio artefact, T6 asked counsel about a private circle, and the
+  threat model deferred output-channel rows on the strength of a small trusting
+  audience. A coherent smaller project that no check could contradict, because
+  every check here verifies that documents agree with each other and these did.
+- `docs/MVP.md` gains **Audience D, a publicly available warning system**, with
+  its blockers typed: the holdout gate, a measured alarm rate from shadow mode,
+  a legal position covering strangers rather than a named circle, a budget
+  calibrated on more than two conversations, a delivery path with an
+  availability target, and a subscription route that is not one Android app in
+  English. The gap between C and D is deliberately larger than the gap between
+  A and C, because that gap is the honest distance to the point of the project.
+- `docs/MOBILE.md` replaces its incorrect closing section with `Sequencing, not
+  exclusion` and a new section on what public availability changes: the budget
+  becomes a distribution rather than one person's tolerance, blast radius
+  replaces individual harm in the threat model, delivery acquires the project's
+  first availability target, and accessibility stops being optional.
+- **F54. An access blocker outlived the access problem.** Two MVP rows read
+  `blocked on the token` after the corpus was retrieved without one, and one of
+  them had been satisfied since sprint 4. A row mistyped as `access` is a row
+  nobody attacks, which makes the error self-preserving.
+- **F55. Two figures were written from memory.** `COMPUTATION.md` cited a
+  constant that does not exist in the package, and `MOBILE.md` called an
+  inference from one 14.7-hour window a measurement, when the corpus gives a
+  real one (~514 posts/day across 118 days). Provenance laundering: a label
+  improves as a claim is copied, because the copy keeps the number and drops
+  the qualifier. T22 proposes the cheap partial guard.
+
 ## 0.6.2.0 - 2026-08-09
 
 Two claims the repository made about itself and did not check.
@@ -80,12 +115,12 @@ defects, one of them in the live parse path. Entries state the defect.
   the time in the footer, after the text. Every live-parsed event carried the
   previous message's timestamp, the first text on the page was dropped, and the
   suite could not see it because the page fixture was synthetic and written in
-  the regex's order — a fixture encoding the code's assumption, F1's class one
+  the regex's order - a fixture encoding the code's assumption, F1's class one
   layer down. Parsing is per `data-post` block now, the fixture is the live
   order, and harness A12 (MT13) mutation-verifies the pairing.
 - **F51.** Backfill snapshots were written non-atomically, so an interrupt
   mid-write could plant a truncated page whose filename claims the full id
-  range — invisible to `--resume` and to `contiguity_gaps`, which reads ranges
+  range - invisible to `--resume` and to `contiguity_gaps`, which reads ranges
   from names. Snapshots now write to scratch and `os.replace`.
 - **F52.** The store's replay order (ISO text, lexicographic) was chronological
   only by the accident that no source with a non-UTC offset had ever met the
@@ -95,12 +130,12 @@ defects, one of them in the live parse path. Entries state the defect.
   emits aware-UTC.
 - **D-013.** `content_hash` keeps excluding `kind` and text, and the reason is
   now written down: a store is a parser's reading of the raw corpus, rebuilt by
-  a new parser rather than appended over — the path where a re-ingest silently
+  a new parser rather than appended over - the path where a re-ingest silently
   kept the old parser's rows is closed by convention and by the decision log.
 - `is_degraded` joins `is_clear` and `is_actionable`: the docstring had promised
   a degradation predicate that did not exist, which is README-claim drift living
   one file below the lints that catch it. Written by negation in the safe
-  direction — a fifth state is degraded, and loud, by default.
+  direction - a fifth state is degraded, and loud, by default.
 - `UrllibTransport` local logic (size cap, exception mapping, lossy decode) was
   untested at 68% coverage; the size cap is a threat-model control and an
   untested control is an unmeasured one. Four tests, no network.

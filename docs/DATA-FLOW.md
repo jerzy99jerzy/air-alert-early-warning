@@ -106,7 +106,7 @@ F50). Three regexes with deliberately separated jobs:
 The block boundary is the load-bearing part. Until 0.6.0.0 a single page-wide
 regex required the timestamp to precede the text; on the live page the
 timestamp sits in the message *footer*, so every event carried its neighbour's
-time — a one-message shift invisible to a suite whose fixture was written in
+time - a one-message shift invisible to a suite whose fixture was written in
 the regex's order (F50, harness A12). Pairing inside a block cannot cross a
 message boundary by construction, in either internal order.
 

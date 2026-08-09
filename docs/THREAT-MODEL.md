@@ -57,9 +57,19 @@ A source that is subtly late rather than silent degrades lead time without
 tripping anything. Not currently detected. T5 plans a rolling latency
 distribution with an alert on drift.
 
-The output channel does not exist yet, so its threats (a compromised bot sending
-arbitrary warnings to a trusting audience) are not modelled here. They land with
-the channel, in the same version, or the channel does not land.
+The output channel does not exist yet, so its threats (a compromised publishing
+path sending arbitrary warnings to a trusting audience) are not modelled here.
+They land with the channel, in the same version, or the channel does not land.
+`docs/MOBILE.md` drafts the rows they will become.
+
+*Amended 0.7.0.0.* That deferral was written while the plan misstated the
+project as private-circle only (F53). At the project's actual scope, a public
+warning system, the same compromise is a mass-notification event whose harm is
+not proportional to recipient count: a false airspace alarm arriving at once
+across a region is an incident in its own right. The deferral stands, because
+modelling a channel that does not exist produces rows nothing can test, but the
+priority does not: these rows are a precondition of the public tier rather than
+a follow-up to it, and `docs/MVP.md` Audience D states them as blockers.
 
 ## What the maintainer can do
 

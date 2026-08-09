@@ -44,10 +44,16 @@ without tripping anything.
 **Acceptance:** a test where a source's latency doubles mid-history and the run
 reports degradation.
 
-## T6. Legal position on distributing warnings beyond a private circle
+## T6. Legal position on distributing warnings to people other than the operator
 Status: `decision`
 Does not shrink by writing code. Needs counsel, not a sprint.
 **Acceptance:** a written position in `docs/DECISIONS.md` with a named basis.
+*Restated 0.7.0.0.* The original title asked about a private circle, which is
+the intermediate tier and not the destination. The question that actually gates
+Audience D is distribution to recipients the operator does not know, and the
+answer to the narrower question does not imply the broader one. Asking counsel
+the smaller question would have produced a correct answer to the wrong
+question, which is the more expensive kind of mistake here (F53).
 
 ## T7. Onboarding probe from a clean clone
 Status: `ready`
@@ -156,7 +162,7 @@ Status: `done` (0.5.5.0 retrieval, recorded at 0.6.0.0)
 spanning 118 days, contiguous with no gaps, exit code 0; id range, span and the
 design/holdout boundary (D-012a) recorded in `STATUS.json`, boundary computed
 before any message content was read. This entry was still `ready` while
-`STATUS.json` already carried the corpus block — the file that holds rules
+`STATUS.json` already carried the corpus block - the file that holds rules
 lagged the file that holds facts by one release, which is the drift class
 docs-audit exists for, in the one file it does not read.
 Original text:
@@ -190,3 +196,14 @@ the registration itself. It gates T14, which gates any drone-tier alarm (D-009),
 and it costs minutes.
 **Acceptance:** credentials stored outside the tree and one authenticated ADS-B
 read over eastern Poland recorded with its latency.
+
+
+## T22. Fail the build when a document cites an identifier the package lacks
+Status: `ready`
+F55: `docs/COMPUTATION.md` cited a constant that does not exist, in the document
+whose subject is that figures come from measurement. The audits check cited test
+names and pinned counts; nothing checks the rest of the backticked identifiers.
+**Acceptance:** `tools/docs_audit.py` extracts backtick-quoted names matching an
+identifier pattern from `docs/*.md` and the README, and fails on any that appear
+in no package source, with an explicit allow-list for names that are deliberately
+hypothetical. Verified red by citing a fabricated symbol in a scratch copy.

@@ -4,4 +4,4 @@ Codename MAVO (Lem, *His Master's Voice*). The distribution slug stays
 descriptive; the import namespace is unique. See README, "Naming".
 """
 
-__version__ = "0.6.2.0"
+__version__ = "0.7.0.0"

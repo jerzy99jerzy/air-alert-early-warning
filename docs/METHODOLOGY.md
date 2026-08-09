@@ -120,6 +120,9 @@ repository has come to the mistake it was built after.
 | [F50](#f50-0600-review-the-page-fixture-encoded-the-parsers-assumption) | 0.6.0.0 review | The page fixture encoded the parser's assumption |
 | [F51](#f51-0600-review-an-interrupted-write-could-plant-a-hole-the-census-cannot-see) | 0.6.0.0 review | An interrupted write could plant a hole the census cannot see |
 | [F52](#f52-0600-review-the-stores-ordering-contract-was-an-accident-of-uniform-input) | 0.6.0.0 review | The store's ordering contract was an accident of uniform input |
+| [F53](#f53-0700-a-plan-declared-the-projects-purpose-out-of-scope) | 0.7.0.0 | A plan declared the project's purpose out of scope |
+| [F54](#f54-0700-an-access-blocker-outlived-the-access-problem) | 0.7.0.0 | An access blocker outlived the access problem |
+| [F55](#f55-0700-two-figures-in-the-documents-were-written-from-memory) | 0.7.0.0 | Two figures in the documents were written from memory |
 
 ## Defect log
 
@@ -631,8 +634,8 @@ blocks carry a `data-post` anchor. The footer order is not an assumption about
 t.me/s; it is the shape of every page in the evidence, so the shift was
 systematic, not occasional.
 
-Class: **the same family as F1** — the fixture flattered the thing it was meant
-to test — one layer down, at the page structure rather than the rule. Repaired
+Class: **the same family as F1** - the fixture flattered the thing it was meant
+to test - one layer down, at the page structure rather than the rule. Repaired
 by parsing per `data-post` block with the timestamp searched inside the block
 only, in either internal order; the fixture is now a page in the live footer
 order; harness A12 (MT13) asserts exact pairing on two messages and its
@@ -644,7 +647,7 @@ mutation, which widens the timestamp search back to the whole body, goes red.
 mid-write leaves a truncated `page-*.html` whose *name* still claims the full id
 range. `--resume` then skips it as already retrieved, and `contiguity_gaps`
 reads ranges from filenames, so the hole is structurally invisible: a census
-with a hole it cannot see, which is a sample that believes otherwise — the
+with a hole it cannot see, which is a sample that believes otherwise - the
 sentence this module's own docstring uses about someone else.
 
 Why it survived: the failure needs an interrupt to land inside a single write of
@@ -665,7 +668,7 @@ strings is chronological only when every string carries one uniform offset, and
 nothing enforced that: the Telegram adapter emits aware-UTC, the fixture
 generator emitted naive datetimes, and the two had simply never met in one
 store. Had they, replay order would have been wrong exactly where two sources
-correlate — the system's whole job — and any aware/naive comparison in
+correlate - the system's whole job - and any aware/naive comparison in
 `latency_s` would have raised, converting a correctness defect into an outage.
 
 A second face of the same defect: `content_hash` hashed the timestamp as
@@ -680,6 +683,77 @@ offset; the hash normalizes an aware timestamp to UTC before spelling it; the
 fixture generator now emits aware-UTC. Three regressions in `test_store.py`
 hold the refusal, the true-chronology replay across mixed offsets, and the
 one-instant-one-hash identity.
+
+
+### F53, 0.7.0.0. A plan declared the project's purpose out of scope
+
+`docs/MOBILE.md` v1.0 closed with a section headed "Explicitly out of scope"
+whose first item was public distribution. The project's target scope is a
+publicly available warning system. The sentence was not a decision that was
+later reversed; it was wrong when written, and it was written with the
+confidence of a decision.
+
+Why it survived a full release: it was consistent with everything around it.
+`docs/MVP.md` topped out at "public repository as a portfolio artefact", T6
+asked about "a private circle", and the threat model deferred output-channel
+threats on the strength of a small trusting audience. Each of those is
+defensible alone, and together they formed a coherent smaller project that
+nothing in the repository contradicted. The gate cannot catch this class at
+all: every check here verifies that documents agree with the tree and with each
+other, and these documents agreed.
+
+Class: **the destination restated as the nearest reachable point.** Distinct
+from claim drift (F31), where a true statement goes stale. Here the statement
+was never true, and it survived because it described something achievable. The
+tell, available in hindsight, is that no document stated a goal the project
+could not currently reach, which for a project this incomplete is itself
+suspicious.
+
+Repaired by naming the actual scope in three places rather than one: Audience D
+in `docs/MVP.md` with its blockers typed, a `Sequencing, not exclusion` section
+in `docs/MOBILE.md` replacing the incorrect one, and T6 restated to ask counsel
+the broader question. No lint is proposed: a check that a document states an
+ambitious enough goal is not a check, it is an opinion with a build step.
+
+### F54, 0.7.0.0. An access blocker outlived the access problem
+
+Two rows in `docs/MVP.md` read `blocked on the token` after sprint 6 retrieved
+60,680 real messages without a token. One of them, `Defect log entries from
+real data`, had in fact been satisfied earlier still: F23 was measured against
+20 live messages in sprint 4.
+
+The type system in that document is the point of it. **Access** blockers do not
+shrink no matter how many sprints pass; **engineering** blockers do. A row
+mistyped as access is a row nobody attacks, so the error is self-preserving:
+it removes itself from the list of things anyone tries to fix.
+
+Class: F44's family (a belief outliving its evidence), specialised to
+scheduling. The retrieval that falsified it is recorded three documents away,
+in `docs/DECISIONS.md`, and nothing connects the two. Repaired by correcting
+both rows with the reason stated in the table, and by recording the correction
+as a scope change under that document's own amendment rule.
+
+### F55, 0.7.0.0. Two figures in the documents were written from memory
+
+`docs/COMPUTATION.md` cited a constant `MAX_ALARMS_PER_WEEK = 2.0`. No such
+name exists in the package; the value lives on `DecisionPolicy.total_budget_per_week`.
+`docs/MOBILE.md` described the channel as "measured at ~650 posts/day", which
+is an inference from a single 14.7-hour window, labelled as inference in both
+`docs/FOUNDATIONS.md` and this file. The corpus gives ~514/day as an actual
+measurement across 118 days.
+
+Both errors are the same move: a figure restated confidently in a new document
+without being re-read from its source, one of them in the document whose whole
+subject is that numbers come from measurement rather than memory.
+
+Class: **provenance laundering.** A claim's label improves as it is copied,
+because the copy loses the qualifier and keeps the number. The existing audits
+verify cited *test names* and pinned *counts*; neither reads prose for symbol
+names or for a label that has quietly been upgraded. Repaired by correction and
+by stating the provenance inline at both sites. A cheap partial guard is
+available and not yet built: extracting backtick-quoted identifiers from the
+documents and failing when one does not appear in the package. It is recorded
+as T22 rather than claimed here.
 
 ## Corpus measurements, 2026-08-09
 

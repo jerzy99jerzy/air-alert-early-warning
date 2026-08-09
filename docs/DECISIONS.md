@@ -207,8 +207,8 @@ covering four eastern oblasts and no western one. Fitting to it would reproduce
 F23 at a smaller scale, which F28 already refused once. Meanwhile the corpus has
 a property the code does not: it can only be collected forward in time, because
 the page is a twenty-message window. *(Recorded as reasoned, and later found
-false: the preview pages backwards, F44. The decision's conclusion — wait for a
-corpus rather than fit to a sample — survived its wrong premise; the schedule
+false: the preview pages backwards, F44. The decision's conclusion - wait for a
+corpus rather than fit to a sample - survived its wrong premise; the schedule
 built on the premise did not, and 0.5.0.0 reordered it. Left in place because a
 decision log that edits its own reasoning after the fact is a changelog of
 opinions.)* A week spent redesigning against a sample
@@ -280,8 +280,8 @@ Date: 2026-08-09. Status: adopted
 
 `content_hash` deliberately excludes `kind` and the message text: identity means
 "this area entered this state at this moment according to this source". A
-reclassification of the same transition — the exact thing the sprint-7 redesign
-will produce for every message the 0/20 table misread — is a better *reading* of
+reclassification of the same transition - the exact thing the sprint-7 redesign
+will produce for every message the 0/20 table misread - is a better *reading* of
 an event, not a new event. Under `INSERT OR IGNORE` that has a sharp
 consequence: appending re-parsed events to a store built by the old parser
 silently keeps the old rows and drops every corrected one. The store would
@@ -289,14 +289,14 @@ preserve the defect the redesign fixes, invisibly, at the moment of fixing it.
 
 The decision is not to widen the hash. Widening it to cover `kind` or the text
 makes every parser improvement mint new identities, so a re-ingest *duplicates*
-history instead of correcting it — the same defect with the opposite sign.
+history instead of correcting it - the same defect with the opposite sign.
 
 The decision is to name what the store is. **The raw page corpus is the
 evidence; a store is a reading of it, and a reading is versioned by the parser
 that produced it.** A new parser writes a new store from the raw corpus; it
 never appends over an old parser's rows. This is already how the repository
-works — `backfill` writes pages and nothing else precisely so parsing can happen
-"later, from disk, as many times as the redesign needs" — so the decision
+works - `backfill` writes pages and nothing else precisely so parsing can happen
+"later, from disk, as many times as the redesign needs" - so the decision
 records the practice and closes the one path that contradicts it.
 
 Trigger to reopen: a live, append-forever deployment where rebuilding from raw

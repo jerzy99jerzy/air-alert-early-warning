@@ -18,7 +18,8 @@ is NOT BUILT unless it names a module that exists.
 - [The iOS constraint, named](#the-ios-constraint-named)
 - [The message contract](#the-message-contract)
 - [Threat model additions](#threat-model-additions)
-- [Explicitly out of scope](#explicitly-out-of-scope)
+- [Sequencing, not exclusion](#sequencing-not-exclusion)
+- [What public availability changes](#what-public-availability-changes)
 
 ## Framing: a delivery channel, not a product
 
@@ -51,7 +52,7 @@ The degradation class is mandatory, not optional. A warning channel that goes
 quiet when its feed dies has rebuilt unknown-resolves-to-clear at the
 notification layer: silence would read as calm precisely when the system is
 blind. `mavo.schema.is_degraded` exists as the code seam for this class, and
-it is written by negation in the safe direction — a state added tomorrow is
+it is written by negation in the safe direction - a state added tomorrow is
 degraded, and therefore *loud*, by default.
 
 ## What gates distribution
@@ -59,9 +60,9 @@ degraded, and therefore *loud*, by default.
 Two TODO items gate every recipient who is not the operator, and no app code
 shrinks either:
 
-- **T6** — a written legal position on distributing warnings beyond a private
+- **T6** - a written legal position on distributing warnings beyond a private
   circle. Needs counsel, not a sprint.
-- **T11** — nobody in the intended circle has been asked whether they want
+- **T11** - nobody in the intended circle has been asked whether they want
   this, or at what firing rate they would stop reading it. The second answer
   *replaces* the assumed 2/week budget; building recipient UX before it exists
   means calibrating a channel against a fiction.
@@ -84,7 +85,7 @@ flowchart LR
 ```
 
 One new seam: `Notifier`, a protocol in the same pattern as `Transport` and
-`ThreatSource` — the daemon is testable against an injected notifier, and the
+`ThreatSource` - the daemon is testable against an injected notifier, and the
 limit of that testing (that ntfy delivers what the tests assume) is stated
 rather than implied. The budget ledger lives beside the policy, server-side,
 append-only like the event store: every alarm sent is a row, and the week's
@@ -99,22 +100,22 @@ alerts require an Apple entitlement regardless of framework (see below).
 
 | Option | DND alarm path | Self-hosted push | Cost to first alarm | Verdict |
 | --- | --- | --- | --- | --- |
-| **Existing ntfy client (no app code)** | max-priority channel + user-granted DND override, supported today | native (UnifiedPush, foreground service) | hours | **M1.** Zero code buys the entire alarm path; the trade is generic UX and no MAVO-specific state on the phone |
+| **Existing ntfy client (no app code)** | max-priority channel + user-granted DND override [reported, from the client's documentation; unverified on a device] | native (UnifiedPush, foreground service) | hours | **M1.** Zero code buys the entire alarm path; the trade is generic UX and no MAVO-specific state on the phone |
 | **Native Android, Kotlin + Compose** | full control of notification channels, `USE_FULL_SCREEN_INTENT`, alarm category | UnifiedPush client library | weeks | **M2.** The alarm path is ~90% platform API; owning it natively is owning the actual product |
-| Flutter | via platform channels into the same Android APIs | via plugin over UnifiedPush | weeks + plugin risk | Rejected: cross-platform amortizes over shared UI, and this app is one list, one status screen and a notification pipeline that is platform-specific either way. The second platform (iOS) is *not* reached by the shared code where it matters — critical alerts are native work regardless |
+| Flutter | via platform channels into the same Android APIs | via plugin over UnifiedPush | weeks + plugin risk | Rejected: cross-platform amortizes over shared UI, and this app is one list, one status screen and a notification pipeline that is platform-specific either way. The second platform (iOS) is *not* reached by the shared code where it matters - critical alerts are native work regardless |
 | React Native | same, one more bridge | same | weeks + bridge risk | Rejected, same reasoning with a heavier runtime |
 | PWA / web push | no reliable DND override, delivery best-effort | partially | days | Rejected for the alarm class outright; acceptable someday for the observation digest |
-| Telegram bot | good delivery mechanics | **no** — third-party relay, and the same upstream as the signal | hours | Rejected on constraint 3. Fine as a *redundant secondary* for observation-tier only, never for alarms |
+| Telegram bot | good delivery mechanics | **no** - third-party relay, and the same upstream as the signal | hours | Rejected on constraint 3. Fine as a *redundant secondary* for observation-tier only, never for alarms |
 
 Decision: **M1 ships on the stock ntfy Android client against a self-hosted
 ntfy server; M2 is a native Kotlin/Jetpack Compose app speaking UnifiedPush to
 the same server.** Rationale in one sentence: every hour of work goes into the
-path that wakes a person, and that path is native on every option anyway — the
+path that wakes a person, and that path is native on every option anyway - the
 frameworks differ only in how much is stacked on top of it.
 
 [inference, revisable] If M2 ever demands iOS at parity, the revisit point is
-Kotlin Multiplatform for the contract/state layer with native UI on both — not
-Flutter — because the JSON contract and budget-display logic are the only
+Kotlin Multiplatform for the contract/state layer with native UI on both - not
+Flutter - because the JSON contract and budget-display logic are the only
 genuinely shared code.
 
 ## Phase M0: the collector daemon
@@ -124,15 +125,18 @@ polls. `mavo collect` is one-shot by design; the daemon is new.
 
 - `mavo watch`: a long-running loop holding **one** `TelegramChannelSource`
   instance, so consecutive polls share a baseline and `ParseReport.skipped`
-  becomes a measurement instead of unknown — the promise the collect command's
+  becomes a measurement instead of unknown - the promise the collect command's
   own NOTE already makes about continuous collection.
 - Each cycle: poll → append to store → evaluate the policy → emit decisions to
   the `Notifier` seam → emit degradation events for refusals and gaps.
 - Poll interval starts at 60 s and changes only on evidence: the page is a
-  ~20-message window against a channel measured at ~650 posts/day, so window
-  turnover during a mass alert is minutes; skip counts recorded by the daemon
-  are the measurement that licenses tightening (the T21 discipline, applied
-  forward).
+  ~20-message window against a channel averaging ~514 posts/day [measured, over
+  the 60,680-post corpus across 118 days], with peaks well above that: a
+  separate 14.7-hour window gives ~650/day [inference, one window]. Version 1.0
+  of this document quoted the second figure as measured, which upgraded an
+  inference by restating it (F55). Window turnover during a mass alert is
+  therefore minutes, and the skip counts the daemon records are the measurement
+  that licenses tightening the interval, not the estimate.
 - Runs under systemd on an operator-controlled always-on host. Credentials
   (the ntfy token) live outside the tree; the repository stays runnable by
   someone who has neither credentials nor network, as the CLI docstring
@@ -152,7 +156,7 @@ alarm-class messages emitted in shadow mode.
 ## Phase M1: self-notification MVP
 
 The MVP is deliberately app-less. It is real end-to-end: real daemon, real
-push, real phone, waking through DND — with zero lines of mobile code.
+push, real phone, waking through DND - with zero lines of mobile code.
 
 - ntfy server, self-hosted, TLS, token-authenticated topics, one topic per
   message class (`mavo-alarm`, `mavo-observe`, `mavo-degraded`).
@@ -175,7 +179,7 @@ unreachable without the token [measured, by attempting it].
 
 Entry conditions, in order, none skippable: sprint-7 classifier passes on the
 holdout; T11 recorded (the real budget number exists); T6 recorded if any
-recipient beyond the operator is added. Then, and only then, the native app —
+recipient beyond the operator is added. Then, and only then, the native app -
 because now it displays *real* alerts under a *measured* budget to people who
 *asked*.
 
@@ -183,10 +187,10 @@ Scope of the MVP app, and the discipline is what stays out:
 
 - **Three screens.** (1) *Feed*: alarm and observation messages, newest
   first, each showing rule id, regime, fired-at, lead estimate, and the
-  provenance label — the label travels to the phone, because a push that
+  provenance label - the label travels to the phone, because a push that
   cannot say whether it is measured or inferred is out of house style. (2)
   *System health*: last poll age, skipped counter, unparsed trend, source
-  reachability, budget remaining this week — the degradation class rendered
+  reachability, budget remaining this week - the degradation class rendered
   as state, so "is the system blind right now" is answerable at a glance.
   (3) *Settings*: server URL, token, per-class sound choices, and nothing
   else.
@@ -201,7 +205,7 @@ Scope of the MVP app, and the discipline is what stays out:
   section); a shared topic would let one person's tolerance set everyone's.
 
 **Acceptance:** a clean phone, the MANUAL's onboarding path followed from
-zero, first alarm drill rings through DND — the T7 clean-clone probe extended
+zero, first alarm drill rings through DND - the T7 clean-clone probe extended
 to a clean device; the app kills cleanly and the next alarm still arrives
 (delivery does not depend on the app process); a captured-message replay to
 the app cannot create an alarm entry the ledger does not hold.
@@ -216,7 +220,7 @@ entitlement process is Apple-documented, the approval odds are not].
 Consequences, stated rather than papered over:
 
 - iOS is **not** on the M1 or M2 critical path. The stock ntfy iOS client
-  delivers via the hosted APNs gateway — acceptable for the observation
+  delivers via the hosted APNs gateway - acceptable for the observation
   digest, a third-party relay and a non-guarantee for the alarm class.
 - If an iOS recipient enters at M2, the entitlement application starts at M2
   entry, in parallel, and until it is granted that recipient's alarm path is
@@ -243,8 +247,8 @@ two minor releases).
 }
 ```
 
-`ledger_id` is the idempotence key on the client — a redelivered push renders
-once — and the audit key across the pair: every notification on a phone
+`ledger_id` is the idempotence key on the client - a redelivered push renders
+once - and the audit key across the pair: every notification on a phone
 resolves to exactly one ledger row on the server, and a notification that
 does not is finding-grade.
 
@@ -256,7 +260,7 @@ the threat model cannot drift apart silently:
 - A compromised or cloned client must not be able to publish to any topic
   (write and read tokens are distinct; clients hold read-only).
 - A replayed push must not duplicate an alarm (ledger id idempotence).
-- The daemon dying must be distinguishable from the daemon finding nothing —
+- The daemon dying must be distinguishable from the daemon finding nothing -
   a heartbeat message on the degradation topic at a fixed interval, whose
   *absence* the client renders as staleness. Unknown is not the safe state,
   end to end.
@@ -264,11 +268,64 @@ the threat model cannot drift apart silently:
   no per-subject data; the existing SECURITY.md rule about raw per-subject
   records extends to the push path.
 
-## Explicitly out of scope
+## Sequencing, not exclusion
 
-Public distribution, app-store presence, and any recipient who has not been
-asked. That is a different project with different liability (T6 is scoped to
-a *private circle*), and the thesis is not yet proven on real data. The
-honest sequence is: classifier on the corpus, gate on the holdout, one
-operator, then a circle that was asked — in that order, with each step's exit
-criteria written before entering it.
+**Correction, 0.7.0.0.** Version 1.0 of this document listed public
+distribution and app-store presence as "explicitly out of scope". That was a
+misstatement of the project, not a decision of it: a publicly available warning
+system is the target scope. What the phases above describe is the order of
+arrival, and the earlier text confused an order with a boundary. The error is
+logged as F53 rather than quietly overwritten, because a plan that misstates
+the destination sends every downstream decision the wrong way, and two of them
+had already started to drift (see the next section).
+
+What is genuinely out of scope is **premature** distribution: shipping to
+people before the classifier works, before a rule has cleared its gate on
+evidence it did not shape, and before there is a written position on what the
+operator is undertaking by sending a stranger a warning. Each phase gate below
+is a condition, not a preference:
+
+| Gate | Blocks | Why it cannot be skipped |
+| --- | --- | --- |
+| Sprint 7 classifier passing on the holdout | any alarm-class message to anyone, including the operator | An alarm from a component that scores 0 of 20 on real content is noise with a siren attached |
+| A rule clearing the gate on real data | recipients beyond the operator | Until then the only honest claim is that the machinery works, not that the warning does |
+| T6, the legal position | any recipient who is not the operator | Sending warnings to strangers is a different undertaking from notifying yourself, and it does not become smaller by being unexamined |
+| T11, the measured budget | the multi-recipient tier | Two per week is a guess. A public tier calibrated against a guess is a guess at scale |
+
+## What public availability changes
+
+Recorded here because three design choices earlier in this document were made
+under the private-circle reading and do not survive it unchanged.
+
+**The budget stops being one recipient's tolerance.** Per-recipient budgets are
+still correct, but T11's method is not: two conversations measure a circle, not
+a population. At public scale the budget becomes a distribution rather than a
+number, and the honest form is a default with a per-recipient setting, plus a
+measurement of what people actually do with it. T11 stays as written for the
+private tier and a successor is owed for the public one.
+
+**Blast radius replaces individual harm in the threat model.** A compromised
+publishing path in a private circle sends a wrong warning to a handful of
+people who know the operator. The same compromise at public scale is a
+mass-notification event, and its consequences are not proportional to the
+recipient count: a false alarm about airspace, arriving at once across a
+region, is an incident in itself. This raises the priority of the read-only
+token split and the ledger audit from good practice to preconditions, and it
+means the notification threat rows land with the channel rather than after it.
+
+**Delivery capacity becomes a design constraint.** A self-hosted ntfy instance
+serving one operator is a container; the same instance serving an open
+subscriber list is a service with an availability target, which is the first
+component of this project that would have one. That is an argument for the
+alarm path staying on infrastructure the operator controls and for the
+subscriber tier being explicitly rate-limited, not an argument against public
+availability.
+
+**Accessibility stops being optional.** A public warning system whose only
+client is an Android app, in English, excludes most of the population it claims
+to serve. The M2 scope above is honest as a first client and dishonest as a
+final one, and the gap is named here rather than discovered later.
+
+None of these changes the sequence. All of them change what "done" means at the
+end of it, which is why `docs/MVP.md` now carries an Audience D rather than
+stopping at a public repository.

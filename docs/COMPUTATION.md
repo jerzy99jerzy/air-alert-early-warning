@@ -34,7 +34,7 @@ The thesis rests on one observed coincidence and one number that nearly
 destroys it. Every violation of Polish airspace in the observed period fell on
 a night of massed strikes against western Ukraine [reported; source coverage
 discussed in `docs/FOUNDATIONS.md`]. Those campaign nights cover roughly **57%
-of days** in the same period [reported]. The positive class — actual crossings —
+of days** in the same period [reported]. The positive class - actual crossings -
 holds roughly **a dozen events across four years** [reported].
 
 Both numbers are load-bearing:
@@ -61,8 +61,8 @@ Each night is scored once against each rule:
 
 `Contingency(a, b, c, d)` with `n = a+b+c+d`, `fired = a+b`, `events = a+c`.
 The scoring loop is `evaluate.run_rule`: a rule returns the *moment* it would
-have fired or `None`, and the moment matters because lead time — the minutes a
-warning buys — is measured only on true positives, as the median over `a`.
+have fired or `None`, and the moment matters because lead time - the minutes a
+warning buys - is measured only on true positives, as the median over `a`.
 
 Windows are nights rather than hours because the positive events are nightly
 phenomena and an hourly table would multiply `d` without adding information,
@@ -72,13 +72,13 @@ flattering every p-value for free [inference].
 
 All four in `mavo/baserate.py`, each returning `None` when undefined:
 
-- **base rate** `= events / n` — the probability of a crossing with no rule at
+- **base rate** `= events / n` - the probability of a crossing with no rule at
   all. This is the null model: the calendar.
-- **precision** `= a / fired` — P(crossing | fired). Undefined when the rule
+- **precision** `= a / fired` - P(crossing | fired). Undefined when the rule
   never fired.
-- **recall** `= a / events` — P(fired | crossing). Undefined when no crossing
+- **recall** `= a / events` - P(fired | crossing). Undefined when no crossing
   was observed.
-- **lift** `= precision / base rate` — the only number here that measures
+- **lift** `= precision / base rate` - the only number here that measures
   *information*. A lift of 1.0 means the rule's firing changed nothing about
   the probability of a crossing; at a 57% base rate, high precision is cheap
   and lift is what separates a detector from a calendar.
@@ -91,8 +91,8 @@ Reporting zero would make an *untested* rule indistinguishable from a *bad*
 one, and the difference decides what happens next: a bad rule is dropped, an
 untested one is tested. The same convention holds for recall without events,
 base rate of an empty history, and lift without firings. This is the
-statistical face of the project's central invariant — UNKNOWN never resolves
-to CLEAR — applied to its own metrics. Every `summary()` prints the word
+statistical face of the project's central invariant - UNKNOWN never resolves
+to CLEAR - applied to its own metrics. Every `summary()` prints the word
 `unknown` rather than a numeral.
 
 ## The Wilson interval
@@ -105,7 +105,7 @@ For successes s over t trials with p&#770; = s/t:
     margin = z · sqrt( p̂(1−p̂)/t + z²/4t² ) / (1 + z²/t)
 
 The normal ("Wald") interval collapses to zero width at p&#770; ∈ {0, 1} and
-undercovers badly below t ≈ 40 — precisely the regime a dozen positives puts
+undercovers badly below t ≈ 40 - precisely the regime a dozen positives puts
 every cell in. Wilson stays honest at the boundaries: 7 of 7 does not report
 certainty, it reports roughly [0.65, 1.0] [measured, by running the function].
 The interval is clamped to [0, 1] and is `None` for zero trials
@@ -120,7 +120,7 @@ least as favorable as the observed one. It is the hypergeometric upper tail:
 
     P = Σ_{k=a}^{min(row1, col1)}  C(row1, k) · C(row2, col1−k) / C(n, col1)
 
-computed on `math.comb` over integers, exactly — no floating-point series, no
+computed on `math.comb` over integers, exactly - no floating-point series, no
 continuity correction, no approximation to be wrong about.
 
 Three choices worth defending:
@@ -164,16 +164,20 @@ exactly one owner.
 
 ## The alarm budget as a statistical control
 
-`MAX_ALARMS_PER_WEEK = 2.0` is the recipient's attention, treated as the
-binding constraint of the whole system. The number is currently an
+`DecisionPolicy.total_budget_per_week`, defaulting to 2.0, is the recipient's
+attention treated as the binding constraint of the whole system. (Version 1.0
+of this document cited a constant `MAX_ALARMS_PER_WEEK` that does not exist in
+the package: a plausible name written from memory rather than read from the
+code, in the document whose entire claim is that its figures come from
+measurement. Logged as F55.) The number is currently an
 **assumption about a hypothetical audience** [speculation, and flagged: T11
 exists to replace it with two recorded answers to "at what firing rate would
 you stop reading this"].
 
 The arithmetic that makes it a *statistical* control rather than a UX
 preference: alarm fatigue is an attack surface. An adversary who can induce
-rule firings — and the poison check in `mavo/rules.py` exists because feed
-manipulation costs nothing to attempt — can spend the recipient's attention
+rule firings - and the poison check in `mavo/rules.py` exists because feed
+manipulation costs nothing to attempt - can spend the recipient's attention
 until a real alarm is ignored. A budget enforced *per rule share and again on
 the total* (`DecisionPolicy` refuses construction when shares exceed the
 total; `plan_policy` refuses when measured demand plus 25% headroom exceeds
@@ -196,7 +200,7 @@ against]:
 | pooled | 7 / 15 | 0.47 |
 
 The rule was not mediocre; it was perfect at one job and blind to another, and
-a pooled recall cannot express that — the same aggregation failure family as
+a pooled recall cannot express that - the same aggregation failure family as
 Simpson's paradox, though here it is masking rather than reversal. The
 consequences are structural, not cosmetic:
 
@@ -204,12 +208,12 @@ consequences are structural, not cosmetic:
   what differs is how many minutes a warning buys, roughly a factor of five);
 - each regime scored **only against its own crossings**
   (`evaluate.run_regime` excludes the other kind's nights from the table
-  rather than counting them as negatives — a missile rule silent on a drone
+  rather than counting them as negatives - a missile rule silent on a drone
   night has declined a job, not made an error; the cost is sample size and it
   is paid openly);
 - crossings served by **no** regime are counted and printed as a coverage
   gap, never folded into the denominator, because absorbing them would
-  manufacture recall out of scope-shrinking — unknown resolving to clear, one
+  manufacture recall out of scope-shrinking - unknown resolving to clear, one
   layer up.
 
 The drone regime currently fails its gate and is demoted to the observation
@@ -246,7 +250,7 @@ the decision log says so in those words.
 There is no probability of impact anywhere in this codebase, and a lint
 (`no_probability_claim`) fails the build if a function of that shape appears.
 The honest output is: *a named rule fired at a named time, and here is what
-that rule has historically been worth* — a contingency table, an interval, an
+that rule has historically been worth* - a contingency table, an interval, an
 exact p-value, a lead-time median, each with a provenance label. Converting
 that into P(crossing tonight) would require a model of the adversary's intent,
 and no such model is available to this system at any sample size.
