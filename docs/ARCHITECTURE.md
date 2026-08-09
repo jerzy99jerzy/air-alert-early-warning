@@ -340,10 +340,11 @@ argument sits with the addition.
 | `tools/docs_audit.py` | Version pins, sprint files, row counts, cited test names | In `make verify` |
 | `tools/manual_audit.py` | Every command documented, every section marked, thresholds match the code | In `make verify` |
 | `tools/harness_mutation.py` | Disables each control, fails if its attack stays green | In `make verify` |
+| `docs/<NAME>.md` | Design documents, uppercase because they are authored rather than generated | `lint_domain`: a lowercase name in `docs/` fails |
 | `docs/reviews/<version>.md` | One pre-push review per release, every finding dispositioned | |
 | `data/raw/` | Tier 1. Never committed | `.gitignore` |
 | `data/aggregates/` | Tier 2. Committed | |
-| `STATUS.json` | Machine-readable pins and measurements | `docs_audit` |
+| `STATUS.json` | Machine-readable pins and measurements, including the repository size block | `docs_audit`: recounted from the tree at every run |
 | `MANIFEST.sha256` | Transfer integrity for hand-assembled archives | `shasum -c` |
 
 
@@ -352,10 +353,14 @@ argument sits with the addition.
 Named so that their absence is a decision rather than an oversight:
 
 - **No output channel.** Its threats are not modelled here; they land with the
-  channel, in the same version, or the channel does not land.
+  channel, in the same version, or the channel does not land. The plan for it,
+  including the technology decision and the phases that gate it, is
+  `docs/MOBILE.md`, which is a plan and says so on its first line.
 - **No observation tier.** The drone regime is demoted to it (D-009) and it does
   not exist yet, which means the drone regime currently goes nowhere.
 - **No API adapters.** alerts.in.ua and ukrainealarm are drawn as dashed edges
   because the boundary is real and the implementations are not.
 - **No scheduler.** Continuous collection is a cron entry the operator writes,
-  until `mavo watch` exists.
+  until `mavo watch` exists. That daemon is phase M0 of the notification plan,
+  and it is a prerequisite for the skipped-message counter to be a measurement
+  rather than `unknown`, because a one-shot poll has no previous poll.

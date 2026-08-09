@@ -117,6 +117,49 @@ def check_contents_anchors_resolve() -> list[str]:
     return problems
 
 
+def check_statistics_match_the_tree(status: dict[str, object]) -> list[str]:
+    """The size block in STATUS.json is recomputed, not remembered.
+
+    The README says these numbers are measured at each release and pinned. That
+    sentence was true of the intent and false of the mechanism: nothing checked
+    them, and at 0.6.2.0 all four rows were a release or two stale while reading
+    as authoritative. F31's shape exactly, in the one block that describes the
+    repository to a reader who will not open it.
+
+    Counted definition, stated because a count without one drifts by
+    reinterpretation: `.py` files under the package, `tests/` and `tools/`
+    recursively, and for documentation every `.md` under `docs/` recursively
+    plus the top-level authored markdown and the harness catalogue.
+    """
+    top_level_docs = ["README.md", "CHANGELOG.md", "ENGINEERING.md", "SECURITY.md",
+                      "TODO.md", "CONTRIBUTING.md"]
+    groups = {
+        "package": sorted((ROOT / "mavo").rglob("*.py")),
+        "test": sorted((ROOT / "tests").rglob("*.py")),
+        "tool": sorted((ROOT / "tools").rglob("*.py")),
+        "documentation": (
+            sorted((ROOT / "docs").rglob("*.md"))
+            + [ROOT / name for name in top_level_docs]
+            + [ROOT / "tests" / "harness" / "CATALOGUE.md"]
+        ),
+    }
+    statistics = status.get("statistics", {})
+    assert isinstance(statistics, dict)
+    problems: list[str] = []
+    for label, paths in groups.items():
+        present = [path for path in paths if path.exists()]
+        counted = {
+            f"{label}_files": len(present),
+            f"{label}_lines": sum(
+                len(path.read_text(encoding="utf-8").splitlines()) for path in present
+            ),
+        }
+        for key, value in counted.items():
+            if statistics.get(key) != value:
+                problems.append(f"{key} is {value} in the tree, STATUS.json pins {statistics.get(key)}")
+    return problems
+
+
 def check_defect_count_is_pinned(status: dict[str, object]) -> list[str]:
     """The defect badge equals the count of F-entries in the methodology.
 
@@ -203,6 +246,7 @@ def main() -> int:
         + check_harness_catalogue(status)
         + check_cited_tests_exist()
         + check_defect_count_is_pinned(status)
+        + check_statistics_match_the_tree(status)
         + check_badges_match_the_pins(status)
         + check_contents_anchors_resolve()
     )

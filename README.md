@@ -109,6 +109,38 @@ mavo policy --weeks 208 --allocation demand
 No token, no network, no data of your own. What the second command prints is a
 property of the generator, not of the world.
 
+**On real data.** The channel is public, so this needs no token either. Nothing
+here is a simulation: these three commands hit the live source.
+
+```
+# one live poll, parsed and reported, nothing written
+mavo collect
+
+# the same poll, keeping the page exactly as served for later re-parsing
+mavo collect --save-raw data/raw
+
+# five pages of channel history, verbatim, one request per second
+mavo backfill --out data/raw/corpus --pages 5 --delay 1.0
+```
+
+Expect `mavo collect` to report roughly twenty messages and **parse almost none
+of them**. That is not a broken install, it is F23 printing itself: the shipped
+area table keys on oblast names and the channel emits raions and hromadas, so
+classification fails by construction and the redesign is the next sprint. The
+unparsed count is the number to read, and its being visible rather than absent
+is the design. `skipped=unknown` on a single poll is the same discipline: one
+invocation has no previous poll to compare against, and unknown is never
+printed as zero.
+
+`mavo backfill` prints the id range, the time span it reached, and a contiguity
+line. **The span is the line to read first**: how far back a page count reaches
+is a property of channel volume rather than arithmetic. It writes raw HTML and
+parses nothing beyond the post ids it needs to page, because a corpus filtered
+through the parser it exists to fix would not be evidence. `data/raw/` is
+git-ignored, which is a policy rather than a convenience (see Layout).
+
+Full option tables and failure modes: `docs/MANUAL.md` sections 4.4 and 4.5.
+
 ## The gate
 
 A rule may raise a critical alarm only if it clears three conditions. Failing any
@@ -177,6 +209,7 @@ tools/
   manual_audit.py  fails when the manual describes a command the CLI does not have
   harness_mutation.py  disables each control and fails if its attack stays green
 docs/
+  BRIEF.md         the project for a reader who does not write code
   MANUAL.md        operator's manual; every section declares BUILT or NOT BUILT
   FOUNDATIONS.md   the observations and assumptions, each with its falsifier
   ARCHITECTURE.md  infrastructure: components, boundaries, dependency rules
@@ -186,20 +219,29 @@ docs/
   THREAT-MODEL.md  adversaries against this tool
   MVP.md           release criteria per audience
   DECISIONS.md     what was rejected, and what would reopen it
+  COMPUTATION.md   the statistical machinery, with its stated weaknesses
+  MOBILE.md        the notification channel: technology choice and its phases
+  reviews/         one pre-push review per release, findings dispositioned
+data/
+  raw/             tier 1, never committed, git-ignored
+  aggregates/      tier 2, counts only, committed
 ```
 
 ## The repository in numbers
 
-Measured by `tools/docs_audit.py` at each release and pinned in `STATUS.json`.
+Recounted from the tree by `tools/docs_audit.py` on every run and pinned in
+`STATUS.json`. Until 0.6.2.0 that sentence described the intent and not the
+mechanism: nothing checked these four rows, and all four were stale while
+reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 14 | 2,184 |
-| Tests | 24 | 2,101 |
-| Tools | 3 | 449 |
-| Documentation | 20 | 4,890 |
+| Package `mavo/` | 14 | 2,293 |
+| Tests | 25 | 2,366 |
+| Tools | 3 | 573 |
+| Documentation | 26 | 6,601 |
 
-**Documentation outweighs the package roughly two to one**, and that ratio is
+**Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
 and a measurement whose method is not written down is an opinion with a
 confidence interval attached.
@@ -214,7 +256,7 @@ confidence interval attached.
 | Threat-model rows | 13, each with a control or a named acceptance |
 | Defects logged with their class | 35, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 14 |
-| Releases | 15, of which 4 carry tags |
+| Releases | 16, of which 5 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 
 ## Documentation

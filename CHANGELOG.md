@@ -16,6 +16,29 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.6.2.0 - 2026-08-09
+
+Two claims the repository made about itself and did not check.
+
+- **The quickstart now has a real-data path.** Everything a reader could run in
+  sixty seconds was synthetic, which flattered the project twice: the numbers
+  came from a generator, and the one shipped defect a newcomer would actually
+  meet was reachable only by reading the manual. Three commands against the live
+  public channel, with the honest expectation stated beside them: roughly twenty
+  messages in, almost none parsed, because F23 is real and prints itself.
+- **The repository size block is recounted rather than remembered.** The README
+  said these figures were measured at each release and pinned; nothing checked
+  them, and all four rows were stale by a release or two while reading as
+  authoritative. `docs_audit` now recounts the tree and fails on disagreement,
+  with the counted definition written into the check rather than left to
+  reinterpretation. Same class as F31, in the block that describes the
+  repository to a reader who will not open it.
+- `docs/ARCHITECTURE.md` gains the design-document row its layout table was
+  missing, and its "what is not here" list now points at `docs/MOBILE.md` for
+  the output channel and names `mavo watch` as what turns the skipped-message
+  counter from `unknown` into a measurement. A section listing absences is only
+  useful while the absences are current.
+
 ## 0.6.1.0 - 2026-08-09
 
 One document, and the gap it closes is an audience gap rather than a defect.
