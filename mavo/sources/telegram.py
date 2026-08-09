@@ -148,10 +148,21 @@ def _strip(raw: str) -> str:
 
 
 def _parse_timestamp(raw: str) -> datetime | None:
+    """An aware datetime, or None. A naive one is None, not a value.
+
+    F61. ``datetime="2026-09-01T21:00:00"`` parses cleanly and yields a naive
+    timestamp, which the store refuses at ``append`` (F52). Letting it through
+    here converts malformed *content* into an *outage* one layer up, in exactly
+    the composition the never-raise contract exists to prevent. The live page
+    always carries an offset, so a timestamp without one is malformed by the
+    same standard as ``"nonsense"`` and takes the same path: unparsed, counted,
+    reported.
+    """
     try:
-        return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
     except (ValueError, TypeError):
         return None
+    return parsed if parsed.tzinfo is not None else None
 
 
 def classify_state(text: str) -> AlertState | None:

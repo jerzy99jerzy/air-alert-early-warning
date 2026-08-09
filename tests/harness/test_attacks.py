@@ -232,3 +232,28 @@ def test_a12_the_footer_time_cannot_shift_onto_a_neighbour() -> None:
         "lviv": "2026-09-01T21:04:00+00:00",
         "volyn": "2026-09-01T21:11:00+00:00",
     }, "a footer timestamp crossed a message boundary"
+
+
+def test_a13_an_unknown_tag_is_not_replaced_by_a_prose_guess() -> None:
+    """MT14. The area the channel named, but the map cannot read, stays unread.
+
+    F60. The sprint 7 fallback fired whenever the tag path produced nothing,
+    which is wider than its justification. A message tagging an area the map
+    does not know, and mentioning an oblast in prose, resolved to that oblast
+    from the table that scores 0 of 20 on real content. The unknown tag was
+    still reported, so the failure looked like an accounting quirk rather than
+    what it was: an event carrying a guess about where the danger is.
+
+    The adversarial reading is the one that makes it an attack rather than a
+    bug. The channel's vocabulary drifts on its own schedule, and an attacker
+    who can get one unrecognised tag into a message with an oblast name in it
+    obtains a warning that names the wrong place. A report naming the wrong
+    place is worse than no report, because it is actionable.
+    """
+    from mavo.areas import AreaTable
+    from mavo.sources.telegram import classify
+
+    table = AreaTable.from_csv()
+    misleading = "Львівська область #Вигаданський_район Повітряна тривога"
+    assert classify(misleading, table) is None, "a prose guess replaced an unknown tag"
+    assert classify(misleading) is not None, "the untagged fallback must still work"

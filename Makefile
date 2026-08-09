@@ -12,9 +12,13 @@ verify: coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain doc
 coverage:
 	$(PY) -m pytest tests -q --cov=$(PKG) --cov-branch --cov-report=term-missing
 
+# `tools/` is inside the net. Half the measured numbers in STATUS.json are
+# produced there, and `harness_mutation.py` is itself part of this gate; a
+# gate whose own instruments are unlinted and untyped is auditing everything
+# except the audit.
 lint:
-	ruff check $(PKG) tests
-	mypy $(PKG)
+	ruff check $(PKG) tests tools
+	mypy $(PKG) tools
 
 lint-limitations:
 	$(PY) tests/lint_limitations.py

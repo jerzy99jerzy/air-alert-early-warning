@@ -348,6 +348,12 @@ The channel tags `#ВолодимирВолинський_район`; the regis
 nothing has systematically compared the two vocabularies and there may be more.
 The general shape of the problem: the register and the channel evolve
 independently, and either can change a name first (`docs/CHANNEL.md`).
+*Update 0.11.0.0:* the one ambiguous tag is resolved. `Покровська_територіальна_громада`
+matched four hromadas by name; in the corpus it appears beside
+`Нікопольський район` and `Дніпропетровська область`, which identifies the
+Pokrovska hromada of Dnipropetrovsk oblast. Context settles what a name cannot,
+and the map can go to 127 of 127 once the row is written with that reason.
+
 **Acceptance:** every one of the 127 tags either resolves directly or carries an
 alias with the reason recorded, plus a check that fails when a tag appears in the
 corpus that the map does not know. A new tag is a finding, not a fallback.
@@ -375,14 +381,47 @@ entered either way. A confirmed quiet night on all four is a measurement; a
 missed incursion on any of them is a more interesting one.
 
 
-## T36. The hand-labelled sample S7 owes
-Status: `ready`, **closes S7**
+## T36. The hand-labelled sample, retargeted
+Status: `ready`, **no longer blocking S7**. The sprint closed on an exhaustive
+consistency check instead (`docs/METHODOLOGY.md`, sprint 7 closed): 38,520 of
+38,521 comparable messages agree between tag and prose, 99.997%. What that check
+cannot see is the 9,701 messages carrying a tag and no prose area, 20% of the
+corpus, and the hand sample is now the only instrument for those.
+**Acceptance:** at least 50 messages drawn from the tags-without-prose
+population alone, read by hand, with the error rate and its interval recorded.
+Sampling from the population where an exhaustive check already exists would
+measure the same thing twice and worse.
+Original text:
 Sprint 7 measured that the channel tags 99.34% of messages and that 126 of 127
 tags resolve to a register code. Neither says the tag on a message describes the
 area that message is about. No automated probe can assert that, which is why the
 criterion was written as a hand-labelled sample before the sprint began.
+**The instrument exists** (`tools/label_sample.py`, 0.10.3.0): `draw` writes a
+seeded, fingerprinted sample in two strata, `score` reads it back and reports the
+error rate with a Wilson interval and refuses a partially filled file. What
+remains is the reading, which is a person and cannot be delegated to a probe.
+
 **Acceptance:** at least 50 design-window messages read by hand, each with the
-resolved area recorded as correct or not, and the error rate stated as a number.
+resolved area recorded as correct or not, and the error rate stated as a number
+with its interval, its seed and its fingerprint, recorded in
+`docs/METHODOLOGY.md`.
 An error rate above a few percent is a finding about the channel, not about the
 map, and it is recorded either way. Until this exists S7 stays open and
 `STATUS.json` does not claim otherwise in prose.
+
+
+## T37. The pipeline discards areas it was told about
+Status: `ready`, **S8**
+Two losses, both currently invisible, found by the sprint 7 consistency check.
+A message naming several areas yields one event, because `ThreatEvent` carries
+one area: 13.3% of comparable messages name two to eight. And an all-clear can
+carry a continuation list, areas where the alert is *still running*: 5.2% of
+comparable messages, 4,064 area mentions in the design window, none of them
+recorded anywhere.
+The second is the worse one. A report whose stated product is completeness is
+dropping the half of the message that says *still dangerous there*.
+**Acceptance:** every area named by a message reaches the store with its own
+state, continuation areas included and distinguishable from the subject of the
+all-clear; the two rows in `docs/DATA-FLOW.md` move from invisible to visible;
+and a regression asserts that a message with a continuation list produces more
+than one event.

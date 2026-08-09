@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.10.2.0",
+  "version": "0.11.1.0",
   "python_requires": ">=3.11",
   "shipped_sprints": [
     0,
@@ -26,7 +26,7 @@
     "docs/DATA-FLOW.md": "1.0",
     "docs/ARCHITECTURE.md": "2.0",
     "docs/MECHANISMS.md": "2.0",
-    "docs/METHODOLOGY.md": "2.2",
+    "docs/METHODOLOGY.md": "2.3",
     "docs/THREAT-MODEL.md": "2.2",
     "docs/MVP.md": "3.1",
     "docs/DECISIONS.md": "2.1",
@@ -36,20 +36,20 @@
     "docs/BRIEF.md": "1.1",
     "docs/OBSERVABILITY.md": "1.0",
     "docs/DEPLOYMENT.md": "1.0",
-    "docs/CHANNEL.md": "1.1",
+    "docs/CHANNEL.md": "1.2",
     "docs/reviews/0.10.1.0.md": "1.0"
   },
-  "threat_model_rows": 13,
-  "harness_attacks": 11,
+  "threat_model_rows": 14,
+  "harness_attacks": 12,
   "measured": {
-    "tests_passing": 169,
-    "coverage_percent": 96.9,
+    "tests_passing": 173,
+    "coverage_percent": 96.78,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 1,
     "policy_combined_alarms_per_week": 1.96,
     "classifier_hit_rate_on_real_messages": 0.0,
     "real_messages_sampled": 20,
-    "harness_mutations_killed": 10,
+    "harness_mutations_killed": 11,
     "harness_attacks_without_a_mutation": 1,
     "channel_page_size": 20,
     "channel_newest_post_id_2026_08_09": 321498,
@@ -67,7 +67,13 @@
     "western_wide_episodes_design_window": 22,
     "western_episodes_per_week": 5.73,
     "western_wide_episodes_per_week": 1.56,
-    "reported_crossings_on_western_wide_nights_design_window": 0
+    "reported_crossings_on_western_wide_nights_design_window": 0,
+    "tag_prose_agreement": 0.99997,
+    "tag_prose_comparable_messages": 38521,
+    "messages_with_tag_but_no_prose_area": 9701,
+    "share_of_messages_naming_one_area": 0.867,
+    "messages_with_continuation_list": 2000,
+    "continuation_areas_discarded": 4064
   },
   "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except classifier_hit_rate_on_real_messages, which is pinned by tests against real channel content; nothing here is a claim about the world",
   "corpus": {
@@ -85,15 +91,15 @@
     "content_read_before_freeze": false
   },
   "statistics": {
-    "package_lines": 2430,
+    "package_lines": 2492,
     "package_files": 15,
-    "test_lines": 2531,
+    "test_lines": 2619,
     "test_files": 27,
-    "tool_lines": 1343,
-    "tool_files": 6,
-    "documentation_lines": 8767,
+    "tool_lines": 1830,
+    "tool_files": 8,
+    "documentation_lines": 9076,
     "documentation_files": 30,
     "runtime_dependencies": 0
   },
-  "defects_logged": 43
+  "defects_logged": 46
 }

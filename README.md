@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 169](https://img.shields.io/badge/tests-169-brightgreen)](tests/)
-[![coverage 96.90%](https://img.shields.io/badge/coverage-96.90%25-brightgreen)](Makefile)
-[![harness 11 attacks, 10 mutation-verified](https://img.shields.io/badge/harness-11%20attacks%2C%2010%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 43](https://img.shields.io/badge/defects%20logged-43-informational)](docs/METHODOLOGY.md)
+[![tests 173](https://img.shields.io/badge/tests-173-brightgreen)](tests/)
+[![coverage 96.78%](https://img.shields.io/badge/coverage-96.78%25-brightgreen)](Makefile)
+[![harness 12 attacks, 11 mutation-verified](https://img.shields.io/badge/harness-12%20attacks%2C%2011%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
+[![defects logged 46](https://img.shields.io/badge/defects%20logged-46-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -299,10 +299,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 15 | 2,430 |
-| Tests | 27 | 2,531 |
-| Tools | 6 | 1,343 |
-| Documentation | 30 | 8,767 |
+| Package `mavo/` | 15 | 2,445 |
+| Tests | 27 | 2,556 |
+| Tools | 8 | 1,839 |
+| Documentation | 30 | 8,968 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -313,13 +313,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 169, of which 11 are scripted attacks |
+| Tests | 170, of which 12 are scripted attacks |
 | Coverage | 96.90% against a floor of 95, a ratchet that is never lowered |
-| Mutation-verified controls | 10 of 11 attacks; the eleventh is printed as unverified on every run |
-| Threat-model rows | 13, each with a control or a named acceptance |
+| Mutation-verified controls | 11 of 12 attacks; the twelfth is printed as unverified on every run |
+| Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 43, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 17 |
-| Releases | 28, of which 17 carry tags |
+| Releases | 30, of which 19 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 
 ## Documentation
@@ -331,7 +331,7 @@ confidence interval attached.
 | [**`docs/FOUNDATIONS.md`**](docs/FOUNDATIONS.md) | **Start here to contribute.** The observations and assumptions everything rests on, each with its provenance label and what would falsify it |
 | [`docs/DATA-FLOW.md`](docs/DATA-FLOW.md) | The data architecture: one message from byte to verdict, every transformation, and a table of exactly where information can be lost |
 | [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) | What may be claimed, the defect log, and the probes that were run rather than read |
-| [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) | MT1 to MT13, each with a control or a named acceptance and the test that measures it |
+| [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) | MT1 to MT14, each with a control or a named acceptance and the test that measures it |
 | [`docs/MECHANISMS.md`](docs/MECHANISMS.md) | Every mechanism with its rejected alternative |
 | [`docs/COMPUTATION.md`](docs/COMPUTATION.md) | The statistical machinery the thesis stands on, with its stated weaknesses |
 | [`docs/MOBILE.md`](docs/MOBILE.md) | The notification channel: technology choice, phases, and what gates distribution |
@@ -363,7 +363,7 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: 169 tests passing, of which 11 are harness attacks.
+- `make verify` green: 170 tests passing, of which 12 are harness attacks.
   Coverage 96.90% against a floor of 95. The floor stays a ratchet under T9:
   the rise is below the five-point threshold that moves it. The old caveat
   stands in kind:

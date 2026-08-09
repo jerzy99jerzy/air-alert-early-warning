@@ -40,6 +40,11 @@ DEFAULT_DELAY_S = 1.0
 
 _TIMESTAMP = re.compile(r'<time[^>]*datetime="([^"]+)"')
 
+# The one grammar for snapshot names. `_snapshot_path` writes it and every
+# reader parses it with this pattern; five tools carried their own copy of
+# this regex, which is the drift class F36 names, one character at a time.
+SNAPSHOT_NAME = re.compile(r"page-(\d+)-(\d+)\.html$")
+
 
 @dataclass(frozen=True, slots=True)
 class Page:
@@ -329,13 +334,10 @@ def lowest_on_disk(directory: Path) -> int | None:
     """
     lowest: int | None = None
     for snapshot in directory.glob("page-*.html"):
-        parts = snapshot.stem.split("-")
-        if len(parts) != 3:
+        match = SNAPSHOT_NAME.search(snapshot.name)
+        if match is None:
             continue
-        try:
-            first = int(parts[1])
-        except ValueError:
-            continue
+        first = int(match.group(1))
         lowest = first if lowest is None else min(lowest, first)
     return lowest
 
@@ -350,13 +352,10 @@ def contiguity_gaps(directory: Path) -> Iterator[tuple[int, int]]:
     """
     ranges: list[tuple[int, int]] = []
     for snapshot in sorted(directory.glob("page-*.html")):
-        parts = snapshot.stem.split("-")
-        if len(parts) != 3:
+        match = SNAPSHOT_NAME.search(snapshot.name)
+        if match is None:
             continue
-        try:
-            ranges.append((int(parts[1]), int(parts[2])))
-        except ValueError:
-            continue
+        ranges.append((int(match.group(1)), int(match.group(2))))
     ranges.sort()
     for (_, previous_last), (next_first, _) in zip(ranges, ranges[1:], strict=False):
         if next_first > previous_last + 1:

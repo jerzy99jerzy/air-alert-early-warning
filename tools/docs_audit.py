@@ -151,7 +151,8 @@ def check_measured_block_is_recomputed(status: dict[str, object]) -> list[str]:
             f"candidate_rules_passing_gate recomputes to {passing}, "
             f"STATUS.json states {measured.get('candidate_rules_passing_gate')}"
         )
-    if rate is not None and abs(float(measured.get("policy_combined_alarms_per_week", -1)) - rate) > 0.005:
+    pinned_rate = float(measured.get("policy_combined_alarms_per_week", -1))
+    if rate is not None and abs(pinned_rate - rate) > 0.005:
         problems.append(
             f"policy_combined_alarms_per_week recomputes to {rate:.2f}, "
             f"STATUS.json states {measured.get('policy_combined_alarms_per_week')}"
@@ -198,7 +199,9 @@ def check_statistics_match_the_tree(status: dict[str, object]) -> list[str]:
         }
         for key, value in counted.items():
             if statistics.get(key) != value:
-                problems.append(f"{key} is {value} in the tree, STATUS.json pins {statistics.get(key)}")
+                problems.append(
+                    f"{key} is {value} in the tree, STATUS.json pins {statistics.get(key)}"
+                )
     return problems
 
 
@@ -257,7 +260,8 @@ def check_badges_match_the_pins(status: dict[str, object]) -> list[str]:
         "coverage": f"coverage-{measured['coverage_percent']:.2f}%25-",
         "harness": f"harness-{status['harness_attacks']}%20attacks",
         "mutations": f"{measured['harness_mutations_killed']}%20mutation--verified",
-        "runtime dependencies": f"runtime%20dependencies-{statistics.get('runtime_dependencies', 0)}-",
+        "runtime dependencies":
+            f"runtime%20dependencies-{statistics.get('runtime_dependencies', 0)}-",
     }
     return [
         f"README badge for {label} does not match STATUS.json (expected {fragment!r})"

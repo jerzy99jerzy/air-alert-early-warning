@@ -39,7 +39,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import re
 import sys
 from collections import Counter, defaultdict
 from datetime import UTC, datetime, timedelta
@@ -48,14 +47,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from mavo.areas import TAG  # noqa: E402
+from mavo.areas import WESTERN_OBLASTS as WEST  # noqa: E402
+from mavo.backfill import SNAPSHOT_NAME as PAGE_RANGE  # noqa: E402
 from mavo.sources.telegram import _BLOCK, _TEXT, _TIME, _parse_timestamp  # noqa: E402
-
-PAGE_RANGE = re.compile(r"page-(\d+)-(\d+)\.html$")
-TAG = re.compile(r"#([\w\u0400-\u04FF’'-]+?)_(район|громада|область)", re.UNICODE)
-WEST = (
-    "Львівська", "Волинська", "Закарпатська", "Івано-Франківська",
-    "Тернопільська", "Рівненська", "Хмельницька", "Чернівецька",
-)
 
 
 def _boundary() -> int:

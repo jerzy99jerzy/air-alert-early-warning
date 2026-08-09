@@ -43,3 +43,14 @@ class SourceUnavailable(MavoRefusal):
     """A source could not be read. Distinct from a source reporting nothing."""
 
     code = "refusal.source_unavailable"
+
+
+class DuplicateTag(MavoRefusal):
+    """The area map carries two rows for one tag.
+
+    Refused rather than letting the later row win: a duplicated tag in the
+    versioned map would change what an area resolves to based on row order,
+    which is a contradiction absorbed instead of reported (F63).
+    """
+
+    code = "refusal.duplicate_tag"

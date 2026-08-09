@@ -350,6 +350,8 @@ project exists to attack.**
 | Transport | Content past 4 MB | `SourceUnavailable` | A truncated page would parse as a short one |
 | Page window | Messages beyond 20 between polls | `skipped=N`, or `unknown` | A skip would read as a quiet channel (MT12) |
 | Message regex | A page whose structure changed | `messages=0` | A restructured page would read as no news |
+| Classification | Every area but the first, in a message naming several | **Nothing. This loss is currently invisible** | 13.3% of comparable messages name two to eight areas, and only the first reaches an event (T37) |
+| Classification | The continuation list of an all-clear: areas where the alert is still running | **Nothing. This loss is currently invisible** | 5.2% of comparable messages carry one, naming 4,064 areas in the design window. The message says *still dangerous there* and nothing records it. For a report whose product is completeness this is the sharpest loss in this table (T37) |
 | Classifier | Any wording the table lacks | `unparsed` count, kept as text | A stale table would read as a quiet channel (F23) |
 | State layer | The difference between silence and contradiction | `UNKNOWN` against `PARTIAL_CLEAR` | An ambiguous all-clear would read as an all-clear (F26) |
 | Store | Nothing | | |

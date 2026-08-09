@@ -16,6 +16,116 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.11.1.0 - 2026-08-09
+
+**External code review.** Three defects found by composing contracts rather than
+reading layers, each with a regression verified red before the fix; the lint net
+widened to cover its own instruments. Entries F61 to F63 in `docs/METHODOLOGY.md`.
+
+- **F61.** A valid-but-offsetless `datetime` attribute parsed cleanly, crossed
+  `poll()` under the never-raise contract, and the store refused the resulting
+  event at `append` (F52) — malformed content became an outage one layer up.
+  A naive timestamp is now malformed at the parser and takes the unparsed path.
+  `test_telegram.py::test_f61_a_naive_content_timestamp_never_becomes_an_event`
+  asserts the poll-to-append composition itself.
+- **F62.** `UrllibTransport` passed URLs straight to `urlopen`, which also
+  speaks `file://`: a latent local-file-read behind constants. Non-http(s)
+  schemes are refused as `SourceUnavailable`.
+  `test_transport.py::test_f62_a_non_http_scheme_is_refused`.
+- **F63.** A duplicated tag in `tag_map.csv` resolved to whichever row came
+  later in the file — a contradiction inside the one artifact resolution
+  trusts, absorbed by dict assignment. `AreaTable.from_csv` now refuses with
+  `DuplicateTag`. `test_areas.py::test_f63_a_duplicate_tag_in_the_map_is_refused`.
+- **The gate now audits its own instruments.** `make lint` covered `mavo` and
+  `tests` while half the measured numbers in `STATUS.json` are produced in
+  `tools/` and `tools/harness_mutation.py` is itself part of `verify`. Ruff and
+  mypy now run over `tools` as well; the findings that fell out (three long
+  lines, one union-attr) are fixed.
+- **Five tools carried their own copy of the snapshot-name regex, two their own
+  copy of the tag grammar and the western-oblast list** — the drift class F36
+  names, one character at a time. `mavo/backfill.py` now exports
+  `SNAPSHOT_NAME` beside the writer that defines the grammar, and the tools
+  import `TAG` and `WESTERN_OBLASTS` from `mavo/areas.py` instead of restating
+  them.
+- `EventStore.append` names its columns instead of depending on schema order,
+  and `replay` iterates the cursor instead of materializing the log a line
+  after promising an iterator.
+
+Found and deliberately **not** changed, because each is a measurement or an
+owner decision rather than a repair: the `area_id` vocabulary split between
+KATOTTG codes and the fixture slugs in `BORDER_OBLASTS` (dead today, a mine
+under S8), the rules layer importing `Night` from the fixture module, R2's
+endpoint-only westward test (changing the predicate changes measured gate
+results), and the `content_hash` field separator (changing it breaks the
+identity of stored rows). Recorded in the review, not in this log's fixes.
+
+## 0.11.0.0 - 2026-08-09
+
+**Sprint 7 closed.** On an amended criterion, and the amendment is the entry.
+
+- `tools/consistency_check.py`. T36 required a hand-labelled sample because when
+  the criterion was written no automated check appeared to exist. One did, and
+  it was in the messages all along: the channel writes the area name twice, in
+  prose and as a tag, and two independent copies of one fact can be compared by
+  a machine. **38,520 of 38,521 comparable design-window messages agree,
+  99.997%.** The single disagreement is an oblast-tagged damage report whose
+  prose names the raion, correct at both levels. Observed area-resolution
+  errors: zero.
+- **The criterion change is recorded rather than assumed.** The replacement is
+  not easier, which is the only defensible reason to change one after the fact:
+  three orders of magnitude more coverage, ±0.02% where a hand sample gives ±5%,
+  and weaker in kind because internal consistency is not truth. The residual is
+  named: 9,701 messages carry a tag and no prose area, 20% of the corpus, and
+  T36 is retargeted at exactly that population instead of retired.
+- **A message class nobody knew about, found because the check disagreed with
+  itself first.** An all-clear can carry a continuation list naming areas where
+  the alert is *still running*. The first run compared it against the tag as one
+  set and produced 1,203 false disagreements; separating them moved agreement
+  from 96.972% to 99.997%. 5.2% of comparable messages carry one, naming 4,064
+  areas, and **the pipeline records none of them** (T37). Two rows added to the
+  information-loss table in `docs/DATA-FLOW.md`, both marked invisible, which is
+  the defect class this project exists to attack.
+- **The report's shape is now decided by measurement, not preference.** 86.7% of
+  comparable messages name one area; the tail runs to eight and stops there. One
+  line is the default form, a list handles 13.3%, and eight fits a phone screen.
+- The run before that measured mostly the probe's own regex: `(?:в|у|на)` with
+  no word boundary matched the `на` ending `Повітряна`. Third instance in one
+  session of an instrument reporting its own defect as a property of the
+  material. Repaired by keeping only candidate names the map already knows,
+  because `район` is an ordinary noun too and no pattern over that word can tell
+  an administrative unit from the area of an old town.
+- The one ambiguous tag resolves by context: `Покровська_територіальна_громада`
+  appears beside `Нікопольський район` and `Дніпропетровська область`, which
+  identifies the Dnipropetrovsk one. 127 of 127 once the row carries that reason
+  (T33).
+- `AreaTable` gains `tags` and `names` as read-only views, because a probe had
+  been reaching into the private mapping for the vocabulary.
+
+## 0.10.3.0 - 2026-08-09
+
+- `tools/label_sample.py`, the instrument T36 needs and the last thing that can
+  be built for sprint 7 without a person reading Ukrainian. `draw` writes a
+  sample in two strata: messages that resolved to an area, which test whether
+  resolution is correct, and messages whose tags resolved to nothing, which test
+  whether the unknown-tag path triggers on the right thing. `score` reads the
+  labelled file back and reports the error rate with a Wilson interval.
+- **The draw is seeded and fingerprinted, and score recomputes the fingerprint.**
+  A sample that can be redrawn until the number looks acceptable is not a
+  measurement. Changing the seed is allowed and changes the fingerprint;
+  changing it silently is what the check makes impossible.
+- **`score` refuses a partially filled file.** A sample scored as if complete is
+  a measurement of the rows somebody found easy, and refusing is the whole point
+  of the check.
+- The sample carries message text and therefore defaults under `data/raw/`,
+  which is git-ignored: a committed file of channel content is a tier-1 artifact
+  under `SECURITY.md` regardless of how public the source is.
+- **Harness attack A13 (MT14)** promotes the F60 control from a test verified by
+  hand this morning to one the mutation run verifies on every invocation. The
+  adversarial reading is what makes it an attack: the channel's vocabulary
+  drifts on its own schedule, and one unrecognised tag in a message that names
+  an oblast in prose produced a warning naming the wrong place. Twelve attacks,
+  eleven mutation-verified.
+
 ## 0.10.2.0 - 2026-08-09
 
 - **F60. An unknown tag was overwritten by a prose guess.** The sprint 7

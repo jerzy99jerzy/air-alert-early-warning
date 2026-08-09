@@ -11,6 +11,7 @@ live service returns what the tests assume is **not** tested here.
 from __future__ import annotations
 
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Protocol, runtime_checkable
 
@@ -47,7 +48,18 @@ class UrllibTransport:
         self.timeout_s = timeout_s
 
     def fetch(self, url: str) -> str:
-        """Fetch ``url``, capped in size and time."""
+        """Fetch ``url``, capped in size and time. Refuses any non-http(s) scheme.
+
+        F62. ``urlopen`` also speaks ``file://`` and would return local file
+        contents as though they were a fetched page. The URLs here are
+        constants, but a transport that reads the filesystem when handed the
+        wrong string is a latent local-file-read, and the refusal is two lines.
+        """
+        scheme = urllib.parse.urlsplit(url).scheme.lower()
+        if scheme not in ("http", "https"):
+            raise SourceUnavailable(
+                f"{url}: scheme {scheme!r} refused; this transport speaks http(s)"
+            )
         request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_s) as response:

@@ -195,6 +195,42 @@ week. The denominator was the subset in which the phenomenon occurs, and a rate
 computed that way is not a rate a recipient experiences. Corrected to 99 nights
 throughout. Same class as F59: a restriction that flatters the number.
 
+## 6b. Tag against prose: the exhaustive check
+
+The channel writes the area name twice, in prose and as a tag, and the two can
+be compared without a person. Measured with `tools/consistency_check.py` over
+the design window.
+
+| Quantity | Value |
+| --- | --- |
+| Comparable messages (both a tag and a prose name the map knows) | 38,521 |
+| Tag and prose naming the same area | **38,520 (99.997%)** |
+| Disagreements | 1, an oblast-tagged damage report whose prose names the raion |
+| Messages carrying a tag and no recognised prose area | 9,701 |
+| Areas per message | one in 86.7%, tail to eight, nothing above |
+| Messages carrying a continuation list | 2,000 (5.2%), naming 4,064 areas |
+
+**Two message classes this check discovered by first disagreeing with itself.**
+
+An all-clear can carry a continuation list: `Відбій ... Зверніть увагу, тривога
+ще триває у: - Запорізька область - Пологівський район`. The tag names what was
+cleared; the list names where the alert continues. Compared as one set they
+produced 1,203 false disagreements, and separating them moved agreement from
+96.972% to 99.997%. **The pipeline records none of the continuation areas**
+(T37), which for a report whose product is completeness is the sharpest loss it
+currently has.
+
+The one tag the register could not disambiguate resolves by context.
+`Покровська_територіальна_громада` matches four hromadas by name; in the corpus
+it appears beside `Нікопольський район` and `Дніпропетровська область`, which
+identifies the one in Dnipropetrovsk oblast. Context settles what a name cannot.
+
+**The limit of this number.** Internal consistency is not truth: a channel
+naming the wrong raion in both places would be agreed with. And 9,701 messages,
+20% of the corpus, carry a tag with no prose area to compare against, so the
+check is silent about them. That population is where the hand sample now points
+(T36), rather than at the population an exhaustive check already covers.
+
 ## 7. What this corrects
 
 **F23 is now explained rather than only recorded.** The shipped table searched

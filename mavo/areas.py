@@ -32,6 +32,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from mavo.errors import DuplicateTag
+
 # The eight oblasts whose alerts can plausibly bear on the Polish side. Not a
 # statement about crossings, which nothing here predicts (D-015): a statement
 # about which reports are worth a Polish reader's attention at all. 96.5% of tag
@@ -100,6 +102,12 @@ class AreaTable:
         with source.open(encoding="utf-8") as handle:
             for row in csv.DictReader(handle):
                 tag = row["tag"]
+                if tag in rows or tag in unresolved:
+                    # F63. Two rows claiming one tag is a contradiction inside
+                    # the one artifact resolution trusts. Letting the later row
+                    # win silently would resolve it by file order, which is
+                    # absorption, not resolution.
+                    raise DuplicateTag(f"{source}: tag {tag!r} appears more than once")
                 if not row.get("katottg_code") or row.get("status", "").startswith("ambiguous"):
                     unresolved.add(tag)
                     continue
@@ -114,6 +122,21 @@ class AreaTable:
 
     def __len__(self) -> int:
         return len(self._rows)
+
+    @property
+    def tags(self) -> tuple[str, ...]:
+        """Every tag the table resolves, for callers that need the vocabulary.
+
+        Exposed as a view rather than the mapping, so a caller cannot mutate the
+        table it is reading. Added when a cross-check needed the set of known
+        names and had been reaching into the private dict to get it.
+        """
+        return tuple(self._rows)
+
+    @property
+    def names(self) -> tuple[str, ...]:
+        """Every register name the table resolves to."""
+        return tuple(area.name for area in self._rows.values())
 
     def resolve(self, tag: str) -> AreaRef | None:
         """The area for a tag, or None when the table does not know it."""

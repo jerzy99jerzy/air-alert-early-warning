@@ -73,3 +73,17 @@ def test_invalid_utf8_is_replaced_rather_than_raised(monkeypatch: pytest.MonkeyP
     _serving(monkeypatch, b"\xff\xfe alert")
     body = UrllibTransport().fetch("https://example.invalid")
     assert "alert" in body
+
+
+def test_f62_a_non_http_scheme_is_refused() -> None:
+    """F62. The transport speaks to the web, not to the filesystem.
+
+    ``urllib.request.urlopen`` accepts ``file://`` and would return local file
+    contents as though they were a fetched page. The URL is a constant today,
+    but a transport that will read ``/etc/passwd`` when handed the wrong string
+    is a latent local-file-read, and the refusal costs two lines.
+    """
+    with pytest.raises(SourceUnavailable):
+        UrllibTransport().fetch("file:///etc/hostname")
+    with pytest.raises(SourceUnavailable):
+        UrllibTransport().fetch("ftp://example.invalid/x")

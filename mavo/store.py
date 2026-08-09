@@ -92,7 +92,10 @@ class EventStore:
         with closing(self._connect()) as conn:
             before = conn.total_changes
             conn.executemany(
-                "INSERT OR IGNORE INTO events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", rows
+                "INSERT OR IGNORE INTO events (content_hash, area_id, state, ts_source, "
+                "ts_ingest, source_id, kind, provenance, raw_fields) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                rows,
             )
             conn.commit()
             return conn.total_changes - before
@@ -104,7 +107,10 @@ class EventStore:
                 "SELECT area_id, state, ts_source, ts_ingest, source_id, kind, "
                 "provenance, raw_fields FROM events ORDER BY ts_source, area_id"
             )
-            for row in cursor.fetchall():
+            # Iterated, not fetchall(): the docstring promises an iterator
+            # and materializing the whole log first would quietly break that
+            # promise on the first store big enough for it to matter.
+            for row in cursor:
                 yield ThreatEvent(
                     area_id=row[0],
                     state=AlertState(row[1]),

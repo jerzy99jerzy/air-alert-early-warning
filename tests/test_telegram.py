@@ -203,3 +203,30 @@ def test_f50_pairing_survives_the_inverted_order_too() -> None:
     )
     (event,) = _source(inverted).poll()
     assert event.ts_source.isoformat() == "2026-09-01T21:04:00+00:00"
+
+
+def test_f61_a_naive_content_timestamp_never_becomes_an_event(tmp_path) -> None:
+    """F61. A valid-but-offsetless datetime in content must die at the parser.
+
+    ``datetime="2026-09-01T21:00:00"`` parses cleanly and produces a naive
+    ``ts_source``. The store refuses naive timestamps (F52), so an event built
+    from one converts hostile or malformed *content* into an *outage* one layer
+    up, at ``append`` — exactly the composition the never-raise contract exists
+    to prevent. A9 covered ``datetime="nonsense"``; this is the case that parses.
+    """
+    from pathlib import Path
+
+    from mavo.store import EventStore
+
+    body = _message(950, "2026-09-01T21:00:00", "Повітряна тривога у Львівській області")
+    source = TelegramChannelSource(StubTransport(body))
+    events = source.poll()
+    assert all(
+        event.ts_source.tzinfo is not None for event in events
+    ), "an event with a naive ts_source left poll(); the store will refuse it"
+    # The composition itself: whatever poll returns, the store accepts.
+    EventStore(Path(tmp_path) / "f61.sqlite").append(events)
+    # The message is not silently dropped either: it is counted as unparsed.
+    assert source.report.messages == 1
+    assert source.report.parsed == 0
+    assert source.report.unparsed_count == 1

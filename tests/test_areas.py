@@ -142,3 +142,25 @@ def test_f60_an_unknown_tag_does_not_fall_back_to_the_oblast_table(table: AreaTa
     text = "Львівська область #Вигаданський_район Повітряна тривога"
     assert classify(text, table) is None
     assert classify(text) is not None, "the fallback must still work without tags"
+
+
+def test_f63_a_duplicate_tag_in_the_map_is_refused(tmp_path: Path) -> None:
+    """F63. Two rows claiming one tag must not resolve by file order.
+
+    ``csv.DictReader`` yields both rows and the dict write makes the later one
+    win silently, so a duplicated tag in the versioned map would change what an
+    area resolves to based on row order — absorbed, never reported. The map is
+    the single artifact area resolution trusts; a contradiction inside it is a
+    refusal, not a coin toss.
+    """
+    from mavo.errors import DuplicateTag
+
+    path = tmp_path / "dupe.csv"
+    path.write_text(
+        "tag,count,unit,register_name,oblast,katottg_code,status,note\n"
+        "Львівський_район,1,P,Львівський,Львівська,UA0001,ok,\n"
+        "Львівський_район,1,P,Самбірський,Львівська,UA0002,ok,\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(DuplicateTag):
+        AreaTable.from_csv(path)

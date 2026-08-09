@@ -125,6 +125,14 @@ MUTATIONS: tuple[Mutation, ...] = (
         disables="an outage refusing rather than reporting silence",
     ),
     Mutation(
+        attack="test_a13_an_unknown_tag_is_not_replaced_by_a_prose_guess",
+        row="MT14",
+        path="mavo/sources/telegram.py",
+        old="        elif unknown:",
+        new="        elif False:",
+        disables="the refusal to guess an area the channel named and the map cannot read",
+    ),
+    Mutation(
         attack="test_a12_the_footer_time_cannot_shift_onto_a_neighbour",
         row="MT13",
         path="mavo/sources/telegram.py",

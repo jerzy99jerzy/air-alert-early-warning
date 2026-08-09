@@ -50,7 +50,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from collections import Counter
 from datetime import UTC, datetime, timedelta
@@ -59,9 +58,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from mavo.backfill import SNAPSHOT_NAME as PAGE_RANGE  # noqa: E402
 from mavo.sources.telegram import _BLOCK, _TEXT, _TIME, _parse_timestamp, _strip  # noqa: E402
-
-PAGE_RANGE = re.compile(r"page-(\d+)-(\d+)\.html$")
 
 # Oblast-level terms, kept explicit and known incomplete. This is not a
 # gazetteer; T15 owns that. Anything matched here is matched because the

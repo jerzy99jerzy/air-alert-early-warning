@@ -26,9 +26,9 @@ def check_every_command_documented() -> list[str]:
     commands = sorted(
         {
             name
-            for action in build_parser()._actions
-            if isinstance(getattr(action, "choices", None), dict)
-            for name in action.choices
+            for choices in (getattr(action, "choices", None) for action in build_parser()._actions)
+            if isinstance(choices, dict)
+            for name in choices
         }
     )
     return [f"`mavo {name}` has no section in docs/MANUAL.md" for name in commands

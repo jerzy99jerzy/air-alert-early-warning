@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.0
+Document:  docs/METHODOLOGY.md, version 2.3
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -36,6 +36,9 @@ Note:      the defect log is the most useful document here for a new
 | Campaigns cover roughly 57% of days in the period | measured |
 | 22 western-wide alert episodes in the design window coincided with zero reported Polish airspace violations | reported, absence of evidence rather than evidence of absence: Polish media searched 2026-08-09 for 29 Apr, 28 and 29 May, 20 Jun 2026. Minor incursions may go unreported (T35) |
 | The only confirmed crossing in the corpus period, 30 July 2026, falls in the holdout | measured, from the frozen boundary and the reported date |
+| Tag and prose name the same area in 38,520 of 38,521 comparable design-window messages (99.997%) | measured, `tools/consistency_check.py`. Internal consistency, not truth |
+| 86.7% of comparable messages name one area; the tail runs to eight and stops | measured, same run |
+| 5.2% of comparable messages carry a continuation list naming 4,064 areas where the alert is still running | measured, same run. The pipeline discards all of it (T37) |
 | 99.34% of design-window messages carry a `#Name_unit` hashtag; 127 distinct tags; 126 resolve to a unique register code | measured, 48,540 messages, `docs/CHANNEL.md` |
 | Western oblasts hold 3.5% of tag occurrences (2,456 of 69,676) | measured, same run |
 | Matching register names in text reaches 6.06% as a lower bound against 99.34% for tags | measured, `tools/register_probe.py` |
@@ -136,6 +139,9 @@ repository has come to the mistake it was built after.
 | [F58](#f58-0900-one-corpus-was-sized-for-two-different-requirements) | 0.9.0.0 | One corpus was sized for two different requirements |
 | [F59](#f59-01000-a-probe-presented-an-arbitrary-match-as-an-attribution) | 0.10.0.0 | A probe presented an arbitrary match as an attribution |
 | [F60](#f60-01020-an-unknown-tag-was-overwritten-by-a-prose-guess) | 0.10.2.0 | An unknown tag was overwritten by a prose guess |
+| [F61](#f61-01110-a-timestamp-that-parses-cleanly-became-an-outage-one-layer-up) | 0.11.1.0 | A timestamp that parses cleanly became an outage one layer up |
+| [F62](#f62-01110-the-transport-would-read-the-filesystem-when-handed-the-wrong-string) | 0.11.1.0 | The transport would read the filesystem when handed the wrong string |
+| [F63](#f63-01110-a-duplicated-tag-in-the-map-resolved-by-file-order) | 0.11.1.0 | A duplicated tag in the map resolved by file order |
 
 ## Defect log
 
@@ -908,6 +914,68 @@ classification at all, so the unknown tag is the only outcome. The fallback is
 now reachable only from messages with no tags, which is what it was for. A
 report naming the wrong place is worse than no report, because it is actionable.
 
+### F61, 0.11.1.0. A timestamp that parses cleanly became an outage one layer up
+
+`_parse_timestamp` accepted any string `fromisoformat` accepts, and
+`fromisoformat` accepts `2026-09-01T21:00:00`: valid ISO, no UTC offset, a naive
+datetime. `poll()` built a `ThreatEvent` around it and honoured its never-raise
+contract, and the store then refused the event at `append` with
+`NaiveTimestamp` (F52) — so a malformed *message* became an *outage*, one layer
+above the contract that exists to prevent exactly that. Found in an external
+review by composing the two guarantees rather than reading either one.
+
+**Why it survived.** Harness attack A9 covered the hostile timestamp that does
+not parse (`datetime="nonsense"`) and asserted that `poll` returns. The
+timestamp that parses into the wrong shape took a different branch, and no test
+asserted the composition: that whatever `poll` returns, the store accepts. Each
+layer was correct against its own contract, and the defect lived in the seam.
+
+Class: **two refusals composed into a raise.** Repaired at the parser: a naive
+datetime is malformed by the same standard as an unparseable one and takes the
+same path — unparsed, counted, reported.
+`tests/test_telegram.py::test_f61_a_naive_content_timestamp_never_becomes_an_event`
+asserts the composition itself, not either layer alone.
+
+
+### F62, 0.11.1.0. The transport would read the filesystem when handed the wrong string
+
+`UrllibTransport.fetch` passed its URL straight to `urlopen`, which also speaks
+`file://`. Handed `file:///etc/hostname` it returned the file's contents as
+though they were a fetched page. Every URL in the package is a constant today,
+so nothing hostile could reach it; the defect is latent, and latent is the only
+time a local-file-read is cheap to remove.
+
+**Why it survived.** The transport's stated scope was "the one seam between this
+package and the internet", and every test exercised it through that framing:
+size cap, exception mapping, lossy decode. Nobody asked what it does with a
+string that is not the internet.
+
+Class: **a capability wider than the stated scope, unexercised and therefore
+invisible.** Repaired with a scheme check that refuses anything but http(s) as
+`SourceUnavailable`, keeping the raises-one-thing contract.
+`tests/test_transport.py::test_f62_a_non_http_scheme_is_refused` holds it.
+
+
+### F63, 0.11.1.0. A duplicated tag in the map resolved by file order
+
+`AreaTable.from_csv` wrote rows into a dict keyed by tag, so a tag appearing
+twice resolved to whichever row came later in the file. The map has no
+duplicates today, which is why nothing fired; the defect is that if it ever
+gained one — a hand edit, a bad merge of a register update — the contradiction
+would be absorbed and an area would resolve to a code chosen by row order,
+silently.
+
+**Why it survived.** The map is generated and checked for other properties
+(codes present, ambiguity flagged), and dict assignment is the idiomatic load
+loop. Absorbing a duplicate key is what dicts do; that is exactly why the one
+artifact area resolution trusts must not be loaded by one without a check.
+
+Class: **a key with multiple values, resolved by accident rather than reported**
+— the same class as F59, one layer earlier in the pipeline. Repaired with a
+refusal: `DuplicateTag` at load, before any resolution can happen.
+`tests/test_areas.py::test_f63_a_duplicate_tag_in_the_map_is_refused` holds it.
+
+
 ## Corpus measurements, 2026-08-09
 
 Metadata only. No message content was read before the holdout boundary was
@@ -1072,3 +1140,55 @@ it.
 single drone that crosses and is downed without debris may never reach national
 media. T35 records the check that would turn this from an absence of evidence
 into a measurement: the operational command's own posts for those four dates.
+
+
+---
+
+## Sprint 7 closed: how, and on a criterion that changed
+
+T36 required a hand-labelled sample of at least fifty messages, because when the
+criterion was written no automated check appeared to exist. One did. **The
+channel writes the area name twice**, once in prose and once as a tag, and two
+independent copies of the same fact in one message can be compared by a machine.
+
+**The measurement.** 38,521 comparable messages in the design window, tag and
+prose naming the same area in **38,520 of them, 99.997%**. The single
+disagreement is an after-action damage report tagged at oblast level whose prose
+names the raion: both correct, different granularity. Errors of area
+resolution in the design window: **zero observed**.
+
+**The criterion changed and this is the record of it**, under the amendment rule
+in `docs/MVP.md`. The replacement is not easier, which is the only defensible
+reason to change a criterion after the fact. It is stronger in coverage by three
+orders of magnitude, 38,521 messages against fifty, so the interval is ±0.02%
+where a hand sample would have been ±5%. It is weaker in kind: internal
+consistency is not truth, and a channel that named the wrong raion in both
+places would be agreed with rather than caught.
+
+**What the measurement does not cover, stated because it is the residual and
+somebody will otherwise treat 99.997% as covering everything.** 9,701 messages
+carry a tag and no prose area the map recognises, and this check says nothing
+about them. They are 20% of the corpus. The hand sample is therefore not
+retired, it is **retargeted**: T36 now samples from that population alone, where
+it is the only instrument available, rather than from the population where an
+exhaustive check exists.
+
+**Two findings the check produced by disagreeing with itself first.**
+
+The first run reported 96.972% and printed twenty-five disagreements, all of one
+shape: an all-clear carrying a continuation list, `Відбій ... Зверніть увагу,
+тривога ще триває у: - Запорізька область - Пологівський район`. The tag names
+the area the all-clear is about; the list names areas where the alert continues.
+Two roles in one message, compared as one set. Separating them moved agreement
+from 96.972% to 99.997%, and the message class is now known: 5.2% of comparable
+messages, naming 4,064 areas as still running, **every one of which the pipeline
+discards** (T37).
+
+The run before that reported disagreements that were almost entirely the
+probe's own regex: `(?:в|у|на)` carried no word boundary, so the `на` ending
+`Повітряна` matched and the capture became `тривога в Миргородський`. Third
+instance in one session of an instrument reporting its own defect as a property
+of the material (F59, the west_activity denominator, this). The repair was not a
+better pattern: candidate names are now kept only when the map already knows
+them, because `район` is also an ordinary noun and no pattern over that word can
+tell an administrative unit from the area of an old town.
