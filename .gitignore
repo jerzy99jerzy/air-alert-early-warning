@@ -4,7 +4,9 @@ data/raw/
 *.sqlite-wal
 *.sqlite-shm
 
-# Tier 2 (data/aggregates/) and tier 3 (docs/report.*) ARE committed.
+# Tier 2 (data/aggregates/, data/reference/) and tier 3 (docs/report.*) ARE
+# committed. data/reference/ holds derived lookup tables with their provenance,
+# never raw messages.
 
 __pycache__/
 *.py[cod]

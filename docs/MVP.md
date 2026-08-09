@@ -130,20 +130,32 @@ next one. Two-week windows, calendar dates rather than effort.
 
 | Sprint | Window | What ships | Exit criterion, checkable |
 | --- | --- | --- | --- |
-| **S7** | 10 to 23 Aug | Area resolution. KATOTTH as a versioned file (T31), the parser redesign against the design window, means of attack as its own class (T16) | The measured hit rate of area resolution against a hand-labelled sample of the design window, printed as a number. Not "improved": a number, beside the 0 of 20 it replaces |
-| **S8** | 24 Aug to 6 Sep | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | A hand-checked sample of real messages where the rendered report is correct in area, means and distance, with the error rate stated. Distances spot-checked by hand before the column is trusted anywhere |
-| **S9** | 7 to 20 Sep | Real time. `mavo watch` (M0), the run log and its reader (T23, T24), interval jitter from the first commit (T27), the host decision (T25) | 72 hours unattended with every cycle accounted for, and the first end-to-end latency measurement: channel publication to rendered report, reported as a distribution rather than a best case |
-| **S10** | 21 Sep to 4 Oct | Delivery. Self-hosted ntfy, the three message classes, blindness reporting, per-recipient topics (M1) | A synthetic report reaches a phone through Do-Not-Disturb within a measured time; killing the feed produces a blindness message within one interval; the delivery ledger and the phone agree over a week |
-| **S11** | 5 to 18 Oct | Hardening to beta. Threat-model rows for the delivery path with tests, the clean-clone probe (T7), the identifier lint (T22), the disengagement instrument (T29) | `make verify` green from a clean clone on a machine with nothing installed, every new threat row carrying a test, and T6 recorded |
+| **S7** | **9 Aug: engineering shipped, one exit criterion outstanding** | Area resolution, and it is smaller than planned: the channel tags 99.34% of messages with the area and unit type (`docs/CHANNEL.md`), so the work is the tag parse, the 127-row map, the alias table (T33) and the untagged remainder (T34) | Two countable things rather than a hit rate. Every one of the 127 tags resolves or is explicitly marked unresolved, and a hand-labelled sample agrees with the resolved area on the message the tag sits in. Presence is already measured at 99.34% and every tag resolves or is marked unresolved, so the first half is met. **The hand-labelled sample is not done (T36), so S7 is not closed.** Recording it as shipped on the strength of the half that was easy is the exact failure this table exists to prevent |
+| **S8** | 10 to 23 Aug (pulled forward) | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | A hand-checked sample of real messages where the rendered report is correct in area, means and distance, with the error rate stated. Distances spot-checked by hand before the column is trusted anywhere |
+| **S9** | 24 Aug to 6 Sep | Real time. `mavo watch` (M0), the run log and its reader (T23, T24), interval jitter from the first commit (T27), the host decision (T25) | 72 hours unattended with every cycle accounted for, and the first end-to-end latency measurement: channel publication to rendered report, reported as a distribution rather than a best case |
+| **S10** | 7 to 20 Sep | Delivery. Self-hosted ntfy, the three message classes, blindness reporting, per-recipient topics (M1) | A synthetic report reaches a phone through Do-Not-Disturb within a measured time; killing the feed produces a blindness message within one interval; the delivery ledger and the phone agree over a week |
+| **S11** | 21 Sep to 4 Oct | Hardening to beta. Threat-model rows for the delivery path with tests, the clean-clone probe (T7), the identifier lint (T22), the disengagement instrument (T29) | `make verify` green from a clean clone on a machine with nothing installed, every new threat row carrying a test, and T6 recorded |
 
-**Beta: 18 October 2026.**
+**Beta: 4 October 2026**, two weeks earlier than planned.
+
+*Amended 2026-08-09 (0.10.1.0).* S7's engineering landed on the day the plan was written,
+because the channel's own structure answered in an afternoon the question the
+sprint had allocated two weeks to (`docs/CHANNEL.md`). It is **not closed**: the
+hand-labelled correctness sample is outstanding (T36) and runs inside S8's
+window. The remaining windows are
+pulled forward by two weeks rather than banked as slack: a schedule that absorbs
+a gain silently cannot report a loss honestly either. **The T6 deadline does not
+move.** It is a decision blocker and gaining engineering time buys nothing
+against it; if the legal position is not recorded by 21 September, beta slips to
+that date plus two weeks and the slip is reported.
 
 **The parallel track no sprint can absorb.** T6 is a decision blocker: it needs
 counsel and does not shrink by writing code. It starts now and must be recorded
 before S11 closes, because Audience B is gated on it and every sprint after S9
-assumes recipients exist. If it is not recorded by 5 October, beta slips to the
-date it is recorded plus two weeks, and the slip is reported rather than
-absorbed.
+assumes recipients exist. If it is not recorded by 21 September, beta slips to
+the date it is recorded plus two weeks, and the slip is reported rather than
+absorbed. It is now the single most likely cause of a slip, because the
+engineering path just got two weeks shorter and this one did not.
 
 **Dependencies, stated so a slip propagates visibly.** S8 needs S7's resolution
 to work at all; S9 needs S8's report to have something to render; S10 needs S9's
@@ -169,12 +181,17 @@ The first thing cut at a deadline is measurement, because it does not show in a
 demo. Here measurement is the product: an unmeasured report is somebody else's
 feed with extra steps, and anyone can build that in an afternoon.
 
-The specific risk is S7. Area resolution is the one sprint whose difficulty is
-genuinely unknown, because the register's names have never been checked against
-the channel's wording. If the hit rate comes back low, that is a finding, and
-the correct response is to say so and re-plan rather than ship a report that is
-confidently wrong about which rajon is under alert. A report that names the
-wrong place is worse than no report, because it is actionable.
+The specific risk was S7, and it has largely resolved in the project's favour:
+the channel's own structure answers the question the sprint was going to spend
+two weeks on (`docs/CHANNEL.md`). What is left of the risk is correctness rather
+than coverage, and it moves to a smaller, sharper question: does the tag on a
+message describe the area that message is about. A report that names the wrong
+place is worse than no report, because it is actionable, so the hand-labelled
+sample is not optional and cannot be replaced by another automated probe.
+
+The risk that grew instead is S8. Distance to the border now carries more weight
+than planned, because it is the field that turns a resolved tag into something a
+person can act on, and its geometry has not been touched.
 
 ## 10. Amending these criteria
 

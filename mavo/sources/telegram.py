@@ -34,6 +34,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+from mavo.areas import AreaTable
 from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind
 from mavo.transport import Transport
 
@@ -109,6 +110,11 @@ class ParseReport:
     first_id: int | None = None
     last_id: int | None = None
     skipped: int | None = None
+    # Sprint 7. Tags the area table did not know. A new tag is a finding, not a
+    # fallback (T33): either the channel named a new area or a name drifted, and
+    # both are things a reader of this report must be told rather than have
+    # absorbed into an unparsed count.
+    unknown_tags: tuple[str, ...] = field(default_factory=tuple)
 
     @property
     def unparsed_count(self) -> int:
@@ -172,16 +178,32 @@ def classify_state(text: str) -> AlertState | None:
     return None
 
 
-def classify(text: str) -> tuple[str, AlertState, ThreatKind] | None:
+def classify(
+    text: str, areas: AreaTable | None = None
+) -> tuple[str, AlertState, ThreatKind] | None:
     """Map one message to an area, a state and a means. None when nothing matches.
 
     Returns None rather than a default: an unclassified message is unknown, and
     an unknown that resolves to a state is the defect this project is built
     around.
+
+    **Sprint 7 changed where the area comes from.** When an ``AreaTable`` is
+    supplied, the area is the first tag the channel itself attached, resolved
+    through the versioned map. The oblast-name table below remains only as the
+    fallback for messages carrying no tag at all, which is 0.66% of the design
+    window and is being read by hand under T34. The fallback is kept rather than
+    deleted because deleting it would silently change what an untagged message
+    means before anyone has looked at one.
     """
     lowered = text.lower()
 
-    area = next((code for pattern, code in AREAS.items() if pattern in lowered), None)
+    area: str | None = None
+    if areas is not None:
+        resolved, _unknown = areas.resolve_all(text)
+        if resolved:
+            area = resolved[0].code
+    if area is None:
+        area = next((code for pattern, code in AREAS.items() if pattern in lowered), None)
     if area is None:
         return None
 
@@ -201,9 +223,15 @@ class TelegramChannelSource:
 
     source_id = "telegram"
 
-    def __init__(self, transport: Transport, url: str = CHANNEL_URL) -> None:
+    def __init__(
+        self,
+        transport: Transport,
+        url: str = CHANNEL_URL,
+        areas: AreaTable | None = None,
+    ) -> None:
         self.transport = transport
         self.url = url
+        self.areas = areas
         self.report = ParseReport()
         self._last_id: int | None = None
 
@@ -238,6 +266,7 @@ class TelegramChannelSource:
 
         events: list[ThreatEvent] = []
         unparsed: list[str] = []
+        unknown_tags: list[str] = []
         found = _BLOCK.findall(body)
 
         for block in found:
@@ -245,7 +274,10 @@ class TelegramChannelSource:
             time_match = _TIME.search(block)
             text = _strip(text_match.group(1)).strip() if text_match else "(no text div)"
             ts = _parse_timestamp(time_match.group(1)) if time_match else None
-            classified = classify(text)
+            if self.areas is not None:
+                _resolved, unknown = self.areas.resolve_all(text)
+                unknown_tags.extend(tag for tag in unknown if tag not in unknown_tags)
+            classified = classify(text, self.areas)
             if ts is None or classified is None:
                 unparsed.append(text[:120])
                 continue
@@ -270,6 +302,7 @@ class TelegramChannelSource:
             first_id=first_id,
             last_id=last_id,
             skipped=skipped,
+            unknown_tags=tuple(unknown_tags),
         )
         return events
 

@@ -344,6 +344,7 @@ argument sits with the addition.
 | `docs/reviews/<version>.md` | One pre-push review per release, every finding dispositioned | |
 | `data/raw/` | Tier 1. Never committed | `.gitignore` |
 | `data/aggregates/` | Tier 2. Committed | |
+| `data/reference/` | Tier 2. Committed. Derived lookup tables with their provenance and licence, never raw messages. Currently `tag_map.csv` (`docs/CHANNEL.md`) | |
 | `STATUS.json` | Machine-readable pins and measurements, including the repository size block | `docs_audit`: recounted from the tree at every run |
 | `MANIFEST.sha256` | Transfer integrity for hand-assembled archives | `shasum -c` |
 

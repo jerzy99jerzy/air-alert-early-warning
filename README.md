@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 147](https://img.shields.io/badge/tests-147-brightgreen)](tests/)
-[![coverage 96.74%](https://img.shields.io/badge/coverage-96.74%25-brightgreen)](Makefile)
+[![tests 167](https://img.shields.io/badge/tests-167-brightgreen)](tests/)
+[![coverage 96.97%](https://img.shields.io/badge/coverage-96.97%25-brightgreen)](Makefile)
 [![harness 11 attacks, 10 mutation-verified](https://img.shields.io/badge/harness-11%20attacks%2C%2010%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 41](https://img.shields.io/badge/defects%20logged-41-informational)](docs/METHODOLOGY.md)
+[![defects logged 42](https://img.shields.io/badge/defects%20logged-42-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -68,6 +68,35 @@ coincided with a night of massed strikes on western Ukraine, and those campaigns
 cover roughly 57% of days, which is why a prediction built on them would be a
 calendar. Restated at 0.9.0.0; the earlier predictive framing is recorded in
 D-015 rather than overwritten.
+
+## How the source is actually structured
+
+The finding the project turned on, measured on 48,540 real messages in the
+design window of the corpus.
+
+**99.34% of messages carry a hashtag naming the area and its unit type**, in the
+form `#Харківський_район`, `#м_Харків_та_Харківська_територіальна_громада`,
+`#Донецька_область`. The name is in the nominative, spaces are underscores, and
+the unit word is explicit, so nothing has to be inferred. There are **127
+distinct tags across 99 nights**, and **126 of them resolve to a unique code in
+the Ukrainian state register** (`data/reference/tag_map.csv`).
+
+This explains F23 rather than merely recording it. The shipped table searched
+for oblast names in message text and scored 0 of 20; the channel emits an oblast
+tag in 515 of 69,676 occurrences and names raions the rest of the time. The
+table could not have scored above zero, and the problem was never an incomplete
+vocabulary.
+
+**3.5% of tag occurrences belong to western oblasts.** The other 96.5% are
+front-line raions in the east and south, which for a reader on the Polish side
+are facts about places 900 kilometres away. The channel labels the difference
+itself, so the filter this project needs arrives for free rather than as a
+classifier that has to be trained and trusted. A western-only report has a
+naturally small volume because the west is naturally quiet, with no artificial
+rate limit standing in for judgement.
+
+Full measurement, the join to the register, the two rules it needed and what it
+corrects: `docs/CHANNEL.md`.
 
 ## What this will not tell you
 
@@ -250,10 +279,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 14 | 2,248 |
-| Tests | 25 | 2,237 |
-| Tools | 4 | 861 |
-| Documentation | 28 | 7,958 |
+| Package `mavo/` | 15 | 2,422 |
+| Tests | 27 | 2,497 |
+| Tools | 6 | 1,326 |
+| Documentation | 30 | 8,691 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -264,13 +293,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 147, of which 11 are scripted attacks |
-| Coverage | 96.74% against a floor of 95, a ratchet that is never lowered |
+| Tests | 167, of which 11 are scripted attacks |
+| Coverage | 96.97% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 10 of 11 attacks; the eleventh is printed as unverified on every run |
 | Threat-model rows | 13, each with a control or a named acceptance |
-| Defects logged with their class | 41, the count pinned against the log itself |
+| Defects logged with their class | 42, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 17 |
-| Releases | 24, of which 13 carry tags |
+| Releases | 27, of which 16 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 
 ## Documentation
@@ -286,6 +315,7 @@ confidence interval attached.
 | `docs/MECHANISMS.md` | Every mechanism with its rejected alternative |
 | `docs/COMPUTATION.md` | The statistical machinery the thesis stands on, with its stated weaknesses |
 | `docs/MOBILE.md` | The notification channel: technology choice, phases, and what gates distribution |
+| `docs/CHANNEL.md` | What the source actually emits, measured, and the join to the state register |
 | `docs/OBSERVABILITY.md` | The durable run log and how a cycle is watched. Plan, not built |
 | `docs/DEPLOYMENT.md` | Egress inventory, endpoint identity, containers, and where the daemon lives. Plan and open decisions |
 | `docs/ARCHITECTURE.md` | The infrastructure architecture: components, boundaries, dependency rules, process shape |
@@ -313,8 +343,8 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: 147 tests passing, of which 11 are harness attacks.
-  Coverage 96.74% against a floor of 95. The floor stays a ratchet under T9:
+- `make verify` green: 167 tests passing, of which 11 are harness attacks.
+  Coverage 96.97% against a floor of 95. The floor stays a ratchet under T9:
   the rise is below the five-point threshold that moves it. The old caveat
   stands in kind:
   `transport.py` carries the one genuinely network-bound function, and it drags

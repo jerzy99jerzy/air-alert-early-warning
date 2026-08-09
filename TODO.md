@@ -116,6 +116,7 @@ and a drone-regime rule that clears its allocated share on the adversarial
 history without lowering the recall floor.
 
 ## T15. Raion and hromada gazetteer
+Status: **largely met at 0.10.0.0**, by a route nobody planned. The channel tags 99.34% of messages with the area and unit type, so the gazetteer is a 127-row lookup rather than a vocabulary to search (`docs/CHANNEL.md`). What remains is correctness on the message the tag sits in, which is S7's hand-labelled sample. Original text:
 Status: `ready`, **S7, core**. Promoted from support to product by D-015: a report that cannot name the rajon is a relay. Superseded in method by T31, which supplies the register this task consumes.
 F24. The channel names raions and hromadas; nothing in a message identifies the
 oblast. Without a mapping, the border-oblast rules that the entire thesis rests
@@ -297,8 +298,27 @@ frequency-dependent, a rate condition returns to the gate with a measured
 number attached, and D-014 is reopened on its own stated terms.
 
 
-## T31. KATOTTH as a versioned file
-Status: `ready`, **S7**
+## T31. KATOTTG as a versioned file
+Status: `ready`, **S7**. *Renamed 0.9.2.0: the register is КАТОТТГ, KATOTTG. The
+earlier spelling KATOTTH followed one English transliteration and did not match
+what any source publishes.*
+
+**Candidate located and measured** [measured, 2026-08-09, by retrieving it]:
+`kaminarifox/katottg-json` carries the codifier as JSON, `orderDate` 2024-01-19,
+31,751 items, with categories O oblast, P raion, H hromada, M city, C village
+and others. Restricted to the eight western oblasts it yields 36 raions and 484
+hromadas. Names are the bare adjectival forms the channel would inflect:
+`Володимирський`, `Ковельський`, `Затурцівська`.
+
+**Blocking issue, and it is not technical: the repository declares no licence.**
+No licence means all rights reserved, so it cannot be vendored into an
+Apache-2.0 tree, whatever its contents. The underlying codifier is a Ukrainian
+government publication and open, so the fix is to take it from the official
+publication and use this repository only to cross-check the parse.
+**Acceptance:** the register in the tree with its official source URL, version
+and retrieval date recorded, a licence statement that survives reading, a loader
+with no runtime dependency, and the hit rate from `tools/register_probe.py`
+recorded as a number.
 D-016. The Ukrainian state administrative register, successor to KOATUU, gives
 hromada, rajon and oblast with stable codes, which is the mapping F23 showed to
 be missing: the shipped table keyed on oblasts while the channel emits the
@@ -319,3 +339,50 @@ learning which rajons a Polish user asks about at three in the morning.
 geometry, with the method and the geometry version recorded. A spot check
 against a handful of known distances, verified by hand, before the column is
 trusted anywhere.
+
+
+## T33. Alias table between the channel and the register
+Status: `ready`, **S7**
+The channel tags `#ВолодимирВолинський_район`; the register lists
+`Володимирський` after a renaming. Found by accident while joining, which means
+nothing has systematically compared the two vocabularies and there may be more.
+The general shape of the problem: the register and the channel evolve
+independently, and either can change a name first (`docs/CHANNEL.md`).
+**Acceptance:** every one of the 127 tags either resolves directly or carries an
+alias with the reason recorded, plus a check that fails when a tag appears in the
+corpus that the map does not know. A new tag is a finding, not a fallback.
+
+## T34. What is in the 0.66% of messages without a tag
+Status: `ready`, **S7**
+321 of 48,540 design-window messages carry no `#Name_unit` tag and nothing says
+what they are. They may be administrative posts, or they may be exactly the
+messages that matter.
+**Acceptance:** a hand-read sample of them, classified, with the finding
+recorded either way. If any are alerting messages, the tag parse needs a
+documented fallback and the 99.34% figure needs a caveat beside it wherever it
+appears.
+
+
+## T35. Turn the negative result into a measurement
+Status: `ready`
+The design window's four western-wide alert nights show no reported Polish
+airspace violation, but the source is press coverage, and a single drone downed
+without debris may never reach national media. Absence of evidence, not evidence
+of absence, and the log says so.
+**Acceptance:** the operational command's own published posts for 2026-04-29,
+2026-05-28, 2026-05-29 and 2026-06-20 read and recorded, with the finding
+entered either way. A confirmed quiet night on all four is a measurement; a
+missed incursion on any of them is a more interesting one.
+
+
+## T36. The hand-labelled sample S7 owes
+Status: `ready`, **closes S7**
+Sprint 7 measured that the channel tags 99.34% of messages and that 126 of 127
+tags resolve to a register code. Neither says the tag on a message describes the
+area that message is about. No automated probe can assert that, which is why the
+criterion was written as a hand-labelled sample before the sprint began.
+**Acceptance:** at least 50 design-window messages read by hand, each with the
+resolved area recorded as correct or not, and the error rate stated as a number.
+An error rate above a few percent is a finding about the channel, not about the
+map, and it is recorded either way. Until this exists S7 stays open and
+`STATUS.json` does not claim otherwise in prose.

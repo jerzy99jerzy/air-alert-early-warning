@@ -392,7 +392,7 @@ same series.
 Date: 2026-08-09. Status: adopted
 
 **Decision.** Area resolution uses the Ukrainian state administrative register
-(KATOTTH, successor to KOATUU) as a file in the repository, joined to centroids
+(KATOTTG, КАТОТТГ, successor to KOATUU) as a file in the repository, joined to centroids
 and boundaries from OpenStreetMap. Distance from each area to the Polish border
 is computed once, offline, and stored as a column. No geocoding API is called at
 runtime, by this or any other provider.
@@ -404,7 +404,7 @@ and a third party who learns which rajons a Polish user is asking about at three
 in the morning. A file has none of those, is auditable, is diffable, and works
 with the network down, which is the state the tool most needs to survive.
 
-**Practical shape.** The register gives the hierarchy hromada, rajon, oblast
+**Practical shape.** The register gives the hierarchy hromada, raion, oblast
 with stable codes, which is exactly the mapping the channel's wording needs
 (F23: the shipped table keyed on oblasts while the channel emits the smaller
 units). Distance to the border is a precomputed scalar per area, so a message

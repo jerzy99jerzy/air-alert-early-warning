@@ -34,6 +34,11 @@ Note:      the defect log is the most useful document here for a new
 | --- | --- |
 | Every observed violation of Polish airspace coincided with a massed campaign against western Ukraine | measured, small sample |
 | Campaigns cover roughly 57% of days in the period | measured |
+| 22 western-wide alert episodes in the design window coincided with zero reported Polish airspace violations | reported, absence of evidence rather than evidence of absence: Polish media searched 2026-08-09 for 29 Apr, 28 and 29 May, 20 Jun 2026. Minor incursions may go unreported (T35) |
+| The only confirmed crossing in the corpus period, 30 July 2026, falls in the holdout | measured, from the frozen boundary and the reported date |
+| 99.34% of design-window messages carry a `#Name_unit` hashtag; 127 distinct tags; 126 resolve to a unique register code | measured, 48,540 messages, `docs/CHANNEL.md` |
+| Western oblasts hold 3.5% of tag occurrences (2,456 of 69,676) | measured, same run |
+| Matching register names in text reaches 6.06% as a lower bound against 99.34% for tags | measured, `tools/register_probe.py` |
 | Per-night message volume does not separate nights: every design night carries more than 120 messages, at ~490/night | measured, 2427 pages, 48,540 messages, 99 nights |
 | Per-hour peak volume does separate: peak >= 60 on 24.2% of nights, >= 80 on 7.1%, >= 120 on none | measured, same run |
 | The channel names an oblast in 1.05% of messages (510 of 48,540) | measured, same run. F23's 0-of-20 was too small a sample to see it |
@@ -129,6 +134,7 @@ repository has come to the mistake it was built after.
 | [F56](#f56-0800-a-defect-entry-was-itself-wrong) | 0.8.0.0 | A defect entry was itself wrong |
 | [F57](#f57-0800-a-control-was-removed-and-the-log-says-so) | 0.8.0.0 | A control was removed, and the log says so |
 | [F58](#f58-0900-one-corpus-was-sized-for-two-different-requirements) | 0.9.0.0 | One corpus was sized for two different requirements |
+| [F59](#f59-01000-a-probe-presented-an-arbitrary-match-as-an-attribution) | 0.10.0.0 | A probe presented an arbitrary match as an attribution |
 
 ## Defect log
 
@@ -842,6 +848,40 @@ stayed predictive, the repair would have been about 37,500 pages and ten hours
 of paging, which is the number recorded here so that a future reader restoring
 the predictive framing knows its price.
 
+
+### F59, 0.10.0.0. A probe presented an arbitrary match as an attribution
+
+`tools/register_probe.py` matched truncated register names against message text
+and reported 16.56% of messages carrying a western area name, with
+`Миколаївська, Львівська` as the busiest match at 1,075 hits. A single grep
+showed the underlying text was `Миколаївський район`, a raion of *Mykolaiv*
+oblast, listed beside `Вознесенський` and `Первомайський`, its neighbours.
+
+Two independent defects, both in code written the same afternoon.
+
+**The attribution was arbitrary.** When a stem matched several register entries
+the probe took the first, `table[stem][0]`, and printed its oblast as though it
+were a finding. An ordering artefact of the register was rendered as geography.
+
+**The scope restriction created the collision it hid.** Restricting the register
+to the eight western oblasts made `Миколаївський` unique *within that scope*, so
+a stem that collides nationally looked clean. A restriction on the register is
+not a restriction on the text, and the text is what is being searched.
+
+Class: **a key with multiple values, reported as though it had one.** Repaired by
+judging ambiguity against the whole country rather than the restricted scope, by
+excluding colliding stems from attribution instead of assigning them, and by
+splitting the headline figure into an upper and a lower bound that are printed
+together. The corrected lower bound is 6.06%, and 77 of 445 stems in scope
+collide somewhere in the country, meaning 17% of the vocabulary had been treated
+as unambiguous when it was not.
+
+The larger lesson is not about the bug. The measurement it produced was an
+answer to the wrong question: the channel labels its areas with hashtags in
+99.34% of messages, and no amount of repairing a text-matching heuristic would
+have reached that. The grep that exposed the defect also showed the structure,
+which is recorded in `docs/CHANNEL.md`.
+
 ## Corpus measurements, 2026-08-09
 
 Metadata only. No message content was read before the holdout boundary was
@@ -964,3 +1004,45 @@ The conjunction currently adds nothing. Its numbers are identical to R3, meaning
 R2 fires on every night R3 fires and the third conjunct is inert as defined.
 Either R2 is redefined to carry information R3 lacks, or it is dropped and the
 README stops describing a three-part conjunction.
+
+
+---
+
+## Sprint 7: what the negative result means, and what it does not
+
+The design window holds 81 western episodes, of which 22 touch all 36 western
+raions at once. Polish sources report **no airspace violation on any of the four
+busiest western nights**, and the one confirmed crossing of the corpus period,
+30 July 2026, falls in the holdout rather than the design window.
+
+Recorded here because a project that only writes down its confirmations is a
+brochure.
+
+**What it would have meant under the old thesis.** A predictive rule firing on
+western-wide alerts would have scored 0 of 22 in this window. Ninety-nine nights
+of data, twenty-two candidate firings, no hits, and nothing to show. That is not
+a surprise: crossings run at two to four a year and western-wide alerts at
+roughly one in four nights, so coincidence has to be rare. It is the base-rate
+argument arriving as an observation rather than as arithmetic.
+
+**What it means under the current one.** Nothing against the project. D-015
+states that the tool reports a picture and predicts nothing, and the picture it
+reports was true on all 22 nights: the whole of western Ukraine was under alert.
+The negative result is the strongest available confirmation that dropping the
+predictive framing was correct, and it arrived one release after the decision
+rather than one release before, which is luck rather than foresight.
+
+**The expectation this measurement does not touch.** The working assumption is
+that incursions are *deliberately organised against the Polish border* rather
+than being spillover from strikes deeper in Ukraine. If that is right, a
+predictor keyed to strike intensity was doomed for a second, independent reason:
+the intent it would need to observe is not a function of the volume it can see.
+This is [speculation] and is recorded as such; it is not evidence for anything
+and it is not used anywhere in the code. Its only role is to keep anyone from
+reviving the predictive framing on the grounds that a longer corpus would fix
+it.
+
+**Its limit, stated.** Absence of press coverage is not absence of event. A
+single drone that crosses and is downed without debris may never reach national
+media. T35 records the check that would turn this from an absence of evidence
+into a measurement: the operational command's own posts for those four dates.

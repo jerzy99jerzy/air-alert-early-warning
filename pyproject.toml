@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "air-alert-early-warning"
-version = "0.9.1.0"
+version = "0.10.1.0"
 description = "Cross-border early warning from Ukrainian air-alert feeds, with an explicit base-rate gate"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -19,6 +19,12 @@ mavo = "mavo.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["mavo*"]
+
+[tool.setuptools.package-data]
+# The area map is a versioned artifact the package reads at runtime. Without
+# this it resolves nothing once installed, and the failure is silent: classify
+# falls back to the oblast table that scores 0 of 20 (F23).
+mavo = ["../data/reference/*.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

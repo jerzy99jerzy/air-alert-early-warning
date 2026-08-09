@@ -16,6 +16,136 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.10.1.0 - 2026-08-09
+
+Sprint 7 shipped, and a negative result recorded beside it.
+
+- **`mavo/areas.py`: area resolution by the channel's own hashtags.** F23's
+  repair. `classify` now prefers the tag the channel attached, resolved through
+  the versioned 127-row map to a KATOTTG code and an oblast, and falls back to
+  the oblast-name table only for the 0.66% of messages carrying no tag (T34).
+  The fallback is kept rather than deleted, because deleting it would change
+  what an untagged message means before anyone has read one.
+- **Unknown tags are reported, never absorbed.** `ParseReport.unknown_tags`
+  carries them to the caller. A tag the table does not know is a finding: the
+  channel named a new area, or a name drifted (T33). A fallback that mapped it
+  onto something plausible would make the day a new raion appears look exactly
+  like every other day. It does not raise either, because content must never
+  become an outage.
+- `AreaRef.border_km` is `None` and stays `None` until S8 measures it (T32).
+  Unknown prints as unknown; a caller rendering it as 0 would put a Polish
+  reader on the border.
+- Ten regressions in `tests/test_areas.py`, mirrored as the sprint's record in
+  `tests/test_sprint7.py`. The load-bearing one asserts that a message naming
+  one oblast in prose and tagging a raion in another resolves to the tag, which
+  is the difference between sprint 7 and no sprint 7.
+- **Measured, and against the project's own earlier hope:** the design window
+  holds 81 western episodes, 22 of them touching all 36 western raions, and
+  Polish sources report no airspace violation on any of the four busiest western
+  nights. A predictive rule would have scored 0 of 22. Under D-015 that is not a
+  finding against the project, it is the base-rate argument arriving as an
+  observation, and it is the strongest available confirmation that the
+  predictive framing was correctly dropped one release earlier. Labelled
+  `reported, absence of evidence`, with T35 recording the check that would make
+  it a measurement.
+- The volume figures a western-only report would produce, now in
+  `docs/CHANNEL.md`: 5.73 episodes per week, 1.56 of them western-wide. The
+  distribution is bimodal, 22 episodes at 36 areas against 39 at one to four,
+  which decides that the report needs two message forms rather than one
+  parameterised one.
+- A correction to this project's own tool: `west_activity` divided episodes by
+  *active* nights and reported 11.12 per week. The denominator was the subset in
+  which the phenomenon occurs. Corrected to 99 nights throughout, giving 5.73.
+- **S7 is not closed, and this release corrects a claim that it was.** Its exit
+  criterion has two halves: every tag resolves or is marked unresolved, which is
+  met, and a hand-labelled correctness sample, which does not exist (T36).
+  Recording the sprint complete on the strength of the countable half is the
+  failure the criteria table was written to prevent. The remaining windows are
+  pulled forward two weeks and beta moves to 4 October, but **T6's deadline does
+  not move**: gaining engineering time buys nothing against a decision blocker,
+  which makes it now the most likely cause of a slip.
+- `docs/reviews/0.10.1.0.md` covers this release and the four before it in one
+  pre-push review, and `docs/MANUAL.md` documents `unknown_tags` as the field to
+  watch next.
+- The standing assumption that incursions are deliberately organised against the
+  Polish border rather than spillover is recorded as **speculation**, used
+  nowhere in the code, and present only to stop the predictive framing being
+  revived on the grounds that a longer corpus would fix it.
+
+## 0.10.0.0 - 2026-08-09
+
+The source turned out to be structured, and that changes three sprints.
+
+- **`docs/CHANNEL.md`, and it is the most consequential measurement in the
+  project so far.** 99.34% of design-window messages carry a hashtag naming the
+  area and its unit type: `#Харківський_район`, nominative, spaces as
+  underscores, unit word explicit. 127 distinct tags across 99 nights, of which
+  126 resolve to a unique code in the Ukrainian state register. The parse
+  problem was never vocabulary; nobody had read the structure.
+- **F23 is explained rather than only recorded.** The shipped table searched for
+  oblast names in message text and scored 0 of 20. The channel emits an oblast
+  tag in 515 of 69,676 occurrences and names raions the rest of the time, so the
+  table could not have scored above zero. Two sprints had been planned around
+  the wrong diagnosis.
+- **The east-west split is the product filter, arriving for free.** 2,456 of
+  69,676 tag occurrences (3.5%) are western oblasts; the rest are front-line
+  raions 900 kilometres from any Polish reader. The channel labels the
+  difference itself, so the filter needs no classifier to be trained or trusted,
+  and a western-only report has a naturally small volume because the west is
+  naturally quiet.
+- **F59. A probe presented an arbitrary match as an attribution.** The
+  text-matching probe reported 16.56% and attributed its busiest match to Lviv
+  oblast; the text was `Миколаївський район`, in Mykolaiv oblast. Two defects:
+  the first entry of a colliding stem was printed as geography, and restricting
+  the register to western oblasts made a nationally colliding stem look clean. A
+  restriction on the register is not a restriction on the text. Corrected lower
+  bound 6.06%, and 77 of 445 stems in scope collide somewhere in the country.
+- `data/reference/tag_map.csv`: tag, count, unit, register name, oblast, KATOTTG
+  code, status, note. Two rules were needed and are recorded in the file rather
+  than hidden in code: composite `м_X_та_Yська_територіальна_громада` tags
+  resolve on the member after `_та_`, and `#ВолодимирВолинський_район` has no
+  register entry because the register renamed it. That second one is why the
+  file has a `note` column: **the channel and the register are two
+  independently evolving vocabularies** (T33).
+- `tools/west_activity.py` measures what a western-only report would have said
+  and how often, in episodes rather than messages, because an alert and its
+  all-clear are one event. `tools/register_probe.py` keeps its corrected upper
+  and lower bounds and its structural axes.
+- S7's exit criterion sharpened from a hit rate to two countable things: every
+  tag resolves or is explicitly unresolved, and a hand-labelled sample agrees on
+  the message the tag sits in. T34 asks what is in the 0.66% of messages with no
+  tag at all, which may be administrative posts or may be the ones that matter.
+- `NOTICE` carries the CC-BY attribution the register's licence requires, and
+  `data/reference/` is named as a committed tier-2 directory for derived lookup
+  tables with their provenance.
+
+## 0.9.2.0 - 2026-08-09
+
+- `tools/register_probe.py`. S7's first question, asked rather than assumed:
+  does the state register's wording appear in what the channel actually emits?
+  The shipped table keyed on oblasts and scored 0 of 20 (F23); the register
+  carries raions and hromadas, and whether its *names* survive the channel's
+  *inflection* is empirical. The probe reports the share of design-window
+  messages carrying at least one register name, broken down by category and
+  oblast, plus how many register entries never appear at all. Both halves are
+  printed because a hit rate carried by three stems is a different situation
+  from the same rate spread across the register.
+- It measures presence, not correctness, and says so twice. Matching is on a
+  truncated stem because Ukrainian inflects (`Володимирський` against
+  `у Володимирському районі`), which trades precision for recall deliberately:
+  the question is whether the vocabulary is there at all, and over-matching
+  errs in the direction the hand-labelled sample will catch.
+- **The register located and measured** [measured, by retrieving it]:
+  `kaminarifox/katottg-json`, `orderDate` 2024-01-19, 31,751 items; restricted
+  to the eight western oblasts, 36 raions and 484 hromadas. **It declares no
+  licence**, so it cannot be vendored into an Apache-2.0 tree whatever its
+  contents. The codifier itself is a Ukrainian government publication and open,
+  so T31 now requires the official source with its URL, version and retrieval
+  date, and treats the GitHub copy as a cross-check rather than the artifact.
+- T31 renamed from KATOTTH to KATOTTG. The earlier spelling followed one English
+  transliteration and matched nothing any source publishes, which is a small
+  error of the kind that costs an hour to a contributor searching for the file.
+
 ## 0.9.1.0 - 2026-08-09
 
 - `docs/MVP.md` rewritten to v3.0 against D-015, with section 1 stating what

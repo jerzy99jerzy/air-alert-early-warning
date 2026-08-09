@@ -103,6 +103,14 @@ F50). Three regexes with deliberately separated jobs:
 | `_TEXT`, `_TIME` | The text div and the `<time datetime>` **within one block**, in either internal order | That block joins the unparsed count; its neighbours are untouched |
 | `POST_ID` | `data-post="channel/NNNN"` | No ids. The window gap becomes `unknown`, never `0` |
 
+**The parse target is the hashtag, not the prose** (0.10.0.0). Measured on the
+design window, 99.34% of messages carry `#Name_unit` with the unit type
+explicit, the name in the nominative and spaces as underscores. 127 distinct
+tags, 126 resolving to a unique register code. Free-text matching against
+register names, the approach this replaces, reached 6.06% as a lower bound and
+needed a stemming parameter that made names collide across oblasts. Full
+measurement in `docs/CHANNEL.md`.
+
 The block boundary is the load-bearing part. Until 0.6.0.0 a single page-wide
 regex required the timestamp to precede the text; on the live page the
 timestamp sits in the message *footer*, so every event carried its neighbour's

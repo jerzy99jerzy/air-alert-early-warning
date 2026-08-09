@@ -227,6 +227,22 @@ is a different and dangerous tool.
 
 ## 6. What is measured, and on what
 
+**Channel structure, measured 2026-08-09 on the design window** (48,540
+messages, 2,427 pages, 607 refused above the boundary). Detail in
+`docs/CHANNEL.md`.
+
+| Claim | Provenance |
+| --- | --- |
+| 99.34% of messages carry a `#Name_unit` hashtag | measured |
+| 127 distinct tags across 99 nights | measured |
+| 126 of 127 resolve to a unique KATOTTG code | measured, by joining |
+| Tag occurrences: raion 61,531, hromada 7,630, oblast 515 | measured |
+| Western oblasts hold 2,456 of 69,676 tag occurrences, 3.5% | measured |
+| 36 western tags, covering all 36 western raions in the register | measured |
+| The west is alerted as a block rather than per raion | inference, from the uniformity of western tag counts at 56 to 58 |
+| The channel and the register are independently evolving vocabularies | measured, one instance: the channel tags `ВолодимирВолинський`, the register lists `Володимирський` |
+
+
 The most important sentence in this repository: **almost every number produced
 so far was produced against a synthetic history.**
 

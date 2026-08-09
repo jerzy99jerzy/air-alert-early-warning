@@ -282,6 +282,15 @@ and printed, never dropped. A rising count means the pattern table is drifting
 from the channel's actual wording, which would otherwise show up as a channel
 that has gone quiet.
 
+**`unknown_tags` is the number sprint 7 added, and it is the one to watch next.**
+The channel labels 99.34% of its messages with a hashtag naming the area
+(`docs/CHANNEL.md`), and area resolution is now a lookup in a versioned
+127-row map rather than a search through prose. A tag the map does not know is
+listed here rather than absorbed: either the channel has started naming a new
+area, or a name has drifted between the channel and the state register, which
+has already happened once. A non-empty list is a finding and belongs in the
+defect log, not in a silent fallback.
+
 **Measured, and it failed.** On 2026-08-08 the shipped pattern table was run
 against twenty real messages from the channel. It classified **none of them**.
 The state markers were correct (15 of 20), the means markers partly correct (4 of

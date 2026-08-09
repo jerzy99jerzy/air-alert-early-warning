@@ -42,6 +42,7 @@ Note:      every constant quoted here was read out of the code. Where a
 23. [Executable claims](#23-executable-claims)
 24. [Mutation-verified attacks](#24-mutation-verified-attacks)
 25. [Provenance labels as a data type](#25-provenance-labels-as-a-data-type)
+26. [Area resolution by hashtag, not by name search](#26-area-resolution-by-hashtag-not-by-name-search)
 
 ---
 
@@ -661,3 +662,31 @@ event that arrived unlabelled cannot be relabelled honestly afterwards.
 The same convention governs prose. Every load-bearing claim in this repository's
 documents carries one of the four, and the defect log contains an entry (F49) for
 a number stated in conversation without one.
+
+---
+
+## 26. Area resolution by hashtag, not by name search
+
+**Where:** `data/reference/tag_map.csv`, `tools/register_probe.py`,
+`tools/west_activity.py`. Full measurement in `docs/CHANNEL.md`.
+
+The channel labels 99.34% of its messages with a hashtag carrying the area and
+its unit type explicitly. Resolution is therefore a lookup in a 127-row table,
+not a search, and the state register's role is to supply the code and the
+geography behind each row rather than a vocabulary to match against.
+
+**Rejected alternative: matching register names in message text.** Tried and
+measured first. It reached 16.56% as an upper bound and 6.06% once stems that
+collide across oblasts were excluded, against 99.34% for the tags. It also needs
+a truncation length, because Ukrainian inflects, and truncation is what made
+`Миколаївський` in Mykolaiv oblast look like a match for a western hromada. An
+approach whose accuracy depends on a tuning parameter nobody can justify is
+worse than one with no parameter at all.
+
+**Rejected alternative: bulleted list items.** Present in 10.53% of messages and
+carrying the unit word, but embedded in prose and apparently accompanying the
+tags rather than replacing them. Kept as a cross-check, not a parse target.
+
+**Guarded by:** nothing yet, and that is the honest state. The tag parse is not
+implemented; this section records the decided mechanism and its measurement so
+that S7 implements what was measured rather than what was remembered.
