@@ -199,9 +199,17 @@ def classify(
 
     area: str | None = None
     if areas is not None:
-        resolved, _unknown = areas.resolve_all(text)
+        resolved, unknown = areas.resolve_all(text)
         if resolved:
             area = resolved[0].code
+        elif unknown:
+            # F60. The channel named an area and the map did not know it. Falling
+            # back to the oblast table here would answer a question the channel
+            # already answered, with a guess drawn from the table that scores 0
+            # of 20 (F23), and the unknown tag would leave no mark on the result.
+            # The fallback exists for messages with no tags at all, and only for
+            # those.
+            return None
     if area is None:
         area = next((code for pattern, code in AREAS.items() if pattern in lowered), None)
     if area is None:

@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 167](https://img.shields.io/badge/tests-167-brightgreen)](tests/)
-[![coverage 96.97%](https://img.shields.io/badge/coverage-96.97%25-brightgreen)](Makefile)
+[![tests 169](https://img.shields.io/badge/tests-169-brightgreen)](tests/)
+[![coverage 96.90%](https://img.shields.io/badge/coverage-96.90%25-brightgreen)](Makefile)
 [![harness 11 attacks, 10 mutation-verified](https://img.shields.io/badge/harness-11%20attacks%2C%2010%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 42](https://img.shields.io/badge/defects%20logged-42-informational)](docs/METHODOLOGY.md)
+[![defects logged 43](https://img.shields.io/badge/defects%20logged-43-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -68,6 +68,26 @@ coincided with a night of massed strikes on western Ukraine, and those campaigns
 cover roughly 57% of days, which is why a prediction built on them would be a
 calendar. Restated at 0.9.0.0; the earlier predictive framing is recorded in
 D-015 rather than overwritten.
+
+## Where the information comes from
+
+Stated in full, because a warning tool whose inputs are vague is a tool nobody
+can check. Every row is what it is, including the rows that are weaker than they
+look.
+
+| Source | What it gives | Access | Standing |
+| --- | --- | --- | --- |
+| **t.me/s/air_alert_ua**, the public web preview of the official Ukrainian air-alert channel | Every alert and all-clear, tagged with the area and its unit type, within seconds of publication | Public page, no token, no account, no agreement. It can be withdrawn at any time and nothing obliges anyone to keep it | **The only signal source in use.** ~20 messages per page, ~514 messages a day measured over the corpus |
+| **alerts.in.ua** and **api.ukrainealarm.com** | The same alerts, through APIs | Tokens, one applied for and unanswered | **Not independent.** Both draw from the channel above (D-010). Two feeds, one dependency, and treating them as two would be the kind of false redundancy that reads as robustness right up until the day it matters |
+| **KATOTTG**, the Ukrainian state register of administrative units | The code, oblast and hierarchy behind every area the channel names | A file, published as open data under Creative Commons Attribution | Used offline, versioned in the tree, never called at runtime (D-016). No API key in the warning path, no rate limit where latency is the product, and no third party learning which raions a Polish user asks about at three in the morning |
+| **OpenSky Network** (ADS-B) | A second, physically different kind of observation | Self-service registration | **Not in use and not in the beta plan.** It was a prerequisite for a drone alarm tier that D-015 took off the critical path. Valuable later, blocking nothing now |
+| A Polish-side feed | Would close the loop | Unresolved (T8) | **None found that is machine-readable and timely.** RSO and NOTAM are readable; RCB and the announced government application are not, as far as anyone here has established |
+
+**What follows from that table.** Everything this tool says about Ukraine is
+`reported`: it is what the channel claims, not what the sky contains, and no
+amount of processing upgrades that label. There is exactly one signal source,
+its loss would be total, and the correct response to losing it is to say so
+loudly rather than to go quiet.
 
 ## How the source is actually structured
 
@@ -279,10 +299,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 15 | 2,422 |
-| Tests | 27 | 2,497 |
-| Tools | 6 | 1,326 |
-| Documentation | 30 | 8,691 |
+| Package `mavo/` | 15 | 2,430 |
+| Tests | 27 | 2,531 |
+| Tools | 6 | 1,343 |
+| Documentation | 30 | 8,767 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -293,37 +313,37 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 167, of which 11 are scripted attacks |
-| Coverage | 96.97% against a floor of 95, a ratchet that is never lowered |
+| Tests | 169, of which 11 are scripted attacks |
+| Coverage | 96.90% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 10 of 11 attacks; the eleventh is printed as unverified on every run |
 | Threat-model rows | 13, each with a control or a named acceptance |
-| Defects logged with their class | 42, the count pinned against the log itself |
+| Defects logged with their class | 43, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 17 |
-| Releases | 27, of which 16 carry tags |
+| Releases | 28, of which 17 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
-| **`docs/BRIEF.md`** | **Start here if you do not write code.** What the project is, why the base rate is the hard part, and the questions that would expose a weak answer |
-| **`docs/MANUAL.md`** | **Start here to use it.** Install, every command, how to read the output, operational limits, glossary. Each section declares BUILT, PARTIAL, NOT BUILT or NARRATIVE |
-| **`docs/FOUNDATIONS.md`** | **Start here to contribute.** The observations and assumptions everything rests on, each with its provenance label and what would falsify it |
-| `docs/DATA-FLOW.md` | The data architecture: one message from byte to verdict, every transformation, and a table of exactly where information can be lost |
-| `docs/METHODOLOGY.md` | What may be claimed, the defect log, and the probes that were run rather than read |
-| `docs/THREAT-MODEL.md` | MT1 to MT13, each with a control or a named acceptance and the test that measures it |
-| `docs/MECHANISMS.md` | Every mechanism with its rejected alternative |
-| `docs/COMPUTATION.md` | The statistical machinery the thesis stands on, with its stated weaknesses |
-| `docs/MOBILE.md` | The notification channel: technology choice, phases, and what gates distribution |
-| `docs/CHANNEL.md` | What the source actually emits, measured, and the join to the state register |
-| `docs/OBSERVABILITY.md` | The durable run log and how a cycle is watched. Plan, not built |
-| `docs/DEPLOYMENT.md` | Egress inventory, endpoint identity, containers, and where the daemon lives. Plan and open decisions |
-| `docs/ARCHITECTURE.md` | The infrastructure architecture: components, boundaries, dependency rules, process shape |
-| `docs/DECISIONS.md` | What was rejected, and what would reopen it |
-| `docs/MVP.md` | Release criteria per audience, and the schedule to autumn |
-| `docs/reviews/` | Pre-push review per version, every finding dispositioned |
-| `tests/harness/CATALOGUE.md` | The attack catalogue, one row per threat |
-| `STATUS.json` | Machine-readable pins, enforced by `tools/docs_audit.py` |
+| [**`docs/BRIEF.md`**](docs/BRIEF.md) | **Start here if you do not write code.** What the project is, why the base rate is the hard part, and the questions that would expose a weak answer |
+| [**`docs/MANUAL.md`**](docs/MANUAL.md) | **Start here to use it.** Install, every command, how to read the output, operational limits, glossary. Each section declares BUILT, PARTIAL, NOT BUILT or NARRATIVE |
+| [**`docs/FOUNDATIONS.md`**](docs/FOUNDATIONS.md) | **Start here to contribute.** The observations and assumptions everything rests on, each with its provenance label and what would falsify it |
+| [`docs/DATA-FLOW.md`](docs/DATA-FLOW.md) | The data architecture: one message from byte to verdict, every transformation, and a table of exactly where information can be lost |
+| [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) | What may be claimed, the defect log, and the probes that were run rather than read |
+| [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) | MT1 to MT13, each with a control or a named acceptance and the test that measures it |
+| [`docs/MECHANISMS.md`](docs/MECHANISMS.md) | Every mechanism with its rejected alternative |
+| [`docs/COMPUTATION.md`](docs/COMPUTATION.md) | The statistical machinery the thesis stands on, with its stated weaknesses |
+| [`docs/MOBILE.md`](docs/MOBILE.md) | The notification channel: technology choice, phases, and what gates distribution |
+| [`docs/CHANNEL.md`](docs/CHANNEL.md) | What the source actually emits, measured, and the join to the state register |
+| [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) | The durable run log and how a cycle is watched. Plan, not built |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Egress inventory, endpoint identity, containers, and where the daemon lives. Plan and open decisions |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The infrastructure architecture: components, boundaries, dependency rules, process shape |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md) | What was rejected, and what would reopen it |
+| [`docs/MVP.md`](docs/MVP.md) | Release criteria per audience, and five dated sprints to beta |
+| [`docs/reviews/`](docs/reviews/) | Pre-push review per version, every finding dispositioned |
+| [`tests/harness/CATALOGUE.md`](tests/harness/CATALOGUE.md) | The attack catalogue, one row per threat |
+| [`STATUS.json`](STATUS.json) | Machine-readable pins, enforced by `tools/docs_audit.py` |
 
 ## Verification
 
@@ -343,8 +363,8 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: 167 tests passing, of which 11 are harness attacks.
-  Coverage 96.97% against a floor of 95. The floor stays a ratchet under T9:
+- `make verify` green: 169 tests passing, of which 11 are harness attacks.
+  Coverage 96.90% against a floor of 95. The floor stays a ratchet under T9:
   the rise is below the five-point threshold that moves it. The old caveat
   stands in kind:
   `transport.py` carries the one genuinely network-bound function, and it drags

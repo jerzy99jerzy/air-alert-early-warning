@@ -135,6 +135,7 @@ repository has come to the mistake it was built after.
 | [F57](#f57-0800-a-control-was-removed-and-the-log-says-so) | 0.8.0.0 | A control was removed, and the log says so |
 | [F58](#f58-0900-one-corpus-was-sized-for-two-different-requirements) | 0.9.0.0 | One corpus was sized for two different requirements |
 | [F59](#f59-01000-a-probe-presented-an-arbitrary-match-as-an-attribution) | 0.10.0.0 | A probe presented an arbitrary match as an attribution |
+| [F60](#f60-01020-an-unknown-tag-was-overwritten-by-a-prose-guess) | 0.10.2.0 | An unknown tag was overwritten by a prose guess |
 
 ## Defect log
 
@@ -881,6 +882,31 @@ answer to the wrong question: the channel labels its areas with hashtags in
 99.34% of messages, and no amount of repairing a text-matching heuristic would
 have reached that. The grep that exposed the defect also showed the structure,
 which is recorded in `docs/CHANNEL.md`.
+
+
+### F60, 0.10.2.0. An unknown tag was overwritten by a prose guess
+
+Sprint 7 made area resolution prefer the channel's own hashtag and kept the
+oblast-name table as a fallback for the 0.66% of messages carrying no tag. The
+fallback was wired to fire whenever the tag path returned nothing, which is not
+the same condition. A message that carried a tag the map did not know, and
+happened to mention an oblast in prose, resolved to that oblast: a guess drawn
+from the table that scores 0 of 20 on real content, attached to an event, while
+the unknown tag was reported separately as though nothing had been decided.
+
+Found by running the sprint's own mutation check rather than by reading. The
+assertion that failed printed `assert 'lviv' != 'lviv'`, which showed that the
+old table still matched the test message through its prose, and that observation
+is what exposed the wider condition.
+
+Class: **a fallback whose trigger is wider than its justification.** The
+justification was "the channel said nothing about the area"; the trigger was
+"the tag path produced nothing", and those differ exactly when the channel said
+something the map cannot read, which is the case the alias work exists for
+(T33). Repaired: a message with tags that resolve to nothing returns no
+classification at all, so the unknown tag is the only outcome. The fallback is
+now reachable only from messages with no tags, which is what it was for. A
+report naming the wrong place is worse than no report, because it is actionable.
 
 ## Corpus measurements, 2026-08-09
 

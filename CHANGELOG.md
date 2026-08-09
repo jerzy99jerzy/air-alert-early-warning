@@ -16,6 +16,36 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.10.2.0 - 2026-08-09
+
+- **F60. An unknown tag was overwritten by a prose guess.** The sprint 7
+  fallback fired whenever the tag path produced nothing, which is wider than its
+  justification: a message carrying a tag the map does not know, and mentioning
+  an oblast in prose, resolved to that oblast from the table that scores 0 of 20.
+  The unknown tag was reported separately while the event carried the guess.
+  Found by running the sprint's own mutation check, whose failure printed
+  `assert 'lviv' != 'lviv'` and exposed the wider condition. A message whose tags
+  resolve to nothing now returns no classification, so the unknown tag is the
+  only outcome, and the fallback is reachable only from untagged messages.
+- **The README now states where the information comes from, in full.** One
+  signal source, the public channel preview, with no token and no agreement
+  behind it; two APIs that are not independent of it (D-010); the state register
+  as an offline file under CC-BY (D-016); ADS-B registered as valuable and not
+  blocking; and no Polish-side feed found that is both machine-readable and
+  timely (T8). Everything the tool says about Ukraine is `reported`, there is
+  exactly one source, and losing it is total.
+- **A section on why a quiet west is the good news**, because the instinct runs
+  the other way. 5.73 episodes a week and 1.56 region-wide means the volume
+  regulates itself without the ceiling D-014 removed, a rare message keeps its
+  meaning, the filtering is the channel's own and costs nothing, and twenty-two
+  region-wide episodes in ninety-nine nights is few enough that a person near the
+  border can check the tool from memory. With the honest other half beside it:
+  the same quietness makes a predictor impossible to validate, which is why this
+  reports instead (D-015, F58).
+- Every document in the README table is now a link, and `docs_audit` fails the
+  build on a relative link that resolves to nothing. The documentation table is
+  the map a reader uses before they trust anything else.
+
 ## 0.10.1.0 - 2026-08-09
 
 Sprint 7 shipped, and a negative result recorded beside it.

@@ -202,6 +202,22 @@ def check_statistics_match_the_tree(status: dict[str, object]) -> list[str]:
     return problems
 
 
+def check_readme_links_resolve() -> list[str]:
+    """Every relative link in the README points at something that exists.
+
+    The documentation table is the map a reader uses before they trust anything
+    else, and a dead link there is a claim about the repository that the
+    repository does not honour. Cheap to check, and the alternative is finding
+    out from someone else's browser.
+    """
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    problems: list[str] = []
+    for target in re.findall(r"\]\((?!https?://|#)([^)]+)\)", readme):
+        if not (ROOT / target).exists():
+            problems.append(f"README links to {target}, which does not exist")
+    return problems
+
+
 def check_defect_count_is_pinned(status: dict[str, object]) -> list[str]:
     """The defect badge equals the count of F-entries in the methodology.
 
@@ -287,6 +303,7 @@ def main() -> int:
         + check_threat_model_numbering(status)
         + check_harness_catalogue(status)
         + check_cited_tests_exist()
+        + check_readme_links_resolve()
         + check_defect_count_is_pinned(status)
         + check_statistics_match_the_tree(status)
         + check_measured_block_is_recomputed(status)

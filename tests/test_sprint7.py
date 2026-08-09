@@ -131,3 +131,20 @@ def test_the_map_file_is_where_the_package_expects_it() -> None:
     from mavo.areas import DEFAULT_MAP
 
     assert Path(DEFAULT_MAP).is_file()
+
+
+def test_f60_an_unknown_tag_does_not_fall_back_to_the_oblast_table(table: AreaTable) -> None:
+    """A tag the map does not know must not be overwritten by a prose guess.
+
+    The message names an oblast in prose and tags a raion the map has never
+    seen. Before 0.10.2.0 the tag path returned nothing, the oblast fallback
+    fired, and the message resolved to a plausible area drawn from the table
+    that scores 0 of 20 on real content. The unknown tag was still reported, but
+    the event carried a guess beside it, which is worse than no event: a report
+    naming the wrong place is actionable.
+
+    The fallback exists for messages carrying no tag at all, and only for those.
+    """
+    text = "Львівська область #Вигаданський_район Повітряна тривога"
+    assert classify(text, table) is None
+    assert classify(text) is not None, "the fallback must still work without tags"
