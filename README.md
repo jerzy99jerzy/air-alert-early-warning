@@ -64,10 +64,13 @@ The section a competent reader reads first. Each bullet is registered in
   named rule fired at a named time, and what that rule has historically been
   worth. There is no probability of impact, because nothing here can compute one.
   (lint: no_probability_claim)
-- It will not use lunar illumination, moon phase, or any astronomical variable.
-  This is an exclusion, not an omission: the hypothesis was tested on 738 attack
-  nights and 87,093 munitions and returned a null (Rayleigh R = 0.013, p = 0.95).
-  See `docs/DECISIONS.md`. (lint: no_lunar_variable)
+- It will not reintroduce a covariate that a measured null result has excluded.
+  Exclusions here are earned by measurement, not by taste: the candidate that
+  established this rule was tested against the full attack-density series, 738
+  attack nights and 87,093 munitions, and returned a null (Rayleigh R = 0.013,
+  p = 0.95). The excluded terms are enumerated in the lint rather than in prose,
+  so re-introduction takes a deliberate test change. See D-002 in
+  `docs/DECISIONS.md`. (lint: no_excluded_covariate)
 - It will not read a silent feed as an all-clear, and will not read a partial
   all-clear as a whole one. An area whose status is unknown stays `UNKNOWN`; a
   message that announces an all-clear while saying the alert continues is
@@ -211,13 +214,14 @@ confidence interval attached.
 | Threat-model rows | 13, each with a control or a named acceptance |
 | Defects logged with their class | 35, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 14 |
-| Releases | 14, of which 3 carry tags |
+| Releases | 15, of which 4 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
+| **`docs/BRIEF.md`** | **Start here if you do not write code.** What the project is, why the base rate is the hard part, and the questions that would expose a weak answer |
 | **`docs/MANUAL.md`** | **Start here to use it.** Install, every command, how to read the output, operational limits, glossary. Each section declares BUILT, PARTIAL, NOT BUILT or NARRATIVE |
 | **`docs/FOUNDATIONS.md`** | **Start here to contribute.** The observations and assumptions everything rests on, each with its provenance label and what would falsify it |
 | `docs/DATA-FLOW.md` | The data architecture: one message from byte to verdict, every transformation, and a table of exactly where information can be lost |
