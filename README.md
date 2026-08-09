@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 155](https://img.shields.io/badge/tests-155-brightgreen)](tests/)
-[![coverage 95.80%](https://img.shields.io/badge/coverage-95.80%25-brightgreen)](Makefile)
-[![harness 11 attacks, 10 mutation-verified](https://img.shields.io/badge/harness-11%20attacks%2C%2010%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 32](https://img.shields.io/badge/defects%20logged-32-informational)](docs/METHODOLOGY.md)
+[![tests 165](https://img.shields.io/badge/tests-165-brightgreen)](tests/)
+[![coverage 96.97%](https://img.shields.io/badge/coverage-96.97%25-brightgreen)](Makefile)
+[![harness 12 attacks, 11 mutation-verified](https://img.shields.io/badge/harness-12%20attacks%2C%2011%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
+[![defects logged 35](https://img.shields.io/badge/defects%20logged-35-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -205,13 +205,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 155, of which 11 are scripted attacks |
-| Coverage | 95.80% against a floor of 95, a ratchet that is never lowered |
-| Mutation-verified controls | 10 of 11 attacks; the eleventh is printed as unverified on every run |
-| Threat-model rows | 12, each with a control or a named acceptance |
-| Defects logged with their class | 32 |
-| Decisions recorded with reopen conditions | 13 |
-| Releases | 13, of which 3 carry tags |
+| Tests | 165, of which 12 are scripted attacks |
+| Coverage | 96.97% against a floor of 95, a ratchet that is never lowered |
+| Mutation-verified controls | 11 of 12 attacks; the twelfth is printed as unverified on every run |
+| Threat-model rows | 13, each with a control or a named acceptance |
+| Defects logged with their class | 35, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 14 |
+| Releases | 14, of which 3 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 
 ## Documentation
@@ -222,8 +222,10 @@ confidence interval attached.
 | **`docs/FOUNDATIONS.md`** | **Start here to contribute.** The observations and assumptions everything rests on, each with its provenance label and what would falsify it |
 | `docs/DATA-FLOW.md` | The data architecture: one message from byte to verdict, every transformation, and a table of exactly where information can be lost |
 | `docs/METHODOLOGY.md` | What may be claimed, the defect log, and the probes that were run rather than read |
-| `docs/THREAT-MODEL.md` | MT1 to MT12, each with a control or a named acceptance and the test that measures it |
-| `docs/MECHANISMS.md` | Why this statistic and not another |
+| `docs/THREAT-MODEL.md` | MT1 to MT13, each with a control or a named acceptance and the test that measures it |
+| `docs/MECHANISMS.md` | Every mechanism with its rejected alternative |
+| `docs/COMPUTATION.md` | The statistical machinery the thesis stands on, with its stated weaknesses |
+| `docs/MOBILE.md` | The notification channel: technology choice, phases, and what gates distribution |
 | `docs/ARCHITECTURE.md` | The infrastructure architecture: components, boundaries, dependency rules, process shape |
 | `docs/DECISIONS.md` | What was rejected, and what would reopen it |
 | `docs/MVP.md` | Release criteria per audience, and the schedule to autumn |
@@ -249,8 +251,10 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: 155 tests passing, of which 11 are harness attacks.
-  Coverage 95.80% against a floor of 95. The margin sprint 2 had is gone:
+- `make verify` green: 165 tests passing, of which 12 are harness attacks.
+  Coverage 96.97% against a floor of 95. The floor stays a ratchet under T9:
+  the rise is below the five-point threshold that moves it. The old caveat
+  stands in kind:
   `transport.py` carries the one genuinely network-bound function, and it drags
   the total toward the floor. Whether to exclude it from the measurement is an
   open decision recorded in the 0.3.2.0 review, not something to resolve by

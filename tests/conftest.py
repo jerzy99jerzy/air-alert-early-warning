@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind
 
-T0 = datetime(2026, 3, 1, 22, 0, 0)
+T0 = datetime(2026, 3, 1, 22, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture

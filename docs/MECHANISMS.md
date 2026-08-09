@@ -323,7 +323,12 @@ turns A3 red.
 in `mavo/store.py`.
 
 The hash covers area, state, source timestamp and source identity, and
-**deliberately excludes ingest time**.
+**deliberately excludes ingest time**. Since 0.6.0.0 the timestamp is spelled
+in UTC before hashing, so one instant reported under two offsets is one
+transition (F52) — and the hash also excludes `kind` and the raw text, which is
+a decision with its own entry: a reclassification of a transition is a better
+reading, not a new event, and a corrected parser rebuilds a store from the raw
+corpus rather than appending over an old one (D-013).
 
 A feed polled every thirty seconds repeats an unchanged transition constantly.
 Without this exclusion the log grows without bound, replay stops reconstructing

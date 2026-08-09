@@ -12,19 +12,31 @@ from mavo.transport import FailingTransport, StubTransport
 TXT = '<div class="tgme_widget_message_text js-message_text">'
 
 
-def _message(when: str, text: str) -> str:
-    """One channel message in the shape the page serves it."""
-    return f'<time datetime="{when}"></time>{TXT}{text}</div>'
+def _message(post_id: int, when: str, text: str) -> str:
+    """One channel message in the shape the live page serves it.
+
+    The text div comes first and the ``<time>`` element sits in the footer,
+    after it. The old helper had the two inverted, which is the order the old
+    page-wide regex required, so the suite measured the parser against its own
+    assumption and the one-message timestamp shift on live pages was invisible
+    (F50). This helper is the live order; ``test_f50`` holds the pairing.
+    """
+    return (
+        f'<div class="tgme_widget_message" data-post="air_alert_ua/{post_id}">'
+        f"{TXT}{text}</div>"
+        f'<a class="tgme_widget_message_date"><time datetime="{when}"></time></a></div>'
+    )
 
 
 PAGE = "".join(
     [
         _message(
+            101,
             "2026-09-01T21:04:00+00:00",
             "🔴 Львівська область<br/>Повітряна тривога. Ракетна небезпека",
         ),
-        _message("2026-09-01T21:11:00+00:00", "🟢 Волинська область<br/>Відбій тривоги"),
-        _message("2026-09-01T21:20:00+00:00", "Підтримати проєкт можна тут"),
+        _message(102, "2026-09-01T21:11:00+00:00", "🟢 Волинська область<br/>Відбій тривоги"),
+        _message(103, "2026-09-01T21:20:00+00:00", "Підтримати проєкт можна тут"),
     ]
 )
 
@@ -70,9 +82,9 @@ def test_latency_is_recorded_because_it_eats_the_budget() -> None:
         "",
         "not html at all",
         f"{TXT}no time element</div>",
-        _message("not-a-date", "Львів Повітряна тривога"),
-        _message("2026-09-01T21:04:00+00:00", "А" * 50_000),
-        _message("2026-09-01T21:04:00+00:00", "\x00\xff binary"),
+        _message(201, "not-a-date", "Львів Повітряна тривога"),
+        _message(202, "2026-09-01T21:04:00+00:00", "А" * 50_000),
+        _message(203, "2026-09-01T21:04:00+00:00", "\x00\xff binary"),
     ],
 )
 def test_hostile_bodies_do_not_raise(body: str) -> None:
@@ -160,3 +172,34 @@ def test_means_markers_match_four_of_twenty_real_messages() -> None:
         for message in _real_messages()
     )
     assert matched == 4, "means table changed; update this pin alongside F23"
+
+
+# --- F50, the pairing --------------------------------------------------------
+
+def test_f50_footer_time_pairs_with_its_own_message() -> None:
+    """Two messages in the live order must each carry their own timestamp.
+
+    The page-wide regex this replaces paired message N's time with message
+    N+1's text, dropped the first text on the page, and orphaned the last time.
+    The assertion is exact: both events present, each with the timestamp its
+    own footer carries, none shifted onto a neighbour.
+    """
+    page = _message(301, "2026-09-01T21:04:00+00:00", "🔴 Львівська область Повітряна тривога") \
+        + _message(302, "2026-09-01T21:11:00+00:00", "🔴 Волинська область Повітряна тривога")
+    events = {event.area_id: event.ts_source.isoformat() for event in _source(page).poll()}
+    assert events == {
+        "lviv": "2026-09-01T21:04:00+00:00",
+        "volyn": "2026-09-01T21:11:00+00:00",
+    }
+
+
+def test_f50_pairing_survives_the_inverted_order_too() -> None:
+    # Block-scoped search does not care where inside the block the footer sits.
+    # The guard is the block boundary, not the internal order.
+    inverted = (
+        '<div class="tgme_widget_message" data-post="air_alert_ua/401">'
+        '<time datetime="2026-09-01T21:04:00+00:00"></time>'
+        f"{TXT}🔴 Львівська область Повітряна тривога</div></div>"
+    )
+    (event,) = _source(inverted).poll()
+    assert event.ts_source.isoformat() == "2026-09-01T21:04:00+00:00"

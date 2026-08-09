@@ -40,7 +40,7 @@ flowchart TD
     CH["channel page<br/>HTML, 20 posts"]
     CH -->|"transport.fetch"| BODY["body: str<br/>capped at 4 MB"]
     BODY -->|"POST_ID regex"| WIN["window: first_id, last_id<br/>skipped or unknown"]
-    BODY -->|"_MESSAGE regex"| MSG["(timestamp, text) pairs"]
+    BODY -->|"_BLOCK per data-post"| MSG["(timestamp, text) pairs<br/>paired inside one block"]
     MSG -->|"classify"| CLS{"area and state<br/>both matched"}
     CLS -->|"no"| UNP["unparsed<br/>counted, kept as text"]
     CLS -->|"yes"| EV["ThreatEvent<br/>area, state, kind, ts_source, ts_ingest, provenance"]
@@ -94,18 +94,26 @@ hostile content turns a hostile string into an outage (MT7).
 
 **In:** the page body. **Out:** `(timestamp, text)` pairs, plus a window report.
 
-Two independent regexes run over the same body, and their independence is
-deliberate:
+The body is cut into per-message blocks first, and only then read (0.6.0.0,
+F50). Three regexes with deliberately separated jobs:
 
 | Regex | Extracts | If it fails |
 | --- | --- | --- |
-| `_MESSAGE` | A `<time datetime>` and the message text div that follows | Zero messages. The page looks empty |
+| `_BLOCK` | One block per `data-post` anchor, spanning to the next anchor or the page end | Zero messages. The page looks empty |
+| `_TEXT`, `_TIME` | The text div and the `<time datetime>` **within one block**, in either internal order | That block joins the unparsed count; its neighbours are untouched |
 | `POST_ID` | `data-post="channel/NNNN"` | No ids. The window gap becomes `unknown`, never `0` |
 
-Because they are separate, a page restructuring that breaks one does not silently
-take the other with it. A page with ids and no parseable messages reports
-`messages=0` with a known window, which is a different and more informative
-failure than a page with neither.
+The block boundary is the load-bearing part. Until 0.6.0.0 a single page-wide
+regex required the timestamp to precede the text; on the live page the
+timestamp sits in the message *footer*, so every event carried its neighbour's
+time — a one-message shift invisible to a suite whose fixture was written in
+the regex's order (F50, harness A12). Pairing inside a block cannot cross a
+message boundary by construction, in either internal order.
+
+Because window extraction stays separate from message parsing, a page
+restructuring that breaks one does not silently take the other with it. A page
+with ids and no parseable messages reports `messages=0` with a known window,
+which is a different and more informative failure than a page with neither.
 
 **The window computation.** The lowest id on this page is compared against the
 highest id from the previous poll on the same source object. The difference,

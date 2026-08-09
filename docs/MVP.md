@@ -38,7 +38,7 @@ budget, and the median lead time on any true positive in that window is recorded
 | alerts.in.ua API token | **access**, application submitted, one follow-up ~20 Aug. No longer on the critical path: gates cross-source comparison and API history (T10), not ingestion |
 | Live feed latency measurement | engineering. Unblocked by sprint 4: the Telegram adapter reaches the shared upstream without a token. First measurement owned by sprint 6 |
 | Regime split, missile and drone paths | engineering, **done** (sprint 3, D-009: missile alarms, drone demoted) |
-| Working classifier against real channel content | engineering. The shipped table scored 0 of 20 (F23); redesign is sprint 6 and needs the corpus (T19), which is now the critical path |
+| Working classifier against real channel content | engineering. The shipped table scored 0 of 20 (F23); redesign is sprint 7 — sprint 6 shipped the corpus acquisition it waits on (T19, done) — and remains the critical path |
 | Signal output channel | engineering (sprint 7) |
 
 *Amended 2026-08-08 (0.3.2.0).* The original table gated latency measurement on

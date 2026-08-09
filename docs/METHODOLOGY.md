@@ -117,6 +117,9 @@ repository has come to the mistake it was built after.
 | [F47](#f47-0530-two-runs-could-share-one-output-directory) | 0.5.3.0 | Two runs could share one output directory |
 | [F48](#f48-0530-a-twenty-five-minute-run-printed-nothing-until-it-ended) | 0.5.3.0 | A twenty-five minute run printed nothing until it ended |
 | [F49](#f49-0540-a-dramatic-finding-produced-by-a-division-error) | 0.5.4.0 | A dramatic finding produced by a division error |
+| [F50](#f50-0600-review-the-page-fixture-encoded-the-parsers-assumption) | 0.6.0.0 review | The page fixture encoded the parser's assumption |
+| [F51](#f51-0600-review-an-interrupted-write-could-plant-a-hole-the-census-cannot-see) | 0.6.0.0 review | An interrupted write could plant a hole the census cannot see |
+| [F52](#f52-0600-review-the-stores-ordering-contract-was-an-accident-of-uniform-input) | 0.6.0.0 review | The store's ordering contract was an accident of uniform input |
 
 ## Defect log
 
@@ -603,6 +606,80 @@ was spoken rather than written. The remediation is not a tool, it is the rule
 already in this document applied to conversation as well as to files: a
 derived number is inference and is labelled, and an inference that implies a
 consequence gets recomputed before the consequence is stated.
+
+
+### F50, 0.6.0.0 review. The page fixture encoded the parser's assumption
+
+The message regex required `<time>` to precede the text div. On the live page
+the time element sits in the message footer, after the text, so the page-wide
+scan paired message N's timestamp with message N+1's text, dropped the first
+text on the page, and orphaned the last timestamp: every live-parsed event one
+message late, silently. In the missile regime the whole warning budget is about
+six minutes, so the shift is not cosmetic; it is the lead-time measurement
+quietly poisoned, and it compounds with window overflow (F27) during exactly the
+mass alerts that matter.
+
+Why it survived: `tests/fixtures/channel.html` was synthetic and written in the
+regex's order rather than the channel's. A fixture that encodes the code's
+assumption measures the code against itself and can only ever agree with it.
+The 0/20 classifier measurement (F23) used raw message texts, never the page
+shape, so the two known defects did not overlap and neither exposed the other.
+
+**Verified on the retrieved corpus, 2026-08-09** [measured]: on a full
+20-message page the markers alternate strictly text-then-time, and all 20
+blocks carry a `data-post` anchor. The footer order is not an assumption about
+t.me/s; it is the shape of every page in the evidence, so the shift was
+systematic, not occasional.
+
+Class: **the same family as F1** — the fixture flattered the thing it was meant
+to test — one layer down, at the page structure rather than the rule. Repaired
+by parsing per `data-post` block with the timestamp searched inside the block
+only, in either internal order; the fixture is now a page in the live footer
+order; harness A12 (MT13) asserts exact pairing on two messages and its
+mutation, which widens the timestamp search back to the whole body, goes red.
+
+### F51, 0.6.0.0 review. An interrupted write could plant a hole the census cannot see
+
+`backfill` wrote each snapshot with a plain `write_text`. An interrupt or crash
+mid-write leaves a truncated `page-*.html` whose *name* still claims the full id
+range. `--resume` then skips it as already retrieved, and `contiguity_gaps`
+reads ranges from filenames, so the hole is structurally invisible: a census
+with a hole it cannot see, which is a sample that believes otherwise — the
+sentence this module's own docstring uses about someone else.
+
+Why it survived: the failure needs an interrupt to land inside a single write of
+roughly a hundred kilobytes, a window of milliseconds per page. The 3,034-page
+retrieval simply never hit it. A defect that needs bad luck to fire is still a
+defect; the corpus is the only evidence this project has.
+
+Class: a durability guarantee assumed rather than constructed. Repaired with
+write-to-scratch-then-`os.replace`, atomic on POSIX; the scratch suffix keeps a
+crashed leftover out of the `page-*.html` glob every reader uses. The corpus on
+disk predates the fix and passed its contiguity check, which bounds the exposure
+but does not retroactively make the writes atomic.
+
+### F52, 0.6.0.0 review. The store's ordering contract was an accident of uniform input
+
+`replay` orders by `ts_source` stored as ISO text. Lexicographic order over ISO
+strings is chronological only when every string carries one uniform offset, and
+nothing enforced that: the Telegram adapter emits aware-UTC, the fixture
+generator emitted naive datetimes, and the two had simply never met in one
+store. Had they, replay order would have been wrong exactly where two sources
+correlate — the system's whole job — and any aware/naive comparison in
+`latency_s` would have raised, converting a correctness defect into an outage.
+
+A second face of the same defect: `content_hash` hashed the timestamp as
+spelled, so one instant reported as `+02:00` by one poll and `+00:00` by
+another hashed as two transitions, and idempotence silently depended on the
+reporter's clock presentation.
+
+Class: **a contract held up by a coincidence of inputs.** Repaired at the single
+point of entry: the store normalizes to UTC and refuses a naive timestamp with
+`NaiveTimestamp` rather than repairing it, because repairing means inventing an
+offset; the hash normalizes an aware timestamp to UTC before spelling it; the
+fixture generator now emits aware-UTC. Three regressions in `test_store.py`
+hold the refusal, the true-chronology replay across mixed offsets, and the
+one-instant-one-hash identity.
 
 ## Corpus measurements, 2026-08-09
 

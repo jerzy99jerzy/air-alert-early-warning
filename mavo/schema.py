@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Protocol, runtime_checkable
 
@@ -71,12 +71,27 @@ def is_clear(state: AlertState) -> bool:
 
 
 def is_actionable(state: AlertState) -> bool:
-    """True when the state may contribute to a warning decision.
-
-    UNKNOWN and PARTIAL_CLEAR are actionable for degradation reporting but never
-    for an alarm; the decision layer must ask which, so both predicates exist.
-    """
+    """True when the state may contribute to a warning decision."""
     return state is AlertState.ACTIVE
+
+
+def is_degraded(state: AlertState) -> bool:
+    """True when the state must surface as degradation, never as an alarm.
+
+    The third predicate. Until 0.6.0.0 the docstring above *claimed* a
+    degradation path that no code implemented — a promise in prose, which is the
+    claim-drift class the README lints exist to catch, living one file below
+    them. Written by negation deliberately, and in the safe direction: a fifth
+    state added tomorrow is degraded by default, so the new member is *loud*
+    on the day it exists rather than silent. Negating toward CLEAR is the
+    defect; negating toward "report this" is the guard.
+
+    The consumer is the notification layer (docs/MOBILE.md): a degraded area is
+    a "the system is blind here" message, which is a first-class output, because
+    a warning channel that goes quiet when its feed dies has rebuilt
+    unknown-resolves-to-clear one layer up.
+    """
+    return state not in (AlertState.ACTIVE, AlertState.CLEAR)
 
 
 class ThreatKind(Enum):
@@ -120,11 +135,19 @@ class ThreatEvent:
         """Stable identity for idempotent writes.
 
         Excludes ``ts_ingest``: re-polling the same transition must not create a
-        second row.
+        second row. An offset-aware timestamp is normalized to UTC first, so the
+        same instant reported as ``+02:00`` by one poll and ``+00:00`` by
+        another hashes identically; two spellings of one moment are one
+        transition, not two (F52). Deliberately still excludes ``kind`` and the
+        raw text: identity means "this area entered this state at this moment
+        according to this source", and a reclassification of the same transition
+        is a better *reading*, not a new *event* — see D-013 for why re-reading
+        happens by rebuilding a store from the raw corpus rather than by
+        appending to an old one.
         """
-        payload = "|".join(
-            [self.area_id, self.state.value, self.ts_source.isoformat(), self.source_id]
-        )
+        ts = self.ts_source
+        stamp = (ts.astimezone(UTC) if ts.tzinfo is not None else ts).isoformat()
+        payload = "|".join([self.area_id, self.state.value, stamp, self.source_id])
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 

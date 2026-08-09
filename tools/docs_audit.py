@@ -117,6 +117,26 @@ def check_contents_anchors_resolve() -> list[str]:
     return problems
 
 
+def check_defect_count_is_pinned(status: dict[str, object]) -> list[str]:
+    """The defect badge equals the count of F-entries in the methodology.
+
+    Added in 0.6.0.0 when the review landed three entries at once: the badge is
+    typed by hand, and a hand-typed count drifts on exactly the release that
+    adds entries. The pin is checked against the document, and the badge against
+    the pin, so all three agree or the gate says which one is lying.
+    """
+    entries = len(re.findall(r"^### F\d+", (ROOT / "docs" / "METHODOLOGY.md")
+                             .read_text(encoding="utf-8"), re.M))
+    pinned = status.get("defects_logged")
+    problems: list[str] = []
+    if pinned != entries:
+        problems.append(f"METHODOLOGY has {entries} F-entries, STATUS.json pins {pinned}")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    if f"defects%20logged-{pinned}-" not in readme:
+        problems.append(f"README defect badge does not match STATUS.json pin {pinned}")
+    return problems
+
+
 def check_badges_match_the_pins(status: dict[str, object]) -> list[str]:
     """Static badge values agree with STATUS.json.
 
@@ -182,6 +202,7 @@ def main() -> int:
         + check_threat_model_numbering(status)
         + check_harness_catalogue(status)
         + check_cited_tests_exist()
+        + check_defect_count_is_pinned(status)
         + check_badges_match_the_pins(status)
         + check_contents_anchors_resolve()
     )

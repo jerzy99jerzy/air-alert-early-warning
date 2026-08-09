@@ -154,11 +154,12 @@ def _cmd_collect(args: argparse.Namespace) -> int:
         return 3
     fetch_s = (datetime.now(UTC) - started).total_seconds()
     if args.save_raw:
-        # The classifier redesign (sprint 5) needs days of real content, and the
-        # page is a ~20-message window (F27), so the corpus can only be built
-        # forward in time. A snapshot that silently fails to land is a quiet
-        # loss of exactly that evidence, hence the loud refusal and its own
-        # exit code.
+        # Live snapshots complement the backfilled corpus: `mavo backfill`
+        # reaches history (0.5.0.0, F44 retired the belief that the corpus
+        # could only be built forward), while --save-raw captures the page as
+        # it looked at poll time, which history cannot reproduce. A snapshot
+        # that silently fails to land is a quiet loss of evidence, hence the
+        # loud refusal and its own exit code.
         stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
         snapshot = Path(args.save_raw) / f"channel-{stamp}.html"
         try:

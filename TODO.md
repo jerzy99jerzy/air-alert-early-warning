@@ -151,6 +151,15 @@ trace.
 than inferred from silence.
 
 ## T19. Build the real-message corpus
+Status: `done` (0.5.5.0 retrieval, recorded at 0.6.0.0)
+**Acceptance met:** post ids 260841 to 321520, 60,680 posts over 3,034 pages
+spanning 118 days, contiguous with no gaps, exit code 0; id range, span and the
+design/holdout boundary (D-012a) recorded in `STATUS.json`, boundary computed
+before any message content was read. This entry was still `ready` while
+`STATUS.json` already carried the corpus block — the file that holds rules
+lagged the file that holds facts by one release, which is the drift class
+docs-audit exists for, in the one file it does not read.
+Original text:
 Status: `ready`, **no longer time-boxed**
 `mavo backfill` reaches history rather than waiting for it (0.5.0.0). The window
 constraint that shaped D-011 and the sprint 5 scope decision did not exist (F44).

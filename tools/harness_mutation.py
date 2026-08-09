@@ -104,10 +104,10 @@ MUTATIONS: tuple[Mutation, ...] = (
         attack="test_a8_replaying_a_feed_does_not_grow_the_log",
         row="MT8",
         path="mavo/schema.py",
-        old='            [self.area_id, self.state.value, self.ts_source.isoformat(), self.source_id]',
+        old='        payload = "|".join([self.area_id, self.state.value, stamp, self.source_id])',
         new=(
-            "            [self.area_id, self.state.value, self.ts_source.isoformat(),"
-            " self.source_id, self.ts_ingest.isoformat()]"
+            '        payload = "|".join([self.area_id, self.state.value, stamp,'
+            ' self.source_id, self.ts_ingest.isoformat()])'
         ),
         disables="idempotence by content hash",
     ),
@@ -131,6 +131,14 @@ MUTATIONS: tuple[Mutation, ...] = (
             '            body = ""'
         ),
         disables="an outage refusing rather than reporting silence",
+    ),
+    Mutation(
+        attack="test_a12_the_footer_time_cannot_shift_onto_a_neighbour",
+        row="MT13",
+        path="mavo/sources/telegram.py",
+        old="            time_match = _TIME.search(block)",
+        new="            time_match = _TIME.search(body)",
+        disables="block-scoped timestamp pairing",
     ),
     Mutation(
         attack="test_a11_a_skipped_window_cannot_pass_as_a_quiet_channel",

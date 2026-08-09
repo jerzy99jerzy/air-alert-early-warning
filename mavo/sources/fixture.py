@@ -14,7 +14,7 @@ from __future__ import annotations
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from mavo.errors import UnknownScenario
 from mavo.schema import (
@@ -188,7 +188,9 @@ def generate_history(
     weights = dict(DEFAULT_MIX if mix is None else mix)
     names = list(weights)
     probabilities = [weights[name] for name in names]
-    first = start or datetime(2025, 1, 1, 21, 0, 0)
+    # Aware UTC, not naive: the store refuses a timestamp without an offset
+    # (F52), and the generator must produce what the store accepts.
+    first = start or datetime(2025, 1, 1, 21, 0, 0, tzinfo=UTC)
 
     nights: list[Night] = []
     for day in range(weeks * 7):

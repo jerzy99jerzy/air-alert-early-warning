@@ -16,6 +16,48 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.6.0.0 - 2026-08-09
+
+An external review read the tree adversarially and three of its findings were
+defects, one of them in the live parse path. Entries state the defect.
+
+- **F50.** The page-parse regex required time-before-text; the live page puts
+  the time in the footer, after the text. Every live-parsed event carried the
+  previous message's timestamp, the first text on the page was dropped, and the
+  suite could not see it because the page fixture was synthetic and written in
+  the regex's order — a fixture encoding the code's assumption, F1's class one
+  layer down. Parsing is per `data-post` block now, the fixture is the live
+  order, and harness A12 (MT13) mutation-verifies the pairing.
+- **F51.** Backfill snapshots were written non-atomically, so an interrupt
+  mid-write could plant a truncated page whose filename claims the full id
+  range — invisible to `--resume` and to `contiguity_gaps`, which reads ranges
+  from names. Snapshots now write to scratch and `os.replace`.
+- **F52.** The store's replay order (ISO text, lexicographic) was chronological
+  only by the accident that no source with a non-UTC offset had ever met the
+  naive-datetime fixture generator in one store. The store now normalizes to
+  UTC at append and refuses naive timestamps (`NaiveTimestamp`); the content
+  hash spells one instant one way regardless of reported offset; the generator
+  emits aware-UTC.
+- **D-013.** `content_hash` keeps excluding `kind` and text, and the reason is
+  now written down: a store is a parser's reading of the raw corpus, rebuilt by
+  a new parser rather than appended over — the path where a re-ingest silently
+  kept the old parser's rows is closed by convention and by the decision log.
+- `is_degraded` joins `is_clear` and `is_actionable`: the docstring had promised
+  a degradation predicate that did not exist, which is README-claim drift living
+  one file below the lints that catch it. Written by negation in the safe
+  direction — a fifth state is degraded, and loud, by default.
+- `UrllibTransport` local logic (size cap, exception mapping, lossy decode) was
+  untested at 68% coverage; the size cap is a threat-model control and an
+  untested control is an unmeasured one. Four tests, no network.
+- The defect-count badge is now pinned: STATUS.json against the methodology's
+  F-entries, the README badge against the pin.
+- Entity decoding via `html.unescape` (the hand map missed numeric entities);
+  `<br>` in both spellings becomes a newline, because the sprint-7 classifier
+  reads line structure. Two unreachable superstring rows dropped from the
+  pattern tables. The directory lock takes creation atomically (`O_EXCL`).
+- `docs/COMPUTATION.md` states the statistical machinery the thesis stands on;
+  `docs/MOBILE.md` plans the notification channel and its MVP.
+
 ## 0.5.5.0 - 2026-08-09
 
 Documentation raised to the level a contributor joining cold actually needs, and

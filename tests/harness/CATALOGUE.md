@@ -20,6 +20,7 @@ difference stated below.
 | A9 | MT7 | Six hostile bodies to the live adapter: empty, non-HTML, bad timestamp, oversized, binary, unknown wording | `poll` returns; nothing raises |
 | A10 | MT11 | The source is unreachable rather than quiet | `SourceUnavailable`, never an empty result |
 | A11 | MT12 | A mass alert overflows the twenty-message window between two polls | The skipped count is reported; an unmeasurable gap is unknown, never zero |
+| A12 | MT13 | Two messages in the live footer-time order, exact timestamps asserted | Each event carries its own footer's timestamp; a one-message shift in either direction fails |
 
 ## The honest difference from `pirx`
 

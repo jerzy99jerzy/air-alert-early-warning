@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -23,7 +23,7 @@ from mavo.schema import AlertState, ThreatEvent, ThreatKind, is_clear
 from mavo.sources.fixture import FixtureSource, build_night, generate_history
 from mavo.store import EventStore
 
-T0 = datetime(2026, 9, 1, 21, 0, 0)
+T0 = datetime(2026, 9, 1, 21, 0, 0, tzinfo=UTC)
 MISSILE = (Regime.MISSILE, "CONJ-missile", conjunction)
 DRONE = (Regime.DRONE, "CONJ-drone", drone_conjunction)
 
@@ -125,15 +125,27 @@ def test_a9_hostile_bodies_to_the_live_adapter_do_not_raise() -> None:
 
     # F39. These were single-quoted, and the page serves double quotes, so the
     # message regex matched nothing and every hostile body was absorbed without
-    # the parser ever seeing it. The attack passed by not arriving.
+    # the parser ever seeing it. The attack passed by not arriving. The same
+    # rule holds under the block parser (F50): a message must carry the
+    # data-post anchor the live page always carries, or it never becomes a
+    # message at all — so every hostile body below except the first two is
+    # anchored, and the reached-counter still guards against a silent miss.
     txt = '<div class="tgme_widget_message_text js-message_text">'
+
+    def anchored(inner: str, post: int) -> str:
+        return f'<div class="tgme_widget_message" data-post="air_alert_ua/{post}">{inner}</div>'
+
     hostile = [
         "",
         "not html",
-        f'<time datetime="nonsense"></time>{txt}Львів тривога</div>',
-        f"{txt}{'А' * 80_000}</div>",
-        f"{txt}\x00\x01\x02</div>",
-        f'<time datetime="2026-09-01T21:00:00+00:00"></time>{txt}wording nobody anticipated</div>',
+        anchored(f'<time datetime="nonsense"></time>{txt}Львів тривога</div>', 901),
+        anchored(f"{txt}{'А' * 80_000}</div>", 902),
+        anchored(f"{txt}\x00\x01\x02</div>", 903),
+        anchored(
+            f'{txt}wording nobody anticipated</div>'
+            f'<time datetime="2026-09-01T21:00:00+00:00"></time>',
+            904,
+        ),
     ]
     reached = 0
     for body in hostile:
@@ -190,3 +202,34 @@ def test_a11_a_skipped_window_cannot_pass_as_a_quiet_channel() -> None:
     blind = TelegramChannelSource(StubTransport("<html>no post ids</html>"))
     blind.poll()
     assert blind.report.skipped is None, "an unmeasurable gap reported as zero"
+
+
+def test_a12_the_footer_time_cannot_shift_onto_a_neighbour() -> None:
+    """MT13. Timestamps must pair within a message block, never across one.
+
+    The live page carries each message's time in its footer, after the text. A
+    page-wide scan that requires time-then-text pairs message N's time with
+    message N+1's text: every event one message late, the first text dropped,
+    the last time orphaned (F50). In the missile regime the whole warning
+    budget is about six minutes, so a one-message shift in ``ts_source`` is not
+    cosmetic; it is the lead-time measurement quietly poisoned. The assertion
+    is exact equality on both pairs, so a shift in either direction goes red.
+    """
+    from mavo.sources.telegram import TelegramChannelSource
+    from mavo.transport import StubTransport
+
+    txt = '<div class="tgme_widget_message_text js-message_text">'
+    page = (
+        '<div class="tgme_widget_message" data-post="air_alert_ua/601">'
+        f"{txt}🔴 Львівська область Повітряна тривога</div>"
+        '<time datetime="2026-09-01T21:04:00+00:00"></time></div>'
+        '<div class="tgme_widget_message" data-post="air_alert_ua/602">'
+        f"{txt}🔴 Волинська область Повітряна тривога</div>"
+        '<time datetime="2026-09-01T21:11:00+00:00"></time></div>'
+    )
+    source = TelegramChannelSource(StubTransport(page))
+    stamped = {event.area_id: event.ts_source.isoformat() for event in source.poll()}
+    assert stamped == {
+        "lviv": "2026-09-01T21:04:00+00:00",
+        "volyn": "2026-09-01T21:11:00+00:00",
+    }, "a footer timestamp crossed a message boundary"

@@ -7,37 +7,54 @@ See threat-model row MT9.
 
 **What is tested and what is not.** Parsing, classification, hostile input and
 idempotence are tested against an injected transport. That a live channel emits
-the shapes `PATTERNS` expects is **not** tested and cannot be from here. Every
+the shapes the patterns expect is **not** tested and cannot be from here. Every
 message that matches nothing is counted as unparsed and reported, never dropped,
 so the gap between the table and reality is visible in the output instead of
 being silently absorbed.
+
+**Messages are parsed per block, not by a page-wide scan.** Until 0.6.0.0 a
+single regex required ``<time>`` to precede the text div. On the live page the
+time element sits in the message *footer*, after the text, so the scan paired
+message N's timestamp with message N+1's text, dropped the first text on the
+page, and orphaned the last timestamp — a systematic one-message shift in
+``ts_source`` on every live poll (F50). The suite did not catch it because the
+page fixture was synthetic and written in the regex's order rather than the
+channel's: a fixture that encodes the code's assumption measures the code
+against itself. Each message is now isolated by its ``data-post`` anchor and its
+timestamp and text are located *within* that block, in either order, so the
+pairing cannot cross a message boundary by construction. The fixture is a page
+in the live footer-time order, and harness attack A12 holds the pairing.
 """
 
 from __future__ import annotations
 
+import html as html_
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from mavo.errors import SourceUnavailable
 from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind
 from mavo.transport import Transport
 
 CHANNEL_URL = "https://t.me/s/air_alert_ua"
 
-_MESSAGE = re.compile(
-    r'<time[^>]*datetime="([^"]+)"[^>]*>.*?'
-    r'<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>',
-    re.S,
-)
 # F27. The page serves a window of roughly twenty messages, so a poll interval
 # that is comfortable at rest can skip messages during a mass alert. The post id
 # is the only thing that makes a skip observable; without it a gap and a quiet
 # channel are the same picture.
 POST_ID = re.compile(r'data-post="[^"/]+/(\d+)"')
+
+# F50. One message block spans from its data-post anchor to the next (or the end
+# of the page). Timestamp and text are searched inside the block only, so the
+# pairing is correct in both the live order (text, then time in the footer) and
+# the inverted order the old fixture assumed.
+_BLOCK = re.compile(r'data-post="[^"/]+/\d+"(.*?)(?=data-post="[^"/]+/\d+"|\Z)', re.S)
+_TEXT = re.compile(r'<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>', re.S)
+_TIME = re.compile(r'<time[^>]*datetime="([^"]+)"')
+
 _TAG = re.compile(r"<[^>]+>")
-_ENTITY = {"&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "<br/>": "\n"}
+_BR = re.compile(r"<br\s*/?>", re.I)
 
 # Area patterns. Unverified against live traffic; see the module docstring.
 AREAS: dict[str, str] = {
@@ -45,7 +62,9 @@ AREAS: dict[str, str] = {
     "льв": "lviv",
     "закарпат": "zakarpattia",
     "рівнен": "rivne",
-    "тернопіль": "ternopil",
+    # "тернопіль" is not listed beside "тернопіл": the longer stem is a
+    # superstring of the shorter, so it can never match a text the shorter
+    # missed. A dead row in a measured pattern table is noise (F50 review).
     "тернопіл": "ternopil",
     "івано-франків": "ivano-frankivsk",
 }
@@ -63,7 +82,9 @@ KIND_MARKERS: dict[str, ThreatKind] = {
     "ракет": ThreatKind.MISSILE,
     "бпла": ThreatKind.DRONE,
     "шахед": ThreatKind.DRONE,
-    "кабів": ThreatKind.GLIDE_BOMB,
+    # "кабів" is a superstring of "каб" and therefore unreachable; only the
+    # shorter stem is kept. The stem is three characters and deliberately so:
+    # false hits are a measured question for the corpus, not a guess to encode.
     "каб": ThreatKind.GLIDE_BOMB,
 }
 
@@ -106,11 +127,18 @@ class ParseReport:
         return f"skipped={self.skipped}"
 
 
-def _strip(html: str) -> str:
-    text = html
-    for entity, char in _ENTITY.items():
-        text = text.replace(entity, char)
-    return _TAG.sub(" ", text)
+def _strip(raw: str) -> str:
+    """HTML fragment to text: line breaks kept, tags to spaces, entities decoded.
+
+    ``html.unescape`` replaces a hand-rolled entity map that silently missed
+    numeric entities (``&#8217;`` and kin), which Ukrainian text emits. It runs
+    *after* tag stripping so a decoded ``&lt;`` cannot resurrect a tag. ``<br>``
+    with or without the slash becomes a newline rather than a space, because the
+    classifier redesign reads line structure: "рух на місто" is a second line.
+    """
+    text = _BR.sub("\n", raw)
+    text = _TAG.sub(" ", text)
+    return html_.unescape(text)
 
 
 def _parse_timestamp(raw: str) -> datetime | None:
@@ -210,11 +238,13 @@ class TelegramChannelSource:
 
         events: list[ThreatEvent] = []
         unparsed: list[str] = []
-        found = _MESSAGE.findall(body)
+        found = _BLOCK.findall(body)
 
-        for raw_time, raw_html in found:
-            text = _strip(raw_html).strip()
-            ts = _parse_timestamp(raw_time)
+        for block in found:
+            text_match = _TEXT.search(block)
+            time_match = _TIME.search(block)
+            text = _strip(text_match.group(1)).strip() if text_match else "(no text div)"
+            ts = _parse_timestamp(time_match.group(1)) if time_match else None
             classified = classify(text)
             if ts is None or classified is None:
                 unparsed.append(text[:120])
@@ -253,9 +283,6 @@ def probe(transport: Transport, url: str = CHANNEL_URL) -> tuple[ParseReport, fl
     """
     source = TelegramChannelSource(transport, url)
     started = datetime.now(UTC)
-    try:
-        source.poll()
-    except SourceUnavailable:
-        raise
+    source.poll()
     elapsed = (datetime.now(UTC) - started).total_seconds()
     return source.report, elapsed

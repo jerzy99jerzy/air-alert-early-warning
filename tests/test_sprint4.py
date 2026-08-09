@@ -45,9 +45,13 @@ def test_f17_only_an_unreachable_source_refuses() -> None:
 
 
 def test_f18_a_stale_pattern_table_is_visible_not_silent() -> None:
+    # Anchored by data-post, as every live message is: the block anchor is what
+    # admits a message to the parser at all (F50), so a body without one is not
+    # a stale-table case but a no-message case, which A9 covers separately.
     body = (
-        '<time datetime="2026-09-01T21:00:00+00:00"></time>'
+        '<div class="tgme_widget_message" data-post="air_alert_ua/900">'
         '<div class="tgme_widget_message_text">Wording nobody anticipated</div>'
+        '<time datetime="2026-09-01T21:00:00+00:00"></time></div>'
     )
     source = TelegramChannelSource(StubTransport(body))
     assert list(source.poll()) == []

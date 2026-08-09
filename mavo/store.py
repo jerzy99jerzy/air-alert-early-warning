@@ -11,9 +11,10 @@ import json
 import sqlite3
 from collections.abc import Iterable, Iterator
 from contextlib import closing
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
+from mavo.errors import NaiveTimestamp
 from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind
 
 _SCHEMA = """
@@ -31,6 +32,23 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE INDEX IF NOT EXISTS idx_events_ts_source ON events (ts_source);
 CREATE INDEX IF NOT EXISTS idx_events_area ON events (area_id, ts_source);
 """
+
+
+def _stored_form(ts: datetime, label: str) -> str:
+    """ISO text in UTC, refusing a timestamp that has no offset to normalize.
+
+    ``replay`` orders by this text. Lexicographic order over ISO strings is
+    chronological only when every string shares one offset, so every timestamp
+    is normalized to UTC here, at the single point of entry, rather than trusted
+    to arrive uniform. A naive datetime cannot be normalized without inventing
+    an offset for it, which is why it is a refusal and not a repair (F52).
+    """
+    if ts.tzinfo is None:
+        raise NaiveTimestamp(
+            f"{label} has no UTC offset; the store orders lexicographically by ISO "
+            "text, which is chronological only in one uniform offset"
+        )
+    return ts.astimezone(UTC).isoformat()
 
 
 class EventStore:
@@ -60,8 +78,8 @@ class EventStore:
                 event.content_hash(),
                 event.area_id,
                 event.state.value,
-                event.ts_source.isoformat(),
-                event.ts_ingest.isoformat(),
+                _stored_form(event.ts_source, "ts_source"),
+                _stored_form(event.ts_ingest, "ts_ingest"),
                 event.source_id,
                 event.kind.value,
                 event.provenance.name,

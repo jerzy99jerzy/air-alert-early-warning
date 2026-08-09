@@ -189,7 +189,17 @@ def backfill(
         if destination.exists():
             skipped += 1
         else:
-            destination.write_text(page.body, encoding="utf-8")
+            # Atomic: write to a sibling and rename. A plain write interrupted
+            # mid-stream leaves a truncated snapshot whose *name* claims the
+            # full id range; `--resume` then skips it as already retrieved and
+            # `contiguity_gaps`, which reads ranges from names, cannot see the
+            # hole. A census with a hole it cannot see is the defect class this
+            # module exists to refuse (F51). `os.replace` is atomic on POSIX;
+            # the temporary suffix keeps a crashed leftover out of the
+            # `page-*.html` glob every reader uses.
+            scratch = destination.with_name(destination.name + ".tmp")
+            scratch.write_text(page.body, encoding="utf-8")
+            os.replace(scratch, destination)
             written.append(destination)
 
         pages += 1
@@ -267,16 +277,32 @@ class DirectoryLock:
         return True
 
     def acquire(self, pid: int | None = None) -> None:
-        """Take the lock, or raise ``DirectoryBusy`` naming the holder."""
+        """Take the lock, or raise ``DirectoryBusy`` naming the holder.
+
+        Creation is ``O_CREAT | O_EXCL``, so two processes racing an absent lock
+        cannot both win: exactly one creates the file, the other lands in the
+        holder check. The previous check-then-write had that window open; within
+        the stated scope (operator error, not an adversary) it never fired, but
+        the atomic form costs three lines and closes it outright.
+        """
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        holder = self._holder()
-        if holder is not None and holder != (pid or os.getpid()) and self._alive(holder):
-            raise DirectoryBusy(
-                f"{self.path.parent} is held by pid {holder}. Two runs against one "
-                "directory double the request rate against a service whose tolerance "
-                "was measured over a burst of twenty"
-            )
-        self.path.write_text(str(pid or os.getpid()), encoding="utf-8")
+        me = pid or os.getpid()
+        try:
+            handle = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            holder = self._holder()
+            if holder is not None and holder != me and self._alive(holder):
+                raise DirectoryBusy(
+                    f"{self.path.parent} is held by pid {holder}. Two runs against one "
+                    "directory double the request rate against a service whose tolerance "
+                    "was measured over a burst of twenty"
+                ) from None
+            # Stale (dead pid) or our own: take over rather than demanding a
+            # manual cleanup step nobody will remember at 02:00.
+            self.path.write_text(str(me), encoding="utf-8")
+        else:
+            with os.fdopen(handle, "w", encoding="utf-8") as lockfile:
+                lockfile.write(str(me))
         self.acquired = True
 
     def release(self) -> None:

@@ -44,6 +44,18 @@ class UnknownScenario(MavoRefusal):
     code = "refusal.unknown_scenario"
 
 
+class NaiveTimestamp(MavoRefusal):
+    """An event carries a timestamp without a UTC offset.
+
+    Refused at the store boundary rather than tolerated: the store orders by
+    ISO text, and lexicographic order is chronological only when every stored
+    timestamp shares one offset. A naive datetime has no offset to normalize,
+    so accepting it converts the ordering contract into an accident (F52).
+    """
+
+    code = "refusal.naive_timestamp"
+
+
 class SourceUnavailable(MavoRefusal):
     """A source could not be read. Distinct from a source reporting nothing."""
 

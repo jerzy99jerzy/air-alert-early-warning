@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.5.5.0",
+  "version": "0.6.0.0",
   "python_requires": ">=3.11",
   "shipped_sprints": [
     0,
@@ -25,23 +25,26 @@
     "docs/DATA-FLOW.md": "1.0",
     "docs/ARCHITECTURE.md": "2.0",
     "docs/MECHANISMS.md": "2.0",
-    "docs/METHODOLOGY.md": "2.0",
-    "docs/THREAT-MODEL.md": "2.0",
-    "docs/MVP.md": "2.0",
-    "docs/DECISIONS.md": "2.0"
+    "docs/METHODOLOGY.md": "2.1",
+    "docs/THREAT-MODEL.md": "2.1",
+    "docs/MVP.md": "2.1",
+    "docs/DECISIONS.md": "2.1",
+    "docs/COMPUTATION.md": "1.0",
+    "docs/MOBILE.md": "1.0",
+    "docs/reviews/0.6.0.0.md": "1.0"
   },
-  "threat_model_rows": 12,
-  "harness_attacks": 11,
+  "threat_model_rows": 13,
+  "harness_attacks": 12,
   "measured": {
-    "tests_passing": 155,
-    "coverage_percent": 95.8,
+    "tests_passing": 165,
+    "coverage_percent": 96.97,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 0,
     "policy_combined_alarms_per_week": 1.96,
     "policy_total_budget_per_week": 2.0,
     "classifier_hit_rate_on_real_messages": 0.0,
     "real_messages_sampled": 20,
-    "harness_mutations_killed": 10,
+    "harness_mutations_killed": 11,
     "harness_attacks_without_a_mutation": 1,
     "channel_page_size": 20,
     "channel_newest_post_id_2026_08_09": 321498,
@@ -63,14 +66,15 @@
     "content_read_before_freeze": false
   },
   "statistics": {
-    "package_lines": 2184,
+    "package_lines": 2293,
     "package_files": 14,
-    "test_lines": 2101,
-    "test_files": 24,
-    "tool_lines": 449,
+    "test_lines": 2356,
+    "test_files": 25,
+    "tool_lines": 508,
     "tool_files": 3,
-    "documentation_lines": 4890,
-    "documentation_files": 20,
+    "documentation_lines": 6084,
+    "documentation_files": 25,
     "runtime_dependencies": 0
-  }
+  },
+  "defects_logged": 35
 }
