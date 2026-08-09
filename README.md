@@ -33,7 +33,7 @@ import namespace is `mavo` because it must be unique rather than descriptive. Th
 codename lives in documentation and conversation. Stated here rather than left
 implicit, because that is where the inconsistency otherwise lives.
 
-Status: pre-alpha. Sprints 0 to 6 shipped. A live Telegram adapter is wired;
+Status: pre-alpha, five sprints from beta on the plan in `docs/MVP.md` (beta target 18 October 2026). Sprints 0 to 6 shipped. A live Telegram adapter is wired;
 measured against real channel content its classifier scored **0 of 20**, and the
 failure is pinned as assertions. The redesign waits for a corpus rather than a
 schedule (D-011), because fitting to the twenty messages in hand would repeat
@@ -253,7 +253,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 14 | 2,248 |
 | Tests | 25 | 2,237 |
 | Tools | 4 | 861 |
-| Documentation | 28 | 7,894 |
+| Documentation | 28 | 7,958 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -270,7 +270,7 @@ confidence interval attached.
 | Threat-model rows | 13, each with a control or a named acceptance |
 | Defects logged with their class | 41, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 17 |
-| Releases | 23, of which 12 carry tags |
+| Releases | 24, of which 13 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 
 ## Documentation

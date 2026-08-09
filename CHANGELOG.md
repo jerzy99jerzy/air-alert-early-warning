@@ -16,6 +16,34 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.9.1.0 - 2026-08-09
+
+- `docs/MVP.md` rewritten to v3.0 against D-015, with section 1 stating what
+  each old criterion was measuring and why the replacement was necessary rather
+  than convenient. The paragraph headed "the thing that does not compress" is
+  gone with the framing that produced it: crossing scarcity blocked validating a
+  predictor and does not block validating a report, so the autumn deadline
+  became reachable by narrowing the claim rather than by working faster.
+- **Five sprints to beta, dated, with checkable exit criteria.** S7 area
+  resolution to 23 Aug, S8 the report to 6 Sep, S9 real time to 20 Sep, S10
+  delivery to 4 Oct, S11 hardening to 18 Oct. Each exit criterion is a number
+  produced by running something: a measured hit rate, a stated error rate, a
+  latency distribution, a delivery time through Do-Not-Disturb, a clean-clone
+  `make verify`. Beta is defined in one sentence so it cannot drift, and what
+  beta is not is listed beside it.
+- The dependency chain is stated so a slip propagates visibly, and T6 is marked
+  as the one track no sprint can absorb: if the legal position is not recorded
+  by 5 October, beta slips to that date plus two weeks and the slip is reported.
+- Backlog statuses realigned: T15 and T31 promoted to the centre of S7, T16 to
+  S7 as output rather than a rule feature, T14 and T20 deferred out of the beta
+  plan because ADS-B was a prerequisite for an alarm tier that D-015 removed
+  from the critical path, T11 restated as the question of whether recipients
+  exist rather than a budget calibration.
+- Section 9 names the one sprint whose difficulty is genuinely unknown, S7, and
+  states the response if the hit rate comes back low: report it and re-plan. A
+  report that names the wrong rajon is worse than no report, because it is
+  actionable.
+
 ## 0.9.0.0 - 2026-08-09
 
 The thesis is restated. This is a scope change, not an edit.

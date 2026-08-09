@@ -286,8 +286,8 @@ is a condition, not a preference:
 
 | Gate | Blocks | Why it cannot be skipped |
 | --- | --- | --- |
-| Sprint 7 classifier passing on the holdout | any alarm-class message to anyone, including the operator | An alarm from a component that scores 0 of 20 on real content is noise with a siren attached |
-| A rule clearing the gate on real data | recipients beyond the operator | Until then the only honest claim is that the machinery works, not that the warning does |
+| Area resolution working (S7) | any message naming a place | A report that names the wrong rajon is worse than no report, because it is actionable |
+| Measured correctness and latency (S8, S9) | recipients beyond the operator | Until then the only honest claim is that the machinery works, not that the report is right or fast |
 | T6, the legal position | any recipient who is not the operator | Sending warnings to strangers is a different undertaking from notifying yourself, and it does not become smaller by being unexamined |
 | T29, disengagement measured | nothing, but shipping without it repeats the assumption D-014 removed | A public tier with no instrument for mute and unsubscribe cannot tell a healthy channel from an abandoned one |
 

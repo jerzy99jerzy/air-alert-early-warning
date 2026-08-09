@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 2.0
+Document:  docs/MVP.md, version 3.0
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -13,54 +13,75 @@ Note:      blockers are typed. Engineering blockers shrink when code is written;
 
 ## Contents
 
-1. [Audience A: the author, personal use](#audience-a-the-author-personal-use)
-2. [Audience B: a small trusted group](#audience-b-a-small-trusted-group)
-3. [Audience C: public repository as a portfolio artefact](#audience-c-public-repository-as-a-portfolio-artefact)
-4. [Audience D: a publicly available warning system](#audience-d-a-publicly-available-warning-system)
-4. [Amending these criteria](#amending-these-criteria)
-5. [Schedule to autumn](#schedule-to-autumn)
+1. [What changed at 0.9.0.0, and why this document was rewritten](#1-what-changed-at-0900-and-why-this-document-was-rewritten)
+2. [Audience A: the author, personal use](#2-audience-a-the-author-personal-use)
+3. [Audience B: a small group who asked](#3-audience-b-a-small-group-who-asked)
+4. [Audience C: public repository as a portfolio artefact](#4-audience-c-public-repository-as-a-portfolio-artefact)
+5. [Audience D: a publicly available reporting instrument](#5-audience-d-a-publicly-available-reporting-instrument)
+6. [What beta means](#6-what-beta-means)
+7. [Five sprints to beta](#7-five-sprints-to-beta)
+8. [What is deliberately not in the plan](#8-what-is-deliberately-not-in-the-plan)
+9. [Where this plan will bend](#9-where-this-plan-will-bend)
+10. [Amending these criteria](#10-amending-these-criteria)
 
+---
 
-What finished means, per audience. A codebase always yields another defect, so
-without exit criteria every sprint can be justified as the next one indefinitely.
+## 1. What changed at 0.9.0.0, and why this document was rewritten
 
-Blockers are typed. **Engineering** blockers shrink when code is written.
-**Access** blockers do not shrink at all, no matter how many sprints pass, and
-counting sprints toward a goal gated by one is a category error.
+D-015 restated the product: MAVO reports a threat picture in real time and does
+not predict crossings. Every criterion below was written under the previous
+framing and most of them measured the wrong thing.
 
-## Audience A: the author, personal use
+Three specific corrections, because "the thesis was restated" is not a licence
+for silently improved criteria.
 
-**Done when** the collector has run continuously for four weeks against live
-feeds in shadow mode, the measured alarm rate for the chosen rule sits inside
-budget, and the median lead time on any true positive in that window is recorded.
+**The schedule stops being blocked by event scarcity.** Version 2.0 of this
+document carried a paragraph headed "the thing that does not compress":
+crossings run at two to four a year, so a four-week window contains
+statistically zero of them, and recall could not be validated by autumn at any
+level of effort. That was correct, and it applied to a predictor. A reporting
+instrument is validated on correctness, latency and completeness, all measurable
+in a week against the corpus in hand. The autumn deadline became reachable by
+narrowing the claim, not by working faster.
+
+**Area resolution moved from support to centre.** It was a gazetteer task behind
+the classifier. It is now the product: a report that cannot say which rajon and
+how far from the border is a relay of somebody else's feed.
+
+**The alarm tier leaves the critical path entirely.** Not cancelled, not
+scheduled. If it returns, it returns with the gate, a crossing list (T28) and a
+corpus roughly fifteen times the current span (F58). None of that gates anything
+below.
+
+## 2. Audience A: the author, personal use
+
+**Done when** the daemon has run unattended for 72 hours against the live
+channel, every cycle is accounted for in the run log as events, a degradation
+event or a logged defect, and the end-to-end latency from channel publication to
+a rendered report is measured and recorded rather than estimated.
 
 | Blocker | Type |
 | --- | --- |
-| alerts.in.ua API token | **access**, application submitted, one follow-up ~20 Aug. No longer on the critical path: gates cross-source comparison and API history (T10), not ingestion |
-| Live feed latency measurement | engineering. Unblocked by sprint 4: the Telegram adapter reaches the shared upstream without a token. First measurement owned by sprint 6 |
-| Regime split, missile and drone paths | engineering, **done** (sprint 3, D-009: missile alarms, drone demoted) |
-| Working classifier against real channel content | engineering. The shipped table scored 0 of 20 (F23); redesign is sprint 7 - sprint 6 shipped the corpus acquisition it waits on (T19, done) - and remains the critical path |
-| Signal output channel | engineering (sprint 7) |
+| Area resolution against real message wording | engineering (S7). The shipped table scored 0 of 20 (F23); the register replacing it is T31 |
+| Distance to the border as a stored column | engineering (S8, T32) |
+| `mavo watch` and the run log | engineering (S9, T23) |
+| Where the daemon lives | **decision** (T25). A laptop that sleeps writes a record whose holes look like quiet nights |
 
-*Amended 2026-08-08 (0.3.2.0).* The original table gated latency measurement on
-the token, which sprint 4 made false and this document did not follow. Recorded
-as a scope change rather than silently edited: the amendment tracks a shipped
-capability, not an inconvenient criterion.
+## 3. Audience B: a small group who asked
 
-## Audience B: a small trusted group
-
-**Done when** everything in A holds, plus: the guard test on message content
-passes, `Responsible use` is written, the onboarding probe has been run from a
-clean clone by following the README from zero, and a documented rule has cleared
-the gate on real data rather than synthetic.
+**Done when** everything in A holds, plus: at least two people have been asked
+and said yes (T11), the delivery path wakes a phone through Do-Not-Disturb, a
+dead feed produces a blindness message within one poll interval, and the message
+wording has been read by someone who did not write it, specifically for whether
+it can be mistaken for a prediction.
 
 | Blocker | Type |
 | --- | --- |
-| Real-data backtest clearing the gate | engineering. **No longer blocked on the token**: sprint 6 retrieved 60,680 real messages without one (T19, F44). Blocked on the sprint 7 classifier, which is engineering and shrinks by writing code |
-| Onboarding probe from a clean clone | engineering |
-| Legal position on distributing warnings to people other than the operator | **decision**, needs counsel, does not shrink by writing code (T6) |
+| Delivery path | engineering (S10, phase M1) |
+| Two people asked | **access** (T11). Nobody has been asked, and this does not shrink by writing code |
+| Legal position on sending warnings to people other than the operator | **decision** (T6). Needs counsel; runs in parallel from now |
 
-## Audience C: public repository as a portfolio artefact
+## 4. Audience C: public repository as a portfolio artefact
 
 **Done when** everything in B holds, plus: every README limitation is registered
 in the lint, the defect log has entries from real data rather than only from
@@ -69,83 +90,98 @@ re-read.
 
 | Blocker | Type |
 | --- | --- |
-| Defect log entries from real data | **met.** F23 was measured against 20 live messages and F50 verified against the corpus, neither needing a token. The row survived as blocked for three releases after it stopped being true |
-| Threat model residuals re-probed | engineering |
+| Defect log entries from real data | **met.** F23 from 20 live messages, F50 verified against the corpus, F58 from the threshold sweep |
+| Threat model residuals re-probed | engineering (S11) |
+| Onboarding probe from a clean clone | engineering (S11, T7) |
 
-## Audience D: a publicly available warning system
+## 5. Audience D: a publicly available reporting instrument
 
-The target scope, and the rung this ladder was missing until 0.7.0.0. Audience
-C makes the *code* public; it says nothing about the *system* being available to
-someone who is not the author, which is what this project is for. A ladder whose
-top rung is a portfolio artefact quietly redefines the goal as the thing that is
-easiest to reach, and two documents had already started planning against that
-smaller goal (F53).
-
-**Done when** everything in C holds, plus: a rule has cleared the gate on the
-holdout rather than the design window, the alarm path has run in shadow mode
-long enough to state a measured alarm rate on real data, the legal position
-covers recipients who are strangers rather than a named circle, the delivery
-path has a stated availability target and a rate limit, and there is a
-subscription route that does not require an Android phone and English.
+The target scope. **Done when** everything in C holds, plus: the report is
+correct against a hand-checked sample of real messages at a stated rate, the
+measured end-to-end latency is published rather than claimed, the delivery path
+has a stated availability target and a rate limit, a subscription route exists
+that is not one Android app in English, and the legal position covers recipients
+who are strangers.
 
 | Blocker | Type |
 | --- | --- |
-| A rule clearing the gate on the holdout | engineering, blocked on sprint 7 |
-| Measured alarm rate from shadow mode on real data | engineering, blocked on the daemon (`mavo watch`, phase M0) |
-| Legal position covering distribution to strangers | **decision** (T6, restated). Does not shrink by writing code, and is broader than the private-circle question originally asked |
-| Disengagement measured rather than assumed | engineering (T29). D-014 removed the assumed budget; the replacement is an instrument, and a public tier shipped without one repeats the assumption at scale |
-| Delivery capacity: availability target and rate limit | engineering, and the first component here that would carry an availability target at all |
-| A subscription route that is not one Android app in English | engineering, **not yet scoped**. Named now so it is not discovered at the end |
+| Measured correctness and latency, published | engineering (S8, S9) |
+| Availability target and rate limit | engineering (S10) |
+| A route that is not one app in English | engineering, **not yet scoped**. Named now so it is not discovered at the end |
+| Legal position covering strangers | **decision** (T6) |
+| Disengagement measured rather than assumed | engineering (T29). D-014 removed the assumed budget; shipping without an instrument repeats the assumption at scale |
 
-The gap between C and D is the honest measure of how far this project is from
-its purpose, and it is deliberately larger than the gap between A and C.
+## 6. What beta means
 
-*Amended 2026-08-09 (0.7.0.0).* Audience D is new, and two Audience B and C
-rows that read `blocked on the token` were corrected: the corpus was retrieved
-without a token in sprint 6, which made both false at that moment and neither
-followed. Recorded as a scope change under the rule below, with its reason: the
-criteria were not moved because they were inconvenient, they were moved because
-they were wrong.
+One sentence, so it cannot drift: **beta is the reporting instrument, live,
+delivering to people who asked, with its correctness and latency measured and
+published.**
 
-## Amending these criteria
+What beta is not: no alarm class, no probability of anything, no ADS-B tier, no
+app store, no claim about what will cross the border. A beta that quietly
+acquires any of those has become a different product and needs a different plan.
+
+## 7. Five sprints to beta
+
+Five, and the number is a commitment rather than an estimate. Each sprint has an
+exit criterion that can be checked by running something, and a sprint that
+misses its exit criterion is reported as missed rather than absorbed into the
+next one. Two-week windows, calendar dates rather than effort.
+
+| Sprint | Window | What ships | Exit criterion, checkable |
+| --- | --- | --- | --- |
+| **S7** | 10 to 23 Aug | Area resolution. KATOTTH as a versioned file (T31), the parser redesign against the design window, means of attack as its own class (T16) | The measured hit rate of area resolution against a hand-labelled sample of the design window, printed as a number. Not "improved": a number, beside the 0 of 20 it replaces |
+| **S8** | 24 Aug to 6 Sep | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | A hand-checked sample of real messages where the rendered report is correct in area, means and distance, with the error rate stated. Distances spot-checked by hand before the column is trusted anywhere |
+| **S9** | 7 to 20 Sep | Real time. `mavo watch` (M0), the run log and its reader (T23, T24), interval jitter from the first commit (T27), the host decision (T25) | 72 hours unattended with every cycle accounted for, and the first end-to-end latency measurement: channel publication to rendered report, reported as a distribution rather than a best case |
+| **S10** | 21 Sep to 4 Oct | Delivery. Self-hosted ntfy, the three message classes, blindness reporting, per-recipient topics (M1) | A synthetic report reaches a phone through Do-Not-Disturb within a measured time; killing the feed produces a blindness message within one interval; the delivery ledger and the phone agree over a week |
+| **S11** | 5 to 18 Oct | Hardening to beta. Threat-model rows for the delivery path with tests, the clean-clone probe (T7), the identifier lint (T22), the disengagement instrument (T29) | `make verify` green from a clean clone on a machine with nothing installed, every new threat row carrying a test, and T6 recorded |
+
+**Beta: 18 October 2026.**
+
+**The parallel track no sprint can absorb.** T6 is a decision blocker: it needs
+counsel and does not shrink by writing code. It starts now and must be recorded
+before S11 closes, because Audience B is gated on it and every sprint after S9
+assumes recipients exist. If it is not recorded by 5 October, beta slips to the
+date it is recorded plus two weeks, and the slip is reported rather than
+absorbed.
+
+**Dependencies, stated so a slip propagates visibly.** S8 needs S7's resolution
+to work at all; S9 needs S8's report to have something to render; S10 needs S9's
+latency measurement to know what it is promising; S11 needs S10's delivery path
+to have threats to model. Beyond the legal track there is no parallelism to
+exploit, and pretending otherwise is how five sprints becomes eight.
+
+## 8. What is deliberately not in the plan
+
+- **The alarm tier.** Out of scope for beta by D-015. Returning it needs the
+  gate, a crossing list (T28) and a far longer corpus (F58).
+- **ADS-B (T14, T20).** It was a prerequisite for a drone *alarm* tier. Under a
+  reporting thesis it is enrichment: valuable, not blocking, and it would cost
+  most of a sprint in ingest work.
+- **A second Polish feed (T8).** Unresolved access, and the report does not
+  depend on it.
+- **The API token (T1).** Both Ukrainian feeds share one upstream (D-010) and
+  the Telegram adapter already reaches it without a token.
+
+## 9. Where this plan will bend
+
+The first thing cut at a deadline is measurement, because it does not show in a
+demo. Here measurement is the product: an unmeasured report is somebody else's
+feed with extra steps, and anyone can build that in an afternoon.
+
+The specific risk is S7. Area resolution is the one sprint whose difficulty is
+genuinely unknown, because the register's names have never been checked against
+the channel's wording. If the hit rate comes back low, that is a finding, and
+the correct response is to say so and re-plan rather than ship a report that is
+confidently wrong about which rajon is under alert. A report that names the
+wrong place is worse than no report, because it is actionable.
+
+## 10. Amending these criteria
 
 A criterion that moves because it turned out to be inconvenient is a scope change
 and is recorded as one, in the same commit that meets it, with its reason.
 
-
----
-
-## Schedule to autumn
-
-Written because the project is time-sensitive: further attacks are expected this
-autumn and the tool should be useful before then. Dates are calendar, not effort.
-
-**The thing that does not compress.** Border crossings run at roughly two to four
-per year. A four-week shadow-mode window contains, statistically, zero positive
-events. It measures the false-alarm side and nothing else. Recall and lead time
-cannot be validated by autumn at any level of effort, because the constraint is
-event scarcity, not engineering time.
-
-**Consequence, and it is not negotiable.** The observation tier can ship in
-September. The alarm tier cannot. Shipping an alarm tier to people who will rely
-on it, without the measurement that justifies its threshold, is precisely the
-failure mode this project exists to prevent.
-
-| Window | Sprint | Capability or defect class | Blocker |
-| --- | --- | --- | --- |
-| 6 to 12 Aug | S4 | Live ingestion without waiting on anyone: `TelegramChannelSource` against the public Ajax channel, which is the shared upstream of both APIs. **Shipped 0.3.0.0.** OpenSky account still outstanding | none |
-| 6 to 9 Aug | S5 | **Shipped 0.4.0.0.** Not the scheduled classifier redesign. The evidence container instead: fourth state (F26), window-gap detection (F27), harness mutation-verified (F14, after two slips). Scope change recorded as D-011 | none |
-| 10 to 19 Aug | S6 | Corpus collection running (T19) and the classifier redesign against it, not against a sample. First live latency measurement | corpus needs seven days of wall clock |
-| 20 to 23 Aug | S7 | Output channel as an attack surface: Signal delivery, guard test on message content, sender-side rate limit. Follow-ups sent if still silent | none |
-| 24 Aug to 21 Sep | S8 | Shadow mode, four weeks, nothing sent. Measures alarm rate on real data | calendar only |
-| 22 to 30 Sep | S9 | Threshold correction, observation tier to a small group, manual completed for every shipped command | T11 |
-
-**T11 is promoted to a blocker.** The alarm threshold is calibrated against a
-recipient's tolerance and no recipient has been asked. Those two conversations
-must happen before shadow mode starts on 24 August, not after, or four weeks of
-measurement will be scored against a number taken from the air.
-
-**Where this plan will bend under time pressure.** The first thing cut at a
-deadline is calibration, because it does not show in a demo. Here calibration is
-the product. Without it what remains is a Telegram relay that anyone can build in
-an afternoon and that needs neither this repository nor its author.
+*Amended 2026-08-09 (0.9.0.0).* This document was rewritten against D-015. The
+previous audience criteria and the schedule to autumn are in the git history;
+what replaced them, and why each replacement was necessary rather than
+convenient, is section 1.

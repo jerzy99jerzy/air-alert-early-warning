@@ -45,7 +45,7 @@ without tripping anything.
 reports degradation.
 
 ## T6. Legal position on distributing warnings to people other than the operator
-Status: `decision`
+Status: `decision`, **parallel track, starts now, recorded before 5 October or beta slips**
 Does not shrink by writing code. Needs counsel, not a sprint.
 **Acceptance:** a written position in `docs/DECISIONS.md` with a named basis.
 *Restated 0.7.0.0.* The original title asked about a private circle, which is
@@ -56,7 +56,7 @@ the smaller question would have produced a correct answer to the wrong
 question, which is the more expensive kind of mistake here (F53).
 
 ## T7. Onboarding probe from a clean clone
-Status: `ready`
+Status: `ready`, **S11**
 **Acceptance:** a fresh clone into an empty directory, README followed from zero,
 with the point of failure recorded. Not "it looks correct".
 
@@ -85,7 +85,7 @@ in `docs/DECISIONS.md` accepting calibration on one month with the resulting
 confidence intervals stated.
 
 ## T11. Ask whether anyone actually wants this
-Status: `ready`
+Status: `ready`, **before S10**. No longer a budget calibration (D-014); it is now the question of whether recipients exist at all, which Audience B is gated on.
 No recipient has been identified. `docs/MVP.md` names a small trusted group and
 nobody in it has been asked. Until then the alarm threshold is calibrated against
 a hypothetical tolerance.
@@ -107,7 +107,7 @@ question. Found open during the 0.3.2.0 audit because MT9 cited D-010 before it
 existed (F33).
 
 ## T14. Second signal type for the drone regime
-Status: `ready`
+Status: `deferred` (D-015). Was a prerequisite for a drone alarm tier. Under a reporting thesis ADS-B is enrichment: valuable, not blocking, and outside the five sprints to beta.
 Promoted from enrichment to prerequisite by the sprint 3 finding. Alert state
 alone cannot discriminate within drone nights, so the drone tier stays silent
 until another channel exists.
@@ -116,7 +116,7 @@ and a drone-regime rule that clears its allocated share on the adversarial
 history without lowering the recall floor.
 
 ## T15. Raion and hromada gazetteer
-Status: `ready`
+Status: `ready`, **S7, core**. Promoted from support to product by D-015: a report that cannot name the rajon is a relay. Superseded in method by T31, which supplies the register this task consumes.
 F24. The channel names raions and hromadas; nothing in a message identifies the
 oblast. Without a mapping, the border-oblast rules that the entire thesis rests
 on have no input.
@@ -124,7 +124,7 @@ on have no input.
 to an oblast, or is reported as unresolved. Unresolved is never silently skipped.
 
 ## T16. Means of attack as its own message class
-Status: `ready`
+Status: `ready`, **S7**. Under the reporting thesis this is output rather than a feature of a rule: the report says what the channel names, with the source's wording preserved.
 F25. `kind` is modelled as an attribute of an alert; the channel emits it as a
 separate message tied to a hromada, with its own lifetime.
 **Acceptance:** a threat-type message produces its own event, and the decision
@@ -190,7 +190,7 @@ recorded, the tolerated rate written into `docs/METHODOLOGY.md` with its
 provenance, and the default changed only if the measurement supports it.
 
 ## T20. OpenSky Network registration
-Status: `ready`, self-service
+Status: `ready`, self-service, **not in the beta plan** (D-015). Registration is cheap and worth doing whenever; nothing waits on it.
 Recategorised from a blocked external dependency: no approval step exists, only
 the registration itself. It gates T14, which gates any drone-tier alarm (D-009),
 and it costs minutes.
@@ -199,7 +199,7 @@ read over eastern Poland recorded with its latency.
 
 
 ## T22. Fail the build when a document cites an identifier the package lacks
-Status: `ready`
+Status: `ready`, **S11**
 F55: `docs/COMPUTATION.md` cited a constant that does not exist, in the document
 whose subject is that figures come from measurement. The audits check cited test
 names and pinned counts; nothing checks the rest of the backticked identifiers.
@@ -210,7 +210,7 @@ hypothetical. Verified red by citing a fabricated symbol in a scratch copy.
 
 
 ## T23. The observability sink and its reader
-Status: `ready`
+Status: `ready`, **S9**
 Blocks nothing today and blocks everything at M0: shadow mode's deliverable is a
 record of decisions that were never sent, so the log is the product rather than a
 diagnostic. Designed in `docs/OBSERVABILITY.md` with acceptance written before
@@ -221,7 +221,7 @@ a rendering that prints `unknown` where a stage could not measure, verified by a
 fixture whose parse report has no baseline.
 
 ## T24. Keep the run log out of the holdout
-Status: `ready`
+Status: `ready`, **S9**
 The design and holdout split was frozen before any message content was read
 (D-012a). A run log echoing message bodies spends that split without anyone
 deciding to spend it.
@@ -231,7 +231,7 @@ and the debug switch that lifts this writes its own line into the record.
 
 
 ## T25. Decide where the daemon lives
-Status: `decision`
+Status: `decision`, **S9**
 `docs/MOBILE.md` assumes an operator-controlled always-on host and does not say
 which. A laptop that sleeps is not one: shadow mode on a sleeping machine writes
 a record whose holes look like quiet nights, which is the defect this project
@@ -255,7 +255,7 @@ current implementation, and a threat-model row. If it does not reproduce, the
 negative result is recorded in `docs/METHODOLOGY.md` and this entry closes.
 
 ## T27. Jitter the poll interval from the first commit of M0
-Status: `ready`
+Status: `ready`, **S9**
 A fixed 60-second period is both a beacon profile to a sensor and a perfectly
 regular load on an upstream with which there is no agreement. Ten to twenty
 percent jitter addresses both and costs one line. It goes in first because
@@ -285,7 +285,7 @@ verdict on real data is possible.
 
 
 ## T29. Measure disengagement instead of assuming it
-Status: `ready`
+Status: `ready`, **S11**
 D-014 removed the alarm budget because the number behind it was assumed. The
 honest replacement is not a better guess but a measurement: mute rate,
 unsubscribe rate, and time to first mute, recorded as first-class metrics beside
@@ -298,7 +298,7 @@ number attached, and D-014 is reopened on its own stated terms.
 
 
 ## T31. KATOTTH as a versioned file
-Status: `ready`
+Status: `ready`, **S7**
 D-016. The Ukrainian state administrative register, successor to KOATUU, gives
 hromada, rajon and oblast with stable codes, which is the mapping F23 showed to
 be missing: the shipped table keyed on oblasts while the channel emits the
@@ -310,7 +310,7 @@ rather than an impression. A hit rate below what the channel actually emits is a
 finding about the register and is recorded as one.
 
 ## T32. Distance from each area to the Polish border, precomputed
-Status: `ready`
+Status: `ready`, **S8**
 D-016. Distance is the field that turns an alert into a report a person can use,
 and it must be a stored column rather than a runtime call: no API key in the
 warning path, no rate limit where latency is the product, and no third party
