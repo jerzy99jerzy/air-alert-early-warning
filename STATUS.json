@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.7.2.0",
+  "version": "0.9.0.0",
   "python_requires": ">=3.11",
   "shipped_sprints": [
     0,
@@ -21,7 +21,7 @@
     "docs/reviews/0.3.2.0.md": "1.0",
     "docs/reviews/0.4.0.0.md": "1.0",
     "docs/reviews/0.5.0.0.md": "1.0",
-    "docs/FOUNDATIONS.md": "1.0",
+    "docs/FOUNDATIONS.md": "1.1",
     "docs/DATA-FLOW.md": "1.0",
     "docs/ARCHITECTURE.md": "2.0",
     "docs/MECHANISMS.md": "2.0",
@@ -32,26 +32,30 @@
     "docs/COMPUTATION.md": "1.1",
     "docs/MOBILE.md": "1.2",
     "docs/reviews/0.6.0.0.md": "1.0",
-    "docs/BRIEF.md": "1.0",
+    "docs/BRIEF.md": "1.1",
     "docs/OBSERVABILITY.md": "1.0",
     "docs/DEPLOYMENT.md": "1.0"
   },
   "threat_model_rows": 13,
-  "harness_attacks": 12,
+  "harness_attacks": 11,
   "measured": {
-    "tests_passing": 165,
-    "coverage_percent": 96.97,
+    "tests_passing": 147,
+    "coverage_percent": 96.74,
     "coverage_floor_percent": 95,
-    "candidate_rules_passing_gate": 0,
+    "candidate_rules_passing_gate": 1,
     "policy_combined_alarms_per_week": 1.96,
-    "policy_total_budget_per_week": 2.0,
     "classifier_hit_rate_on_real_messages": 0.0,
     "real_messages_sampled": 20,
-    "harness_mutations_killed": 11,
+    "harness_mutations_killed": 10,
     "harness_attacks_without_a_mutation": 1,
     "channel_page_size": 20,
     "channel_newest_post_id_2026_08_09": 321498,
-    "channel_posts_per_day_estimate": 650
+    "channel_posts_per_day_estimate": 650,
+    "channel_posts_per_day_measured": 514,
+    "design_window_nights": 99,
+    "design_window_messages": 48540,
+    "oblast_name_coverage_design_window": 0.0105,
+    "hourly_peak_ge_60_share_of_nights": 0.242
   },
   "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except classifier_hit_rate_on_real_messages, which is pinned by tests against real channel content; nothing here is a claim about the world",
   "corpus": {
@@ -69,15 +73,15 @@
     "content_read_before_freeze": false
   },
   "statistics": {
-    "package_lines": 2293,
+    "package_lines": 2248,
     "package_files": 14,
-    "test_lines": 2366,
+    "test_lines": 2237,
     "test_files": 25,
-    "tool_lines": 573,
-    "tool_files": 3,
-    "documentation_lines": 7429,
+    "tool_lines": 861,
+    "tool_files": 4,
+    "documentation_lines": 7894,
     "documentation_files": 28,
     "runtime_dependencies": 0
   },
-  "defects_logged": 38
+  "defects_logged": 41
 }

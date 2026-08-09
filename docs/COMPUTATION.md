@@ -3,7 +3,7 @@
 Version: 1.0 / 2026-08-09
 Audience: a reader who wants to check the arithmetic rather than trust it.
 Code: `mavo/baserate.py` (every statistic), `mavo/evaluate.py` (how histories
-become tables), `mavo/policy.py` (how the budget binds). Nothing statistical
+become tables), `mavo/policy.py` (how regimes are bound to rules). Nothing statistical
 lives anywhere else, deliberately: the null model is a top-level module and a
 domain lint fails the build if it stops being one.
 
@@ -21,7 +21,7 @@ SPECULATION, because absence is never the flattering state).
 - [The Wilson interval](#the-wilson-interval)
 - [The Fisher exact test](#the-fisher-exact-test)
 - [The gate: three conditions](#the-gate-three-conditions)
-- [The alarm budget as a statistical control](#the-alarm-budget-as-a-statistical-control)
+- [The lift floor, and the budget it replaced](#the-lift-floor-and-the-budget-it-replaced)
 - [The regime split, or what an average hid](#the-regime-split-or-what-an-average-hid)
 - [Why there is no model](#why-there-is-no-model)
 - [Design and holdout](#design-and-holdout)
@@ -153,7 +153,7 @@ condition is decisive; all three verdicts are printed with their reasons.
 | Condition | Threshold | What failing means |
 | --- | --- | --- |
 | recall | ≥ 0.90 | The rule sleeps through crossings. A warning system that misses the event it exists for has no reason to exist, whatever its precision |
-| alarm rate | ≤ allocated budget/week | The rule spends more attention than the recipient has. See the next section: this is a hard control, not a quality score |
+| lift, lower bound | ≥ 1.50 | The firing carries no information. A rule that cannot beat the calendar at the pessimistic end of its own interval is a calendar |
 | Fisher p | ≤ 0.05 | The association is not distinguishable from the calendar. The rule may be a superstition with good manners |
 
 The asymmetry is deliberate: recall has a floor and precision has none,
@@ -162,29 +162,43 @@ low-precision rule at a 57% base rate fires constantly and dies on the budget
 condition; a low-recall rule dies on its own condition. Every failure mode has
 exactly one owner.
 
-## The alarm budget as a statistical control
+## The lift floor, and the budget it replaced
 
-`DecisionPolicy.total_budget_per_week`, defaulting to 2.0, is the recipient's
-attention treated as the binding constraint of the whole system. (Version 1.0
-of this document cited a constant `MAX_ALARMS_PER_WEEK` that does not exist in
-the package: a plausible name written from memory rather than read from the
-code, in the document whose entire claim is that its figures come from
-measurement. Logged as F55.) The number is currently an
-**assumption about a hypothetical audience** [speculation, and flagged: T11
-exists to replace it with two recorded answers to "at what firing rate would
-you stop reading this"].
+Until 0.8.0.0 the gate's second condition was an alarm rate ceiling of two per
+week, and this section argued that attention is a statistical control because
+alarm fatigue is an attack surface. The number behind it was never measured
+(`MAX_ALARMS_PER_WEEK` in `mavo/baserate.py`, removed), and it has been replaced
+rather than relaxed (D-014).
 
-The arithmetic that makes it a *statistical* control rather than a UX
-preference: alarm fatigue is an attack surface. An adversary who can induce
-rule firings - and the poison check in `mavo/rules.py` exists because feed
-manipulation costs nothing to attempt - can spend the recipient's attention
-until a real alarm is ignored. A budget enforced *per rule share and again on
-the total* (`DecisionPolicy` refuses construction when shares exceed the
-total; `plan_policy` refuses when measured demand plus 25% headroom exceeds
-it) means the failure mode is a loud refusal at build time, not a quiet
-over-notification at 02:00. Two rules each cleared at two per week produce
-four per week; the arithmetic that destroys the channel is the arithmetic the
-constructor checks.
+The condition now is a floor on **the lower bound of lift**:
+
+    lift_lower_bound = wilson_lower(precision) / base_rate  >=  1.50
+
+Three things about that form.
+
+It states directly what the budget was doing indirectly. With the rate condition
+gone, a rule firing on every campaign night has recall 1.00 and p = 1e-03, and
+passes everything else while telling the recipient nothing the date did not.
+Only a statement about lift separates a detector from a calendar, and the gate
+now makes that statement instead of approximating it with a frequency ceiling.
+
+It uses the interval's lower bound rather than the point estimate, for the same
+reason the interval is printed at all: with about a dozen positive events, point
+lift moves by a factor when one night changes. The gate asks how much better
+than the calendar the rule can still be claimed to be if the sample flattered
+it, which is the question a reader of the output actually needs answered.
+
+It is measured, not assumed. On the scenario tables: firing on 57% of nights
+gives a lower bound of 1.01 and fails; 30% gives 1.92; 20% gives 2.57; 14%
+gives 3.70. The floor of 1.50 sits where a rule stops being a restatement of
+the calendar, and moving it is a scope change with a number attached rather
+than a matter of taste.
+
+The alarm rate is still computed, still printed on every verdict, and labelled
+`[measured, not gated]`. It is a property of a rule that a recipient may care
+about; it is no longer a verdict about one. What the removal costs is written in
+D-014 rather than here: alarm fatigue as an attack surface is no longer refused
+by construction, and that is a trade the decision states rather than hides.
 
 ## The regime split, or what an average hid
 

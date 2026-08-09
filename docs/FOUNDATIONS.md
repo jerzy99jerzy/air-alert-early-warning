@@ -17,12 +17,13 @@ Note:      a claim without a provenance label in this document is a defect.
 ## Contents
 
 1. [Provenance labels](#1-provenance-labels)
-2. [The observation the project starts from](#2-the-observation-the-project-starts-from)
-3. [The problem that observation creates](#3-the-problem-that-observation-creates)
-4. [Assumptions, each with its falsifier](#4-assumptions-each-with-its-falsifier)
-5. [What is measured, and on what](#5-what-is-measured-and-on-what)
-6. [The null result this project is built around](#6-the-null-result-this-project-is-built-around)
-7. [What would make this project stop](#7-what-would-make-this-project-stop)
+2. [What this tool is for](#2-what-this-tool-is-for)
+3. [The observation the project starts from](#3-the-observation-the-project-starts-from)
+4. [The problem that observation creates](#4-the-problem-that-observation-creates)
+5. [Assumptions, each with its falsifier](#5-assumptions-each-with-its-falsifier)
+6. [What is measured, and on what](#6-what-is-measured-and-on-what)
+7. [The null result this project is built around](#7-the-null-result-this-project-is-built-around)
+8. [What would make this project stop](#8-what-would-make-this-project-stop)
 
 ---
 
@@ -46,7 +47,52 @@ produces a display that cannot recover it.
 
 ---
 
-## 2. The observation the project starts from
+## 2. What this tool is for
+
+**MAVO reports a threat picture in real time. It does not predict what will
+cross into Poland.** Stated first because everything downstream follows from it,
+and because until 0.9.0.0 this document said something else.
+
+The distinction is not a hedge. A crossing depends on how many munitions
+Ukrainian air defence brings down, on where the debris of the intercepted ones
+falls, on whether a drone loses its way, and on decisions taken by an adversary
+minutes earlier. None of that is observable from any feed this project can
+reach, and no volume of history makes it observable. A tool that claimed to
+predict crossings would be claiming access to information that does not exist
+in its inputs.
+
+What *is* observable, at the moment it happens, is the threat picture on the
+Ukrainian side: which areas are under alert, how intense the activity is right
+now, what means of attack the channel names, and how far the nearest alerted
+area is from the Polish border. That is a fact about the present rather than a
+claim about the future, and it is exactly what a person twenty kilometres from
+the border cannot currently get at three in the morning.
+
+Three properties define the product, in this order:
+
+1. **Maximum information.** Everything the sources support, with its provenance
+   attached, rather than a distilled verdict.
+2. **Maximum speed.** The value of the report decays in minutes. A correct
+   report that arrives after the sirens is a news item.
+3. **Completeness.** Silence must never be ambiguous: an area whose state is
+   unknown is reported unknown, and a dead feed is reported as blindness.
+
+**What this costs, stated rather than discovered.** The tool cannot tell anyone
+whether to take cover. It can tell them that a massed strike is under way sixty
+kilometres from where they are and that the nearest alerted rajon is closer than
+it was ten minutes ago. What they do with that is theirs, and the decision to
+act belongs to the state alerting system that exists for it (D-004).
+
+**Consequences of the restatement**, recorded because each one silently changed
+what other work is worth doing: the roughly twelve crossings stop being the
+target variable, so the corpus no longer has to be long enough to contain them;
+the base rate of campaign nights stops being the number to beat, because nothing
+is being predicted; and the gate with its recall, lift and Fisher conditions
+applies to the alarm class alone, if an alarm class is ever built. The reporting
+tier is judged on correctness, latency and completeness, which are measurable on
+the corpus in hand.
+
+## 3. The observation the project starts from
 
 **[measured, external]** Every violation of Polish airspace in the observed
 period coincided with a night of massed Russian strikes on western Ukraine.
@@ -64,7 +110,7 @@ steps.
 
 ---
 
-## 3. The problem that observation creates
+## 4. The problem that observation creates
 
 The project exists to answer one question: **is there enough resolution in the
 available feeds to separate the nights that matter from the nights that merely
@@ -85,7 +131,7 @@ and failing is a result rather than a bug.
 
 ---
 
-## 4. Assumptions, each with its falsifier
+## 5. Assumptions, each with its falsifier
 
 An assumption with no falsifier is not an assumption. It is a belief, and it
 belongs in a different document.
@@ -124,7 +170,7 @@ a weaker but real signal.
 across all regimes.
 
 The reasoning is not politeness. An adversary who can induce sub-threshold
-conditions exhausts the audience's attention at no cost, and the exhaustion
+conditions floods the channel at no cost, and the flooding
 outlasts the campaign (MT4). The alarm rate is therefore a hard gate condition
 rather than a quality metric.
 
@@ -135,7 +181,7 @@ they are in the two hundred nights that look identical before it, and the ratio
 between 57% of days and two to four crossings a year is the whole problem.
 
 **Falsifier:** a measured alarm rate during shadow mode that the recipient
-reports as tolerable, or a design in which the budget governs episodes rather
+reports as tolerable, or a design in which one episode yields one message rather
 than messages. The second is the more likely refinement.
 
 ### A4. The positive class is too small to fit a model to
@@ -179,7 +225,7 @@ is a different and dangerous tool.
 
 ---
 
-## 5. What is measured, and on what
+## 6. What is measured, and on what
 
 The most important sentence in this repository: **almost every number produced
 so far was produced against a synthetic history.**
@@ -187,7 +233,7 @@ so far was produced against a synthetic history.**
 | Number | Source | What it is evidence about |
 | --- | --- | --- |
 | Every candidate rule fails the gate | `mavo gate` on the fixture generator | The generator, and the gate's arithmetic. Not the world |
-| Policy at 1.96 alarms/week against a budget of 2.00 | `mavo policy` on the fixture generator | The generator |
+| Policy at 1.96 alarms/week, reported and no longer gated (D-014) | `mavo policy` on the fixture generator | The generator |
 | Recall 7 of 7 missile, 0 of 8 drone | Fixture scenarios | The generator's construction, which is why the drone finding is labelled speculation rather than measurement |
 | Classifier hit rate 0 of 20 | **Real channel content**, 2026-08-08 | The channel, and the pattern table. This is the only product measurement on real data so far |
 | Page size 20, backwards paging, channel volume | **Real channel**, 2026-08-09 | The channel on that day |
@@ -200,7 +246,7 @@ numbers start looking good.
 
 ---
 
-## 6. The null result this project is built around
+## 7. The null result this project is built around
 
 Before this repository existed, a candidate covariate was proposed to explain
 the timing of attacks and it looked convincing on a chart. Tested against the
@@ -231,7 +277,7 @@ the variable is allowed near a rule.
 
 ---
 
-## 7. What would make this project stop
+## 8. What would make this project stop
 
 Stated so that continuing is a decision rather than a default.
 
@@ -241,7 +287,7 @@ Stated so that continuing is a decision rather than a default.
 - **The feeds become unavailable.** Access to both APIs is revocable without
   cause (MT10, D-010). The public channel is the fallback and is equally
   revocable.
-- **The alarm rate cannot be held inside any tolerable budget.** Sprint 3 already
+- **No rule beats the calendar with confidence.** Sprint 3 already
   produced a configuration that passes at a 2% margin, which is not comfortable.
   If real data makes that worse, the shippable product may be the observation
   tier only, with no alarm tier at all.

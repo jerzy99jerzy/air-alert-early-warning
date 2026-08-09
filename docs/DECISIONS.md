@@ -115,6 +115,8 @@ worth more here than copyleft would be.
 would make the `phantomatics` AGPL-plus-commercial split the better model.
 
 ## D-007. Alarm rate is a hard control, not a quality metric
+Status: **superseded by D-014 (0.8.0.0).** Left in place with its reasoning intact: a decision log that deletes a superseded entry loses the ability to show what was believed and why.
+
 Date: 2026-08-05. Status: adopted
 
 **Decision.** A rule exceeding two alarms per week fails the gate outright,
@@ -128,6 +130,8 @@ induce sub-threshold conditions can exhaust attention for free.
 higher rate, which is an empirical question and not a preference.
 
 ## D-008. One shared alarm budget, allocated by measured demand
+Status: **superseded by D-014 (0.8.0.0).** Left in place, same reason.
+
 Date: 2026-08-06. Status: adopted
 
 **Decision.** The two alarms per week limit is a property of the recipient. Rules
@@ -302,3 +306,110 @@ records the practice and closes the one path that contradicts it.
 Trigger to reopen: a live, append-forever deployment where rebuilding from raw
 pages stops being cheap. At that point a `parser_version` column and a stated
 migration rule replace this convention, in the same release.
+
+
+## D-014. The attention budget is removed; a lift floor takes its place
+Date: 2026-08-09. Status: adopted, superseding D-007 and D-008
+
+**Decision.** The two alarms per week limit is removed. It is no longer a gate
+condition, no longer a constant in `mavo/baserate.py`, and no longer an
+allocation refused at policy construction. The gate keeps three conditions:
+recall at or above 0.90, **the lower bound of lift at or above 1.5**, and a
+one-sided Fisher p at or below 0.05. The alarm rate is still computed and still
+printed, labelled as measured and not gated.
+
+**Reasoning, in the operator's words and not softened.** The budget encoded an
+assumption about how a recipient behaves at a given notification frequency, and
+nobody had measured it. Users who care will leave the tool on and moderate the
+push settings themselves; users who do not will mute it and open it when they
+are worried. Modelling that behaviour from an armchair and then hard-coding the
+model as a refusal is the same error this project refuses everywhere else: a
+plausible mechanism, encoded before measurement.
+
+**What the budget was accidentally doing, and what replaces it.** With the
+alarm-rate condition removed, a rule firing on every campaign night has perfect
+recall and a p-value of 1e-03, so it passes on the two remaining conditions
+while telling the recipient nothing they did not have from the calendar. The
+budget had been serving as an accidental proxy for "the firing must carry
+information". The lift floor states that directly, and states it at the *lower*
+bound of the precision interval rather than the point estimate, because with a
+dozen positive events a point lift moves by a factor on one night either way.
+On the measured scenarios: a rule firing on 57% of nights reaches a lower bound
+of 1.01 and fails; on 30% it reaches 1.92 and passes; on 14% it reaches 3.70.
+
+**What was lost, stated plainly rather than argued away.** Alarm fatigue as an
+attack surface is no longer refused by construction. An adversary able to
+induce firings can no longer be stopped by a rate condition; what remains is the
+poison check, the lift floor, and the recipient's own notification controls. The
+author considers this an acceptable trade because the removed control rested on
+an unmeasured number. This paragraph exists so that a future reader can weigh
+that trade rather than discover it.
+
+**Measured consequence, recorded rather than tuned.** On the adversarial
+synthetic history, `R1-border-active` now passes the gate at 2.52 alarms per
+week with a lift lower bound of 1.69. Through 0.7.x nothing passed. The margin
+over the floor is thin, and the history is synthetic, so this is a statement
+about the machinery and not about the world.
+
+**What would change this.** A measurement. If mute and unsubscribe rates are
+recorded once the channel exists and show that recipients disengage above some
+frequency, that frequency returns as a condition with a number behind it. The
+successor to T11 is that measurement rather than two conversations.
+
+
+## D-015. The tool reports a picture; it does not predict a crossing
+Date: 2026-08-09. Status: adopted
+
+**Decision.** The product is a real-time situational report about the threat
+picture on the Ukrainian side, with area resolution and distance to the Polish
+border. Predicting a crossing is out of scope, permanently, and no output may be
+phrased so that a reader can mistake one for the other.
+
+**Reasoning.** A crossing is the outcome of processes none of the available
+feeds observe: interception, where debris of an intercepted munition falls,
+navigation failure, and an adversary's choices minutes earlier. A predictor
+trained or tuned against roughly a dozen positive events would be fitting to
+noise generated by mechanisms it cannot see, which is the failure this project
+was founded on refusing. Reporting what is happening now, faster and more
+completely than anything else available to a private person, is both achievable
+and useful, and it is what the observation of 30 July showed to be missing: the
+whole episode lasted thirteen minutes.
+
+**What this changes, and it is more than wording.** The dozen crossings stop
+being the target variable, so T28 stops blocking and the corpus no longer needs
+to be long enough to contain them. The 57% base rate stops being the number to
+beat. The gate, with recall, lift and Fisher, applies to an alarm class alone,
+if one is ever built; the reporting tier is judged on correctness, latency and
+completeness, all measurable on the corpus in hand. Area resolution stops being
+a supporting gazetteer and becomes the core of the product (D-016).
+
+**What would change this.** Evidence that a specific, mechanically explicable
+precursor is observable in the feeds and precedes crossings, pre-registered and
+tested on data it did not generate. Not a correlation found by searching the
+same series.
+
+## D-016. Geocoding is a versioned file, not a service call
+Date: 2026-08-09. Status: adopted
+
+**Decision.** Area resolution uses the Ukrainian state administrative register
+(KATOTTH, successor to KOATUU) as a file in the repository, joined to centroids
+and boundaries from OpenStreetMap. Distance from each area to the Polish border
+is computed once, offline, and stored as a column. No geocoding API is called at
+runtime, by this or any other provider.
+
+**Reasoning.** A commercial geocoding API would produce the same numbers and
+would add three things this project refuses: a runtime dependency and an API key
+in the warning path, a rate limit on the one path where latency is the product,
+and a third party who learns which rajons a Polish user is asking about at three
+in the morning. A file has none of those, is auditable, is diffable, and works
+with the network down, which is the state the tool most needs to survive.
+
+**Practical shape.** The register gives the hierarchy hromada, rajon, oblast
+with stable codes, which is exactly the mapping the channel's wording needs
+(F23: the shipped table keyed on oblasts while the channel emits the smaller
+units). Distance to the border is a precomputed scalar per area, so a message
+becomes "Yavorivskyi rajon, Lviv oblast, 34 km" without a single network call.
+
+**What would change this.** Nothing about convenience. Only a demonstration
+that the register is unusable for the wording the channel actually emits, which
+is an empirical question the design window can answer.

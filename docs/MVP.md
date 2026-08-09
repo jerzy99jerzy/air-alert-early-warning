@@ -93,7 +93,7 @@ subscription route that does not require an Android phone and English.
 | A rule clearing the gate on the holdout | engineering, blocked on sprint 7 |
 | Measured alarm rate from shadow mode on real data | engineering, blocked on the daemon (`mavo watch`, phase M0) |
 | Legal position covering distribution to strangers | **decision** (T6, restated). Does not shrink by writing code, and is broader than the private-circle question originally asked |
-| Budget calibrated against more than two conversations | **access**. T11 measures a circle; a population needs a different method, and a public default calibrated on two answers is a guess at scale |
+| Disengagement measured rather than assumed | engineering (T29). D-014 removed the assumed budget; the replacement is an instrument, and a public tier shipped without one repeats the assumption at scale |
 | Delivery capacity: availability target and rate limit | engineering, and the first component here that would carry an availability target at all |
 | A subscription route that is not one Android app in English | engineering, **not yet scoped**. Named now so it is not discovered at the end |
 

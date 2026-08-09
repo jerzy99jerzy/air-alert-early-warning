@@ -263,3 +263,59 @@ adding it later invalidates every interval measurement taken before it, and
 those measurements are the evidence that would justify tightening the poll.
 **Acceptance:** the interval is drawn per cycle, the draw is recorded in the run
 log, and the recorded distribution over 72 hours matches the configured range.
+
+
+## T28. The crossing event list, dated and sourced
+Status: `deferred` (D-015). Was blocking while crossings were the target
+variable; the tool reports rather than predicts, so a scored recall against a
+crossing list is no longer on the critical path. The list stays worth building
+for retrospective validation of any future alarm class, and it stops holding
+anything up.
+`tools/threshold_sweep.py` measures what a threshold costs in alarms per week
+and is silent on what it catches, because nothing in this repository knows which
+nights carried a border crossing. The event list has lived in prose ("roughly a
+dozen over four years") since the beginning, which is enough to reason about
+sample size and not enough to score a rule.
+**Acceptance:** a committed file, one row per crossing, each with a date, a
+regime, and a named public source, plus an explicit statement of the coverage it
+claims and the period it covers. Rows whose regime is uncertain are marked
+uncertain rather than assigned, because a positive class of twelve cannot absorb
+a guess. Until this exists, no threshold sweep can produce a recall and no gate
+verdict on real data is possible.
+
+
+## T29. Measure disengagement instead of assuming it
+Status: `ready`
+D-014 removed the alarm budget because the number behind it was assumed. The
+honest replacement is not a better guess but a measurement: mute rate,
+unsubscribe rate, and time to first mute, recorded as first-class metrics beside
+recall and lead time from the first week the channel exists.
+**Acceptance:** the run log carries per-recipient delivery and disengagement
+events, and a report states the rate at which recipients stop listening against
+the frequency at which they were notified. If the rate turns out to be sharply
+frequency-dependent, a rate condition returns to the gate with a measured
+number attached, and D-014 is reopened on its own stated terms.
+
+
+## T31. KATOTTH as a versioned file
+Status: `ready`
+D-016. The Ukrainian state administrative register, successor to KOATUU, gives
+hromada, rajon and oblast with stable codes, which is the mapping F23 showed to
+be missing: the shipped table keyed on oblasts while the channel emits the
+smaller units.
+**Acceptance:** the register in the repository as data with its source, version
+and retrieval date recorded, a loader with no runtime dependency, and a measured
+hit rate of the register's names against the design window, reported as a number
+rather than an impression. A hit rate below what the channel actually emits is a
+finding about the register and is recorded as one.
+
+## T32. Distance from each area to the Polish border, precomputed
+Status: `ready`
+D-016. Distance is the field that turns an alert into a report a person can use,
+and it must be a stored column rather than a runtime call: no API key in the
+warning path, no rate limit where latency is the product, and no third party
+learning which rajons a Polish user asks about at three in the morning.
+**Acceptance:** one scalar per area, computed offline from OpenStreetMap
+geometry, with the method and the geometry version recorded. A spot check
+against a handful of known distances, verified by hand, before the column is
+trusted anywhere.

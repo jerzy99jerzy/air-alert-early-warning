@@ -21,9 +21,9 @@ from mavo.backfill import (
     contiguity_gaps,
     lowest_on_disk,
 )
-from mavo.errors import BudgetOverrun, SourceUnavailable
-from mavo.evaluate import plan_policy, run_policy, run_rule
-from mavo.policy import Regime, equal_split
+from mavo.errors import SourceUnavailable
+from mavo.evaluate import run_policy, run_rule
+from mavo.policy import Regime, policy_of
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
 from mavo.sources.fixture import FixtureSource, generate_history
 from mavo.sources.telegram import CHANNEL_URL, probe
@@ -61,7 +61,7 @@ CANDIDATE_REGIMES = [
     (Regime.DRONE, "CONJ-drone", drone_conjunction),
 ]
 
-DEFAULT_POLICY = equal_split(CANDIDATE_REGIMES, total=2.0)
+DEFAULT_POLICY = policy_of(CANDIDATE_REGIMES)
 
 
 def _cmd_policy(args: argparse.Namespace) -> int:
@@ -69,19 +69,7 @@ def _cmd_policy(args: argparse.Namespace) -> int:
     print(f"synthetic history: {len(nights)} nights, "
           f"{sum(1 for n in nights if n.had_crossing)} crossings")
     print("NOTE: synthetic input. This validates the split, not any hypothesis.\n")
-    if args.allocation == "demand":
-        try:
-            policy = plan_policy(CANDIDATE_REGIMES, nights, total_budget=2.0)
-        except BudgetOverrun as overrun:
-            # Not a crash. The allocator refusing is the answer: measured demand
-            # does not fit the recipient's attention, and the correct response is
-            # to demote a regime, not to raise the total.
-            print(f"[FAIL] allocation: {overrun}")
-            return 1
-    else:
-        policy = DEFAULT_POLICY
-    print(f"allocation: {args.allocation}")
-    print(run_policy(policy, nights).summary())
+    print(run_policy(DEFAULT_POLICY, nights).summary())
     return 0
 
 
@@ -205,11 +193,10 @@ def build_parser() -> argparse.ArgumentParser:
     gate_cmd.set_defaults(func=_cmd_gate)
 
     policy = subparsers.add_parser(
-        "policy", help="score the regime-split decision policy and its total budget"
+        "policy", help="score the regime-split decision policy"
     )
     policy.add_argument("--weeks", type=int, default=208)
     policy.add_argument("--seed", type=int, default=1968)
-    policy.add_argument("--allocation", choices=["equal", "demand"], default="equal")
     policy.set_defaults(func=_cmd_policy)
 
     fill = subparsers.add_parser(

@@ -16,6 +16,123 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.9.0.0 - 2026-08-09
+
+The thesis is restated. This is a scope change, not an edit.
+
+- **D-015. The tool reports a picture; it does not predict a crossing.** Whether
+  a munition crosses depends on what air defence brings down, where the debris
+  of an intercepted one falls, a drone losing its way, and an adversary's
+  choices minutes earlier. None of that is in any feed reachable from here, so a
+  predictor would be claiming to see what is not there. What is observable now
+  is the Ukrainian-side picture: areas under alert, intensity, named means, and
+  kilometres to the border. On 30 July the whole episode lasted thirteen
+  minutes, and nothing available to a private person filled the minutes before
+  it.
+- Consequences, each of which silently changed what other work is worth doing:
+  the dozen crossings stop being the target variable, so T28 is deferred and the
+  corpus no longer has to be long enough to contain them; the 57% base rate
+  stops being the number to beat; the gate applies to an alarm class alone, if
+  one is ever built, and the reporting tier is judged on correctness, latency
+  and completeness, all measurable on the corpus in hand.
+- **D-016. Geocoding is a versioned file, not a service call.** KATOTTH as data
+  in the repository, joined to OpenStreetMap geometry, with distance to the
+  Polish border precomputed as a column. A commercial API would give the same
+  numbers plus a key in the warning path, a rate limit where latency is the
+  product, and a third party learning which rajons a Polish user asks about at
+  three in the morning. T31 and T32 record the work; area resolution is now the
+  core of the product rather than a supporting gazetteer.
+- **F58. One corpus was sized for two different requirements.** Sized for
+  message variety, which it satisfies, then assumed to be the evidence base for
+  scoring a rule against crossings, for which 99 design nights give an expected
+  0.81 positives. The single crossing in the corpus period falls in the holdout.
+  It took a measurement to see: the threshold sweep produced a cost axis
+  immediately and then had nothing to say about recall, and the silence was the
+  finding.
+- **The measured block in `STATUS.json` is now partly recomputed.**
+  `candidate_rules_passing_gate` had read 0 for three releases after D-014 made
+  it 1, in the one block that states an outcome rather than a count. The audit
+  re-derives that field and the policy firing rate on every run; the rest of the
+  block stays a typed claim and the check says so rather than implying more.
+  The channel-volume figure now carries both the measurement (514/day over the
+  corpus) and the older single-window inference (650/day), labelled separately.
+
+## 0.8.1.0 - 2026-08-09
+
+- `tools/threshold_sweep.py` gains an hourly axis, because the nightly one
+  measured flat on the real corpus. Every night in the design window carries
+  more than 120 messages, at roughly 490 a night, so a per-night volume
+  threshold separates nothing: the channel is loud continuously. The new axes
+  take each night's busiest clock hour, filtered and unfiltered. The maximum
+  rather than the mean, because a night with one violent hour and eleven quiet
+  ones is the shape being looked for and a mean erases exactly that night.
+- The first real run also corrected a prediction made in this repository's own
+  planning: the area filter was expected to match nothing, on the strength of
+  F23's 0-of-20. It matched 1.05%, 510 messages of 48,540. The channel does
+  sometimes name an oblast, rarely, and a twenty-message sample was too small to
+  see it. The filtered sweeps now print with an explicit warning that at that
+  coverage they measure the nights on which the channel happened to name an
+  oblast, which is a different population from the nights of western activity.
+
+## 0.8.0.0 - 2026-08-09
+
+The attention budget is gone. A lift floor takes its place.
+
+- **D-014, superseding D-007 and D-008.** The two alarms per week limit is
+  removed: not a gate condition, not a constant, not an allocation refused at
+  construction. It encoded an assumption about how a recipient behaves at a
+  given notification frequency and nobody had measured it. Recipients who care
+  leave the tool on and moderate their own push settings; recipients who do not
+  will mute it. Modelling that from an armchair and hard-coding the model as a
+  refusal is the error this project refuses everywhere else.
+- **A lift floor replaces it, because removing the condition exposed what it was
+  accidentally doing.** With the rate ceiling gone, a rule firing on every
+  campaign night has perfect recall and p = 1e-03 and would pass while telling
+  the recipient nothing the date did not. The gate now requires the *lower bound*
+  of lift to clear 1.50, which states the requirement directly and states it
+  pessimistically, because a positive class of twelve moves a point estimate by a
+  factor on one night. Measured: 57% of nights gives 1.01 and fails, 30% gives
+  1.92, 14% gives 3.70.
+- **What was lost is written down rather than argued away.** Alarm fatigue as an
+  attack surface is no longer refused by construction. Harness attack A5 and
+  threat-model row MT5 are retired with their controls; A4 is rewritten against
+  the new floor and is mutation-verified in the slot the old condition held. The
+  trade is stated in D-014 and again in F57.
+- **Measured consequence, recorded rather than tuned.** On the adversarial
+  synthetic history `R1-border-active` now passes the gate at 2.52 alarms per
+  week with a lift lower bound of 1.69. Through 0.7.x nothing passed. The margin
+  over the floor is thin and the history is synthetic.
+- **F56: a defect entry was itself wrong.** F55 claimed `MAX_ALARMS_PER_WEEK`
+  did not exist in the package. It did, in `mavo/baserate.py`; the check that
+  found its absence imported it from `mavo.policy` and read one failed import as
+  a fact about the package, then replaced a correct citation with a different
+  one. Corrected in place with a pointer rather than deleted, because a log whose
+  entries can be wrong is only worth reading if the wrong ones are marked.
+- T29 records the honest replacement for the removed number: measure mute rate,
+  unsubscribe rate and time to first mute from the first week the channel exists.
+  If disengagement turns out to be sharply frequency-dependent, a rate condition
+  returns to the gate with a measurement behind it, on D-014's own stated terms.
+
+## 0.7.3.0 - 2026-08-09
+
+- `tools/threshold_sweep.py`. The scenario tables argued about feasibility from
+  assumed firing rates; this measures the real one. For each candidate
+  intensification threshold it reports nights above it, the share of all nights,
+  and the implied alarms per week, over the design window only. It refuses every
+  page above the boundary frozen in `STATUS.json` and prints how many it refused,
+  because a sweep that cannot prove it stayed inside the design window is not
+  evidence (D-012a). It writes nothing.
+- Two sweeps, because one of them works today and one does not. Volume needs no
+  classifier and is usable now. The area-filtered sweep prints its term coverage
+  on every run, and when coverage is zero it says so in words instead of
+  printing a table of zeros: that output is F23 reporting itself, not a property
+  of the nights, and a table of zeros would be a measurement of nothing.
+- The tool is silent on recall by construction and says so twice. It knows the
+  cost of a threshold and nothing about what the threshold catches, which is
+  half the gate. T28 records what is missing: a dated, sourced crossing list.
+  The positive class has lived in prose since the beginning, which is enough to
+  reason about sample size and not enough to score a rule.
+
 ## 0.7.2.0 - 2026-08-09
 
 - `docs/DEPLOYMENT.md`, a plan with open decisions marked as open. The daemon is

@@ -197,24 +197,51 @@ class GateVerdict:
         return f"[{verdict}] {self.rule_id}: " + "; ".join(self.reasons)
 
 
+def lift_lower_bound(table: Contingency) -> float | None:
+    """Lift computed from the *lower* bound of the precision interval.
+
+    Point lift answers "how much better than the calendar was this rule, on the
+    nights we happened to observe". With a positive class of about a dozen, that
+    estimate moves by a factor on one night either way, so the gate asks the
+    harder question: how much better than the calendar can we still claim if the
+    sample flattered us. The Wilson lower bound on precision, divided by the base
+    rate, is that number.
+
+    ``None`` when the rule never fired or no events were observed, because a lift
+    that cannot be computed is unknown and never 1.0.
+    """
+    fired = table.a + table.b
+    base = base_rate(table)
+    if fired == 0 or base is None or base == 0:
+        return None
+    interval = wilson_interval(table.a, fired)
+    if interval is None:
+        return None
+    return interval[0] / base
+
+
 MIN_RECALL = 0.9
-MAX_ALARMS_PER_WEEK = 2.0
+MIN_LIFT_LOWER_BOUND = 1.5
 MAX_P_VALUE = 0.05
 
 
-def gate(assessment: RuleAssessment, alarm_budget: float = MAX_ALARMS_PER_WEEK) -> GateVerdict:
+def gate(assessment: RuleAssessment) -> GateVerdict:
     """Decide whether a rule may drive a critical alarm.
 
-    Three conditions, and failing any one is decisive. Alarm rate is a hard
-    control rather than a quality metric: a rule that fires three times a week
-    trains its audience to ignore it, which is a failure mode an adversary can
-    induce deliberately.
+    Three conditions, and failing any one is decisive: the rule must catch the
+    events it exists for, it must beat the calendar with confidence, and the
+    association must not be attributable to chance.
 
-    ``alarm_budget`` is a parameter rather than a constant because the budget
-    belongs to the recipient, not to the rule. When several rules share one
-    recipient, each is gated against its allocated share and the sum is gated
-    separately. Two rules each cleared at the full budget produce twice the
-    budget, which is the arithmetic that destroys the channel.
+    **The alarm-rate condition was removed at 0.8.0.0** (D-014). It encoded an
+    assumption about how a recipient behaves at a given notification frequency,
+    and nobody had measured that. What it was accidentally doing, and what the
+    lift floor now does deliberately, is refusing a rule that fires so broadly
+    that its firing carries no information: on this data a rule firing every
+    campaign night has perfect recall and a significant p-value, and only a
+    statement about lift separates it from a calendar.
+
+    The alarm rate is still computed and still reported in the reasons. It is a
+    measurement, and it stopped being a verdict.
     """
     reasons: list[str] = []
     passes = True
@@ -228,20 +255,18 @@ def gate(assessment: RuleAssessment, alarm_budget: float = MAX_ALARMS_PER_WEEK) 
     else:
         reasons.append(f"recall {assessment.recall:.2f} meets floor")
 
-    if assessment.alarm_rate_per_week is None:
+    bound = lift_lower_bound(assessment.table)
+    if bound is None:
         passes = False
-        reasons.append("alarm rate unknown (no observation window)")
-    elif assessment.alarm_rate_per_week > alarm_budget:
+        reasons.append("lift unknown (the rule never fired, or no events were observed)")
+    elif bound < MIN_LIFT_LOWER_BOUND:
         passes = False
         reasons.append(
-            f"alarm rate {assessment.alarm_rate_per_week:.2f}/week exceeds "
-            f"{alarm_budget:.2f}/week; demote to observation tier"
+            f"lift lower bound {bound:.2f} below floor {MIN_LIFT_LOWER_BOUND}; "
+            "the firing is not distinguishable from a calendar"
         )
     else:
-        reasons.append(
-            f"alarm rate {assessment.alarm_rate_per_week:.2f}/week within "
-            f"budget {alarm_budget:.2f}/week"
-        )
+        reasons.append(f"lift lower bound {bound:.2f} meets floor")
 
     if assessment.p_value > MAX_P_VALUE:
         passes = False
@@ -250,5 +275,12 @@ def gate(assessment: RuleAssessment, alarm_budget: float = MAX_ALARMS_PER_WEEK) 
         )
     else:
         reasons.append(f"association p={assessment.p_value:.3f}")
+
+    if assessment.alarm_rate_per_week is None:
+        reasons.append("alarm rate unknown (no observation window)")
+    else:
+        reasons.append(
+            f"alarm rate {assessment.alarm_rate_per_week:.2f}/week [measured, not gated]"
+        )
 
     return GateVerdict(rule_id=assessment.rule_id, passes=passes, reasons=tuple(reasons))

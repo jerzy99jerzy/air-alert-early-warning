@@ -11,8 +11,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from mavo.baserate import Contingency, GateVerdict, RuleAssessment, assess_rule, gate
-from mavo.errors import BudgetOverrun
-from mavo.policy import DecisionPolicy, Regime, RegimeRule
+from mavo.policy import DecisionPolicy, Regime
 from mavo.rules import Rule
 from mavo.schema import Provenance
 from mavo.sources.fixture import Night
@@ -138,9 +137,10 @@ def run_regime(
 def run_policy(policy: DecisionPolicy, nights: Sequence[Night]) -> PolicyRun:
     """Score every regime rule on its own events, then the policy as a whole.
 
-    The combined line is the one that binds. A policy whose parts each clear
-    their share can still fail, and that is the point of computing it separately
-    rather than summing the parts.
+    The combined line is still computed separately rather than summed from the
+    parts. It bound differently before 0.8.0.0, when each part carried a share of
+    an attention budget; now it answers a plainer question, which is whether the
+    policy taken as one predicate beats the calendar (D-014).
     """
     per_regime: list[tuple[str, RuleRun, GateVerdict]] = []
     for regime_rule in policy.rules:
@@ -149,7 +149,7 @@ def run_policy(policy: DecisionPolicy, nights: Sequence[Night]) -> PolicyRun:
             (
                 f"{regime_rule.regime.value}/{regime_rule.rule_id}",
                 run,
-                gate(run.assessment, alarm_budget=regime_rule.alarm_budget_per_week),
+                gate(run.assessment),
             )
         )
 
@@ -172,47 +172,6 @@ def run_policy(policy: DecisionPolicy, nights: Sequence[Night]) -> PolicyRun:
     return PolicyRun(
         per_regime=tuple(per_regime),
         combined=combined,
-        combined_verdict=gate(combined.assessment, alarm_budget=policy.total_budget_per_week),
+        combined_verdict=gate(combined.assessment),
         unserved=tuple(sorted(unserved.items())),
-    )
-
-
-def plan_policy(
-    candidates: Sequence[tuple[Regime, str, Rule]],
-    nights: Sequence[Night],
-    total_budget: float = 2.0,
-    headroom: float = 1.25,
-) -> DecisionPolicy:
-    """Allocate the shared budget by measured demand rather than evenly.
-
-    An even split is arbitrary and the measurement shows it is wrong: the drone
-    regime needs roughly twice what the missile regime needs, and an even
-    allocation fails a regime the total can comfortably afford.
-
-    Reallocating inside a fixed total is legitimate; raising the total because a
-    regime does not fit is not, and this function refuses to do it. If measured
-    demand plus headroom exceeds the total, it raises rather than quietly
-    trimming, because a silent trim would produce a policy that passes its own
-    gate and overruns the recipient.
-    """
-    demands: list[tuple[Regime, str, Rule, float]] = []
-    for regime, rule_id, rule in candidates:
-        run = run_regime(rule_id, rule, nights, regime)
-        rate = run.assessment.alarm_rate_per_week
-        demands.append((regime, rule_id, rule, 0.0 if rate is None else rate * headroom))
-
-    requested = sum(demand for _, _, _, demand in demands)
-    if requested > total_budget:
-        raise BudgetOverrun(
-            f"measured demand {requested:.2f}/week exceeds the total budget "
-            f"{total_budget:.2f}/week; a regime must be demoted to the observation "
-            f"tier, not accommodated by raising the total"
-        )
-
-    return DecisionPolicy(
-        rules=tuple(
-            RegimeRule(regime=regime, rule_id=rule_id, rule=rule, alarm_budget_per_week=demand)
-            for regime, rule_id, rule, demand in demands
-        ),
-        total_budget_per_week=total_budget,
     )

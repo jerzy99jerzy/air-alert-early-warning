@@ -17,23 +17,6 @@ class MavoRefusal(Exception):
     code: str = "refusal.unspecified"
 
 
-class BudgetOverrun(MavoRefusal):
-    """Measured demand exceeds the recipient's total attention budget.
-
-    Raised instead of trimming a share to fit. A policy that passes its own gate
-    while overrunning the person it serves is worse than one that refuses to be
-    built.
-    """
-
-    code = "refusal.budget_overrun"
-
-
-class BudgetOverAllocated(MavoRefusal):
-    """Allocated shares sum to more than the total they divide."""
-
-    code = "refusal.budget_over_allocated"
-
-
 class UnknownScenario(MavoRefusal):
     """A fixture scenario was requested that the generator does not define.
 

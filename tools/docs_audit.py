@@ -117,6 +117,48 @@ def check_contents_anchors_resolve() -> list[str]:
     return problems
 
 
+def check_measured_block_is_recomputed(status: dict[str, object]) -> list[str]:
+    """Two fields in STATUS.json that are results, not counts, are re-derived.
+
+    `candidate_rules_passing_gate` sat at 0 for three releases after D-014 made
+    it 1, and nothing noticed: the badge checks cover counts of files and rows,
+    and this block is the one place the repository states an *outcome*. Same
+    class as F31, in the block a reader is most likely to quote.
+
+    Only the two fields that can be recomputed cheaply and deterministically are
+    checked here. The rest of the block stays a typed claim, which is stated so
+    the guarantee is not read as wider than it is.
+    """
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT))
+    from mavo.baserate import gate
+    from mavo.cli import DEFAULT_POLICY
+    from mavo.evaluate import run_policy, run_rule
+    from mavo.rules import CANDIDATE_RULES
+    from mavo.sources.fixture import generate_history
+
+    nights = generate_history(weeks=208)
+    passing = sum(
+        1 for rule_id, rule in CANDIDATE_RULES.items()
+        if gate(run_rule(rule_id, rule, nights).assessment).passes
+    )
+    rate = run_policy(DEFAULT_POLICY, nights).combined.assessment.alarm_rate_per_week
+    measured = status.get("measured", {})
+    assert isinstance(measured, dict)
+    problems: list[str] = []
+    if measured.get("candidate_rules_passing_gate") != passing:
+        problems.append(
+            f"candidate_rules_passing_gate recomputes to {passing}, "
+            f"STATUS.json states {measured.get('candidate_rules_passing_gate')}"
+        )
+    if rate is not None and abs(float(measured.get("policy_combined_alarms_per_week", -1)) - rate) > 0.005:
+        problems.append(
+            f"policy_combined_alarms_per_week recomputes to {rate:.2f}, "
+            f"STATUS.json states {measured.get('policy_combined_alarms_per_week')}"
+        )
+    return problems
+
+
 def check_statistics_match_the_tree(status: dict[str, object]) -> list[str]:
     """The size block in STATUS.json is recomputed, not remembered.
 
@@ -247,6 +289,7 @@ def main() -> int:
         + check_cited_tests_exist()
         + check_defect_count_is_pinned(status)
         + check_statistics_match_the_tree(status)
+        + check_measured_block_is_recomputed(status)
         + check_badges_match_the_pins(status)
         + check_contents_anchors_resolve()
     )

@@ -129,7 +129,7 @@ poll     : ok        412ms   bytes=98214 window=321498..321517
 parse    : ok          8ms   messages=20 parsed=0 unparsed=20 skipped=unknown
 store    : ok          3ms   appended=0 duplicates=0
 evaluate : ok          2ms   rules=2 fired=0
-policy   : ok          1ms   budget_remaining=2.00 ledger=untouched
+policy   : ok          1ms   rules=2 fired=0 ledger=untouched
 notify   : shadow      0ms   would_send=0
   uptime=71h12m cycles=4271 degraded=3 last_degraded=2026-08-09T04:11:52Z
   parsed_ratio=0.00 (F23 open, sprint 7)
@@ -159,7 +159,7 @@ poll     : refused     -     refusal.source_unavailable streak=3
 parse    : unknown     -     no body to parse
 store    : ok          1ms   appended=0 duplicates=0
 evaluate : unknown     -     inputs unknown, not empty
-policy   : ok          1ms   budget_remaining=2.00 ledger=untouched
+policy   : ok          1ms   rules=2 fired=0 ledger=untouched
 notify   : sent        7ms   class=degradation topic=mavo-degraded ledger=n/a
   the system is blind for lviv, volyn since 04:02:10Z
 ```
@@ -167,8 +167,8 @@ notify   : sent        7ms   class=degradation topic=mavo-degraded ledger=n/a
 Three things in that block are load-bearing. `parse` and `evaluate` print
 `unknown`, not `ok` with zeros, because there was no input rather than no
 events. `notify` fires on the **degradation** class, which is uncounted against
-the alarm budget, so blindness reports itself without spending the resource that
-warnings need. And the recap says *blind*, in those words, because a recap that
+any rate limit the recipient has set, so blindness reports itself through a
+channel the recipient can tune separately from alarms. And the recap says *blind*, in those words, because a recap that
 reads as calm during an outage has reconstructed unknown-resolves-to-clear one
 layer above the code that forbids it.
 
@@ -219,7 +219,7 @@ inputs is worse than no derivation.
 `--dry-run` performs no external write. Reads still happen, so a cycle can be
 inspected end to end without touching anything downstream. In this system the
 external writes are three, and all three are suppressed: the notification, the
-budget ledger row, and the raw snapshot under `--save-raw`.
+delivery ledger row, and the raw snapshot under `--save-raw`.
 
 The event store is deliberately **not** suppressed, and this is the one place
 the pattern is adapted rather than copied. The store is a local derived artifact
@@ -241,8 +241,8 @@ Written before the code. Each is a test, not an impression.
 - A stage that cannot measure emits `null` with a `*_reason`, and the renderer
   prints `unknown`. Asserted by a fixture whose parse report has no baseline: a
   rendering containing `skipped=0` fails the test.
-- A refused poll produces a degradation notification within one cycle and does
-  not decrement the alarm budget. Asserted against an injected notifier.
+- A refused poll produces a degradation notification within one cycle and is
+  not rendered as an alarm. Asserted against an injected notifier.
 - The sink contains no message text under default settings. A hostile fixture
   carrying a recognisable token in every message body must not produce that
   token anywhere in the log file.
@@ -260,7 +260,7 @@ events will produce a beautiful record of doing so, and the only defence against
 that is the same one as everywhere else here: the attacks in
 `tests/harness/`, and the fixture that is captured rather than imagined (F50).
 
-It does not replace the budget ledger. The ledger is the authoritative record of
+It does not replace the delivery ledger. The ledger is the authoritative record of
 what was sent; the sink is the observation stream. A log line carries the
 `ledger_id` so the two can be reconciled, and a notification on a phone with no
 matching ledger row is finding-grade rather than a display bug.

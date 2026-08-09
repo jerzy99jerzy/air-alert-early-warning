@@ -34,6 +34,9 @@ Note:      the defect log is the most useful document here for a new
 | --- | --- |
 | Every observed violation of Polish airspace coincided with a massed campaign against western Ukraine | measured, small sample |
 | Campaigns cover roughly 57% of days in the period | measured |
+| Per-night message volume does not separate nights: every design night carries more than 120 messages, at ~490/night | measured, 2427 pages, 48,540 messages, 99 nights |
+| Per-hour peak volume does separate: peak >= 60 on 24.2% of nights, >= 80 on 7.1%, >= 120 on none | measured, same run |
+| The channel names an oblast in 1.05% of messages (510 of 48,540) | measured, same run. F23's 0-of-20 was too small a sample to see it |
 | The tested candidate covariate is unrelated to attack timing | measured null, Rayleigh R = 0.013, p = 0.95 over 738 nights and 87,093 munitions. Directional test on the full series, not a subset |
 | Transit times of six and thirty-three minutes | inference, arithmetic on stated speeds and distances |
 | Any number printed by `mavo gate` or `mavo policy` | property of the generator, not of the world |
@@ -123,6 +126,9 @@ repository has come to the mistake it was built after.
 | [F53](#f53-0700-a-plan-declared-the-projects-purpose-out-of-scope) | 0.7.0.0 | A plan declared the project's purpose out of scope |
 | [F54](#f54-0700-an-access-blocker-outlived-the-access-problem) | 0.7.0.0 | An access blocker outlived the access problem |
 | [F55](#f55-0700-two-figures-in-the-documents-were-written-from-memory) | 0.7.0.0 | Two figures in the documents were written from memory |
+| [F56](#f56-0800-a-defect-entry-was-itself-wrong) | 0.8.0.0 | A defect entry was itself wrong |
+| [F57](#f57-0800-a-control-was-removed-and-the-log-says-so) | 0.8.0.0 | A control was removed, and the log says so |
+| [F58](#f58-0900-one-corpus-was-sized-for-two-different-requirements) | 0.9.0.0 | One corpus was sized for two different requirements |
 
 ## Defect log
 
@@ -735,8 +741,10 @@ as a scope change under that document's own amendment rule.
 
 ### F55, 0.7.0.0. Two figures in the documents were written from memory
 
-`docs/COMPUTATION.md` cited a constant `MAX_ALARMS_PER_WEEK = 2.0`. No such
-name exists in the package; the value lives on `DecisionPolicy.total_budget_per_week`.
+`docs/COMPUTATION.md` cited a constant `MAX_ALARMS_PER_WEEK = 2.0`. **This half
+of the entry was wrong and is corrected in F56.** The constant did exist, in
+`mavo/baserate.py`; the check that "found" its absence imported it from
+`mavo.policy` and treated one failed import as proof. The second half stands.
 `docs/MOBILE.md` described the channel as "measured at ~650 posts/day", which
 is an inference from a single 14.7-hour window, labelled as inference in both
 `docs/FOUNDATIONS.md` and this file. The corpus gives ~514/day as an actual
@@ -754,6 +762,85 @@ by stating the provenance inline at both sites. A cheap partial guard is
 available and not yet built: extracting backtick-quoted identifiers from the
 documents and failing when one does not appear in the package. It is recorded
 as T22 rather than claimed here.
+
+
+### F56, 0.8.0.0. A defect entry was itself wrong
+
+F55 recorded two figures written from memory. One of them was not: it claimed
+`MAX_ALARMS_PER_WEEK` did not exist in the package. It did, in
+`mavo/baserate.py`, and the original sentence in `docs/COMPUTATION.md` was
+correct. The check that produced the finding imported the name from
+`mavo.policy`, got an `ImportError`, and concluded absence from a single failed
+lookup in one module. The "correction" then replaced a true citation with a
+different one.
+
+Why it matters more than the error it claimed: a defect log is only worth
+reading if its entries are true. A false entry costs more than the defect it
+describes, because it spends the credibility that makes the rest of the log
+useful, and it does so silently.
+
+Class: **absence inferred from one place looked.** The same shape as F44, where
+a probe's negative result was indistinguishable from its positive one; here a
+failed import in one module was read as a fact about the package. Repaired by
+correcting F55 in place with a pointer rather than deleting it, restoring the
+citation, and by T22, which would have caught the original claim and this one:
+a check that verifies backticked identifiers against the whole package cannot be
+fooled by looking in the wrong module.
+
+### F57, 0.8.0.0. A control was removed, and the log says so
+
+Not a defect. Recorded here because the log is the place where this repository
+writes down things that weaken it, and a control leaving the tree qualifies
+whether or not the reasoning for removing it is sound.
+
+The alarm-rate condition, the shared budget, the construction-time
+over-allocation refusal, harness attack A5 and threat-model row MT5 were all
+removed at 0.8.0.0 on the operator's decision (D-014). The reasoning is in the
+decision and is not repeated here. What belongs in this file is the shape of the
+change: **a hard control was replaced by a different hard control, not by
+nothing.** The gate still has three conditions, and the new one, a floor on the
+lower bound of lift, is mutation-verified by the same attack slot the old one
+occupied.
+
+What genuinely left the tree without a replacement is the refusal of alarm
+fatigue as an attack surface. An adversary able to induce firings is now bounded
+by the poison check and the lift floor, not by a rate. The author judged the
+trade acceptable because the removed control rested on a number nobody had
+measured. This paragraph exists so that judgement can be re-examined rather than
+rediscovered.
+
+Measured consequence, recorded rather than tuned: on the adversarial synthetic
+history `R1-border-active` now passes the gate, at 2.52 alarms per week with a
+lift lower bound of 1.69 against a floor of 1.50. Through 0.7.x nothing passed.
+The margin is thin and the history is synthetic.
+
+
+### F58, 0.9.0.0. One corpus was sized for two different requirements
+
+The corpus was sized to give the classifier redesign enough real message variety
+and it does: 60,680 messages over 118 days, of which 48,540 in the design
+window. It was then assumed to be the evidence base for scoring a rule against
+crossings, and for that it is far too short. Ninety-nine design nights against
+roughly twelve crossings in four years gives an expected count of **0.81**. The
+one crossing in the corpus period, 30 July 2026, falls in the holdout rather
+than the design window.
+
+Nobody wrote the second requirement down, so nobody noticed it was unmet. Both
+requirements are legitimate and they size a corpus by different arithmetic: one
+by message variety, the other by positive-event count, and the second needs
+roughly fifteen times the span.
+
+Why it surfaced only now: it took a measurement to see it. The threshold sweep
+produced a usable cost axis immediately and then had nothing to say about
+recall, and that silence was the finding. Reasoning about the corpus without
+running anything had not exposed it in three releases.
+
+Class: **one artifact serving two unstated requirements.** Repaired by stating
+both: the corpus is sized for classification, and rule scoring against crossings
+is deferred by D-015 rather than served by a longer retrieval. Had the thesis
+stayed predictive, the repair would have been about 37,500 pages and ten hours
+of paging, which is the number recorded here so that a future reader restoring
+the predictive framing knows its price.
 
 ## Corpus measurements, 2026-08-09
 

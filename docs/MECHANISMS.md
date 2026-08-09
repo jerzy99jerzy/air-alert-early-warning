@@ -23,7 +23,7 @@ Note:      every constant quoted here was read out of the code. Where a
 4. [The Wilson interval](#4-the-wilson-interval)
 5. [The three gate conditions](#5-the-three-gate-conditions)
 6. [Two timing regimes](#6-two-timing-regimes)
-7. [The shared alarm budget](#7-the-shared-alarm-budget)
+7. [The lift floor, and the budget it replaced](#7-the-lift-floor-and-the-budget-it-replaced)
 8. [Demand allocation, which refuses rather than trims](#8-demand-allocation-which-refuses-rather-than-trims)
 9. [Coverage gaps](#9-coverage-gaps)
 10. [Poison suppression](#10-poison-suppression)
@@ -79,7 +79,7 @@ on alarm rate first, because a rule can be genuinely informative, with a lift of
 different properties, and the gate is about the second.
 
 **Rejected alternative:** gating on lift. It would let a rule buy its way past
-the alarm budget by being interesting, which is exactly the trade the budget
+the gate by being interesting, which is exactly the trade the lift floor
 exists to refuse.
 
 ---
@@ -129,7 +129,7 @@ because a precision of 0.31 from 29 observations and a precision of 0.31 from
 | Condition | Constant | Floor | Character |
 | --- | --- | --- | --- |
 | Recall | `MIN_RECALL` | 0.90 | A warning system that misses the event has no purpose |
-| Alarm rate | `MAX_ALARMS_PER_WEEK` | 2.00, shared | A control, not a metric. See section 7 |
+| Lift, lower bound | `MIN_LIFT_LOWER_BOUND` | 1.50 | A control, not a metric. See section 7 |
 | Association | `MAX_P_VALUE` | 0.05 | Distinguishes the rule from the calendar |
 
 **Any failure is decisive.** There is no weighted score, no composite index, and
@@ -171,41 +171,43 @@ number that described neither.
 
 ---
 
-## 7. The shared alarm budget
+## 7. The lift floor, and the budget it replaced
 
-**Where:** `DecisionPolicy.__post_init__` in `mavo/policy.py`, raising
-`BudgetOverAllocated`.
+**Where:** `lift_lower_bound` and `gate` in `mavo/baserate.py`.
 
-**The load-bearing sentence: the alarm budget belongs to the recipient, not to
-the rule.** Two rules each cleared at two alarms per week produce four, which is
-the number that destroys the channel. So a regime rule is gated against its own
-share and the policy as a whole against the total, and construction refuses when
-the shares exceed the total.
+**The load-bearing sentence: a rule must beat the calendar with confidence, not
+merely fire rarely.** Through 0.7.x this slot held a ceiling of two alarms per
+week, on the reasoning that a noisier channel trains its recipient to ignore it
+and that an adversary can induce that at no cost. The reasoning is still
+readable in D-007 and D-008; what it lacked was a measurement, and D-014 removed
+it on those grounds.
 
-**Why a refusal at construction rather than a check at evaluation:** an
-over-allocated policy that exists is an over-allocated policy that will
-eventually be run. Making it unconstructible removes the window entirely.
+What the ceiling was accidentally enforcing is that the firing must carry
+information. Removing it exposes the gap immediately: a rule firing on every
+campaign night has perfect recall and a p-value of 1e-03, and would pass. The
+floor on the lower bound of lift closes that gap by stating the requirement
+directly, and states it pessimistically because a positive class of twelve moves
+a point estimate by a factor on one night.
 
-**What this defends against:** MT4, attention exhaustion. An adversary who can
-induce sub-threshold conditions exhausts the audience's attention at no cost, and
-the exhaustion outlasts the campaign. The budget is the only control against it,
-which is why the gate treats alarm rate as a hard condition rather than a quality
-score.
+**Rejected alternative: a floor on point lift.** Simpler, and wrong in the
+direction that matters. A rule whose point lift is 2.0 with a lower bound of 0.9
+has not been shown to beat the calendar at all, and at this sample size that
+combination is ordinary rather than exotic.
 
-**This assumption is contested and the challenge is recorded** in
-`FOUNDATIONS.md` A3. The likely refinement is that the budget governs episodes
-rather than individual messages, since updates inside an already-open episode do
-not compete for attention the way a new interruption does.
+**Rejected alternative: keeping the rate ceiling alongside the lift floor.**
+Defensible, and it would have kept a control this project values. It was
+rejected because the number remained unmeasured, and a hard constraint resting
+on an unmeasured number is the pattern the whole repository exists to refuse.
+The cost is written into D-014 rather than argued away here.
 
-**Guarded by:** harness A5, mutation-verified.
-
----
+**Guarded by:** harness A4 (MT4), mutation-verified. Weakening the floor turns
+A4 red.
 
 ## 8. Demand allocation, which refuses rather than trims
 
 **Where:** `plan_policy` in `mavo/evaluate.py`, `mavo policy --allocation demand`.
 
-Equal split gives each regime half the budget regardless of how often it fires.
+Equal split gave each regime half the attention budget regardless of how often it fired. Recorded as history: the budget it divided was removed at 0.8.0.0 (D-014).
 Demand allocation measures what each regime actually needs, adds 25% headroom,
 and then either fits inside the total or **refuses**.
 
@@ -251,7 +253,7 @@ trips.
 **Rejected alternative:** a scoring penalty making a poisoned night less likely
 to fire. A penalty is a soft control, and the attack it defends against is free:
 an adversary who can induce alarms exhausts attention at no cost and disables the
-system for as long as the audience stays tired. A free attack gets a hard
+system for as long as the flood lasts. A free attack gets a hard
 control.
 
 **Where the numbers come from:** they are thresholds chosen to be obviously
@@ -544,7 +546,7 @@ catch a Python exception:
 | Code | Meaning |
 | --- | --- |
 | 0 | Ran, and the result is what it says |
-| 1 | A designed refusal, such as demand exceeding the budget |
+| 1 | A designed refusal, such as an unreachable source or a naive timestamp |
 | 3 | The source was unreachable |
 | 4 | A snapshot could not be written |
 | 5 | The corpus on disk has holes |

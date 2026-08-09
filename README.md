@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 165](https://img.shields.io/badge/tests-165-brightgreen)](tests/)
-[![coverage 96.97%](https://img.shields.io/badge/coverage-96.97%25-brightgreen)](Makefile)
-[![harness 12 attacks, 11 mutation-verified](https://img.shields.io/badge/harness-12%20attacks%2C%2011%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 38](https://img.shields.io/badge/defects%20logged-38-informational)](docs/METHODOLOGY.md)
+[![tests 147](https://img.shields.io/badge/tests-147-brightgreen)](tests/)
+[![coverage 96.74%](https://img.shields.io/badge/coverage-96.74%25-brightgreen)](Makefile)
+[![harness 11 attacks, 10 mutation-verified](https://img.shields.io/badge/harness-11%20attacks%2C%2010%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
+[![defects logged 41](https://img.shields.io/badge/defects%20logged-41-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -45,15 +45,29 @@ was 321,498 posts on 2026-08-09.
 
 ## The thesis
 
-Every violation of Polish airspace in the observed period coincided with a night
-of massed Russian strikes on western Ukraine. That sounds like a warning signal
-and is almost not one, because those campaigns cover roughly 57% of days. A rule
-with perfect recall and a 57% firing rate is a calendar, not a detector.
+**MAVO reports a threat picture in real time. It does not predict what will
+cross into Poland.**
 
-The only available leverage is resolution: hour instead of night, border oblast
-instead of country, classified means instead of a binary event. Whether that is
-enough is an empirical question this repository is built to answer honestly,
-including the answer *no*.
+Whether a munition crosses depends on Ukrainian air defence, on where the debris
+of an intercepted one lands, on a drone losing its way, and on an adversary's
+decisions minutes earlier. None of that is in any feed this project can reach,
+and no amount of history makes it so. What is observable at the moment it
+happens is the picture on the Ukrainian side: which areas are under alert, how
+intense the activity is right now, what means the channel names, and how far the
+nearest alerted area is from the Polish border.
+
+That distinction is the whole design. It is why the tool resolves rajons and
+hromadas down to kilometres from the border rather than scoring a binary
+prediction, and why the statistical gate applies only to an alarm class that
+does not yet exist. The reporting tier is judged on correctness, latency and
+completeness.
+
+The observation that started the project stands and is now background rather
+than thesis: every violation of Polish airspace in the observed period
+coincided with a night of massed strikes on western Ukraine, and those campaigns
+cover roughly 57% of days, which is why a prediction built on them would be a
+calendar. Restated at 0.9.0.0; the earlier predictive framing is recorded in
+D-015 rather than overwritten.
 
 ## What this will not tell you
 
@@ -101,7 +115,7 @@ mavo fixture --out data/raw/fixture.sqlite --weeks 52
 # score every candidate rule against the base rate
 mavo gate --weeks 208
 
-# score the regime-split policy against the shared attention budget
+# score the regime-split decision policy
 mavo policy --weeks 208
 mavo policy --weeks 208 --allocation demand
 ```
@@ -149,7 +163,7 @@ one is decisive.
 | Condition | Floor | Why it is there |
 | --- | --- | --- |
 | Recall | at least 0.90 | A warning system that misses the event has no purpose |
-| Alarm rate | at most 2.00 per week, shared | Above this the audience learns to ignore it, and an adversary can induce that deliberately at no cost. The budget belongs to the recipient, so several rules divide one total rather than each getting their own |
+| Lift, lower bound | at least 1.50 | A rule must beat the base rate at the lower bound of its precision interval, not at the point estimate. With about a dozen positive events the point moves by a factor on one night, and a rule that cannot beat the calendar with confidence is a calendar |
 | Association | Fisher one-sided p at most 0.05 | Distinguishes the rule from the calendar |
 
 Alarm rate is a hard control rather than a quality metric. That is the design
@@ -162,19 +176,19 @@ a failure. Sprint 3 probed what the average hid: **7 of 7 on missile nights, 0 o
 8 on drone nights.** The rule was not mediocre. It was perfect at one job and
 blind to another, and one global threshold cannot express that.
 
-Splitting the decision into two regimes, each with its own share of one shared
-alarm budget, produces three configurations and no clean winner:
+Splitting the decision into two regimes produces two shippable configurations:
 
-| Configuration | Recall (served scope) | Alarms/week | Headroom | Coverage gap |
-| --- | --- | --- | --- | --- |
-| Missile + drone, even split | 1.00 | 1.96 of 2.00 | 2% | none, but the drone regime overruns its 1.00 share at 1.34 |
-| Missile + drone, demand + 25% headroom | not built | 2.46 requested | refused | allocator declines rather than trimming |
-| Missile only | 1.00 | 0.63 of 2.00 | 69% | 8 drone crossings served by no regime |
+| Configuration | Recall (served scope) | Alarms/week | Coverage gap |
+| --- | --- | --- | --- |
+| Missile + drone | 1.00 | 1.96 | none |
+| Missile only | 1.00 | 0.63 | 8 drone crossings served by no regime |
 
-The trade is real and is not resolved by tuning. Two regimes recover full recall
-but consume the recipient's entire attention budget with a 2% margin, so a
-busier month breaks the policy. One regime is comfortable and leaves drone
-crossings unwarned.
+Through 0.7.x the choice between them was decided by an attention budget, and
+the two-regime configuration was the one that barely fit it. With the budget
+removed (D-014) the alarms-per-week column is a measurement rather than a
+verdict, and the trade that remains is the one that was always the real one: the
+drone rule buys its recall from a signal that does not distinguish a drone night
+ending in a crossing from one that does not.
 
 The shippable shape is therefore missile in the alarm tier, drone demoted to the
 observation tier, and the gap declared rather than hidden. Closing it needs a
@@ -190,7 +204,7 @@ mavo/
   store.py         append-only log; any past moment is reconstructible
   baserate.py      the null model; top-level because it is the point
   rules.py         candidate rules as explicit predicates
-  policy.py        regime split and the shared alarm budget
+  policy.py        regime split, one rule per timing regime
   evaluate.py      scoring against ground truth; shared with the future shadow mode
   errors.py        the refusal taxonomy; there is no warning type in this codebase
   transport.py     the only file that reaches the network
@@ -236,10 +250,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 14 | 2,293 |
-| Tests | 25 | 2,366 |
-| Tools | 3 | 573 |
-| Documentation | 28 | 7,429 |
+| Package `mavo/` | 14 | 2,248 |
+| Tests | 25 | 2,237 |
+| Tools | 4 | 861 |
+| Documentation | 28 | 7,894 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -250,13 +264,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 165, of which 12 are scripted attacks |
-| Coverage | 96.97% against a floor of 95, a ratchet that is never lowered |
-| Mutation-verified controls | 11 of 12 attacks; the twelfth is printed as unverified on every run |
+| Tests | 147, of which 11 are scripted attacks |
+| Coverage | 96.74% against a floor of 95, a ratchet that is never lowered |
+| Mutation-verified controls | 10 of 11 attacks; the eleventh is printed as unverified on every run |
 | Threat-model rows | 13, each with a control or a named acceptance |
-| Defects logged with their class | 38, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 14 |
-| Releases | 19, of which 8 carry tags |
+| Defects logged with their class | 41, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 17 |
+| Releases | 23, of which 12 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 
 ## Documentation
@@ -299,17 +313,18 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: 165 tests passing, of which 12 are harness attacks.
-  Coverage 96.97% against a floor of 95. The floor stays a ratchet under T9:
+- `make verify` green: 147 tests passing, of which 11 are harness attacks.
+  Coverage 96.74% against a floor of 95. The floor stays a ratchet under T9:
   the rise is below the five-point threshold that moves it. The old caveat
   stands in kind:
   `transport.py` carries the one genuinely network-bound function, and it drags
   the total toward the floor. Whether to exclude it from the measurement is an
   open decision recorded in the 0.3.2.0 review, not something to resolve by
   quietly moving either number.
-- Every candidate rule fails the gate individually. The two-regime policy passes
-  at 1.96 alarms per week against a budget of 2.00, which is a 2% margin and not
-  a comfortable one.
+- On the adversarial synthetic history one candidate rule passes the gate,
+  `R1-border-active`, with a lift lower bound of 1.69 against a floor of 1.50.
+  The margin is thin, one night either way moves it, and synthetic history says
+  nothing about the world.
 - The classifier hit rate on real channel content is **0 of 20**, pinned as
   assertions so it cannot be fixed quietly. See F23 in `docs/METHODOLOGY.md`.
 - The harness is mutation-verified as of 0.4.0.0, after slipping twice. Ten

@@ -15,9 +15,8 @@ from pathlib import Path
 import pytest
 
 from mavo.baserate import Contingency, assess_rule, gate
-from mavo.errors import BudgetOverAllocated
 from mavo.evaluate import run_policy
-from mavo.policy import DecisionPolicy, Regime, RegimeRule, equal_split
+from mavo.policy import Regime, policy_of
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
 from mavo.schema import AlertState, ThreatEvent, ThreatKind, is_clear
 from mavo.sources.fixture import FixtureSource, build_night, generate_history
@@ -47,40 +46,40 @@ def test_a3_one_fabricated_alert_cannot_raise_an_alarm() -> None:
     assert conjunction(build_night(T0, "border-only", random.Random(1))) is None
 
 
-def test_a4_perfect_recall_does_not_buy_past_the_alarm_budget() -> None:
-    """MT4. Attention exhaustion is refused even by a rule that never misses.
+def test_a4_perfect_recall_does_not_buy_past_the_lift_floor() -> None:
+    """MT4. A rule that fires on nearly everything cannot pass by never missing.
 
-    F38. The earlier table failed the gate on association as well as on alarm
-    rate, and the assertion looked for the substring "alarm rate", which the
-    *passing* reason also contains. Both halves were satisfiable with the alarm
-    budget disabled. The table now clears recall and association, so alarm rate
-    is the only condition left to fail, and the assertion names the failure.
+    F38, in its original form: the earlier table failed on association as well
+    as on the gated condition, and the assertion looked for a substring the
+    *passing* reason also contained, so both halves were satisfiable with the
+    control disabled. The table below clears recall and association, leaving the
+    lift floor as the only condition able to fail, and the assertion names it.
+
+    Rewritten at 0.8.0.0 (D-014). The gated condition used to be the alarm rate;
+    it is now the lower bound on lift. The attack is the same attack, because
+    what it always tested was whether a rule can buy an alarm by firing broadly
+    enough to be right eventually.
     """
+    # A calendar: 12 events over 1460 windows, firing on 57% of them and
+    # catching all of them. Recall is perfect, the association is significant,
+    # and the firing still tells the recipient nothing they did not have from
+    # the date. The old table used here fired often *and* carried information,
+    # so under the lift floor it passes, correctly: firing often is no longer
+    # the offence. Firing uninformatively is.
     assessment = assess_rule(
-        "exhauster", Contingency(a=20, b=200, c=0, d=800), observation_weeks=100
+        "calendar", Contingency(a=12, b=820, c=0, d=628), observation_weeks=208
     )
     verdict = gate(assessment)
     assert assessment.recall == 1.0
     assert assessment.p_value < 0.05, "the table must clear association, or this proves nothing"
     assert verdict.passes is False
-    assert any("exceeds" in reason for reason in verdict.reasons)
-
-
-def test_a5_budget_cannot_be_spent_twice() -> None:
-    """MT5. Two regimes cannot each hold the whole of a shared budget."""
-    with pytest.raises(BudgetOverAllocated):
-        DecisionPolicy(
-            rules=(
-                RegimeRule(Regime.MISSILE, "a", conjunction, 2.0),
-                RegimeRule(Regime.DRONE, "b", drone_conjunction, 2.0),
-            ),
-            total_budget_per_week=2.0,
-        )
+    assert any("lift lower bound" in reason and "below floor" in reason
+               for reason in verdict.reasons)
 
 
 def test_a6_a_partial_policy_cannot_read_as_complete() -> None:
     """MT6. An unserved crossing kind is counted and printed, never absorbed."""
-    run = run_policy(equal_split([MISSILE]), generate_history(weeks=208))
+    run = run_policy(policy_of([MISSILE]), generate_history(weeks=208))
     assert run.combined.assessment.recall == 1.0
     assert run.has_coverage_gap is True
     assert "COVERAGE GAP" in run.summary()

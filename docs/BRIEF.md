@@ -21,7 +21,7 @@ Note:      no term is used here before it is explained. Where this document
 2. [The observation, and why it is not enough](#2-the-observation-and-why-it-is-not-enough)
 3. [Why 57 percent ruins everything](#3-why-57-percent-ruins-everything)
 4. [What the system says, and what it refuses to say](#4-what-the-system-says-and-what-it-refuses-to-say)
-5. [Attention is the scarce resource](#5-attention-is-the-scarce-resource)
+5. [What separates a detector from a calendar](#5-what-separates-a-detector-from-a-calendar)
 6. [The three rules the whole design obeys](#6-the-three-rules-the-whole-design-obeys)
 7. [The null result this project was built around](#7-the-null-result-this-project-was-built-around)
 8. [Two real defects, told plainly](#8-two-real-defects-told-plainly)
@@ -35,16 +35,24 @@ Note:      no term is used here before it is explained. Where this document
 
 ## 1. The one-paragraph version
 
-Ukraine publishes air-raid alerts. When Russian strikes run west, close to the
-Polish border, the risk of something crossing into Polish airspace goes up.
-Those alerts are public and arrive in near real time, so in principle a Polish
-resident could learn something from them minutes before any official channel
-speaks. This project tests whether that "in principle" survives contact with
-arithmetic. It is not an app that shows Ukrainian alerts, of which there are
-several good ones. It is an attempt to answer a harder question: *does knowing
-about the alerts actually tell you anything you did not already know*, and if
-the honest answer is no, to say no rather than ship a red icon that feels
-informative.
+Ukraine publishes air-raid alerts, publicly and within seconds. This project
+turns that stream into a picture a person on the Polish side can actually use:
+which areas are under alert right now, how intense it is, what is being flown,
+and how many kilometres the nearest alerted area is from the border.
+
+It does **not** predict what will cross into Poland, and that is a deliberate
+refusal rather than a missing feature. Whether a munition crosses depends on
+what Ukrainian air defence brings down, where the debris of an intercepted one
+falls, whether a drone loses its way, and on decisions made by an adversary
+minutes earlier. None of that is visible in any public feed, so a tool
+predicting crossings would be claiming to see something that is not there.
+
+What it does instead is worth more than a bad prediction: on 30 July 2026 a
+Russian cruise missile came down in Lubelskie, and the entire episode, from
+detection to impact, lasted thirteen minutes. Nothing available to a private
+person filled the minutes before that. A live picture of the Ukrainian side does
+not tell you to take cover, and it does tell you that tonight is not an ordinary
+night.
 
 ---
 
@@ -98,11 +106,11 @@ anyone up until it survives that attempt.
 
 ## 4. What the system says, and what it refuses to say
 
-What it can say, if a rule survives:
+What it can say:
 
-> Rule R3 fired at 23:41. Historically, on nights when this rule fired, a
-> crossing followed in X of Y cases, the pattern would not appear this often by
-> chance (p = 0.03), and the median warning time bought was about six minutes.
+> 23:41. Alert active in 7 areas of Lviv and Volyn oblast. Nearest: Yavorivskyi
+> rajon, 34 km from the border. The channel names cruise missiles. Activity in
+> the last hour is above anything in the past thirty days.
 
 What it will never say:
 
@@ -121,33 +129,32 @@ reader can take from this document.
 
 ---
 
-## 5. Attention is the scarce resource
+## 5. What separates a detector from a calendar
 
-Most systems of this kind treat computing time or data volume as the limited
-resource. Here the limited resource is a person's willingness to keep looking
-at their phone.
+Suppose a rule fires on every night of heavy attacks. It catches every crossing,
+so it never misses, and the connection is statistically solid. It is also
+useless, and seeing why is the whole game.
 
-The system therefore has a hard budget: **two alarms per week, total**, across
-everything it monitors. Not two per rule. Two, shared, allocated between
-categories of threat by measured demand. If two proposed rules each want two
-alarms per week, construction of the policy fails loudly at build time rather
-than quietly sending four.
+More than half of all nights are heavy-attack nights. A rule that fires on all
+of them has told you what a calendar would have: it is nearly always on. The
+technical name for the trap is the **base rate**, and the measure of escaping it
+is **lift**: how much the rule's firing changes the odds compared to knowing
+nothing. Lift of 1.0 means it changed nothing.
 
-Three consequences that follow from taking the budget seriously:
+So the system's second admission test is a floor on lift, and specifically on
+the *pessimistic end* of the lift estimate. With about a dozen real events to
+learn from, a favourable estimate can be produced by one lucky night, so the
+question asked is not "how good does this look" but "how good can we still claim
+it is if the sample flattered us". A rule firing on more than half of all nights
+fails that test. A rule firing on one night in seven passes it comfortably.
 
-- A rule that is accurate but chatty gets rejected. Accuracy is not the top
-  criterion, since attention is what runs out first.
-- Alarm fatigue becomes a security concern, not a design nicety. Anyone able to
-  provoke extra firings could exhaust the budget deliberately, so that a real
-  alarm arrives to someone who has stopped reading. Designing against that is
-  the same work as designing against a hostile feed.
-- The budget number itself is currently **a guess**, and it is labelled as one
-  everywhere it appears. Nobody in the intended circle of recipients has yet
-  been asked "at what rate of messages would you stop reading these?" Until
-  two people answer that question, every calculation downstream inherits the
-  guess. This is tracked as an open item, not glossed over.
-
----
+Until August 2026 this test was something else: a ceiling of two alarms per week,
+on the theory that a noisier channel trains people to ignore it. The theory is
+reasonable and nobody had measured it, and this project's standing rule is that
+an unmeasured assumption does not get to be a hard constraint. It was replaced
+with the lift floor, which says the same thing where it is actually true: the
+problem was never how often a warning arrives, it was warnings that carry no
+information. What the change costs is written down in the decision that made it.
 
 ## 6. The three rules the whole design obeys
 

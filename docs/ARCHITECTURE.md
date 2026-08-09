@@ -53,7 +53,7 @@ flowchart TD
     STORE --> REPLAY["replay<br/>same code as live"]
     REPLAY --> RULES["rules.py<br/>R1 R2 R3 R4 and two conjunctions"]
     RULES --> SUPPRESS["poison suppression<br/>broad simultaneous activation"]
-    SUPPRESS --> POLICY["policy.py<br/>regime split, one shared alarm budget"]
+    SUPPRESS --> POLICY["policy.py<br/>regime split, one rule per regime"]
     POLICY --> BASE["baserate.py<br/>contingency, Fisher, Wilson, lift"]
     BASE --> GATE["gate<br/>recall, alarm rate, association"]
     GATE --> OBS["observation tier<br/>ambient, silent, NOT BUILT"]
@@ -86,7 +86,7 @@ Maintained as a table so that a rename leaves a visibly stale row.
 | replay | `mavo/store.py` | Reconstructs any past moment. The backtest and the live correlator run this same path |
 | rules | `mavo/rules.py` | Explicit predicates returning the moment they fire, which is what makes lead time measurable. R1 to R4 plus the missile and drone conjunctions |
 | poison suppression | `mavo/rules.py` | Hard control against a source claiming implausibly broad simultaneous activation |
-| decision policy | `mavo/policy.py` | Binds one rule per timing regime to a share of one shared alarm budget, and refuses rather than trimming when demand exceeds it |
+| decision policy | `mavo/policy.py` | Binds one rule per timing regime. The shared attention budget it used to allocate was removed at 0.8.0.0 (D-014) |
 | evaluation | `mavo/evaluate.py` | Scores rules and policies against ground truth, and counts the crossing kinds no regime serves |
 | base rate | `mavo/baserate.py` | The null model. Contingency table, one-sided Fisher, Wilson interval, lift against the unconditional rate |
 | gate | `mavo/baserate.py` | Three conditions, any failure decisive. Alarm rate is a control, not a metric |
@@ -121,8 +121,8 @@ each release.
 
 ### `mavo/errors.py` (50 lines)
 
-**Owns** the refusal taxonomy. `SourceUnavailable`, `BudgetOverAllocated`,
-`BudgetOverrun`. **There is no warning type**, and adding one is a change this
+**Owns** the refusal taxonomy. `SourceUnavailable`, `NaiveTimestamp`,
+`UnknownScenario`. The two budget refusals left with the budget (D-014). **There is no warning type**, and adding one is a change this
 repository rejects rather than reviews.
 
 **Invariant:** `SourceUnavailable` is raised for reachability only. A content
@@ -171,7 +171,7 @@ That signature is what makes lead time measurable.
 
 ### `mavo/policy.py` (107 lines)
 
-**Owns** the regime split and the shared budget. `Regime`, `RegimeRule`,
+**Owns** the regime split. `Regime`, `RegimeRule`,
 `DecisionPolicy`, `equal_split`.
 
 **Invariant:** `DecisionPolicy` refuses construction when allocated shares exceed

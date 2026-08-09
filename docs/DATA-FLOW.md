@@ -263,7 +263,7 @@ lift and a one-sided Fisher p-value; the assessment meets the **gate**.
 | Condition | Floor | Character |
 | --- | --- | --- |
 | Recall | at least 0.90 | A warning system that misses the event has no purpose |
-| Alarm rate | at most 2.00 per week, **shared across regimes** | A control, not a metric |
+| Lift, lower bound | at least 1.50 | A control. Replaced the alarm-rate condition at 0.8.0.0 (D-014) |
 | Association | Fisher one-sided p at most 0.05 | Distinguishes the rule from the calendar |
 
 **The budget is allocated, not summed.** Two rules each cleared at two alarms

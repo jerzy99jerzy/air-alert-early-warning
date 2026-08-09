@@ -35,14 +35,6 @@ def test_policy_command_reports_both_regimes(capsys: pytest.CaptureFixture[str])
     assert "POLICY combined" in output
 
 
-def test_demand_allocation_exits_nonzero_when_the_budget_does_not_fit(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    # The allocator refusing is a result, not a crash: exit code 1, no traceback.
-    assert main(["policy", "--weeks", "208", "--allocation", "demand"]) == 1
-    assert "exceeds the total budget" in capsys.readouterr().out
-
-
 def test_collect_save_raw_writes_the_fetched_body_verbatim(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

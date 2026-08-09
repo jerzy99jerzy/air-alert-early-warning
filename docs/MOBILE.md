@@ -23,17 +23,20 @@ is NOT BUILT unless it names a module that exists.
 
 ## Framing: a delivery channel, not a product
 
-MAVO is a decision engine with a hard budget of two alarms per week. The
-mobile piece transmits its decisions and nothing else. Every design choice
+MAVO is a decision engine. The mobile piece transmits its decisions and
+nothing else. The hard budget of two alarms per week that framed this document
+at v1.0 was removed at 0.8.0.0 (D-014); what bounds the channel now is the gate
+refusing uninformative rules, plus the recipient's own notification settings. Every design choice
 below follows from three constraints:
 
 1. **The alarm path must wake a person through Do-Not-Disturb at 02:00.** A
    warning that waits for morning is a news item. This single requirement
    drives the platform choice more than everything else combined.
-2. **The budget is enforced server-side.** The app must be *unable* to
-   over-notify, even compromised, duplicated, or misconfigured. A client that
-   can mint alarms is a client an adversary can use to spend the recipient's
-   attention (MT4's failure mode, moved to the edge).
+2. **Alarms are minted server-side only.** The app renders decisions; it must
+   be *unable* to create one, even compromised, duplicated or misconfigured. The
+   attention budget that used to bound this was removed at 0.8.0.0 (D-014), so
+   what remains is the plainer rule: a client that can mint alarms is a client an
+   adversary can use, whatever the rate.
 3. **Signal and delivery must not share an upstream.** The signal already
    rides one Telegram channel (D-010, MT9). Delivering warnings *about* that
    channel *through* Telegram would stack the delivery availability on the
@@ -42,11 +45,11 @@ below follows from three constraints:
 
 ## The three message classes
 
-| Class | Budget | Presentation | Source in code |
+| Class | Rate | Presentation | Source in code |
 | --- | --- | --- | --- |
-| **alarm** | counted against the recipient's per-week budget | maximum priority, sounds through DND | a `DecisionPolicy` rule firing within its gated share |
-| **observation** | uncounted | silent digest, batched | rules on the observation tier (currently the demoted drone regime, D-009) |
-| **degradation** | uncounted, rate-limited to one per condition per interval | normal priority, distinct sound | `SourceUnavailable` streaks, `ParseReport.skipped` > 0 or unknown, rising unparsed counts, `is_degraded` states |
+| **alarm** | unbounded server-side since D-014; the recipient's own notification settings govern | maximum priority, sounds through DND | a `DecisionPolicy` rule firing within its gated share |
+| **observation** | unbounded | silent digest, batched | rules on the observation tier (currently the demoted drone regime, D-009) |
+| **degradation** | one per condition per interval | normal priority, distinct sound | `SourceUnavailable` streaks, `ParseReport.skipped` > 0 or unknown, rising unparsed counts, `is_degraded` states |
 
 The degradation class is mandatory, not optional. A warning channel that goes
 quiet when its feed dies has rebuilt unknown-resolves-to-clear at the
@@ -64,8 +67,8 @@ shrinks either:
   circle. Needs counsel, not a sprint.
 - **T11** - nobody in the intended circle has been asked whether they want
   this, or at what firing rate they would stop reading it. The second answer
-  *replaces* the assumed 2/week budget; building recipient UX before it exists
-  means calibrating a channel against a fiction.
+  is now a measurement rather than an assumed number (T29); building recipient
+  UX before it exists means calibrating a channel against a fiction.
 
 The phases below are ordered so that all engineering up to M1 stays inside
 what is already legitimate: the operator notifying himself.
@@ -76,7 +79,7 @@ what is already legitimate: the operator notifying himself.
 flowchart LR
     CH[Telegram channel] --> W[mavo watch daemon]
     W --> ST[(event store)]
-    W --> DP[DecisionPolicy plus budget ledger]
+    W --> DP[DecisionPolicy plus delivery ledger]
     DP --> NT[Notifier protocol]
     NT --> NF[self-hosted ntfy over TLS]
     NF --> AND[Android client]
@@ -87,9 +90,9 @@ flowchart LR
 One new seam: `Notifier`, a protocol in the same pattern as `Transport` and
 `ThreatSource` - the daemon is testable against an injected notifier, and the
 limit of that testing (that ntfy delivers what the tests assume) is stated
-rather than implied. The budget ledger lives beside the policy, server-side,
-append-only like the event store: every alarm sent is a row, and the week's
-remaining budget is computed from rows, not from memory.
+rather than implied. The delivery ledger lives beside the policy, server-side,
+append-only like the event store: every message sent is a row, which is what
+makes a notification on a phone reconcilable against the server.
 
 ## Technology choice
 
@@ -115,7 +118,7 @@ frameworks differ only in how much is stacked on top of it.
 
 [inference, revisable] If M2 ever demands iOS at parity, the revisit point is
 Kotlin Multiplatform for the contract/state layer with native UI on both - not
-Flutter - because the JSON contract and budget-display logic are the only
+Flutter - because the JSON contract and the feed rendering are the only
 genuinely shared code.
 
 ## Phase M0: the collector daemon
@@ -165,7 +168,7 @@ push, real phone, waking through DND - with zero lines of mobile code.
   one manual setup step, and it goes into `docs/MANUAL.md` with a screenshot
   when built.
 - The daemon's `NtfyNotifier` maps class → topic → ntfy priority, attaches
-  the message contract below, and enforces the budget ledger *before* send.
+  the message contract below, and writes the delivery ledger row *before* send.
 - Synthetic end-to-end drill: a stub page that satisfies the missile
   conjunction, injected at the transport seam, must ring the phone.
 
@@ -178,10 +181,9 @@ unreachable without the token [measured, by attempting it].
 ## Phase M2: the Android app
 
 Entry conditions, in order, none skippable: sprint-7 classifier passes on the
-holdout; T11 recorded (the real budget number exists); T6 recorded if any
+holdout; T6 recorded if any
 recipient beyond the operator is added. Then, and only then, the native app -
-because now it displays *real* alerts under a *measured* budget to people who
-*asked*.
+because now it displays *real* alerts to people who *asked*.
 
 Scope of the MVP app, and the discipline is what stays out:
 
@@ -190,19 +192,17 @@ Scope of the MVP app, and the discipline is what stays out:
   provenance label - the label travels to the phone, because a push that
   cannot say whether it is measured or inferred is out of house style. (2)
   *System health*: last poll age, skipped counter, unparsed trend, source
-  reachability, budget remaining this week - the degradation class rendered
+  reachability, messages sent this week - the degradation class rendered
   as state, so "is the system blind right now" is answerable at a glance.
   (3) *Settings*: server URL, token, per-class sound choices, and nothing
   else.
 - Kotlin, Jetpack Compose, UnifiedPush client bound to the self-hosted ntfy
   distributor; notification channels created once with the alarm channel at
   `IMPORTANCE_HIGH` + alarm category + DND bypass request.
-- **No local decision logic.** The app renders server decisions. The one
-  computation it may do is displaying budget arithmetic the server already
-  performed.
-- Per-recipient topics and per-recipient budgets from day one of multi-user:
-  the budget belongs to *each* recipient (`docs/COMPUTATION.md`, the budget
-  section); a shared topic would let one person's tolerance set everyone's.
+- **No local decision logic.** The app renders server decisions and computes
+  nothing about them.
+- Per-recipient topics from day one of multi-user, so one person's mute or
+  unsubscribe is their own and is measurable as such (T29).
 
 **Acceptance:** a clean phone, the MANUAL's onboarding path followed from
 zero, first alarm drill rings through DND - the T7 clean-clone probe extended
@@ -242,7 +242,6 @@ two minor releases).
   "fired_at": "2026-08-09T23:41:07+00:00",
   "lead_estimate_s": 340,
   "provenance": "reported",
-  "budget_remaining_week": 1.0,
   "ledger_id": "2026-W32-0001"
 }
 ```
@@ -290,19 +289,19 @@ is a condition, not a preference:
 | Sprint 7 classifier passing on the holdout | any alarm-class message to anyone, including the operator | An alarm from a component that scores 0 of 20 on real content is noise with a siren attached |
 | A rule clearing the gate on real data | recipients beyond the operator | Until then the only honest claim is that the machinery works, not that the warning does |
 | T6, the legal position | any recipient who is not the operator | Sending warnings to strangers is a different undertaking from notifying yourself, and it does not become smaller by being unexamined |
-| T11, the measured budget | the multi-recipient tier | Two per week is a guess. A public tier calibrated against a guess is a guess at scale |
+| T29, disengagement measured | nothing, but shipping without it repeats the assumption D-014 removed | A public tier with no instrument for mute and unsubscribe cannot tell a healthy channel from an abandoned one |
 
 ## What public availability changes
 
 Recorded here because three design choices earlier in this document were made
 under the private-circle reading and do not survive it unchanged.
 
-**The budget stops being one recipient's tolerance.** Per-recipient budgets are
-still correct, but T11's method is not: two conversations measure a circle, not
-a population. At public scale the budget becomes a distribution rather than a
-number, and the honest form is a default with a per-recipient setting, plus a
-measurement of what people actually do with it. T11 stays as written for the
-private tier and a successor is owed for the public one.
+**Disengagement replaces the budget as the thing to measure.** D-014 removed the
+server-side rate limit on the grounds that it encoded unmeasured behaviour. At
+public scale the honest replacement is not a better default but an instrument:
+mute rate, unsubscribe rate and time to first mute, recorded from the first week
+(T29). If disengagement turns out to be sharply frequency-dependent, a rate
+condition returns to the gate with a number behind it.
 
 **Blast radius replaces individual harm in the threat model.** A compromised
 publishing path in a private circle sends a wrong warning to a handful of

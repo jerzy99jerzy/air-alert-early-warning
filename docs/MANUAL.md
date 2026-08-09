@@ -149,7 +149,7 @@ Reading the output. A line looks like:
 
 ```
 R3-border-missile: precision=0.054 recall=0.467 lift=5.227 p=0.0001 alarms/week=0.625 [reported]
-  [FAIL] R3-border-missile: recall 0.47 below floor 0.9; alarm rate 0.62/week within budget 2.00/week; association p=0.000
+  [FAIL] R3-border-missile: recall 0.47 below floor 0.9; lift lower bound 2.56 meets floor; association p=0.000; alarm rate 0.62/week [measured, not gated]
 ```
 
 | Field | Meaning | How to read it |
@@ -158,23 +158,25 @@ R3-border-missile: precision=0.054 recall=0.467 lift=5.227 p=0.0001 alarms/week=
 | `recall` | P(rule fired given a crossing) | Below 0.9 the rule misses events and fails outright |
 | `lift` | precision divided by the base rate | Near 1.0 means the rule told you nothing a calendar would not have |
 | `p` | one-sided Fisher exact | Above 0.05 the association is indistinguishable from chance |
-| `alarms/week` | firing rate | The number that decides whether a rule is usable, not precision |
+| `alarms/week` | firing rate | Reported, not gated, since 0.8.0.0 (D-014). A property of the rule the recipient may care about, no longer a verdict about it |
 | `[reported]` | provenance | The weakest label among the rule's inputs. `measured` would mean observed directly, `reported` means a source said so |
 | `unknown` | any metric | Genuinely unknown, printed as such. It never means zero |
 
 The gate has three conditions and failing any one is decisive: recall at least
-0.90, alarm rate at most the allocated budget, association p at most 0.05.
+0.90, the lower bound of lift at least 1.50, association p at most 0.05. The
+lift floor replaced an alarm-rate ceiling at 0.8.0.0; it asks whether the firing
+carries information rather than how often it happens (D-014).
 
 ### 4.3 `mavo policy` — BUILT
 
-Scores the regime-split decision policy: one rule per timing regime, sharing one
-attention budget.
+Scores the regime-split decision policy: one rule per timing regime. The shared
+attention budget this command used to allocate was removed at 0.8.0.0 (D-014),
+and with it the `--allocation` option.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--weeks` | `208` | History length |
 | `--seed` | `1968` | Deterministic seed |
-| `--allocation` | `equal` | `equal` divides the budget evenly. `demand` allocates by measured firing rate plus 25% headroom |
 
 Why two regimes. A missile crossing from an alert in Lviv oblast is roughly six
 minutes; a drone crossing from Volyn is roughly thirty-three. One threshold
@@ -351,7 +353,6 @@ three minutes late halves the product.
 | --- | --- | --- |
 | `make verify` fails on coverage | New code without tests | Write the test. The floor is a ratchet and is not lowered |
 | `lint-limitations` fails | A README claim no longer matches the tree | Fix the tree or delete the claim. Do not add an exemption |
-| `mavo policy --allocation demand` exits 1 | Measured demand exceeds the total budget | This is the designed answer, not a fault. Demote a regime |
 | Store grows on every poll | Content hash changed | Check that `ts_ingest` is still excluded from the hash |
 | A metric prints `unknown` | The quantity is genuinely undefined | Do not substitute zero. Find out why it is undefined |
 | `harness-mutation` reports an attack PASSED | A control was disabled and the attack guarding it stayed green | The attack does not measure its control. Fix the attack, not the mutation. Three of these were found on the tool's first run |

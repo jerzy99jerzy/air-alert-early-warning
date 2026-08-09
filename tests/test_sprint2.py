@@ -44,6 +44,8 @@ def test_missile_rule_precision_is_not_perfect() -> None:
 def test_gate_records_the_finding_rather_than_being_relaxed() -> None:
     # The floors are the ones the README publishes. If a sprint moves them, that
     # is a scope change and the README table moves in the same commit.
-    from mavo.baserate import MAX_ALARMS_PER_WEEK, MAX_P_VALUE, MIN_RECALL
+    from mavo.baserate import MAX_P_VALUE, MIN_LIFT_LOWER_BOUND, MIN_RECALL
 
-    assert (MIN_RECALL, MAX_ALARMS_PER_WEEK, MAX_P_VALUE) == (0.9, 2.0, 0.05)
+    # MAX_ALARMS_PER_WEEK left this tuple at 0.8.0.0 with the condition it
+    # carried (D-014). MIN_LIFT_LOWER_BOUND took its place in the gate.
+    assert (MIN_RECALL, MIN_LIFT_LOWER_BOUND, MAX_P_VALUE) == (0.9, 1.5, 0.05)

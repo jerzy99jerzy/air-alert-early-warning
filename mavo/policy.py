@@ -1,14 +1,18 @@
-"""Regime split: one rule per timing regime, one shared attention budget.
+"""Regime split: one rule per timing regime.
 
 Sprint 2 measured a recall of 0.47 for the missile rule and recorded it as a
 failure. Sprint 3 probed what that average hid: 7 of 7 on missile nights and 0 of
 8 on drone nights. The rule was not mediocre, it was perfect at one job and blind
 to another, and a single global threshold cannot express that.
 
-The load-bearing constraint is that **the alarm budget belongs to the recipient,
-not to the rule.** Two rules each cleared at two alarms per week produce four,
-which is the number that destroys the channel. So a regime rule is gated against
-its own share of the budget, and the policy as a whole is gated against the total.
+**The shared alarm budget was removed at 0.8.0.0** (D-014). Until then a regime
+rule carried an allocated share of two alarms per week and the policy refused
+construction when the shares exceeded the total. The number was an assumption
+about recipient behaviour that nobody had measured, and the arithmetic built on
+it inherited that label all the way down. What remains is the part that was
+always a measurement: each rule's firing rate is computed and reported, and the
+gate refuses a rule whose firing carries no information rather than one that
+fires often.
 """
 
 from __future__ import annotations
@@ -18,7 +22,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
-from mavo.errors import BudgetOverAllocated
 from mavo.rules import Rule
 from mavo.schema import ThreatKind
 from mavo.sources.fixture import Night
@@ -43,32 +46,23 @@ class Regime(Enum):
 
 @dataclass(frozen=True, slots=True)
 class RegimeRule:
-    """A rule bound to a regime and to its share of the alarm budget."""
+    """A rule bound to the timing regime it is accountable for."""
 
     regime: Regime
     rule_id: str
     rule: Rule
-    alarm_budget_per_week: float
 
 
 @dataclass(frozen=True, slots=True)
 class DecisionPolicy:
-    """The full alarm-tier decision: one rule per regime, one total budget.
+    """The full alarm-tier decision: one rule per regime.
 
-    ``total_budget_per_week`` is not the sum of the parts by accident. It is the
-    binding constraint, and the per-regime shares are an allocation of it.
+    Construction no longer refuses anything. The refusal it used to carry was a
+    budget over-allocation check, and with the budget gone there is nothing left
+    for it to be right about (D-014).
     """
 
     rules: tuple[RegimeRule, ...]
-    total_budget_per_week: float = 2.0
-
-    def __post_init__(self) -> None:
-        allocated = sum(rule.alarm_budget_per_week for rule in self.rules)
-        if allocated > self.total_budget_per_week:
-            raise BudgetOverAllocated(
-                f"allocated budget {allocated:.2f}/week exceeds total "
-                f"{self.total_budget_per_week:.2f}/week"
-            )
 
     def fires_at(self, night: Night) -> datetime | None:
         """Earliest moment any regime rule would fire, or None.
@@ -91,17 +85,17 @@ class DecisionPolicy:
         return None
 
 
-def equal_split(rules: Sequence[tuple[Regime, str, Rule]], total: float = 2.0) -> DecisionPolicy:
-    """Build a policy that divides the total budget evenly across regimes.
+def policy_of(rules: Sequence[tuple[Regime, str, Rule]]) -> DecisionPolicy:
+    """Build a policy from regime, id and rule triples.
 
-    An even split is a starting allocation, not a finding. Once real lead-time
-    data exists, the regime that buys more minutes should get the larger share.
+    Replaces ``equal_split``, whose whole job was dividing an attention budget
+    that no longer exists. The name changed rather than the body being emptied,
+    because a function called ``equal_split`` that splits nothing is a comment
+    that lies (D-014).
     """
-    share = total / len(rules) if rules else total
     return DecisionPolicy(
         rules=tuple(
-            RegimeRule(regime=regime, rule_id=rule_id, rule=rule, alarm_budget_per_week=share)
+            RegimeRule(regime=regime, rule_id=rule_id, rule=rule)
             for regime, rule_id, rule in rules
-        ),
-        total_budget_per_week=total,
+        )
     )

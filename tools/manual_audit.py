@@ -47,13 +47,13 @@ def check_sections_declare_a_kind() -> list[str]:
 def check_gate_thresholds_match_the_code() -> list[str]:
     """Thresholds quoted in the manual are the ones the code enforces."""
     sys.path.insert(0, str(ROOT))
-    from mavo.baserate import MAX_ALARMS_PER_WEEK, MAX_P_VALUE, MIN_RECALL
+    from mavo.baserate import MAX_P_VALUE, MIN_LIFT_LOWER_BOUND, MIN_RECALL
 
     text = MANUAL.read_text(encoding="utf-8")
     problems: list[str] = []
     for label, value in (
         ("recall", f"{MIN_RECALL:.2f}"),
-        ("alarm rate", f"{MAX_ALARMS_PER_WEEK:.2f}"),
+        ("lift lower bound", f"{MIN_LIFT_LOWER_BOUND:.2f}"),
         ("p-value", f"{MAX_P_VALUE:.2f}"),
     ):
         if value not in text:
