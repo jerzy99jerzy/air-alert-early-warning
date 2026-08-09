@@ -16,6 +16,38 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.6.1.0 - 2026-08-09
+
+One document, and the gap it closes is an audience gap rather than a defect.
+
+- `docs/BRIEF.md`. Every document in this repository is written for someone who
+  already accepts why the project exists: FOUNDATIONS argues with a contributor,
+  COMPUTATION argues with a statistician, THREAT-MODEL argues with an attacker.
+  None of them is readable by the person most likely to ask the sharpest
+  question, which is someone outside the field who wants to know whether the
+  thing works. The brief states the 57% base rate before it states the thesis,
+  names the 0-of-20 classifier failure and the measured null in plain
+  language, and ends with the six questions that would expose a weak answer.
+  Convention adopted from `pirx`, where the brief is the document non-technical
+  readers actually finish.
+- **D-002 restated as the general rule it always was.** The exclusion was
+  documented as a case: one named covariate, tested and rejected. It is now
+  documented as the procedure that case established, which is what actually
+  binds future work: a candidate covariate is admitted only after a
+  pre-registered directional test on the full attack-density series, and one
+  that measures null is excluded mechanically rather than left lying around
+  looking plausible. The measurement is unchanged and still quoted in full: 738
+  attack nights, 87,093 munitions, Rayleigh R = 0.013 with p = 0.95, Spearman
+  r = +0.03 with p = 0.44. What is gone from the documents is the variable's
+  name, which was doing no analytical work; the terms stay enumerated in
+  `tests/lint_limitations.py`, because a guard has to name what it forbids.
+  The lint marker and its README bullet are renamed to
+  `no_excluded_covariate` accordingly.
+- The convention has a rule worth stating: the brief simplifies but never
+  flatters. Where it rounds a mechanism, it says so; where a number is a guess,
+  it carries the same label it carries in FOUNDATIONS. A brief that reads
+  better than the evidence supports is marketing with a repository attached.
+
 ## 0.6.0.0 - 2026-08-09
 
 An external review read the tree adversarially and three of its findings were

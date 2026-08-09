@@ -223,12 +223,12 @@ Roughly a dozen positive events. A logistic regression with three predictors
 fitted to twelve positives has ~4 events per parameter against a commonly
 cited floor of 10–20; a tree or boosted ensemble is worse. Any of them would
 interpolate the training positives and validate beautifully on resubstitution,
-which is precisely the failure that produced this project's retracted first
-analysis: an astronomical variable survived visual inspection and died only
-under a proper test on 738 attack nights and 87,093 munitions (Rayleigh
-R = 0.013, p = 0.95; D-002, permanently excluded). The lesson was not "test
-better", it was **structural**: with this event count, flexibility is the
-enemy. Rules are therefore explicit predicates with legible thresholds. A
+which is precisely the failure this project measured its way out of once
+already: a candidate covariate survived visual inspection of the attack-density
+series and died only under a proper directional test on 738 attack nights and
+87,093 munitions (Rayleigh R = 0.013, p = 0.95; D-002, permanently excluded).
+The lesson was not "test better", it was **structural**: with this event count,
+flexibility is the enemy. Rules are therefore explicit predicates with legible thresholds. A
 threshold can be argued with; a weight cannot.
 
 ## Design and holdout
@@ -238,7 +238,7 @@ before any message content was read**: design 80.0%, holdout 20.0%, boundary
 on a page edge because a page is the indivisible unit on disk (D-012, D-012a,
 frozen). The sprint-7 classifier is built on the design window; the holdout
 buys one honest evaluation and is spent the moment it is read. Moving the
-boundary after seeing a result is the retraction repeated with more data, and
+boundary after seeing a result is that same null repeated with more data, and
 the decision log says so in those words.
 
 ## What this machinery does not compute

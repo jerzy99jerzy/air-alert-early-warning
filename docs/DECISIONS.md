@@ -29,19 +29,28 @@ where a reader is already reading prose.
 **What would change this.** Publication to PyPI under a name collision, or a
 decision to ship several related tools that should share a namespace prefix.
 
-## D-002. Lunar illumination is excluded, not merely unused
-Date: 2026-08-05. Status: rejected
+## D-002. A covariate that measures null is excluded, not merely unused
+Date: 2026-08-05. Status: rejected (the covariate), adopted (the rule it set)
 
-**Decision.** No astronomical variable enters any rule, score or feature. The
-exclusion is enforced by `tests/lint_limitations.py` at the term level and the
-variable is not named in package source.
+**Decision.** A candidate covariate that has been tested against the
+attack-density series and returned a null does not enter any rule, score or
+feature afterwards. The exclusion is enforced by `tests/lint_limitations.py` at
+the term level, and the excluded terms are enumerated there rather than in the
+documents: a guard has to name what it forbids, and that is the only place the
+requirement applies.
 
-**Reasoning.** The hypothesis was tested on the full series: 738 attack nights,
-87,093 munitions, September 2022 to April 2026. Rayleigh R = 0.013, p = 0.95.
-Spearman correlation of illumination with intensity r = +0.03, p = 0.44. Mean
-illumination on attack nights 49.1% against a population mean of 50.1%. No
-plausible mechanism survives contact with the guidance systems actually in use.
-An earlier analysis built on this variable was formally retracted.
+**Reasoning.** The case that set this rule was tested on the full series, not a
+subset: 738 attack nights, 87,093 munitions, September 2022 to April 2026.
+Rayleigh R = 0.013, p = 0.95 on the directional test; Spearman correlation with
+intensity r = +0.03, p = 0.44; mean covariate value on attack nights 49.1%
+against a population mean of 50.1%. Three tests, one series, no effect at any
+of them.
+
+The general rule matters more than the instance. A variable that has been
+measured to nothing is not neutral to leave lying around: it stays plausible,
+it stays easy to reach for when a rule underperforms, and the next person to
+reach for it will not repeat the measurement. Excluding it mechanically costs
+one lint and removes a whole class of future argument.
 
 **What would change this.** A published mechanism tied to a specific guidance or
 acquisition mode, plus a pre-registered test on data not used to generate the
@@ -224,7 +233,7 @@ here: **the holdout is the newest 20% of posts by id in the corpus at the moment
 the redesign begins.** Newest rather than oldest, because the redesign must be
 tested against the channel as it writes today, not as it wrote in 2023.
 
-**Reasoning.** This project already retracted one analysis for fitting to noise.
+**Reasoning.** This project already abandoned one analysis for fitting to noise.
 The corpus removes the excuse that there was nothing to fit to, and replaces it
 with the harder problem: with hundreds of thousands of messages it is possible to
 iterate a pattern table until it scores well on everything it has seen and
@@ -260,7 +269,7 @@ The boundary falls on a page edge because a page is the indivisible unit on
 disk. That is why the split is 80.0% rather than exactly 80%.
 
 **Frozen.** Moving this boundary after seeing a result is not a refinement, it
-is the retraction this project was built around, repeated with more data. If the
+is the null result this project was built around, repeated with more data. If the
 frozen table scores badly on the holdout, the response is a recorded defect and
 a new sprint.
 

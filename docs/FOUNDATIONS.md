@@ -21,7 +21,7 @@ Note:      a claim without a provenance label in this document is a defect.
 3. [The problem that observation creates](#3-the-problem-that-observation-creates)
 4. [Assumptions, each with its falsifier](#4-assumptions-each-with-its-falsifier)
 5. [What is measured, and on what](#5-what-is-measured-and-on-what)
-6. [The retraction this project is built around](#6-the-retraction-this-project-is-built-around)
+6. [The null result this project is built around](#6-the-null-result-this-project-is-built-around)
 7. [What would make this project stop](#7-what-would-make-this-project-stop)
 
 ---
@@ -200,27 +200,34 @@ numbers start looking good.
 
 ---
 
-## 6. The retraction this project is built around
+## 6. The null result this project is built around
 
-An earlier analysis attributed attack timing to lunar illumination. It was
-wrong, it was retracted, and the variable is now permanently excluded by
-measured null result: Rayleigh R = 0.013, p = 0.95, across 738 attack nights and
-87,093 munitions.
+Before this repository existed, a candidate covariate was proposed to explain
+the timing of attacks and it looked convincing on a chart. Tested against the
+full attack-density series, 738 attack nights and 87,093 munitions from
+September 2022 to April 2026, it returned a null on every test applied:
+Rayleigh R = 0.013 with p = 0.95, Spearman r = +0.03 with p = 0.44, and a mean
+value on attack nights of 49.1% against a population mean of 50.1%. The
+analysis built on it does not survive, and the variable is excluded (D-002).
 
 This is not history. It is the reason for three structural choices:
 
-- **No model fitted to the positive class.** The retracted analysis was
-  overfitting to a small sample, and a learned model on a dozen events would be
-  the same mistake with more machinery.
-- **The lint at term level.** `tests/lint_domain.py` fails if the excluded
-  variable appears in package source, so re-introducing it takes a deliberate
-  test change rather than a plausible-sounding commit.
+- **No model fitted to the positive class.** A pattern that convinces the eye
+  on a small sample is the normal case, not the exception, and a learned model
+  on a dozen positive events would reproduce the same error with more
+  machinery and less visibility.
+- **The lint at term level.** `tests/lint_limitations.py` fails if an excluded
+  covariate appears in package source, so re-introduction takes a deliberate
+  test change rather than a plausible-sounding commit. A null result that lives
+  only in prose is an opinion.
 - **The design/holdout split declared before reading** (D-012). With twenty
   messages there was nothing to overfit to. With a corpus of hundreds of
   thousands, there is.
 
-A repository that had made this mistake and quietly moved on would be less
-trustworthy than one that had never made it. The record is the point.
+The attack-density series remains the reference dataset for how attacks
+distribute in time, and the procedure remains the standard for admitting any
+new covariate: a directional test on the full series, pre-registered, before
+the variable is allowed near a rule.
 
 ---
 

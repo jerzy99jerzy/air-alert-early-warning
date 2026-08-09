@@ -34,7 +34,7 @@ Note:      the defect log is the most useful document here for a new
 | --- | --- |
 | Every observed violation of Polish airspace coincided with a massed campaign against western Ukraine | measured, small sample |
 | Campaigns cover roughly 57% of days in the period | measured |
-| Lunar illumination is unrelated to attack timing | measured null, Rayleigh R = 0.013, p = 0.95 over 738 nights and 87,093 munitions |
+| The tested candidate covariate is unrelated to attack timing | measured null, Rayleigh R = 0.013, p = 0.95 over 738 nights and 87,093 munitions. Directional test on the full series, not a subset |
 | Transit times of six and thirty-three minutes | inference, arithmetic on stated speeds and distances |
 | Any number printed by `mavo gate` or `mavo policy` | property of the generator, not of the world |
 | Transit-time regimes are two, not a continuum | inference, from a factor of roughly five in transit speed |

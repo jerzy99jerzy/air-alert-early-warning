@@ -17,7 +17,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "mavo"
 
-LUNAR_TERMS = ("lunar", "moon", "illuminat", "ksiezyc", "waxing", "waning")
+# Terms of a covariate excluded by a measured null result (D-002). Enumerated
+# here rather than in the documents: the guard has to name what it forbids,
+# and this file is the only place that requirement applies.
+EXCLUDED_COVARIATE_TERMS = ("lunar", "moon", "illuminat", "ksiezyc", "waxing", "waning")
 NETWORK_MODULES = ("requests", "httpx", "urllib.request", "http.client", "aiohttp", "socket")
 
 
@@ -39,13 +42,20 @@ def check_no_probability_claim() -> str | None:
     return f"probability-style API found in {offenders}" if offenders else None
 
 
-def check_no_lunar_variable() -> str | None:
-    """The excluded variable must stay excluded, including in comments."""
+def check_no_excluded_covariate() -> str | None:
+    """An excluded covariate stays excluded, including in comments.
+
+    D-002. The exclusion rests on a measured null against the attack-density
+    series, and a null result that lives only in prose is an opinion: nothing
+    stops a plausible-sounding commit from reintroducing the variable. The term
+    check makes re-introduction a deliberate edit to this file.
+    """
     offenders: list[str] = []
     for path in _package_sources():
         lowered = path.read_text(encoding="utf-8").lower()
-        offenders += [f"{path.name}:{term}" for term in LUNAR_TERMS if term in lowered]
-    return f"lunar terms present in package source: {offenders}" if offenders else None
+        offenders += [f"{path.name}:{term}" for term in EXCLUDED_COVARIATE_TERMS
+                     if term in lowered]
+    return f"excluded covariate present in package source: {offenders}" if offenders else None
 
 
 def check_unknown_not_clear() -> str | None:
@@ -102,7 +112,7 @@ def check_network_reach_is_one_file() -> str | None:
 
 CHECKS: dict[str, Callable[[], str | None]] = {
     "no_probability_claim": check_no_probability_claim,
-    "no_lunar_variable": check_no_lunar_variable,
+    "no_excluded_covariate": check_no_excluded_covariate,
     "unknown_not_clear": check_unknown_not_clear,
     "no_ml_dependency": check_no_ml_dependency,
     "network_reach_is_one_file": check_network_reach_is_one_file,

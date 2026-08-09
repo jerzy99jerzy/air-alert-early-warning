@@ -595,7 +595,7 @@ same commit or does not go in.
 | Claim | Checks |
 | --- | --- |
 | `no_probability_claim` | No probability of impact is computed anywhere |
-| `no_lunar_variable` | The excluded astronomical variable appears in no package source |
+| `no_excluded_covariate` | A covariate excluded by measured null (D-002) appears in no package source |
 | `unknown_not_clear` | No state other than CLEAR reads as clear, enumerated over `AlertState` |
 | `no_ml_dependency` | No machine-learning dependency is declared |
 | `network_reach_is_one_file` | Exactly one module imports a network client |
