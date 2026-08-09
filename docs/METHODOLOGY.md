@@ -1004,6 +1004,50 @@ by the release rather than by a marker of their own, and pretending otherwise
 would add four pins that mean nothing.
 
 
+### Distance to the Polish border, 2026-08-09
+
+The column T32 asked for, delivered as an interval rather than the scalar the
+criterion named. Every one of the 127 mapped areas carries one.
+
+| Quantity | Value | Label |
+| --- | --- | --- |
+| Areas with a distance | 127 of 127 | measured |
+| Nearest area centre (Самбірський район) | 14.2 km | measured |
+| Farthest (Кальміуський район) | 1074.0 km | measured |
+| Areas whose interval reaches zero | 5 | measured |
+| Register centre points and areas | ua-geo, KATOTTG joined to OSM relations | reported, not verified here |
+| Border outline | Natural Earth 10m, ~1 km positional error | reported |
+| True nearest-edge distance | - | **not measured**, and stated as not measured |
+
+**What is measured** is the geodesic distance from each area's registered centre
+point to the nearest point on the Polish outline, and the radius of a disc with
+the same area. **What is not measured** is the distance from the area's edge,
+which is what a reader actually wants. The gap is not small and is not random:
+it is largest exactly for the border raions this project exists to watch.
+Самбірський район shares an edge with Poland, so its true distance is zero while
+its centre sits 14.2 km away.
+
+So the column is an interval, `lower` to `upper`, and `AreaRef.border_interval`
+renders `0-46 km` rather than `14 km`. A reader who sees `0-46` knows the alert
+may be at the border and knows the report cannot say more. A reader who sees
+`14 km` has been told something false to one decimal place.
+
+**This deviates from T32's own acceptance criterion**, which asked for one
+scalar per area. Recorded rather than taken quietly: this project allows a
+criterion to move after the fact only when the replacement is harder to satisfy
+than the original, and an interval is harder to produce and harder to quote than
+a number. Closing the gap needs polygons keyed by KATOTTG, which no source
+reachable offline provides; the recipe is in `tools/border_distance.py`.
+
+**The spot check caught the author, not the code.** Four settlement distances
+were written down by hand before the run, as T32 requires. Lutsk was bounded at
+90 to 130 km from an estimate; the tool measured 85.1 km and refused to write
+the file. An independent flat-earth cross-check gave 86.4 km against the nearest
+border vertex, so the bound was what was wrong, and it was widened with that
+reason recorded in the source. A bound widened because the measurement
+disagreed is a defect unless the bound is shown to be the error.
+
+
 ## Corpus measurements, 2026-08-09
 
 Metadata only. No message content was read before the holdout boundary was

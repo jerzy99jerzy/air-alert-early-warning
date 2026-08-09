@@ -330,15 +330,30 @@ rather than an impression. A hit rate below what the channel actually emits is a
 finding about the register and is recorded as one.
 
 ## T32. Distance from each area to the Polish border, precomputed
-Status: `ready`, **S8**
+Status: `done with a stated deviation` (0.13.0.0)
 D-016. Distance is the field that turns an alert into a report a person can use,
 and it must be a stored column rather than a runtime call: no API key in the
 warning path, no rate limit where latency is the product, and no third party
 learning which rajons a Polish user asks about at three in the morning.
-**Acceptance:** one scalar per area, computed offline from OpenStreetMap
-geometry, with the method and the geometry version recorded. A spot check
-against a handful of known distances, verified by hand, before the column is
-trusted anywhere.
+
+*Delivered 0.13.0.0.* `data/reference/border_km.csv`, 127 of 127 areas, generated
+by `tools/border_distance.py` from the KATOTTG-to-OSM register join published by
+`ua-geo` and a vendored extract of the Polish outline. Method, both source
+checksums and the geometry version are in the file header. Four hand-verified
+spot checks run in the generator and again in the suite.
+
+**The deviation:** the criterion asked for one scalar and this is an interval.
+The scalar is unavailable and would be wrong where it matters most: a centre
+point puts Самбірський район 14.2 km from a border it actually touches. The
+interval bounds the true nearest-edge distance using a disc of equal area, and
+`AreaRef.border_interval` renders `0-46 km`. Permitted under the rule that a
+criterion may move only when the replacement is harder than the original.
+
+**What would close it properly:** polygons keyed by KATOTTG. Neither
+geoBoundaries (git-lfs, objects served off-domain) nor Overpass is reachable
+from the environment this was built in. With polygons, the same tool computes a
+true minimum by swapping the point for a vertex list, and the interval collapses
+to the scalar the criterion asked for.
 
 
 ## T33. Alias table between the channel and the register

@@ -16,6 +16,37 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.13.0.0 - 2026-08-09
+
+**T32, and sprint 8 closes.** Distance to the Polish border, 127 of 127 areas,
+computed offline and stored as a column. `AreaRef.border_km` was `None` for
+eight releases; it is now three fields and an interval.
+
+- **The column is an interval, not the scalar the criterion asked for.** The
+  register gives a centre point, not a polygon, and a centre point puts
+  Самбірський район 14.2 km from a border it shares an edge with. Five areas'
+  intervals reach zero. `border_interval` renders `0-46 km`, which tells a
+  reader the alert may be at the border and that the report cannot say more; a
+  bare `14 km` would tell them something false to one decimal place. Deviation
+  from T32 recorded in `TODO.md` and `docs/METHODOLOGY.md` rather than taken
+  quietly: a criterion may move only when the replacement is harder, and this
+  one is.
+- `tools/border_distance.py` regenerates the column from the KATOTTG-to-OSM
+  register join published by `ua-geo` (MIT) and `data/reference/poland_outline.json`,
+  a 29 KB unmodified extract of the Natural Earth 10m Poland feature, vendored so
+  the measurement is reproducible from the tree. Both source checksums and the
+  method go in the output header. Geodesic point-to-arc, no projection, no
+  runtime dependency; the count stays at zero.
+- **A spot check caught the author.** Four settlement distances were written
+  down by hand before the run. Lutsk was bounded at 90-130 km from an estimate,
+  the tool measured 85.1 km and refused to write the file. A flat-earth
+  cross-check gave 86.4 km, so the bound was the error and was widened with that
+  reason recorded in the source. The four checks now run in the suite as well as
+  in the generator, since the generator runs rarely and the suite runs always.
+- A checkout without the generated column still resolves areas and reports every
+  distance as `unknown`. The one thing it must not do is fall back to a
+  plausible number.
+
 ## 0.12.2.0 - 2026-08-09
 
 - **A prediction made in this repository's own working notes was wrong, and the

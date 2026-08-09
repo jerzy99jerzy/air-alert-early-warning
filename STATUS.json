@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.12.2.0",
+  "version": "0.13.0.0",
   "python_requires": ">=3.11",
   "shipped_sprints": [
     0,
@@ -11,7 +11,8 @@
     4,
     5,
     6,
-    7
+    7,
+    8
   ],
   "gate": "make verify",
   "documents": {
@@ -26,7 +27,7 @@
     "docs/DATA-FLOW.md": "1.0",
     "docs/ARCHITECTURE.md": "2.0",
     "docs/MECHANISMS.md": "2.0",
-    "docs/METHODOLOGY.md": "2.4",
+    "docs/METHODOLOGY.md": "2.6",
     "docs/THREAT-MODEL.md": "2.2",
     "docs/MVP.md": "3.2",
     "docs/DECISIONS.md": "2.1",
@@ -44,8 +45,8 @@
   "threat_model_rows": 14,
   "harness_attacks": 13,
   "measured": {
-    "tests_passing": 184,
-    "coverage_percent": 96.79,
+    "tests_passing": 191,
+    "coverage_percent": 96.7,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 1,
     "policy_combined_alarms_per_week": 1.96,
@@ -80,7 +81,10 @@
     "open_data_catalogue_alerting_datasets_found": 29,
     "open_data_catalogue_alerting_streams_found": 0,
     "rcb_catalogue_resources": 4,
-    "rcb_catalogue_openness_level": 3
+    "rcb_catalogue_openness_level": 3,
+    "areas_with_border_distance": 127,
+    "border_intervals_reaching_zero": 5,
+    "nearest_area_centre_km": 14.2
   },
   "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except classifier_hit_rate_on_real_messages, which is pinned by tests against real channel content; nothing here is a claim about the world",
   "corpus": {
@@ -98,13 +102,13 @@
     "content_read_before_freeze": false
   },
   "statistics": {
-    "package_lines": 2788,
+    "package_lines": 2837,
     "package_files": 15,
-    "test_lines": 2876,
-    "test_files": 28,
-    "tool_lines": 1871,
-    "tool_files": 8,
-    "documentation_lines": 9616,
+    "test_lines": 2991,
+    "test_files": 29,
+    "tool_lines": 2136,
+    "tool_files": 9,
+    "documentation_lines": 9706,
     "documentation_files": 32,
     "runtime_dependencies": 0
   },

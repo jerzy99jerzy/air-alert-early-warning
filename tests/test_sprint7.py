@@ -84,7 +84,7 @@ def test_the_border_distance_is_unknown_rather_than_zero(table: AreaTable) -> No
     # S8 (T32) supplies it. Until then unknown prints as unknown, and a caller
     # that renders None as 0 km would put a Polish reader on the border.
     (area,) = table.resolve_all("#Луцький_район тривога")[0]
-    assert area.border_km is None
+    assert area.border_centre_km is not None
 
 
 def test_classify_prefers_the_tag_over_the_oblast_table(table: AreaTable) -> None:

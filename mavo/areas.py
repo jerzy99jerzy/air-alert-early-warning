@@ -110,6 +110,9 @@ TOKEN = re.compile(r"[\w\u0400-\u04FF’'-]+")
 TAG = re.compile(r"#([\w\u0400-\u04FF’'-]+?)_(район|громада|область)")
 
 DEFAULT_MAP = Path(__file__).resolve().parent.parent / "data" / "reference" / "tag_map.csv"
+DEFAULT_DISTANCES = (
+    Path(__file__).resolve().parent.parent / "data" / "reference" / "border_km.csv"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,12 +124,51 @@ class AreaRef:
     unit: str
     oblast: str
     code: str
-    border_km: float | None = None
+    # T32. Distance to the Polish border as an interval, never as one number.
+    # `centre_km` is measured from the area's registered centre point;
+    # `lower_km` and `upper_km` bound the true nearest-edge distance using a
+    # disc of equal area. Sambirskyi raion touches Poland, so its true distance
+    # is zero while its centre sits 14 km away: a single scalar would be false
+    # with a decimal point on it, and the areas it is most wrong about are
+    # exactly the border ones this project exists to watch. All three are None
+    # together when no distance is known, and None prints as unknown.
+    border_centre_km: float | None = None
+    border_lower_km: float | None = None
+    border_upper_km: float | None = None
+
+    @property
+    def border_interval(self) -> str:
+        """The distance as a reader should see it, or "unknown"."""
+        if self.border_lower_km is None or self.border_upper_km is None:
+            return "unknown"
+        return f"{self.border_lower_km:.0f}-{self.border_upper_km:.0f} km"
 
     @property
     def is_western(self) -> bool:
         """True when the oblast is one a Polish reader has reason to care about."""
         return any(term in self.oblast for term in WESTERN_OBLASTS)
+
+
+def _load_distances(path: Path) -> dict[str, tuple[float, float, float]]:
+    """Border distances by register code, or nothing at all.
+
+    A missing file is not an error: the column is generated offline from sources
+    that are not vendored, and a checkout without it should still resolve areas.
+    Every area then reports its distance as unknown, which is the truthful answer
+    and the one this project prefers to a plausible number (T32).
+    """
+    if not path.exists():
+        return {}
+    found: dict[str, tuple[float, float, float]] = {}
+    with path.open(encoding="utf-8") as handle:
+        rows = csv.DictReader(line for line in handle if not line.startswith("#"))
+        for row in rows:
+            found[row["katottg_code"]] = (
+                float(row["centre_km"]),
+                float(row["lower_km"]),
+                float(row["upper_km"]),
+            )
+    return found
 
 
 def normalise_name(name: str) -> str:
@@ -167,7 +209,9 @@ class AreaTable:
             self._by_name.setdefault(normalise_name(area.tag.rsplit("_", 1)[0]), []).append(area)
 
     @classmethod
-    def from_csv(cls, path: Path | None = None) -> AreaTable:
+    def from_csv(
+        cls, path: Path | None = None, distance_path: Path | None = None
+    ) -> AreaTable:
         """Load the map. Rows without a code are kept as known-but-unresolved.
 
         A tag the register could not disambiguate is a different thing from a tag
@@ -175,6 +219,7 @@ class AreaTable:
         than carry it.
         """
         source = path or DEFAULT_MAP
+        distances = _load_distances(distance_path or DEFAULT_DISTANCES)
         rows: dict[str, AreaRef] = {}
         unresolved: set[str] = set()
         with source.open(encoding="utf-8") as handle:
@@ -189,12 +234,16 @@ class AreaTable:
                 if not row.get("katottg_code") or row.get("status", "").startswith("ambiguous"):
                     unresolved.add(tag)
                     continue
+                centre, lower, upper = distances.get(row["katottg_code"], (None, None, None))
                 rows[tag] = AreaRef(
                     tag=tag,
                     name=row["register_name"],
                     unit=row["unit"],
                     oblast=row["oblast"],
                     code=row["katottg_code"],
+                    border_centre_km=centre,
+                    border_lower_km=lower,
+                    border_upper_km=upper,
                 )
         return cls(rows, frozenset(unresolved))
 
