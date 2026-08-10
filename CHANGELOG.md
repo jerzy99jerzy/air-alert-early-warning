@@ -16,6 +16,126 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.16.0.0 - 2026-08-10
+
+Review release. No new capability: two defects found by auditing what the
+previous two releases took for granted, and three claims demoted from assertion
+to labelled assumption.
+
+**F69, the inventory writer ate the freeze record beside it.**
+`corpus_inventory.py --write-status` replaced `STATUS.json`'s `corpus` block
+instead of merging into it and erased the D-012a holdout boundary, with the gate
+passing because nothing read those fields. Repaired on both sides: ownership by
+explicit list in `patch_corpus_block()`, and
+`docs_audit.check_the_holdout_boundary_survives_in_the_corpus_block` as the
+reader those fields never had. Two regressions, both verified red.
+
+**F70, one counter for two different events.** `JoinReport.resolved` merged
+"the message named the kind itself" with "the join supplied one", so `coverage`
+took credit for regimes the join never touched. Split into `carried` and
+`joined`, with `join_coverage` as the join's own figure; `resolved` survives as
+their sum.
+
+**Claims demoted to their actual provenance.** The threat-kind marker tables in
+`mavo/sources/telegram.py` now carry `[assumption, unmeasured]` and name the two
+failures a corpus review must look for, an over-broad `небезпека` and a lift
+phrasing that inverts into a declaration; `tools/kind_coverage.py --sample N`
+prints classified messages and near-misses from a seeded draw so that review can
+happen before any coverage figure is quoted. T41's MTProto latency is an
+inference from the protocol rather than a property, and its citation of D-010 no
+longer claims a shared upstream that D-010 deliberately does not assert.
+
+**In the 0.13.0.0 line, carried forward.** Three of four `border_distance.py`
+spot checks are now measured against an independent border geometry rather than
+against the author's recollection (Lviv 57.2, Lutsk 85.4, Uzhhorod 51.6 km,
+each within 1.1 km of this tool); the Natural Earth positional error and the
+sphericity cost are measured (median 0.0, p95 1.6, max 2.6 km; at most +0.31%)
+rather than quoted from general knowledge; and the border-touching regression's
+docstring no longer states as proven a geographic fact its assertion does not
+test.
+
+## 0.15.0.0 - 2026-08-09
+
+**F68. The corpus was lost, and it had no inventory to lose it against.** Sixty
+thousand posts, one copy, no checksum, no location recorded, under every
+measurement this project publishes. The tree had a `MANIFEST.sha256` over its
+own source files and nothing over the data those files analyse. Tier 1 means not
+committed; it had been read as not tracked at all.
+
+- `tools/corpus_inventory.py` writes `data/aggregates/corpus_manifest.csv`: one
+  row per snapshot with id range, message count, byte size and SHA-256, and a
+  header carrying the aggregate digest, the id range, the contiguity verdict and
+  the date. Three separate questions kept in three separate columns: the digest
+  answers *is this the same corpus*, contiguity answers *is it complete*,
+  id_range answers *is it the right window*.
+- `--write-status` patches the `corpus` block in `STATUS.json` from the
+  inventory, because a figure retyped by hand from a measurement is a figure
+  from memory with extra steps.
+- **`docs_audit` now refuses a corpus-derived measurement with no inventory.**
+  Any design-window figure in `STATUS.json` requires the manifest to exist and
+  to agree with the pinned block. The rule is executable rather than remembered,
+  which is the only kind this project keeps.
+- **This release ships with that check red on purpose.** The corpus is being
+  re-collected as it is written; the gate goes green when the inventory exists,
+  and not before. A release that stayed green while its evidence base was
+  unidentifiable would be the defect wearing the fix as a costume.
+
+Recovery is possible because Telegram addresses posts by id: the same range
+yields the same pages, so this is the same corpus fetched twice rather than a
+new dataset. Whether it *is* the same is now a question with an answer, which is
+the whole point of the release.
+
+**Three backlog items and one decision, all from the same afternoon.** The
+re-collection raised the question of what request rate the source tolerates
+(T39), and the observation that a strike is measured in seconds rather than
+minutes reframed it: polling is the wrong instrument for seconds however fast it
+runs, and MTProto is a push interface that removes the interval entirely (T41).
+Both are downstream of a number nobody has: how late the channel already is
+relative to publication (T40). D-018 separates the two axes a move to cloud infrastructure gets confused
+between: collection is one stream and does not scale, delivery does and arrives
+with M2, and a host is an availability decision — with the consequence that a
+change of address class restarts T39's ladder rather than continuing it. D-017
+records what was refused along the way —
+rotating addresses to raise throughput, which would measure a limit we do not
+intend to approach, make availability depend on concealment, and cost the
+standing to ask Polish institutions for an honestly consumable feed.
+
+## 0.14.0.0 - 2026-08-09
+
+**Sprint 9, T16. The means of attack becomes its own stream, and the regime
+split becomes able to fire on real input.**
+
+- **F67. Every regime rule was unsatisfiable on live data.** `kind` was read off
+  the alert message; the channel emits it as a separate message, tied to a
+  hromada, with its own lifetime, exactly as F25 recorded in sprint 4. Measured
+  on the twenty real messages held as fixtures: 15 carry an alert state, 4 carry
+  a kind marker, none carry both. The regime split is this project's central
+  finding, and on real input it had nothing to split by.
+- `KindEvent` and `KindState` in the schema, a `kind_events` table beside the
+  alert table rather than a discriminator column on it, and `mavo/kinds.py`
+  holding the index and the join. The join runs before the rules, so the rules
+  are unchanged and still know nothing about where `kind` came from.
+- **Ambiguity resolves to unknown.** Two kinds live over one oblast at the same
+  moment, which is a mixed strike, leaves the alert UNKNOWN and counts the case.
+  Picking the first, the newest or the more dangerous would each be a
+  fabrication with a rationale attached.
+- **The source outranks the assumption.** A declaration expires after
+  `DEFAULT_KIND_TTL`, six hours, because one whose lift never arrives would
+  otherwise stay attached to an oblast forever. A lift that does arrive is
+  honoured whenever it arrives, even past the TTL: a number written in this
+  repository does not get to shorten a statement made by the channel. The first
+  draft of `KindIndex.active` capped it and that inversion is recorded in the
+  code.
+- Threat-kind messages previously parsed as nothing and were counted as
+  unparsed. They now have a reader, so part of the old parse-failure rate was
+  never failure.
+- `tools/kind_coverage.py`: the measurement that decides whether any of this has
+  coverage. It prints declaration counts, the declaration-to-lift interval
+  distribution that replaces the assumed TTL, and join coverage at five
+  candidate TTLs. **It cannot run here**: the corpus is tier-1 data and is not in
+  the tree. Until it has been run against `data/raw`, the honest claim is that
+  the regime split *can* fire, not that it *will*.
+
 ## 0.13.0.0 - 2026-08-09
 
 **T32, and sprint 8 closes.** Distance to the Polish border, 127 of 127 areas,

@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.13.0.0",
+  "version": "0.16.0.0",
   "python_requires": ">=3.11",
   "shipped_sprints": [
     0,
@@ -12,7 +12,8 @@
     5,
     6,
     7,
-    8
+    8,
+    9
   ],
   "gate": "make verify",
   "documents": {
@@ -27,7 +28,7 @@
     "docs/DATA-FLOW.md": "1.0",
     "docs/ARCHITECTURE.md": "2.0",
     "docs/MECHANISMS.md": "2.0",
-    "docs/METHODOLOGY.md": "2.6",
+    "docs/METHODOLOGY.md": "2.9",
     "docs/THREAT-MODEL.md": "2.2",
     "docs/MVP.md": "3.2",
     "docs/DECISIONS.md": "2.1",
@@ -45,8 +46,8 @@
   "threat_model_rows": 14,
   "harness_attacks": 13,
   "measured": {
-    "tests_passing": 191,
-    "coverage_percent": 96.7,
+    "tests_passing": 208,
+    "coverage_percent": 96.16,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 1,
     "policy_combined_alarms_per_week": 1.96,
@@ -84,33 +85,37 @@
     "rcb_catalogue_openness_level": 3,
     "areas_with_border_distance": 127,
     "border_intervals_reaching_zero": 5,
-    "nearest_area_centre_km": 14.2
+    "nearest_area_centre_km": 14.2,
+    "real_messages_with_alert_state": 15,
+    "real_messages_with_kind_marker": 4,
+    "real_messages_with_both": 0
   },
   "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except classifier_hit_rate_on_real_messages, which is pinned by tests against real channel content; nothing here is a claim about the world",
   "corpus": {
-    "retrieved": "2026-08-09",
-    "post_id_low": 260841,
-    "post_id_high": 321520,
-    "posts": 60680,
-    "pages": 3034,
-    "span_days": 118,
-    "contiguous": true,
-    "size_mb": 313,
+    "pages": 3062,
+    "size_mb": 325,
     "design_window_high_id": 309380,
     "holdout_low_id": 309381,
     "holdout_share": 0.2001,
-    "content_read_before_freeze": false
+    "content_read_before_freeze": false,
+    "manifest": "data/aggregates/corpus_manifest.csv",
+    "messages": 61240,
+    "id_range": "260790..321830",
+    "digest": "sha256:10266cbf775357b86577c9e3acd3494c86c670149511a5e7abbf236044840405",
+    "contiguity": "no gaps",
+    "taken_at": "2026-08-10"
   },
   "statistics": {
-    "package_lines": 2837,
-    "package_files": 15,
-    "test_lines": 2991,
-    "test_files": 29,
-    "tool_lines": 2136,
-    "tool_files": 9,
-    "documentation_lines": 9706,
+    "package_lines": 3268,
+    "package_files": 16,
+    "test_lines": 3359,
+    "test_files": 31,
+    "tool_lines": 2742,
+    "tool_files": 11,
+    "documentation_lines": 10187,
     "documentation_files": 32,
     "runtime_dependencies": 0
   },
-  "defects_logged": 47
+  "defects_logged": 51,
+  "decisions_recorded": 19
 }

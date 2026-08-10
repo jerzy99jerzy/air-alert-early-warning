@@ -35,10 +35,14 @@ a centre point and an area for each. The join is theirs and is trusted as
 `--border`: `data/reference/poland_outline.json`, which is the Poland feature
 of `ne_10m_admin_0_countries.geojson` from Natural Earth
 (`github.com/nvkelso/natural-earth-vector`), public domain, extracted unmodified
-and vendored at 33 KB so this measurement is reproducible from the tree alone. Nominal scale
-1:10,000,000, so its own positional error is of order a kilometre — two orders
-below the centroid uncertainty above, which is why refining it would be work
-spent on the wrong term.
+and vendored at 33 KB so this measurement is reproducible from the tree alone.
+Its positional error is measured, not quoted from the nominal scale: against an
+independently derived geometry of the same state border (oblast outlines from
+`github.com/EugeneBorshch/ukraine_geojson`, OSM-derived), the 183 shared border
+vertices sit at median 0.0 km, p95 1.6 km, max 2.6 km from this outline
+(2026-08-10, WGS84 geodesic). Order a kilometre, as the scale suggests — but
+now that is a measurement, two orders below the centroid uncertainty above,
+which is why refining it would be work spent on the wrong term.
 
 The register is not vendored: 4 MB of national codifier against a 2.8 kLOC
 package, and it is refreshed on someone else's schedule. Its SHA-256 goes into
@@ -49,8 +53,12 @@ told apart from a rerun against different inputs.
 
 Point-to-great-circle-arc distance on a sphere of radius 6371.0088 km, clamped
 to each segment, minimised over every vertex pair of the Polish outline. No
-projection, no external dependency. Sphericity costs under 0.5% at these
-distances, which is inside the rounding.
+projection, no external dependency. Sphericity is measured, not assumed: WGS84
+geodesic (geographiclib) against this spherical method on the four spot-check
+points differs by at most +0.31% (Kyiv, +1.4 km at 452 km; 2026-08-10), and
+that delta also contains the vertex-versus-arc discretisation, so the pure
+sphericity cost is bounded below it. Under 0.5%, inside the rounding — and now
+that sentence is a result rather than a recollection.
 """
 
 from __future__ import annotations
@@ -72,10 +80,16 @@ EARTH_RADIUS_KM = 6371.0088
 
 Vector = tuple[float, float, float]
 
-# Verified by hand against independent knowledge of these places before the
-# column was trusted anywhere, as T32 requires. Each is a settlement whose
-# distance to Poland is checkable on any map; the tolerance is wide because the
-# check is for a wrong method, not a wrong decimal.
+# Provenance, stated exactly because it was once overstated: when first
+# written, only Lutsk had been verified independently (flat-earth cross-check
+# plus nearest border vertex); Lviv, Uzhhorod and Kyiv passed ranges drawn from
+# the author's geographic memory, and this comment called that "verified by
+# hand". Since 2026-08-10 three of four are measured against an independent
+# geometry (OSM-derived oblast outlines, WGS84 geodesic): Lviv 57.2 km,
+# Lutsk 85.4 km, Uzhhorod 51.6 km, each within 1.1 km of this tool's value.
+# Kyiv has no second border geometry in reach and remains a method check only,
+# cross-computed on WGS84 (453.3 km vertex-wise). The tolerance is wide because
+# the check is for a wrong method, not a wrong decimal.
 SPOT_CHECKS: tuple[tuple[str, float, float, float, float], ...] = (
     ("Lviv", 24.0316, 49.8397, 50.0, 70.0),
     ("Uzhhorod", 22.2879, 48.6208, 40.0, 70.0),

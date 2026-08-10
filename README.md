@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 184](https://img.shields.io/badge/tests-191-brightgreen)](tests/)
-[![coverage 96.79%](https://img.shields.io/badge/coverage-96.70%25-brightgreen)](Makefile)
+[![tests 208](https://img.shields.io/badge/tests-208-brightgreen)](tests/)
+[![coverage 96.16%](https://img.shields.io/badge/coverage-96.16%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 47](https://img.shields.io/badge/defects%20logged-47-informational)](docs/METHODOLOGY.md)
+[![defects logged 51](https://img.shields.io/badge/defects%20logged-51-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -299,10 +299,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 15 | 2,837 |
-| Tests | 29 | 2,991 |
-| Tools | 9 | 2,136 |
-| Documentation | 32 | 9,706 |
+| Package `mavo/` | 16 | 3,225 |
+| Tests | 31 | 3,254 |
+| Tools | 11 | 2,582 |
+| Documentation | 32 | 10,076 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -313,12 +313,12 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 191, of which 13 are scripted attacks |
-| Coverage | 96.70% against a floor of 95, a ratchet that is never lowered |
+| Tests | 206, of which 13 are scripted attacks |
+| Coverage | 96.14% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the twelfth is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 47, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 17 |
+| Defects logged with their class | 49, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 19 |
 | Releases | 30, of which 19 carry tags |
 | Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
 

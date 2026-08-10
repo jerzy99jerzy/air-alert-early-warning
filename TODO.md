@@ -60,6 +60,111 @@ Status: `ready`, **S11**
 **Acceptance:** a fresh clone into an empty directory, README followed from zero,
 with the point of failure recorded. Not "it looks correct".
 
+
+## T39. Tolerated poll rate under continuous operation
+Status: `ready`, blocks M0
+
+**Where this came from.** Re-collecting the corpus after F68 meant 3,000 requests
+in one burst, which raised the question of what rate the source tolerates. It
+went through at 1.0 s once and 1.5 s once [measured, n=2], and neither
+observation says anything about the daemon's profile: a few hundred requests a
+day, indefinitely, from one address. Carrying a burst result over to continuous
+operation would be an inference with no measurement under it.
+
+**The goal is not to find the limit.** It is to check that the requirement sits
+below it. The requirement is two minutes, from the window arithmetic: 20 messages
+a page, and at an assumed 120 messages/hour under a massed strike the page is a
+10-minute window, so two minutes keeps a factor of five. There is no reason to
+probe faster than the requirement; probing for a ceiling is looking for a block.
+
+**Instrumentation before escalation.** Every request logs status, response size,
+message count, id bounds and response time. A week of that is the baseline
+without which degradation cannot be recognised.
+
+**Ladder:** 5 minutes for 72 hours, then 2 minutes for 72 hours. No lower.
+
+**Stop conditions, any of which ends the escalation and returns to 5 minutes for
+a week:** a 429, 403 or 503; a page with fewer than 20 messages not explained by
+genuine channel silence; a step change in response time; any gap in id
+contiguity. The last one matters most, because the dangerous failure has no
+error code: a block is visible, a truncated 200 looks like an ordinary page.
+
+**Worth checking first, because it may remove the problem instead of measuring
+it:** whether the preview serves `ETag` or `Last-Modified`. A conditional
+request ending in 304 costs a fraction of a full response, which is the only
+lever that improves freshness and politeness at once.
+
+**The measurement is tied to the address it was taken from (D-018).** Both
+successful backfill runs went out over a residential connection, and data-centre
+ranges are treated differently by most anti-bot layers. Moving the collector to a
+cloud host invalidates them: the ladder restarts from five minutes on the new
+address rather than continuing.
+
+**Acceptance:** a daily request budget recorded in `docs/MANUAL.md`, a request
+counter in the run log, and the ladder's outcome recorded as a measurement with
+its date **and the address class it was taken from** — including if the outcome
+is "two minutes caused degradation", in which case the requirement and the
+window arithmetic come back to the table rather than the interval quietly
+moving.
+
+
+## T40. How late is the channel, measured
+Status: `ready`, blocks T41 and any latency claim
+
+**Where this came from.** The observation that during a strike the unit that
+matters is seconds, not minutes. That is correct, and it reframes the polling
+question rather than answering it: poll-interval latency is only worth arguing
+about relative to the latency already spent upstream, which nobody has measured.
+`docs/METHODOLOGY.md` lists the channel's latency relative to the APIs as
+unknown, and the 30 July episode ran thirteen minutes from detection to impact
+without anyone knowing where in those thirteen minutes the channel speaks.
+
+**What to measure.** For every message: the post's own timestamp against the
+moment it was received. A week gives a distribution rather than an anecdote.
+This is cheap, needs no new interface, and can run beside the existing reader.
+
+**Why it gates the rest.** If the upstream costs two minutes, then fighting for
+our sixty seconds is optimising a small term beside a large one, and the
+honest report says so. If the upstream is seconds, the transport choice in T41
+becomes the dominant term and is worth a sprint.
+
+**Acceptance:** median, p90 and max of post-timestamp to receipt, over at least
+a week, recorded in `docs/CHANNEL.md` with the collection dates and the
+interval used.
+
+
+## T41. Prototype the push interface, and compare it against polling
+Status: `ready`, after T40
+
+**Where this came from.** Same place as T40. Polling is the wrong instrument for
+seconds however fast it runs: at a two-minute interval the mechanism itself adds
+60 s on average and 120 s at worst, and the only way to shrink that is more
+requests at a surface that was never meant for them.
+
+**What changes with MTProto.** A listening client should receive a post within
+seconds of publication over one long-lived connection [inference from the
+protocol's design, unmeasured on this channel — measuring it is this task's
+acceptance, not its premise]: no interval, no request budget, no question about
+tolerated rate. T39 stops being a measurement and becomes moot. Whether a
+listener is *the earliest* publicly reachable point depends on the channel
+actually being the upstream of both APIs, which D-010 deliberately does not
+claim — it records the three surfaces as correlated and labels the upstream
+topology an inference (METHODOLOGY, provenance table). What holds either way:
+no publicly reachable point is known to be earlier, and this prototype cannot
+settle that ranking, only its own receipt times.
+
+**What it costs, stated up front.** MTProto needs an account and an `api_id`, so
+an identity linked to the operator enters the threat model and a secret enters
+`docs/DEPLOYMENT.md`, where there is none today. The failure mode changes shape
+too: a dropped connection is not an absence of events but blindness, and it must
+render as UNKNOWN behind a local timeout rather than as quiet.
+
+**Acceptance:** a listener running beside the existing reader over the same
+window, with both streams stored; a comparison of receipt times per post id; and
+a decision recorded either way about whether polling stays as the fallback path.
+The comparison is the deliverable, not the listener.
+
+
 ## T8. Is there any ingestible Polish channel at all
 Status: `blocked-external` (access)
 Sprint 6 assumes a Polish feed exists to switch to. RSO and NOTAM are machine
@@ -125,12 +230,28 @@ on have no input.
 to an oblast, or is reported as unresolved. Unresolved is never silently skipped.
 
 ## T16. Means of attack as its own message class
-Status: `ready`, **S7**. Under the reporting thesis this is output rather than a feature of a rule: the report says what the channel names, with the source's wording preserved.
+Status: `done` (sprint 9, 0.14.0.0)
 F25. `kind` is modelled as an attribute of an alert; the channel emits it as a
 separate message tied to a hromada, with its own lifetime.
-**Acceptance:** a threat-type message produces its own event, and the decision
-layer joins it to alerts by area and time window rather than reading it off the
-alert.
+**Acceptance met:** a threat-type message produces its own `KindEvent`, stored in
+its own table, and `mavo/kinds.py` joins it to alerts by oblast and time window.
+The regime rules are unchanged: the join happens before them, so they still read
+`event.kind` and know nothing about how it got there.
+
+*Why this was the blocker and not a tidy-up.* Measured on the twenty real
+messages held as fixtures: 15 carry an alert state, 4 carry a kind marker, and
+**none carry both**. Every live alert therefore had `kind = UNKNOWN`, every
+regime rule tests for MISSILE or DRONE, and the regime split this project's
+central finding rests on could not fire outside the fixture generator. The same
+class as F65, one field over. Logged as F67.
+
+*Open behind it, and it is a measurement rather than code:* the join is only
+worth its complexity if enough alerts receive a regime. `tools/kind_coverage.py`
+answers that from the corpus, which is not in the tree. Until it is run, the
+six-hour `DEFAULT_KIND_TTL` is an assumption carrying a label, and whether the
+regime split describes the world or only the generator is still the open
+question `docs/METHODOLOGY.md` marks as speculation.
+
 
 ## T17. The fourth state: a partial all-clear
 Status: `done` (sprint 5, 0.4.0.0)

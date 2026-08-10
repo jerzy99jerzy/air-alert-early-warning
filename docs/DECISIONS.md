@@ -413,3 +413,89 @@ becomes "Yavorivskyi rajon, Lviv oblast, 34 km" without a single network call.
 **What would change this.** Nothing about convenience. Only a demonstration
 that the register is unusable for the wording the channel actually emits, which
 is an empirical question the design window can answer.
+
+## D-017. The channel is consumed at its own pace, under one identity
+
+Date: 2026-08-09. Status: adopted
+
+**Decision.** MAVO consumes the Telegram channel from one address, under one
+identity, at a rate it can state publicly. Rotating IP addresses, distributing
+requests across proxies, or otherwise obscuring the consumer from the source in
+order to raise throughput is refused. Rejected while re-collecting the corpus
+after losing it (F68), when the question "could we stress-test the limit
+anonymously" was the obvious next thought.
+
+**Reasoning.** Three, in ascending order of weight.
+
+It would measure the wrong thing. The question worth answering is not where the
+limit is but whether the requirement sits below it, and the requirement is one
+poll every two minutes (T39). Probing for a ceiling we do not intend to
+approach is looking for a block.
+
+It would make availability depend on concealment. A warning system whose feed
+survives only while its consumer is unrecognisable to its source has a
+dependency it cannot supervise, cannot document, and cannot hand to anyone else
+to operate.
+
+It would cost the argument. `docs/FEED-SPEC.md` asks Polish institutions for a
+feed that is public, unauthenticated and honestly consumable, and it rests on
+the observation that the Ukrainian channel could be verified rather than taken
+on trust. A project that simultaneously rotated addresses to extract more from
+someone else's preview page forfeits the standing to ask.
+
+**What would change this.** Not throughput. Only a demonstration that ordinary,
+identified consumption at the required rate is refused *and* that no faster
+interface exists — and the second half is already false, because MTProto is a
+push interface and is the answer to the latency question anyway (T41).
+
+## D-018. Collection does not scale; delivery does
+
+Date: 2026-08-09. Status: adopted
+
+**Decision.** The collector runs as exactly one process on one always-on host
+that the operator controls (T25). Moving it to cloud infrastructure is a
+decision about *availability*, not about throughput, and it is taken on those
+grounds or not at all. The scalability question belongs to the delivery side and
+arrives with M2, when the number of recipients stops being one.
+
+**Reasoning.** One channel, one stream. A second collector instance adds no
+throughput: it doubles the request rate against a source this project is
+deliberately careful with, and it produces two copies of the truth about one
+window that then have to be reconciled. Under the push interface (T41) it is
+starker still, since that is a single long-lived connection under a single
+identity and replicating it is meaningless.
+
+What genuinely fails today is uptime, and it failed visibly during the corpus
+re-collection: a laptop taken out of a clamshell stand is an outage, and in a
+log an unplanned one is indistinguishable from a gap in the channel. That is
+the argument for a host, and it is sufficient on its own.
+
+The side that does scale is delivery. `docs/MOBILE.md` already records that an
+ntfy instance serving one operator is a container while the same instance
+serving an open subscriber list is a service with an availability target, which
+would be the first component here to have one.
+
+**Consequence for T39, and it is not optional.** The two successful backfill
+runs went out over a residential connection. Data-centre address ranges are
+treated differently by most anti-bot layers, so moving the collector to cloud
+infrastructure changes the consumer's profile and **invalidates both
+observations**. The tolerated-rate ladder restarts from five minutes on the new
+address; it does not continue. Recorded here because the alternative is somebody
+migrating the host and assuming the measurement travelled with it.
+
+**What comes with the host, into `docs/DEPLOYMENT.md` before the move rather
+than after.** An MTProto secret on someone else's machine, tier-1 corpus data on
+someone else's disk, and a Telegram identity linked to the operator administered
+remotely. None is a blocker; all three are things to write down first.
+
+**What this does not license.** Being in a cloud is not an argument for moving
+the alarm path onto managed push. The constraint in `docs/MOBILE.md` is
+infrastructure the operator controls, which a VPS satisfies as well as a box
+under a desk; FCM and APNs are a third party on the path that wakes a person,
+and that is a separate decision with separate reasoning.
+
+**What would change this.** A measurement showing that one collector cannot keep
+up with the channel, which the window arithmetic currently says is not close, or
+a second independent signal (ADS-B, T20) whose collection genuinely parallelises
+because it is a different source rather than a second reader of the same one.
+

@@ -50,6 +50,9 @@ WESTERN_OBLASTS = (
 # missing from this table resolves to "" — unknown, and visible as unknown.
 #
 # All 23 oblasts the corpus tags, in the register's nominative spelling.
+# The slugs are project-internal transliterations, not any external standard;
+# agreement with another source's oblast slugs, should one appear, would be
+# coincidence and must not be relied on without a mapping table of its own.
 OBLAST_SLUGS: dict[str, str] = {
     "Вінницька": "vinnytsia",
     "Волинська": "volyn",

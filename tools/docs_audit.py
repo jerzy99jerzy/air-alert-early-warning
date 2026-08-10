@@ -221,6 +221,72 @@ def check_readme_links_resolve() -> list[str]:
     return problems
 
 
+def check_corpus_measurements_carry_an_inventory(status: dict[str, object]) -> list[str]:
+    """A measurement over the corpus requires an inventory of that corpus.
+
+    F68. On 2026-08-09 the corpus was lost: sixty thousand posts, one copy, no
+    checksum, no inventory, and every published measurement derived from it. The
+    tree carried a `MANIFEST.sha256` over its own source files and nothing at
+    all over the data those files exist to analyse.
+
+    The re-collection is possible because Telegram addresses posts by id, so the
+    same id range yields the same pages. That is also the trap: without an
+    inventory, "the second copy is the first one" is an assumption, in the one
+    place this project refuses them. So the rule is executable rather than
+    remembered — any figure naming the design window in `STATUS.json` requires
+    `data/aggregates/corpus_manifest.csv` to exist and to agree with the
+    `corpus` block beside those figures.
+
+    Same class as F64, one layer further out: a claim about something the gate
+    could not see.
+    """
+    measured = status.get("measured")
+    if not isinstance(measured, dict):
+        return ["STATUS.json has no measured block"]
+    # Both spellings: `design_window_messages` and
+    # `western_episodes_design_window`. The first draft matched only the
+    # suffix and would have let half the corpus-derived figures through a
+    # check written to catch exactly them.
+    derived = sorted(key for key in measured if "design_window" in key)
+    if not derived:
+        return []
+
+    manifest = ROOT / "data" / "aggregates" / "corpus_manifest.csv"
+    if not manifest.exists():
+        return [
+            f"{len(derived)} measurement(s) are derived from the corpus "
+            f"({derived[0]} and others) and {manifest.relative_to(ROOT)} does not exist. "
+            "A measurement whose data cannot be identified is not reproducible (F68)"
+        ]
+
+    header = {}
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("#"):
+            break
+        parts = line.lstrip("# ").split(None, 1)
+        if len(parts) == 2:
+            header[parts[0]] = parts[1].strip()
+
+    corpus = status.get("corpus")
+    if not isinstance(corpus, dict):
+        return [
+            "STATUS.json carries corpus-derived measurements and no corpus block. "
+            "The inventory exists and nothing pins it (F68)"
+        ]
+
+    problems = []
+    for key, field in (("pages", "pages"), ("messages", "messages"),
+                       ("id_range", "id_range"), ("digest", "digest")):
+        pinned, found = corpus.get(key), header.get(field)
+        if found is None:
+            problems.append(f"corpus_manifest.csv header has no {field}")
+        elif str(pinned) != found:
+            problems.append(
+                f"corpus {key} is {found} in the inventory, STATUS.json pins {pinned}"
+            )
+    return problems
+
+
 def check_every_document_is_pinned(status: dict[str, object]) -> list[str]:
     """Every document in the tree appears in the ``documents`` block, and vice versa.
 
@@ -330,6 +396,52 @@ def check_cited_tests_exist() -> list[str]:
     return problems
 
 
+def check_the_holdout_boundary_survives_in_the_corpus_block(
+    status: dict[str, object],
+) -> list[str]:
+    """D-012a's freeze record must exist, and no write may silently drop it.
+
+    The boundary between the design window and the holdout was frozen before
+    any message content was read, and STATUS.json's ``corpus`` block is where
+    that record lives. On 2026-08-09 ``corpus_inventory.py --write-status``
+    replaced the block wholesale and erased it, and the gate passed, because no
+    check read those fields — the exact F64 shape, one field further out. This
+    check is the missing reader: the fields must be present, the boundary must
+    be internally consistent, and the freeze flag must be an explicit boolean,
+    so the next tool that eats the block turns the gate red instead of passing.
+    """
+    corpus = status.get("corpus")
+    if not isinstance(corpus, dict):
+        # The inventory check beside this one already reports the missing block.
+        return []
+    problems = []
+    for field in (
+        "design_window_high_id",
+        "holdout_low_id",
+        "holdout_share",
+        "content_read_before_freeze",
+    ):
+        if field not in corpus:
+            problems.append(
+                f"corpus block has no {field}: the D-012a holdout record has been "
+                "dropped by a write that did not own it"
+            )
+    if problems:
+        return problems
+    high, low = corpus["design_window_high_id"], corpus["holdout_low_id"]
+    if not (isinstance(high, int) and isinstance(low, int) and low == high + 1):
+        problems.append(
+            f"holdout boundary is not contiguous: design_window_high_id {high} "
+            f"and holdout_low_id {low} must be adjacent ids"
+        )
+    if not isinstance(corpus["content_read_before_freeze"], bool):
+        problems.append(
+            "content_read_before_freeze must be an explicit boolean, "
+            "not a value that reads as one"
+        )
+    return problems
+
+
 def main() -> int:
     """Run every audit. Returns a process exit code."""
     status = _status()
@@ -341,6 +453,8 @@ def main() -> int:
         + check_cited_tests_exist()
         + check_readme_links_resolve()
         + check_every_document_is_pinned(status)
+        + check_corpus_measurements_carry_an_inventory(status)
+        + check_the_holdout_boundary_survives_in_the_corpus_block(status)
         + check_defect_count_is_pinned(status)
         + check_statistics_match_the_tree(status)
         + check_measured_block_is_recomputed(status)

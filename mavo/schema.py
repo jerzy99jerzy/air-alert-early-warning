@@ -103,6 +103,21 @@ class ThreatKind(Enum):
     UNKNOWN = "unknown"
 
 
+class KindState(Enum):
+    """A threat-kind declaration is announced and later lifted (T16, F25).
+
+    Its own lifecycle, separate from ``AlertState``. The channel declares
+    "Загроза ударних БпЛА" for a hromada and later lifts it with "Відбій
+    загрози", on messages that carry no alert state at all. Modelling this as an
+    attribute of an alert, which is what the code did until 0.14.0.0, means the
+    two can never meet: measured on the 20 real messages held as fixtures, 15
+    carry an alert state, 4 carry a kind marker, and **none carry both**.
+    """
+
+    DECLARED = "declared"
+    LIFTED = "lifted"
+
+
 class AreaRole(Enum):
     """Why an area appears in the message that named it.
 
@@ -132,6 +147,37 @@ class AreaRole(Enum):
 # geography the rules reason about, and both live on the event.
 BORDER_OBLASTS: frozenset[str] = frozenset({"volyn", "lviv", "zakarpattia"})
 SECOND_RING_OBLASTS: frozenset[str] = frozenset({"rivne", "ternopil", "ivano-frankivsk"})
+
+
+@dataclass(frozen=True, slots=True)
+class KindEvent:
+    """One declaration or lifting of a means of attack, for one area.
+
+    A second stream beside the alert stream, with its own lifetime. The decision
+    layer joins the two by area and time rather than reading the kind off the
+    alert, because the source does not put them in the same message (T16).
+    """
+
+    area_id: str
+    kind: ThreatKind
+    state: KindState
+    ts_source: datetime
+    ts_ingest: datetime
+    source_id: str
+    oblast: str = ""
+    raw_fields: dict[str, str] = field(default_factory=dict)
+
+    @property
+    def content_hash(self) -> str:
+        """Identity: this kind entered this state for this area at this moment.
+
+        Same construction as ``ThreatEvent.content_hash`` and for the same
+        reason: a page re-read must not append the same declaration twice.
+        """
+        ts = self.ts_source
+        stamp = (ts.astimezone(UTC) if ts.tzinfo is not None else ts).isoformat()
+        payload = "|".join([self.area_id, self.kind.value, self.state.value, stamp, self.source_id])
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)

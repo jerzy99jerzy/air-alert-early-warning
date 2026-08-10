@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.4
+Document:  docs/METHODOLOGY.md, version 2.9
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -143,6 +143,10 @@ repository has come to the mistake it was built after.
 | [F62](#f62-01110-the-transport-would-read-the-filesystem-when-handed-the-wrong-string) | 0.11.1.0 | The transport would read the filesystem when handed the wrong string |
 | [F63](#f63-01110-a-duplicated-tag-in-the-map-resolved-by-file-order) | 0.11.1.0 | A duplicated tag in the map resolved by file order |
 | [F64](#f64-01120-a-pin-that-nothing-compared-against-the-tree) | 0.11.2.0 | A pin that nothing compared against the tree |
+| [F67](#f67-01400-the-regime-split-could-not-fire-on-live-input) | 0.14.0.0 | The regime split could not fire on live input |
+| [F68](#f68-01500-the-evidence-base-had-no-inventory) | 0.15.0.0 | The evidence base had no inventory |
+| [F69](#f69-01600-the-inventory-writer-ate-the-freeze-record-beside-it) | 0.16.0.0 | The inventory writer ate the freeze record beside it |
+| [F70](#f70-01600-one-counter-for-two-different-events-and-it-flattered-the-join) | 0.16.0.0 | One counter for two different events, and it flattered the join |
 
 ## Defect log
 
@@ -1048,6 +1052,90 @@ reason recorded in the source. A bound widened because the measurement
 disagreed is a defect unless the bound is shown to be the error.
 
 
+### F67, 0.14.0.0. The regime split could not fire on live input
+
+Every regime rule tests `event.kind is MISSILE` or `is DRONE`. `kind` was read
+off the alert message, and the channel does not put it there. Measured on the
+twenty real messages held as fixtures: 15 carry an alert state, 4 carry a kind
+marker, **0 carry both**. So on live input every alert arrived UNKNOWN and no
+regime rule could fire, permanently and silently.
+
+**Why it survived five sprints.** F25 recorded the shape in sprint 4, in one
+paragraph, correctly, and called it architectural rather than cosmetic. It was
+then filed as T16 and the sprint that would have done it kept being the next
+one. Every test that exercises a rule builds its events from the fixture
+generator, which attaches a kind to the alert because that is how the dataclass
+is shaped, so the suite measured the rules against the one input where the
+defect cannot appear. That is the same sentence as F65's, which is why both are
+in the same class.
+
+**What makes this one worse than F65.** The regime split is not a detail of the
+rules; it is the project's central finding. A global recall of 0.47 was masking
+a missile rule at 7 of 7 and a drone rule at 0 of 8, and separating them is what
+made an honest claim possible at all. On real input that separation had nothing
+to separate by.
+
+Class: **one identifier, two meanings, joined by an equality test** — the same
+as F65, one field over. Repaired by giving the kind its own stream, its own
+table and its own lifetime, and joining it to alerts by oblast and time in
+`mavo/kinds.py` before the rules see them.
+`tests/test_sprint9.py` holds it, including the case where two kinds are live at
+once and the join answers UNKNOWN rather than picking.
+
+**Not repaired: whether the join has coverage.** The mechanism exists; whether
+the source declares a means often enough for it to matter is a measurement on
+the corpus, and the corpus is not in the tree. Until `tools/kind_coverage.py`
+has been run, the honest statement is that the regime split can now fire, not
+that it will.
+
+
+### F68, 0.15.0.0. The evidence base had no inventory
+
+On 2026-08-09 the corpus was lost. Sixty thousand posts, 118 days, one copy on
+one laptop, no second copy, no checksum, no inventory, and no entry anywhere
+saying where it lived. Every measurement this project publishes was derived from
+it: 99.34% tag coverage, 48,540 messages, 127 tags, 99.997% tag-prose agreement,
+22 western-wide nights, 0 of 22 crossings.
+
+The tree carried a `MANIFEST.sha256` over 101 source files and nothing at all
+over the data those files exist to analyse.
+
+**What survives and what does not.** The published figures remain true as a
+record of what was measured; the method is written down and the arithmetic is
+reproducible. What is gone is the ability to *re-derive* them, and to answer the
+one question a reader is entitled to ask: is the data you measured the data you
+say you measured. `docs/FEED-SPEC.md` argues in section 1 that the Ukrainian
+channel could be verified rather than taken on trust. Between the loss and this
+release, MAVO could not offer the same.
+
+**Why it survived.** Because it was never modelled as a defect class. The
+project's discipline is aimed at claims in code and prose, and it is thorough
+there: pins, audits, manifests, mutation-verified controls. The data those
+claims are about sat outside every one of those mechanisms, in a directory that
+is correctly gitignored as tier 1 and was therefore invisible to all of them.
+Tier 1 means *not committed*; it was read as *not tracked at all*.
+
+**Recovery, and the trap in it.** Telegram addresses posts by id and a page
+re-fetched is a page unchanged, so re-collecting the same id range yields the
+same corpus. The trap is that without an inventory, "the second copy is the
+first one" is an assumption, in exactly the place this project refuses them.
+
+Class: **a critical artifact with no inventory** — the same shape as F64, a pin
+nothing compared against the tree, one layer further out: a claim about
+something the gate could not see. Repaired with
+`tools/corpus_inventory.py`, which writes per-page checksums, id range,
+contiguity and an aggregate digest into `data/aggregates/corpus_manifest.csv`
+(tier 2, committed), and a `docs_audit` check that fails when `STATUS.json`
+carries a design-window figure and the inventory does not exist or disagrees
+with it. A corpus measurement is now uncommittable without the identity of the
+corpus it came from.
+
+*The first draft of that check matched only keys ending in `_design_window` and
+would have let `design_window_messages` and its siblings through: a check
+written to catch exactly those figures, missing half of them. Caught by its own
+regression before release, and recorded here rather than quietly widened.*
+
+
 ## Corpus measurements, 2026-08-09
 
 Metadata only. No message content was read before the holdout boundary was
@@ -1264,3 +1352,69 @@ of the material (F59, the west_activity denominator, this). The repair was not a
 better pattern: candidate names are now kept only when the map already knows
 them, because `район` is also an ordinary noun and no pattern over that word can
 tell an administrative unit from the area of an old town.
+
+
+### F69, 0.16.0.0. The inventory writer ate the freeze record beside it
+
+`tools/corpus_inventory.py --write-status` assigned `status["corpus"] = {...}`,
+replacing the block rather than merging into it. The block already held the
+D-012a holdout record — `design_window_high_id`, `holdout_low_id`,
+`holdout_share`, `content_read_before_freeze` — the boundary frozen before any
+message content was read, which is what makes the holdout a holdout rather than
+a second look at data already seen. One run erased all four, and `make verify`
+passed.
+
+**Why it survived.** Two reasons, and the second is the one that matters. The
+first: the write looked like an update, and a tool writing figures it just
+measured is exactly the discipline this project asks for elsewhere. The second:
+**nothing read those fields.** Eleven checks read `STATUS.json` and not one of
+them asked whether the freeze record was still there, so the gate could not
+distinguish a block that had been updated from a block that had been eaten.
+
+Class: **F64, a pin nothing compared against the tree**, committed inside the
+tool built to close that class one layer out (F68). Recorded rather than
+quietly corrected because the pattern is now three deep and the repair had to
+address the reader, not only the writer.
+
+**Repair, both halves.** `patch_corpus_block()` merges, and ownership is by an
+explicit list rather than by acquaintance: inventory fields overwrite, the
+superseded hand-written schema (`posts`, `post_id_low`, `post_id_high`,
+`retrieved`, `contiguous`, `span_days`) is retired with each removal printed,
+and every other key survives — including keys invented after this function was
+written. A naive merge was rejected: it would leave two contradictory
+descriptions of the corpus in one block, `posts: 60680` beside
+`messages: 61240`, and the stale one is the one somebody quotes.
+
+The second half is `docs_audit.check_the_holdout_boundary_survives_in_the_corpus_block`,
+the reader those fields never had: the four fields must be present, the boundary
+must be two adjacent ids, and the freeze flag must be an explicit boolean.
+Held by `tests/test_corpus_inventory.py::test_a_status_write_does_not_erase_fields_it_does_not_own`
+and `tests/test_corpus_inventory.py::test_the_gate_refuses_a_corpus_block_missing_the_holdout_record`,
+both verified red against a scratch copy carrying the original assignment and a
+disabled guard respectively.
+
+### F70, 0.16.0.0. One counter for two different events, and it flattered the join
+
+`JoinReport.resolved` counted two things as one: alerts whose own message named
+the means of attack, and alerts the join supplied a regime for. `coverage`
+divided that total by every alert, so it took credit for regimes the join never
+touched. Nothing was arithmetically wrong, which is why it survived: the number
+was correct for a question nobody had asked, and it was about to be quoted as
+the answer to the question T16 exists to settle.
+
+**Why it survived.** The counter was named after its effect rather than its
+cause, and no test asked where a resolution came from. Three tests asserted on
+`resolved` and each was satisfiable either way.
+
+Class: **an instrument reporting its own framing as a property of the material**
+— the family of F59 and the `?before=` probe of F44, where the measurement and
+the thing measured were not separable in the output.
+
+**Repair.** `carried` and `joined` are separate fields; `resolved` survives as
+their sum, so existing assertions keep their meaning. `join_coverage` is the
+join's own performance — of the alerts that arrived without a kind, the share it
+resolved to exactly one — and it is the figure to quote when the question is
+whether the join works. `JoinReport.line()` prints both, so the TTL sweep in
+`tools/kind_coverage.py` shows the split without a caller having to know about
+it. Held by `tests/test_sprint9.py::test_t16_a_message_that_states_its_own_kind_is_not_overwritten`,
+verified red against a scratch copy that merges the counters again.

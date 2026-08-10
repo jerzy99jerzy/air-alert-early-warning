@@ -50,9 +50,17 @@ def test_the_interval_contains_the_centre_and_never_goes_negative(table: AreaTab
 def test_a_border_touching_raion_admits_it_may_reach_zero(table: AreaTable) -> None:
     """The case the scalar got wrong, asserted by name.
 
-    Sambirskyi, Yavorivskyi, Chervonohradskyi and Volodymyr-Volynskyi raions all
-    share an edge with Poland. Any distance column that reports a positive
-    minimum for them is reporting something false, however precise it looks.
+    What this test checks: that the interval arithmetic reaches zero for these
+    four raions, i.e. each registered centre sits closer to the border than its
+    equal-area radius. What it does NOT check: that they actually share an edge
+    with Poland. That claim is geographic knowledge [reported], not measured
+    here — no polygon source with KATOTTG codes is reachable — and an earlier
+    version of this docstring stated it as if the assertion below proved it.
+    Independent support, measured 2026-08-10 against an OSM-derived border
+    geometry (WGS84): centre distances reproduce within 0.4 km — Sambirskyi
+    14.3, Yavorivskyi 24.8, Chervonohradskyi 16.5, Volodymyr-Volynskyi 20.9 km,
+    all inside their radii. If any of the four turns out not to touch Poland,
+    the interval still holds: it says "may reach zero", not "reaches zero".
     """
     for tag in (
         "Самбірський_район",

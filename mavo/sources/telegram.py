@@ -35,7 +35,15 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from mavo.areas import CONTINUES, AreaTable, oblast_slug
-from mavo.schema import AlertState, AreaRole, Provenance, ThreatEvent, ThreatKind
+from mavo.schema import (
+    AlertState,
+    AreaRole,
+    KindEvent,
+    KindState,
+    Provenance,
+    ThreatEvent,
+    ThreatKind,
+)
 from mavo.transport import Transport
 
 CHANNEL_URL = "https://t.me/s/air_alert_ua"
@@ -77,6 +85,25 @@ CLEAR_MARKERS = ("відбій тривоги", "відбій повітряно
 # yellow message; reading it as CLEAR would be actively wrong, and reading it as
 # UNKNOWN would discard the fact that the source spoke.
 CONTINUES_MARKERS = ("тривога ще триває", "тривога триває")
+
+# T16. A threat-kind message is its own class, with its own verbs. "Відбій
+# загрози" lifts a means of attack; "Відбій тривоги" clears an alert. The two
+# differ by one word and mean different things about different lifetimes, which
+# is exactly the kind of distinction this project loses when it reads for the
+# marker it expects instead of the one that is there.
+#
+# Provenance of both tables: written from the F25 examples and the author's
+# knowledge of the language, before the corpus existed to check them against
+# [assumption, unmeasured]. Until `tools/kind_coverage.py --sample` output has
+# been reviewed and the review recorded, a coverage figure computed over these
+# markers measures this parser, not the channel. Two named risks the review
+# must specifically look for: (1) "небезпека" is a common word and may match
+# messages that are not declarations; (2) the lift table assumes every lift
+# says "відбій загрози" — a lift phrased any other way that happens to contain
+# a declare marker (e.g. a past-tense "небезпека …") would be read as a fresh
+# DECLARED, which is an inversion, the worst failure available to this table.
+KIND_DECLARE_MARKERS = ("загроза застосування", "загроза удар", "атака дрон", "небезпека")
+KIND_LIFT_MARKERS = ("відбій загрози",)
 
 KIND_MARKERS: dict[str, ThreatKind] = {
     "балістик": ThreatKind.MISSILE,
@@ -187,6 +214,38 @@ def classify_state(text: str) -> AlertState | None:
     if any(marker in lowered for marker in START_MARKERS):
         return AlertState.ACTIVE
     return None
+
+
+def classify_kind_message(
+    text: str, areas: AreaTable | None = None
+) -> tuple[tuple[str, str, ThreatKind, KindState], ...]:
+    """Areas, oblasts and the means of attack a kind message declares or lifts.
+
+    Returns nothing for an alert message, so the two readers cannot both claim
+    the same text: a message carrying an alert state is an alert, whatever else
+    it mentions. Until 0.14.0.0 these messages parsed as nothing at all and were
+    counted as unparsed, which was honest and lossy at the same time.
+    """
+    lowered = text.lower()
+    if classify_state(text) is not None:
+        return ()
+    lifting = any(marker in lowered for marker in KIND_LIFT_MARKERS)
+    if not lifting and not any(marker in lowered for marker in KIND_DECLARE_MARKERS):
+        return ()
+    kinds = {value for pattern, value in KIND_MARKERS.items() if pattern in lowered}
+    if len(kinds) != 1:
+        # Naming no means, or two, is not a declaration this can act on. The
+        # message is still unparsed rather than resolved to a guess.
+        return ()
+    kind = next(iter(kinds))
+    state = KindState.LIFTED if lifting else KindState.DECLARED
+
+    if areas is None:
+        return ()
+    resolved, _unknown = areas.resolve_all(text)
+    return tuple(
+        (ref.code, oblast_slug(ref.oblast), kind, state) for ref in resolved
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -326,6 +385,9 @@ class TelegramChannelSource:
         self.transport = transport
         self.url = url
         self.areas = areas
+        # T16. The kind stream from the most recent poll, beside the alert
+        # stream rather than inside it. Empty until the first poll, like report.
+        self.kind_events: tuple[KindEvent, ...] = ()
         self.report = ParseReport()
         self._last_id: int | None = None
 
@@ -359,6 +421,7 @@ class TelegramChannelSource:
         first_id, last_id, skipped = self._window(body)
 
         events: list[ThreatEvent] = []
+        kind_events: list[KindEvent] = []
         unparsed: list[str] = []
         unknown_tags: list[str] = []
         found = _BLOCK.findall(body)
@@ -371,6 +434,26 @@ class TelegramChannelSource:
             if self.areas is not None:
                 _resolved, unknown = self.areas.resolve_all(text)
                 unknown_tags.extend(tag for tag in unknown if tag not in unknown_tags)
+            declarations = classify_kind_message(text, self.areas)
+            if ts is not None and declarations:
+                # T16. The second stream. Kept beside `poll`'s return value
+                # rather than mixed into it: an alert and a declaration are
+                # different events with different lifetimes, and merging them is
+                # the modelling error F25 recorded.
+                kind_events.extend(
+                    KindEvent(
+                        area_id=area_id,
+                        kind=kind,
+                        state=state,
+                        ts_source=ts,
+                        ts_ingest=now,
+                        source_id=self.source_id,
+                        oblast=oblast,
+                        raw_fields={"text": text[:200]},
+                    )
+                    for area_id, oblast, kind, state in declarations
+                )
+                continue
             mentions = classify_message(text, self.areas)
             if ts is None or not mentions:
                 unparsed.append(text[:120])
@@ -394,6 +477,7 @@ class TelegramChannelSource:
                 for mention in mentions
             )
 
+        self.kind_events = tuple(kind_events)
         self.report = ParseReport(
             messages=len(found),
             parsed=len(found) - len(unparsed),
