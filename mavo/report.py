@@ -34,17 +34,17 @@ import tempfile
 import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
 
-from mavo.areas import AreaRef, AreaTable
+from mavo.areas import AreaRef, AreaTable, oblast_slug
 from mavo.schema import AlertState, ThreatEvent, ThreatKind, is_clear
 
 # The contract version. Bumped when a consumer could break, never silently:
 # FEED-SPEC section 3 property four is a requirement this project wrote for
 # somebody else's feed, and owing it to our own consumers is the whole point.
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # How long a report may be trusted after the observation it rests on. Chosen
 # rather than measured, and labelled as such: the poll interval that will
@@ -53,6 +53,12 @@ SCHEMA_VERSION = 1
 # derived from the page-window arithmetic in T39, which is a margin rather
 # than a finding. [assumption, unmeasured]
 DEFAULT_VALID_FOR_S = 600
+
+# The trailing window the consumer shades its map by. Seven days is the
+# consumer's choice rather than a measurement, and it is published as a
+# parameter (`window_days`) so a reader can see which window produced the
+# counts instead of inferring one.
+DEFAULT_TRAILING_DAYS = 7
 
 
 class FeedState(Enum):
@@ -81,10 +87,28 @@ class AreaPicture:
 
     @property
     def oblast(self) -> str:
-        """The oblast, or "unknown" - never an empty string in the output."""
+        """The oblast's register name, or "unknown". For a human reader."""
         if self.area is not None and self.area.oblast:
             return self.area.oblast
         return "unknown"
+
+    @property
+    def oblast_slug(self) -> str:
+        """The canonical ASCII slug, or "" when nothing resolves it.
+
+        Two fields rather than one because they answer to different readers.
+        The register name is what a person recognises; the slug is what a
+        consumer joins on, and joining on a Cyrillic display name is how
+        F74 happened: the site indexes its geometry by slug, every area
+        arrived carrying `Львівська`, and the map drew nothing while the
+        distance list drew everything.
+
+        Empty is the unknown state and never a match, the same rule
+        `oblast_slug()` follows in `mavo/areas.py` (T38).
+        """
+        if self.area is None or not self.area.oblast:
+            return ""
+        return oblast_slug(self.area.oblast)
 
     @property
     def border_interval(self) -> str:
@@ -104,6 +128,21 @@ class AreaPicture:
 
 
 @dataclass(frozen=True, slots=True)
+class RecentOblast:
+    """How often one oblast declared an alert over the trailing window.
+
+    Oblast granularity rather than raion, because the consumer shades whole
+    oblasts and a raion-level count would be a finer number rendered at a
+    coarser resolution: precision the display cannot carry and a reader would
+    assume anyway.
+    """
+
+    slug: str
+    alerts_count: int
+    last_alert_ended_at: datetime | None
+
+
+@dataclass(frozen=True, slots=True)
 class Report:
     """The composed picture at one moment, with its own blindness measured."""
 
@@ -112,6 +151,8 @@ class Report:
     valid_for_s: int
     areas: tuple[AreaPicture, ...]
     unresolved_areas: tuple[str, ...]
+    recent: tuple[RecentOblast, ...] = ()
+    trailing_days: int = DEFAULT_TRAILING_DAYS
 
     @property
     def staleness_s(self) -> float | None:
@@ -178,12 +219,63 @@ class Report:
         return min(candidates) if candidates else None
 
 
+def trailing_counts(
+    events: Iterable[ThreatEvent],
+    *,
+    as_of: datetime,
+    days: int = DEFAULT_TRAILING_DAYS,
+    table: AreaTable,
+) -> tuple[RecentOblast, ...]:
+    """Alert declarations per oblast over the trailing window.
+
+    Counts *transitions into* ACTIVE rather than areas currently active: the
+    question the shading answers is "how busy has this oblast been", and an
+    area that has been under one long alert for six days is one declaration,
+    not six days of them.
+
+    An oblast whose name the register map cannot resolve is dropped from this
+    count and **not** folded into another. The alternative is a count that is
+    quietly wrong for the oblast it lands in, which is worse than a count that
+    is visibly missing: the areas that fail to resolve are already reported as
+    `unresolved_areas` on the report beside this.
+
+    `last_alert_ended_at` is the most recent affirmative all-clear, or None
+    where no all-clear was seen in the window. None means unknown, and a
+    consumer must not render it as "ended just now".
+    """
+    cutoff = as_of - timedelta(days=days)
+    counts: dict[str, int] = {}
+    last_clear: dict[str, datetime] = {}
+    for event in events:
+        if event.ts_source < cutoff:
+            continue
+        area = table.by_code(event.area_id)
+        slug = oblast_slug(area.oblast) if area is not None else ""
+        if not slug:
+            continue
+        if event.state is AlertState.ACTIVE:
+            counts[slug] = counts.get(slug, 0) + 1
+        elif is_clear(event.state):
+            previous = last_clear.get(slug)
+            if previous is None or event.ts_source > previous:
+                last_clear[slug] = event.ts_source
+    return tuple(
+        RecentOblast(
+            slug=slug,
+            alerts_count=count,
+            last_alert_ended_at=last_clear.get(slug),
+        )
+        for slug, count in sorted(counts.items())
+    )
+
+
 def compose(
     events: Iterable[ThreatEvent],
     *,
     as_of: datetime | None = None,
     table: AreaTable | None = None,
     valid_for_s: int = DEFAULT_VALID_FOR_S,
+    trailing_days: int = DEFAULT_TRAILING_DAYS,
 ) -> Report:
     """Fold an event log into the current picture.
 
@@ -198,8 +290,13 @@ def compose(
     while an area that went ACTIVE and then UNKNOWN must remain and say so.
     """
     table = table if table is not None else AreaTable.from_csv()
+    # Materialised once: the fold below and the trailing window both need the
+    # whole log, and a generator consumed twice would silently give the second
+    # reader nothing, which here would be an empty seven-day layer that looks
+    # like a quiet week.
+    replayed = list(events)
     latest: dict[str, ThreatEvent] = {}
-    for event in events:
+    for event in replayed:
         current = latest.get(event.area_id)
         if current is None or (event.ts_source, event.ts_ingest) >= (
             current.ts_source, current.ts_ingest
@@ -224,12 +321,17 @@ def compose(
             )
         )
     newest = max((e.ts_source for e in latest.values()), default=None)
+    moment = as_of if as_of is not None else datetime.now(UTC)
     return Report(
-        as_of=as_of if as_of is not None else datetime.now(UTC),
+        as_of=moment,
         newest_observation=newest,
         valid_for_s=valid_for_s,
         areas=tuple(pictures),
         unresolved_areas=tuple(unresolved),
+        recent=trailing_counts(
+            replayed, as_of=moment, days=trailing_days, table=table
+        ),
+        trailing_days=trailing_days,
     )
 
 
@@ -285,17 +387,39 @@ def to_contract(report: Report) -> dict[str, object]:
     the producer's own gate; one inferred by the consumer breaks on a rename
     nobody flagged.
     """
+    newest = report.newest_observation
     return {
         "v": SCHEMA_VERSION,
         "generated_at": report.as_of.isoformat(timespec="seconds"),
         "valid_for_s": report.valid_for_s,
         "state": report.feed_state.value,
         "observation_age_s": report.staleness_s,
+        # When the source last said anything, as distinct from when this
+        # picture was composed. A consumer showing only `generated_at` would
+        # tell a reader the page is fresh while the feed behind it is hours
+        # old, which is the staleness failure one level up.
+        "source_last_message_at": (
+            newest.isoformat(timespec="seconds") if newest is not None else None
+        ),
+        "window_days": report.trailing_days,
+        "recent_7d": [
+            {
+                "oblast": entry.slug,
+                "alerts_count": entry.alerts_count,
+                "last_alert_ended_at": (
+                    entry.last_alert_ended_at.isoformat(timespec="seconds")
+                    if entry.last_alert_ended_at is not None
+                    else None
+                ),
+            }
+            for entry in report.recent
+        ],
         "areas": [
             {
                 "katottg": picture.area.code if picture.area is not None else "",
                 "area_id": picture.area_id,
-                "oblast": picture.oblast,
+                "oblast": picture.oblast_slug,
+                "oblast_name": picture.oblast,
                 "alert": picture.state.value,
                 "kind": picture.kind.value,
                 "since": picture.since.isoformat(timespec="seconds"),

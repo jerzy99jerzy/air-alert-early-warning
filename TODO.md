@@ -641,3 +641,27 @@ over south-eastern Poland correlates with alert nights on the Ukrainian side is
 a different question with a different acceptance, and it has no lift computed
 [hypothesis, unmeasured]. Recorded here so it is not quietly folded into the
 count above, which would be one measurement carrying two claims.
+
+
+## T43. Raion centroids in the contract
+Status: `ready`, follows F74. Small, and it changes what the map can say.
+
+Every marker on the consumer's map is currently anchored to a whole oblast,
+with an uncertainty ellipse the size of that oblast's bounding box, because
+the contract carries no coordinates. Two raions under alert in one oblast
+render as one marker. That is honest, and it throws away resolution this
+project already has: areas resolve to KATOTTG codes, and `border_km.csv` was
+computed from registered centre points, so the coordinates exist upstream of
+a column that does not carry them.
+
+**Acceptance:** a `lat`/`lon` pair per area in `data/reference/`, provenance
+recorded with the source and its licence the way `border_km.csv` records the
+register pin; both published in the contract when known and **absent rather
+than approximated** when not; a schema bump; and a check that every published
+coordinate falls inside the area it claims, verified the way the consumer
+verifies its own anchors by point-in-polygon.
+
+**What this does not license.** A finer marker is not a finer claim. The feed
+still reports administrative states, not objects, and a raion-anchored marker
+is "somewhere in this raion", which is why the uncertainty field must shrink
+with the anchor rather than disappear.

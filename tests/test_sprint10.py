@@ -214,10 +214,11 @@ def test_the_contract_carries_its_schema_version_and_heartbeat() -> None:
         compose([_event(SAMBIR, AlertState.ACTIVE, 1, ThreatKind.MISSILE)],
                 as_of=NOW, table=_table())
     )
-    assert payload["v"] == 1
+    assert payload["v"] == 2
     assert payload["generated_at"] == NOW.isoformat(timespec="seconds")
     assert payload["valid_for_s"] == DEFAULT_VALID_FOR_S
     assert payload["state"] == "ok"
+    assert payload["source_last_message_at"] is not None
     area = payload["areas"][0]
     assert area["katottg"] == SAMBIR
     assert area["kind"] == "missile"
@@ -247,7 +248,7 @@ def test_writing_the_contract_is_atomic_and_leaves_no_partial_file(
     report = compose([_event(SAMBIR, AlertState.ACTIVE, 1)], as_of=NOW, table=_table())
     write_contract(report, target)
     payload = json.loads(target.read_text(encoding="utf-8"))
-    assert payload["v"] == 1
+    assert payload["v"] == 2
     leftovers = [p.name for p in target.parent.iterdir() if p.name != "state.json"]
     assert leftovers == [], f"temporary files survived the write: {leftovers}"
 
@@ -586,3 +587,139 @@ def test_watch_without_an_output_path_refuses(tmp_path: Path) -> None:
     from mavo.cli import main
 
     assert main(["report", "--store", str(tmp_path / "events"), "--watch"]) == 2
+
+
+def test_the_oblast_field_is_a_slug_a_consumer_can_join_on() -> None:
+    """F74: the map drew nothing while the distance list drew everything.
+
+    The site indexes its geometry by ASCII slug. The contract published the
+    register's Cyrillic display name in the same field, so every area landed
+    in the consumer's "unplaceable" bucket: measured at four of four against
+    `mavo-site` 1.2.0.0. Both readers are served now, and the join field is
+    the machine one.
+
+    Mutation: publish `picture.oblast` in the `oblast` key again.
+    """
+    payload = to_contract(
+        compose([_event(SAMBIR, AlertState.ACTIVE, 1)], as_of=NOW, table=_table())
+    )
+    area = payload["areas"][0]
+    assert area["oblast"] == "lviv", "the join field must be the ASCII slug"
+    assert area["oblast_name"] == "Львівська", "the display name must survive too"
+    assert area["oblast"].isascii(), "a consumer joins on this; it cannot be Cyrillic"
+
+
+def test_an_unresolvable_oblast_publishes_an_empty_slug_not_a_guess() -> None:
+    """Empty is the unknown state, and a consumer must be able to see it."""
+    payload = to_contract(
+        compose(
+            [_event("UA00000000000000000", AlertState.ACTIVE, 1)],
+            as_of=NOW,
+            table=_table(),
+        )
+    )
+    area = payload["areas"][0]
+    assert area["oblast"] == ""
+    assert area["oblast_name"] == "unknown"
+
+
+def test_a_blind_report_publishes_a_null_source_time_rather_than_now() -> None:
+    """`generated_at` says when we composed; this says when the source spoke."""
+    payload = to_contract(compose([], as_of=NOW, table=_table()))
+    assert payload["source_last_message_at"] is None
+
+
+def test_the_trailing_window_counts_declarations_not_days_under_alert() -> None:
+    """One long alert is one declaration.
+
+    Mutation: count every event in the window rather than transitions into
+    ACTIVE. An area under a single six-day alert would then shade as the
+    busiest oblast on the map, which is the opposite of what the shading is
+    for.
+    """
+    from mavo.report import trailing_counts
+
+    events = [
+        _event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 5),
+        _event(SAMBIR, AlertState.CLEAR, 60 * 24 * 4),
+        _event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 2),
+        _event(SAMBIR, AlertState.UNKNOWN, 60),
+    ]
+    counts = trailing_counts(events, as_of=NOW, table=_table())
+    assert [(c.slug, c.alerts_count) for c in counts] == [("lviv", 2)]
+    assert counts[0].last_alert_ended_at == NOW - timedelta(minutes=60 * 24 * 4)
+
+
+def test_events_outside_the_window_do_not_count() -> None:
+    """Mutation: drop the cutoff comparison."""
+    from mavo.report import trailing_counts
+
+    old = [_event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 30)]
+    assert trailing_counts(old, as_of=NOW, table=_table()) == ()
+
+
+def test_an_unresolvable_area_is_not_folded_into_another_oblast() -> None:
+    """A count that is quietly wrong is worse than one that is visibly absent."""
+    from mavo.report import trailing_counts
+
+    counts = trailing_counts(
+        [_event("UA00000000000000000", AlertState.ACTIVE, 60)],
+        as_of=NOW,
+        table=_table(),
+    )
+    assert counts == ()
+
+
+def test_an_oblast_with_no_all_clear_reports_null_rather_than_a_time() -> None:
+    """Mutation: fall back to the last event's time. That reads as "ended"."""
+    from mavo.report import trailing_counts
+
+    counts = trailing_counts(
+        [_event(SAMBIR, AlertState.ACTIVE, 60)], as_of=NOW, table=_table()
+    )
+    assert counts[0].last_alert_ended_at is None
+
+
+def test_the_contract_publishes_the_window_it_used() -> None:
+    """A count without its window is a number a reader has to guess about."""
+    report = compose(
+        [_event(SAMBIR, AlertState.ACTIVE, 60)], as_of=NOW, table=_table()
+    )
+    payload = to_contract(report)
+    assert payload["window_days"] == 7
+    assert payload["recent_7d"] == [
+        {"oblast": "lviv", "alerts_count": 1, "last_alert_ended_at": None}
+    ]
+
+
+def test_composing_twice_from_one_generator_does_not_empty_the_window() -> None:
+    """The fold and the window both read the log; a generator serves one.
+
+    Mutation: pass `events` straight through instead of materialising it. The
+    seven-day layer would come back empty, which renders as a quiet week.
+    """
+    events = (e for e in [_event(SAMBIR, AlertState.ACTIVE, 60)])
+    report = compose(events, as_of=NOW, table=_table())
+    assert len(report.areas) == 1
+    assert len(report.recent) == 1
+
+
+def test_the_command_reports_the_schema_version_it_actually_wrote(
+    tmp_path: Path, capsys: object
+) -> None:
+    """F75: the line said v=1 while the file said v=2.
+
+    The literal was correct on the day it was typed and became a lie one
+    release later, when the schema moved and the message did not. An operator
+    reading the terminal would report the wrong version to a consumer
+    debugging a refusal. Mutation: put the literal back.
+    """
+    from mavo.cli import main
+    from mavo.report import SCHEMA_VERSION
+
+    target = tmp_path / "state.json"
+    main(["report", "--store", str(tmp_path / "events"), "--json", str(target)])
+    printed = capsys.readouterr().out  # type: ignore[attr-defined]
+    written = json.loads(target.read_text(encoding="utf-8"))["v"]
+    assert written == SCHEMA_VERSION
+    assert f"v={written}" in printed, "the message must name the version on disk"

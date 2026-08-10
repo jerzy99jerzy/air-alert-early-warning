@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" width="900" height="620" font-family="ui-sans-serif, system-ui, sans-serif">
+  <title>MAVO web tier, map view</title>
+  <rect width="900" height="620" fill="#12151a"/>
+  <rect x="0" y="0" width="900" height="52" fill="#1a1f26"/>
+  <text x="24" y="24" fill="#e6e9ee" font-size="14" font-weight="700">Mapa</text>
+  <text x="24" y="41" fill="#8b95a3" font-size="10">Przeciąganie, kółko, strzałki, +/-. Cztery presety widoku.</text>
+  <rect x="596" y="14" width="104" height="24" rx="3" fill="#232a33" stroke="#2a323c"/>
+  <text x="648.0" y="30" fill="#e6e9ee" font-size="10" text-anchor="middle">Przy granicy</text>
+  <rect x="706" y="14" width="104" height="24" rx="3" fill="#232a33" stroke="#2a323c"/>
+  <text x="758.0" y="30" fill="#e6e9ee" font-size="10" text-anchor="middle">Cała Ukraina</text>
+  <rect x="818" y="14" width="26" height="24" rx="3" fill="#232a33" stroke="#2a323c"/>
+  <text x="831.0" y="30" fill="#e6e9ee" font-size="10" text-anchor="middle">−</text>
+  <rect x="852" y="14" width="26" height="24" rx="3" fill="#232a33" stroke="#2a323c"/>
+  <text x="865.0" y="30" fill="#e6e9ee" font-size="10" text-anchor="middle">+</text>
+  <rect x="16" y="62" width="868" height="410" rx="4" fill="#eeecea" stroke="#2a323c"/>
+  <clipPath id="mapclip"><rect x="16" y="62" width="868" height="410" rx="4"/></clipPath>
+  <g clip-path="url(#mapclip)">
+  <rect x="16" y="62" width="150" height="410" fill="#c3c0bd"/>
+  <text x="40" y="250" fill="#6b6764" font-size="11" font-weight="600">POLSKA</text>
+  <path d="M166 62 L172 150 L160 240 L176 330 L166 472" fill="none" stroke="#7d9ec4" stroke-width="2.5"/>
+  <rect x="176" y="72" width="120" height="110" rx="3" fill="#b56872" stroke="#ff2f45" stroke-width="2.5" stroke-dasharray="5 3"/>
+  <text x="182" y="86" fill="#6b6764" font-size="8">Wołyńska</text>
+  <rect x="176" y="190" width="120" height="120" rx="3" fill="#9c4650" stroke="#ff2f45" stroke-width="2.5" stroke-dasharray="5 3"/>
+  <text x="182" y="204" fill="#6b6764" font-size="8">Lwowska</text>
+  <rect x="176" y="318" width="120" height="146" rx="3" fill="#d9b3b8" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="182" y="332" fill="#6b6764" font-size="8">Zakarpacka</text>
+  <rect x="304" y="72" width="120" height="110" rx="3" fill="#c98d95" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="310" y="86" fill="#6b6764" font-size="8">Rówieńska</text>
+  <rect x="304" y="190" width="120" height="120" rx="3" fill="#d9b3b8" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="310" y="204" fill="#6b6764" font-size="8">Tarnopolska</text>
+  <rect x="304" y="318" width="120" height="146" rx="3" fill="#d8d5d2" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="310" y="332" fill="#6b6764" font-size="8">Iwano-Frankowska</text>
+  <rect x="432" y="72" width="140" height="130" rx="3" fill="#d8d5d2" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="438" y="86" fill="#6b6764" font-size="8">Żytomierska</text>
+  <rect x="432" y="210" width="140" height="120" rx="3" fill="#d9b3b8" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="438" y="224" fill="#6b6764" font-size="8">Winnicka</text>
+  <rect x="432" y="338" width="140" height="126" rx="3" fill="#d8d5d2" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="438" y="352" fill="#6b6764" font-size="8">Czerniowiecka</text>
+  <rect x="580" y="72" width="150" height="130" rx="3" fill="#c98d95" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="586" y="86" fill="#6b6764" font-size="8">Kijowska</text>
+  <rect x="580" y="210" width="150" height="120" rx="3" fill="#d8d5d2" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="586" y="224" fill="#6b6764" font-size="8">Czerkaska</text>
+  <rect x="580" y="338" width="150" height="126" rx="3" fill="#d9b3b8" stroke="#ff2f45" stroke-width="2.5" stroke-dasharray="5 3"/>
+  <text x="586" y="352" fill="#6b6764" font-size="8">Odeska</text>
+  <rect x="738" y="72" width="140" height="130" rx="3" fill="#9c4650" stroke="#ff2f45" stroke-width="2.5" stroke-dasharray="5 3"/>
+  <text x="744" y="86" fill="#6b6764" font-size="8">Charkowska</text>
+  <rect x="738" y="210" width="140" height="120" rx="3" fill="#b56872" stroke="#a9a5a1" stroke-width="0.8"/>
+  <text x="744" y="224" fill="#6b6764" font-size="8">Dniepropetrowska</text>
+  <rect x="738" y="338" width="140" height="126" rx="3" fill="#9c4650" stroke="#ff2f45" stroke-width="2.5" stroke-dasharray="5 3"/>
+  <text x="744" y="352" fill="#6b6764" font-size="8">Zaporoska</text>
+  <circle cx="236" cy="127" r="30" fill="#ff2f45" opacity="0.1"/>
+  <circle cx="236" cy="127" r="44" fill="#ff2f45" opacity="0.06"/>
+  <circle cx="236" cy="127" r="58" fill="#ff2f45" opacity="0.035"/>
+  <ellipse cx="236" cy="127" rx="52" ry="38" fill="none" stroke="#ff2f45" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+  <circle cx="236" cy="127" r="19" fill="#ffffff" opacity="0.92"/>
+  <circle cx="236" cy="127" r="15" fill="#ff2f45"/>
+  <circle cx="236" cy="127" r="15" fill="none" stroke="#0b0d10" stroke-width="2"/>
+  <text x="236" y="132" fill="#ffffff" stroke="#0b0d10" stroke-width="0.7" font-size="14" font-weight="700" text-anchor="middle">▲</text>
+  <rect x="167.0" y="149" width="138.0" height="19" rx="3" fill="#0f1216" opacity="0.88"/>
+  <text x="236" y="162" fill="#e6e9ee" font-size="10" text-anchor="middle">wołyński · rakietowy</text>
+  <circle cx="236" cy="250" r="30" fill="#ff2f45" opacity="0.1"/>
+  <circle cx="236" cy="250" r="44" fill="#ff2f45" opacity="0.06"/>
+  <circle cx="236" cy="250" r="58" fill="#ff2f45" opacity="0.035"/>
+  <ellipse cx="236" cy="250" rx="52" ry="38" fill="none" stroke="#ff2f45" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+  <circle cx="236" cy="250" r="19" fill="#ffffff" opacity="0.92"/>
+  <circle cx="236" cy="250" r="15" fill="#ff2f45"/>
+  <circle cx="236" cy="250" r="15" fill="none" stroke="#0b0d10" stroke-width="2"/>
+  <text x="236" y="255" fill="#ffffff" stroke="#0b0d10" stroke-width="0.7" font-size="14" font-weight="700" text-anchor="middle">✳</text>
+  <rect x="176.3" y="272" width="119.4" height="19" rx="3" fill="#0f1216" opacity="0.88"/>
+  <text x="236" y="285" fill="#e6e9ee" font-size="10" text-anchor="middle">lwowski · dronowy</text>
+  <circle cx="655" cy="401" r="30" fill="#ff2f45" opacity="0.1"/>
+  <circle cx="655" cy="401" r="44" fill="#ff2f45" opacity="0.06"/>
+  <circle cx="655" cy="401" r="58" fill="#ff2f45" opacity="0.035"/>
+  <ellipse cx="655" cy="401" rx="52" ry="38" fill="none" stroke="#ff2f45" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+  <circle cx="655" cy="401" r="19" fill="#ffffff" opacity="0.92"/>
+  <circle cx="655" cy="401" r="15" fill="#ff2f45"/>
+  <circle cx="655" cy="401" r="15" fill="none" stroke="#0b0d10" stroke-width="2"/>
+  <text x="655" y="406" fill="#ffffff" stroke="#0b0d10" stroke-width="0.7" font-size="14" font-weight="700" text-anchor="middle">●</text>
+  <rect x="582.9" y="423" width="144.20000000000002" height="19" rx="3" fill="#0f1216" opacity="0.88"/>
+  <text x="655" y="436" fill="#e6e9ee" font-size="10" text-anchor="middle">odeski · typ nieznany</text>
+  <circle cx="808" cy="137" r="30" fill="#ff2f45" opacity="0.1"/>
+  <circle cx="808" cy="137" r="44" fill="#ff2f45" opacity="0.06"/>
+  <circle cx="808" cy="137" r="58" fill="#ff2f45" opacity="0.035"/>
+  <ellipse cx="808" cy="137" rx="52" ry="38" fill="none" stroke="#ff2f45" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+  <circle cx="808" cy="137" r="19" fill="#ffffff" opacity="0.92"/>
+  <circle cx="808" cy="137" r="15" fill="#ff2f45"/>
+  <circle cx="808" cy="137" r="15" fill="none" stroke="#0b0d10" stroke-width="2"/>
+  <text x="808" y="142" fill="#ffffff" stroke="#0b0d10" stroke-width="0.7" font-size="14" font-weight="700" text-anchor="middle">▲</text>
+  <rect x="732.8" y="159" width="150.4" height="19" rx="3" fill="#0f1216" opacity="0.88"/>
+  <text x="808" y="172" fill="#e6e9ee" font-size="10" text-anchor="middle">charkowski · rakietowy</text>
+  <circle cx="808" cy="401" r="30" fill="#ff2f45" opacity="0.1"/>
+  <circle cx="808" cy="401" r="44" fill="#ff2f45" opacity="0.06"/>
+  <circle cx="808" cy="401" r="58" fill="#ff2f45" opacity="0.035"/>
+  <ellipse cx="808" cy="401" rx="52" ry="38" fill="none" stroke="#ff2f45" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+  <circle cx="808" cy="401" r="19" fill="#ffffff" opacity="0.92"/>
+  <circle cx="808" cy="401" r="15" fill="#ff2f45"/>
+  <circle cx="808" cy="401" r="15" fill="none" stroke="#0b0d10" stroke-width="2"/>
+  <text x="808" y="406" fill="#ffffff" stroke="#0b0d10" stroke-width="0.7" font-size="14" font-weight="700" text-anchor="middle">✳</text>
+  <rect x="742.1" y="423" width="131.8" height="19" rx="3" fill="#0f1216" opacity="0.88"/>
+  <text x="808" y="436" fill="#e6e9ee" font-size="10" text-anchor="middle">zaporoski · dronowy</text>
+  <circle cx="364" cy="127" r="10" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <circle cx="364" cy="127" r="3" fill="#8f8b87"/>
+  <circle cx="364" cy="250" r="10" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <circle cx="364" cy="250" r="3" fill="#8f8b87"/>
+  <circle cx="502" cy="137" r="10" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <circle cx="502" cy="137" r="3" fill="#8f8b87"/>
+  <circle cx="502" cy="270" r="10" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <circle cx="502" cy="270" r="3" fill="#8f8b87"/>
+  <circle cx="655" cy="137" r="10" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <circle cx="655" cy="137" r="3" fill="#8f8b87"/>
+  <circle cx="655" cy="270" r="10" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <circle cx="655" cy="270" r="3" fill="#8f8b87"/>
+  <circle cx="808" cy="270" r="10" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <circle cx="808" cy="270" r="3" fill="#8f8b87"/>
+  <circle cx="236" cy="391" r="10" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <circle cx="236" cy="391" r="3" fill="#8f8b87"/>
+  <circle cx="364" cy="391" r="10" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/>
+  <circle cx="364" cy="391" r="3" fill="#8f8b87"/>
+  </g>
+  <rect x="16" y="484" width="868" height="76" rx="4" fill="#1a1f26" stroke="#2a323c"/>
+  <circle cx="36" cy="508" r="10" fill="#ff2f45"/><circle cx="36" cy="508" r="10" fill="none" stroke="#0b0d10" stroke-width="1.5"/>
+  <text x="36" y="512" fill="#fff" font-size="10" font-weight="700" text-anchor="middle">▲</text>
+  <text x="54" y="512" fill="#e6e9ee" font-size="11">alarm rakietowy</text>
+  <circle cx="193.0" cy="508" r="10" fill="#ff2f45"/><circle cx="193.0" cy="508" r="10" fill="none" stroke="#0b0d10" stroke-width="1.5"/>
+  <text x="193.0" y="512" fill="#fff" font-size="10" font-weight="700" text-anchor="middle">✳</text>
+  <text x="211.0" y="512" fill="#e6e9ee" font-size="11">alarm dronowy</text>
+  <circle cx="336.8" cy="508" r="10" fill="#ff2f45"/><circle cx="336.8" cy="508" r="10" fill="none" stroke="#0b0d10" stroke-width="1.5"/>
+  <text x="336.8" y="512" fill="#fff" font-size="10" font-weight="700" text-anchor="middle">●</text>
+  <text x="354.8" y="512" fill="#e6e9ee" font-size="11">alarm, typ nieznany</text>
+  <circle cx="520.2" cy="508" r="9" fill="none" stroke="#8f8b87" stroke-width="1.4" stroke-dasharray="3 3"/><circle cx="520.2" cy="508" r="3" fill="#8f8b87"/>
+  <text x="536.2" y="512" fill="#e6e9ee" font-size="11">stan nieznany</text>
+  <rect x="36" y="530" width="16" height="12" fill="#b56872" stroke="#a9a5a1"/>
+  <text x="60" y="540" fill="#e6e9ee" font-size="11">alarmy w ostatnich 7 dniach, nasycenie to liczba</text>
+  <ellipse cx="420" cy="536" rx="16" ry="8" fill="none" stroke="#ff2f45" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="446" y="540" fill="#e6e9ee" font-size="11">obszar alarmu, nie pozycja obiektu</text>
+  <text x="16" y="584" fill="#8b95a3" font-size="10">Ikona stoi w środku obszaru, który zgłosił alarm. To nie jest pozycja obiektu. Źródło nie widzi obiektów, tylko stany jednostek administracyjnych.</text>
+  <text x="16" y="602" fill="#8b95a3" font-size="10">Makieta, nie zrzut ekranu. Renderowana z danych przykładowych; żadna liczba nie jest pomiarem.</text>
+</svg>

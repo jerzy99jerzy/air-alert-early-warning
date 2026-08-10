@@ -16,6 +16,55 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.19.0.0 - 2026-08-10
+
+**The contract was joined on a display name, and the consumer's map drew
+nothing.** Found by running the site's own code over a file this repository
+produced, rather than by reading either.
+
+- **F74: `oblast` carried `Львівська` where the consumer indexes `lviv`.**
+  Measured against `mavo-site` 1.2.0.0: **0 markers, 4 of 4 areas
+  unplaceable.** The distance list would have rendered completely, because it
+  prints the field rather than joining on it, so the failure was a page showing
+  areas under alert beside an empty map, with nothing saying why. A reader
+  takes the map for the truth. `oblast` is now the ASCII slug and `oblast_name`
+  the register name, two fields because they answer to different readers.
+- **D-020 was ownership without a control, and this is the control.** Moving
+  the contract to the producer one release earlier did not move the consumer's
+  vocabulary. The slug came from `oblast_slug()`, which already existed and
+  already agreed with the consumer on 22 of 23 oblasts. The twenty-third,
+  `kyiv` against `kyiv-city`/`kyiv-oblast`, is a real administrative
+  distinction this project does not make, and the consumer maps it: a producer
+  that learns its consumer's vocabulary has taken the coupling back.
+- **`recent_7d` and `window_days`: the trailing window MAVO was assumed to
+  compute and did not.** The site built a whole visual layer on a field its own
+  audit recorded as a contract for data that might not exist. It exists now.
+  Counts declarations rather than days under alert, because an area under one
+  six-day alert is one declaration and shading it as the busiest oblast on the
+  map would be the opposite of what the layer is for.
+- **`source_last_message_at`**, distinct from `generated_at`. A consumer
+  showing only the latter would tell a reader the page is fresh while the feed
+  behind it is hours old.
+- **Schema bumped to v2**, and this is the first exercise of the rule
+  `docs/FEED-SPEC.md` section 3 asks of everybody else. `oblast` changed
+  meaning, so the version had to move; a consumer pinned to v1 refuses rather
+  than misreads.
+- **`docs/WEBAPP.md` 2.0 and a map mockup.** The document described the page
+  and omitted its largest surface. It now carries what a marker means, why
+  nothing translates across the map, why the uncertainty field scales with the
+  map while the badge does not, and why there is no tile server. Every claim in
+  it was read out of `mavo-site` 1.2.0.0 rather than remembered.
+- **F75: the terminal announced a schema version the file did not carry.**
+  `contract=... v=1` was printed from a literal that had been correct until
+  this release moved the schema. Caught by reading the output of the release
+  smoke test, not by a check, because the file was right and only the message
+  was wrong. A constant copied into a message has a shelf life nobody writes
+  down.
+- **Recorded, not fixed: MAVO publishes no raion centroids**, so every marker
+  is oblast-anchored and two raions under alert in one oblast render as one
+  marker. Honest and coarse. The fix is a centroid column beside the distance
+  column.
+
 ## 0.18.0.0 - 2026-08-10
 
 **The web tier gets a document, a heartbeat and mockups; the ADS-B thread gets

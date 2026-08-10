@@ -1,10 +1,11 @@
 # The web tier: a page fed by MAVO
 
-Version: 1.0 / 2026-08-10
-Status: **partly built, in a separate repository.** `mavo-site` 0.1.0.0 exists
-and runs; what is built there is marked BUILT below, what is planned is marked
-NOT BUILT, and the distinction follows the manual's convention rather than the
-author's optimism.
+Version: 2.0 / 2026-08-10
+Status: **built, in a separate repository.** `mavo-site` 1.2.0.0 exists, runs
+and carries its own gate, its own defect log and its own audit. Everything
+described here was read out of that package rather than remembered: where this
+document states a behaviour, it was checked against the code or measured by
+running it.
 
 Companion documents: [`MOBILE.md`](MOBILE.md) is the same kind of document for
 the notification channel, [`FEED-SPEC.md`](FEED-SPEC.md) is the specification
@@ -18,6 +19,8 @@ than assembled there.
 - [The contract, and who owns it](#the-contract-and-who-owns-it)
 - [Three states, three different sentences](#three-states-three-different-sentences)
 - [What the page looks like](#what-the-page-looks-like)
+- [The map](#the-map)
+- [What the map refuses to draw](#what-the-map-refuses-to-draw)
 - [The palette, and the failure that produced it](#the-palette-and-the-failure-that-produced-it)
 - [Freshness is the browser's job](#freshness-is-the-browsers-job)
 - [What the page must never say](#what-the-page-must-never-say)
@@ -60,6 +63,11 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `observation_age_s` | Age of the newest observation, or `null` | `null` is unknown and must never render as fresh or as `0` |
 | `areas[]` | One entry per area not affirmatively cleared | An area missing from the list has been cleared; an area present with `alert: unknown` has not |
 | `katottg` | Register code, may be `""` | Empty means the map could not resolve it. Render as unknown, do not drop |
+| `oblast` | **ASCII slug** (`lviv`), or `""` | The join field. It carried the register's Cyrillic name until 0.19.0.0, and every area landed in the consumer's `unplaceable` bucket: measured at four of four (F74) |
+| `oblast_name` | Register name (`Львівська`) | For display. Never join on it |
+| `source_last_message_at` | When the source last spoke, may be `null` | Distinct from `generated_at`. A page showing only the latter tells a reader it is fresh while the feed behind it is hours old |
+| `window_days` | The trailing window behind `recent_7d` | A count without its window is a number the reader has to guess about |
+| `recent_7d[]` | Per-oblast alert count over that window | Counts *declarations*, not days under alert: one six-day alert is one declaration, not six |
 | `border_km_lower` / `_upper` | Interval to the border, may be `null` | A single number here would be false with a decimal point on it |
 | `kind` | `missile`, `drone`, `unknown` | `unknown` for roughly nine alerts in ten (F71). See the caption rule below |
 
@@ -100,11 +108,86 @@ the headline says the page does not know:
 ![Web tier, blind](assets/webapp-state-blind.svg)
 
 Layout, described so it survives a rewrite: a header carrying the non-claim, a
-status bar whose colour and sentence follow `state`, a schematic map of the
-western oblasts with the Polish border on the left edge, and a distance list on
-the right ordered by the nearest edge of each area. The map is schematic on
-purpose. A precise map invites a reader to measure their own position against
-it, which is a use this data does not support.
+status bar whose colour and sentence follow `state`, a distance list ordered by
+the nearest edge of each area, and below it the map.
+
+**The distance list renders server-side and works without JavaScript. The map
+does not, and says so** rather than leaving an empty rectangle that reads as a
+quiet sky.
+
+## The map
+
+All 25 oblasts, not only the western ones. It opens on the Polish border; pan
+right and the east is there, because an alert in Kharkiv is part of the picture
+even when it is not the part a Polish reader is watching for.
+
+![Web tier, map view](assets/webapp-map.svg)
+
+**Interaction** [BUILT]: drag, wheel, pinch, arrow keys, `+`/`-`, `Home`, and
+four view presets. Markers counter-scale, so an icon stays an icon at every
+zoom instead of collapsing into a blob.
+
+**What a marker means, and this is the load-bearing sentence on the whole
+page.** The feed sees declared alert states for administrative units. It does
+not see objects. A marker therefore stands for *an area that has declared an
+alert of that type*, drawn at the centre of that area, and two mechanisms make
+the difference between an area and a point impossible to miss:
+
+- **The uncertainty field.** A marker anchored to a raion, where a centroid is
+  supplied, gets a small field. A marker anchored to a whole oblast gets an
+  ellipse the size of that oblast's bounding box. The field scales with the map
+  rather than counter-scaling, because it is a geographic extent and shrinking
+  it on zoom-out would understate it. MAVO currently supplies no raion
+  centroids, so **every marker today is oblast-anchored**.
+- **No pin, no crosshair, no dot with a tail.** All three are the visual
+  vocabulary of a fix, and there is no fix here.
+
+**Icons carry only what the source named** [BUILT]. Missile and drone glyphs
+appear for a declared kind. An active alert whose kind was not parsed gets a
+filled disc with a pulse and **no icon**; an unknown state gets a dashed ring
+and no icon either. An icon names a thing, and the source did not name it.
+Since the kind tables cover roughly one alert in ten (F71), the iconless marker
+is the common case, which is why the legend says *alarm, typ nieznany* rather
+than leaving a reader to infer that a bare disc is something milder.
+
+**Shading is the trailing window.** Fill saturation is the count of alerts in
+that oblast over the last seven days, in five buckets. Donetsk, Kharkiv and
+Zaporizhzhia come out darkest, which is a property of the war rather than of
+the design. An ongoing alert always beats the trailing layer: one oblast never
+carries two markers.
+
+**Animation carries liveness, never motion.** Ripples run on a five-second
+radar cadence, the marker breathes, rotor blades spin in place. **Nothing
+translates across the map**, because a moving icon is a claim about a track and
+there is no track in this feed. Under `prefers-reduced-motion` nothing animates
+and every distinction survives in the static forms.
+
+**Where the decisions live** [BUILT]: `map.py::build_overlay` decides which
+area gets which marker, which icon, which anchor and how the oblast is shaded,
+and it is tested in Python. JavaScript draws and handles pan and zoom, and
+decides nothing. Anything the map could lie about is therefore in a language
+with a gate around it.
+
+## What the map refuses to draw
+
+- **No tile server.** Every pan would send the visitor's viewport and IP to a
+  third party, which is exactly what D-016 refused for MAVO. Geometry is
+  Natural Earth, public domain, built offline, served once and cached, so after
+  the first load pan and zoom cost nothing and are seen by nobody. The price is
+  real and worth stating: no cities, roads or rivers as landmarks. The honest
+  alternative, if legibility wins that argument, is self-hosted tiles, which is
+  a new operational component and deserves its own decision rather than being
+  absorbed into this one.
+- **No area the geometry does not know.** An area whose oblast slug does not
+  match is collected into `unplaceable` and the page says, under the map, that
+  the list is complete and the map is not. That behaviour was itself a defect
+  once: the site dropped such areas with a bare `continue` and had a test
+  asserting that was correct, which would have shown seven areas under alert in
+  the list beside an empty map, with nothing saying why (site audit, section 2).
+  A reader takes the map for the truth, because a map looks like a measurement
+  and a list looks like an opinion.
+- **No claim about position.** Restated on the page below the legend, because
+  it is the one misreading the whole design is arranged against.
 
 ## The palette, and the failure that produced it
 

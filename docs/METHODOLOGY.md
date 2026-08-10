@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.10
+Document:  docs/METHODOLOGY.md, version 2.12
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -151,6 +151,8 @@ repository has come to the mistake it was built after.
 | [F71](#f71-01610-the-kind-tables-cover-one-alert-in-ten-and-nobody-had-counted) | 0.16.1.0 | The kind tables cover one alert in ten, and nobody had counted |
 | [F72](#f72-01610-nine-documents-disagreed-with-their-pins-while-the-gate-said-pins-held) | 0.16.1.0 | Nine documents disagreed with their pins while the gate said pins held |
 | [F73](#f73-01610-the-readme-claimed-its-own-tables-were-checked-and-they-were-not) | 0.16.1.0 | The README claimed its own tables were checked, and they were not |
+| [F74](#f74-01900-the-contracts-join-field-was-a-display-name-and-the-map-drew-nothing) | 0.19.0.0 | The contract's join field was a display name, and the map drew nothing |
+| [F75](#f75-01900-the-terminal-announced-a-schema-version-the-file-did-not-carry) | 0.19.0.0 | The terminal announced a schema version the file did not carry |
 
 ## Defect log
 
@@ -1551,3 +1553,68 @@ later repair of the marker tables.
 *correct*; it measures how often one is assigned at all. The hand-labelled
 correctness sample (T36) remains open, and a coverage figure without it can
 only bound the problem from one side.
+
+### F74, 0.19.0.0. The contract's join field was a display name, and the map drew nothing
+
+`state.json` v1 published the oblast in one field, and the value was the
+register's Ukrainian name: `Львівська`. The consumer indexes its geometry by
+ASCII slug (`lviv`), so every area failed to match. Measured against
+`mavo-site` 1.2.0.0 by running that package's own `build_overlay` over a
+state file this repository produced: **0 markers, 4 of 4 areas unplaceable.**
+
+The distance list would have rendered completely, because it prints the name
+rather than joining on it. So the failure mode was not an error page: it was a
+page showing seven areas under alert beside a map showing none, with nothing
+saying why. A reader would take the map for the truth, because a map looks
+like a measurement and a list looks like an opinion.
+
+**Why it survived.** The field was checked for being non-empty, printed in the
+report a person reads, and asserted on in tests that all used the same value.
+Nothing asked what a consumer would do with it, and the consumer was in
+another repository with its own gate. D-020 moved contract *ownership* here
+one release earlier; it did not move the consumer's geometry vocabulary, and
+ownership without a test against a real consumer is a claim rather than a
+control.
+
+Class: **an identifier that means two things, and the join happened on the
+wrong one** - the family of F63, one boundary further out.
+
+**Repair.** `oblast` carries the ASCII slug, `oblast_name` carries the
+register name, and the two are separate fields because they answer to
+different readers. The slug comes from `mavo/areas.py::oblast_slug`, which
+already existed and already agreed with the consumer's vocabulary on 22 of 23
+oblasts. Held by `tests/test_sprint10.py`, verified red against a scratch copy
+publishing the display name again.
+
+**The twenty-third, recorded rather than papered over.** MAVO's register has
+one `kyiv`; the consumer's geometry splits `kyiv-city` from `kyiv-oblast`,
+which is a real administrative distinction this project does not make. The
+consumer maps it, and that is the correct side for it: a producer that learns
+its consumer's vocabulary has taken the coupling back.
+
+**What this release did not fix.** MAVO publishes no raion centroids, so every
+marker is drawn at oblast scale with an uncertainty ellipse the size of the
+oblast. Two raions under alert in one oblast render as one marker. That is
+honest and it is also coarse; the fix is a centroid column beside the distance
+column, and it is recorded as a task rather than done here.
+
+### F75, 0.19.0.0. The terminal announced a schema version the file did not carry
+
+`mavo report --json` printed `contract=<path> v=1` from a literal. The literal
+was correct the day it was written and became false in the same release that
+bumped the schema to v2, so the command wrote a v2 file and told its operator
+it had written a v1 one.
+
+Found by the operator running the release smoke test and reading the output,
+which is the only reason it was caught before the tag: no test asserted on
+that line, and the file itself was correct, so every other check passed.
+
+Class: **a number copied out of its source of truth**, the family of F36 and
+F64. The distinctive part here is the timing: the copy was accurate when made,
+and the defect was created later by a change somewhere else entirely. A
+constant duplicated into a message has a shelf life nobody writes down.
+
+**Repair.** The message reads `SCHEMA_VERSION`, and a regression asserts that
+the version in the printed line equals the version in the file on disk rather
+than equalling any particular number. Verified red against a scratch copy with
+the literal restored.

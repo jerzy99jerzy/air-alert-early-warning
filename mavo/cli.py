@@ -26,6 +26,7 @@ from mavo.evaluate import run_policy, run_rule
 from mavo.policy import Regime, policy_of
 from mavo.report import (
     DEFAULT_VALID_FOR_S,
+    SCHEMA_VERSION,
     FeedState,
     Report,
     compose,
@@ -223,7 +224,7 @@ def _cmd_report(args: argparse.Namespace) -> int:
     print(render_text(report))
     if args.json:
         written = write_contract(report, Path(args.json))
-        print(f"contract={written} v={1}")
+        print(f"contract={written} v={SCHEMA_VERSION}")
     return {FeedState.OK: 0, FeedState.DEGRADED: 5, FeedState.BLIND: 6}[report.feed_state]
 
 
