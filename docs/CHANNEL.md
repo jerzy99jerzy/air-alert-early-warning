@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.0 / 2026-08-09
+Version: 1.2 / 2026-08-09
 What the source emits, measured on 48,540 real messages, and what that changes.
 Companion: `docs/DATA-FLOW.md` (how a message becomes an event),
 `docs/METHODOLOGY.md` (F23 and F59), `docs/DECISIONS.md` (D-016, geocoding).

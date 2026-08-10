@@ -56,7 +56,10 @@ the smaller question would have produced a correct answer to the wrong
 question, which is the more expensive kind of mistake here (F53).
 
 ## T7. Onboarding probe from a clean clone
-Status: `ready`, **S11**
+Status: `ready`, **S11**. The visibility question that had been travelling with
+this task is resolved separately in `docs/MVP.md` section 4 on 0.16.1.0:
+repository visibility is not an Audience C criterion. What remains here is the
+probe itself, which was always an engineering task.
 **Acceptance:** a fresh clone into an empty directory, README followed from zero,
 with the point of failure recorded. Not "it looks correct".
 
@@ -102,7 +105,7 @@ address rather than continuing.
 
 **Acceptance:** a daily request budget recorded in `docs/MANUAL.md`, a request
 counter in the run log, and the ladder's outcome recorded as a measurement with
-its date **and the address class it was taken from** — including if the outcome
+its date **and the address class it was taken from** - including if the outcome
 is "two minutes caused degradation", in which case the requirement and the
 window arithmetic come back to the table rather than the interval quietly
 moving.
@@ -143,12 +146,12 @@ requests at a surface that was never meant for them.
 
 **What changes with MTProto.** A listening client should receive a post within
 seconds of publication over one long-lived connection [inference from the
-protocol's design, unmeasured on this channel — measuring it is this task's
+protocol's design, unmeasured on this channel - measuring it is this task's
 acceptance, not its premise]: no interval, no request budget, no question about
 tolerated rate. T39 stops being a measurement and becomes moot. Whether a
 listener is *the earliest* publicly reachable point depends on the channel
 actually being the upstream of both APIs, which D-010 deliberately does not
-claim — it records the three surfaces as correlated and labels the upstream
+claim - it records the three surfaces as correlated and labels the upstream
 topology an inference (METHODOLOGY, provenance table). What holds either way:
 no publicly reachable point is known to be earlier, and this prototype cannot
 settle that ranking, only its own receipt times.
@@ -312,12 +315,40 @@ recorded, the tolerated rate written into `docs/METHODOLOGY.md` with its
 provenance, and the default changed only if the measurement supports it.
 
 ## T20. OpenSky Network registration
-Status: `ready`, self-service, **not in the beta plan** (D-015). Registration is cheap and worth doing whenever; nothing waits on it.
-Recategorised from a blocked external dependency: no approval step exists, only
-the registration itself. It gates T14, which gates any drone-tier alarm (D-009),
-and it costs minutes.
-**Acceptance:** credentials stored outside the tree and one authenticated ADS-B
-read over eastern Poland recorded with its latency.
+Status: **done, 0.16.1.0.** Account created 2026-08-10, API client activated,
+credentials stored outside the tree.
+
+**Acceptance met [measured, 2026-08-10]:** OAuth2 client-credentials token in
+276 ms, one authenticated `/states/all` read over the western box (latitude 48
+to 52, longitude 22 to 27) in 275 ms, returning 10 state vectors.
+`X-Rate-Limit-Remaining` moved from 4000 to 3999, so the box costs **one credit
+per call** on the Standard allowance: a ceiling of one call every 21.6 s, and a
+30 to 45 s poll with margin for retries. That figure is now a measurement
+rather than a reading of the published credit tiers.
+
+**The assumption this task carried was false, and the correction matters more
+than the task.** T20 was recorded as gating T14 and therefore any drone-tier
+alarm (D-009). ADS-B cannot see the drone tier. Shahed-type munitions and
+missiles carry no transponder; ADS-B shows only what chooses to be seen, and
+Ukrainian civil airspace is closed. The claim "OpenSky is a prerequisite for
+the drone tier" was `[assumption, unmeasured]` from the day it was written and
+is **false**. The drone tier has no source in this feed and never had one.
+Recorded here rather than quietly rewritten, because a backlog that edits its
+own false premises out of existence stops being evidence about how the work is
+done.
+
+**What the feed can carry instead**, in descending order of how well it is
+supported: an aggregate count of transmitting military aircraft (D-019,
+reported and never scored); a correlation between ISR or tanker presence over
+south-eastern Poland and alert nights on the Ukrainian side [hypothesis,
+unmeasured, no lift computed]; and the absence of civilian traffic as a lagging
+confirmation. None of the three is a drone-tier signal.
+
+**Follow-on, open:** sampler run over at least three nights, one with a
+western-Ukraine alert, per D-019's preconditions. The 10 August snapshot showed
+all 10 vectors west of longitude 23.5, that is on the Polish side, with nothing
+over the Ukrainian half of the box - one snapshot, and therefore an observation
+rather than a base rate.
 
 
 ## T22. Fail the build when a document cites an identifier the package lacks

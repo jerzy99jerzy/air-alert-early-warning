@@ -72,7 +72,7 @@ def test_a_status_write_does_not_erase_fields_it_does_not_own() -> None:
     freeze record went with it: fields the tool does not own and cannot
     recompute, erased by an update that looked like one. The contract under
     test: inventory-owned fields land, superseded legacy names are retired,
-    and everything else — the holdout record first among it — survives.
+    and everything else - the holdout record first among it - survives.
     """
     from tools.corpus_inventory import SUPERSEDED, patch_corpus_block
 

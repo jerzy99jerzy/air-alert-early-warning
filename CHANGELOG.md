@@ -16,6 +16,77 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.16.1.0 - 2026-08-10
+
+**The gate said pins held while nine documents disagreed with theirs, and the
+README claimed a check on its own tables that did not exist.** A documentation
+release: no package code changes, and what changes is what the repository
+asserts about itself.
+
+- **F71: the threat-kind tables cover one alert in ten, measured rather than
+  assumed.** `tools/kind_coverage.py`, built one release earlier for exactly
+  this question, was run against 61,041 messages: coverage 0.128, join_coverage
+  0.104, and 36,697 of 42,910 alerts leaving the join as UNKNOWN. Of 2,392
+  declarations, 25 were MISSILE. The channel announces ballistics as
+  `Загроза балістики`, a form carrying no declaration marker, so the only rule
+  that has ever passed the gate on its own regime (7 of 7) is invisible to the
+  join almost every time it applies. Four failure modes are recorded with the
+  corpus text that produces each. Logged rather than repaired: the repair needs
+  this measurement as its reference point.
+- **TTL is not the binding constraint, and knowing that removes a piece of
+  work.** Coverage moves from 0.128 to 0.127 between a one-hour and a
+  twenty-four-hour TTL. The parser's reach binds; tuning the TTL would have
+  been effort spent on the wrong term.
+- **A guessed risk was wrong in its direction, which is recorded too.** The
+  marker `небезпека` was flagged in 0.16.0.0 as possibly over-broad. It has
+  zero hits: dead, not wide.
+- **F72: nine documents disagreed with their pins while `docs-audit` printed
+  that pins held.** `docs/FEED-SPEC.md` declared 1.0 against a pin of 1.3,
+  `docs/MVP.md` 3.0 against 3.2, seven more by one or two minor versions.
+  `check_every_document_is_pinned` compares the set of documents against the
+  tree and never reads a version marker - and its own docstring said so, which
+  makes this an unguarded pin whose failure mode was written down in the file
+  that needed the guard. `check_document_versions_match_their_pins` is that
+  guard, held by five regressions.
+- **F73: the README said its tables were recounted on every run.** They were
+  not. 0.6.2.0 closed one edge of the triangle, comparing STATUS.json against
+  the tree, and the paragraph above the table announced the whole of it. Every
+  row of both tables was stale, including 206 tests, 96.14% coverage and 49
+  defects sitting twelve lines below enforced badges reading 208, 96.16% and
+  51. `check_readme_tables_match_the_pins` reads rows by label, reports a
+  missing label rather than skipping it, and fails on the pre-repair README.
+- **D-019 records the OpenSky decision with the objection it rejected.**
+  Aggregate counts of transmitting military aircraft may be published;
+  positions, callsigns and addresses may not. The published figure is a lower
+  bound on transmitters and carries that framing in the field itself, because a
+  low count means nothing and transponder silence plausibly correlates with the
+  situations a reader most wants to know about. The counterargument raised in
+  review, that this inverts the argument of `docs/FEED-SPEC.md` section 5, is
+  recorded and rejected rather than omitted.
+- **D-015 is revised: warning infrastructure, not a reporting instrument
+  alone.** The epistemic boundary does not move - no crossing prediction, and
+  the 0 of 22 result stands. The standard does move. A reporting instrument
+  that goes quiet has missing data; warning infrastructure that goes quiet
+  tells its reader the sky is calm, so heartbeat, staleness and an explicit
+  blind state become core requirements, end-to-end latency becomes a measured
+  property, and T6 and T11 stop being formalities.
+- **T7 is resolved after six releases of deferral, as scope rather than
+  compliance.** Repository visibility is not an Audience C criterion: the two
+  remaining blockers describe the quality of what a reader finds, not whether a
+  reader may find it. A tree that must be complete before it is visible cannot
+  be reviewed before it is complete, and the reviews are where F72, F73 and the
+  0.16.0.0 audit came from.
+- **T20 is done, and the assumption underneath it was false.** The OpenSky
+  account exists and one authenticated read is measured (token 276 ms, states
+  275 ms, one credit per call on the western box). The task was recorded as
+  gating the drone tier. ADS-B cannot see the drone tier: Shahed-type munitions
+  and missiles carry no transponder, and the feed shows only what chooses to be
+  seen. The premise is corrected in place rather than deleted.
+- **Fifty-four em-dashes replaced across the tree**, leaving the changelog and
+  the release reviews untouched because those are records rather than prose
+  under maintenance. `docs/MANUAL.md` needed fifteen contents anchors updated
+  with them, since the separator participates in GitHub's anchor rules.
+
 ## 0.16.0.0 - 2026-08-10
 
 Review release. No new capability: two defects found by auditing what the

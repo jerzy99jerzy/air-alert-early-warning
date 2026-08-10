@@ -27,8 +27,8 @@ something the gate could not see.
 
 The aggregate digest is the SHA-256 of the sorted per-page digests. It changes
 when any page changes, when a page is added, and when a page is removed. It says
-nothing about whether the corpus is *complete* — that is what the contiguity
-column is for — and nothing about whether it is *the right window*, which is
+nothing about whether the corpus is *complete* - that is what the contiguity
+column is for - and nothing about whether it is *the right window*, which is
 what the id range is for. Three separate questions, three separate columns, on
 purpose.
 
@@ -79,7 +79,7 @@ def patch_corpus_block(
 
     The first version of this tool did ``status["corpus"] = {...}`` and erased
     the D-012a holdout boundary (``design_window_high_id``, ``holdout_low_id``,
-    ``holdout_share``, ``content_read_before_freeze``) — fields this tool does
+    ``holdout_share``, ``content_read_before_freeze``) - fields this tool does
     not own and cannot recompute. The gate passed, because nothing read them:
     the same class as F64, committed inside the tool built to close that class.
     The contract now: this function owns exactly ``fields`` plus the

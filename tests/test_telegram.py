@@ -211,7 +211,7 @@ def test_f61_a_naive_content_timestamp_never_becomes_an_event(tmp_path) -> None:
     ``datetime="2026-09-01T21:00:00"`` parses cleanly and produces a naive
     ``ts_source``. The store refuses naive timestamps (F52), so an event built
     from one converts hostile or malformed *content* into an *outage* one layer
-    up, at ``append`` — exactly the composition the never-raise contract exists
+    up, at ``append`` - exactly the composition the never-raise contract exists
     to prevent. A9 covered ``datetime="nonsense"``; this is the case that parses.
     """
     from pathlib import Path

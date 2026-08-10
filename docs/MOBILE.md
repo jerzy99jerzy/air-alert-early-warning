@@ -1,6 +1,6 @@
 # The notification channel: technology choice and MVP
 
-Version: 1.0 / 2026-08-09
+Version: 1.2 / 2026-08-09
 Status: **plan.** Nothing in this document is built. Sections are marked with
 the manual's convention where present behaviour is described: everything here
 is NOT BUILT unless it names a module that exists.

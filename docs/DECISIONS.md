@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.0
+Document:  docs/DECISIONS.md, version 2.2
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -388,6 +388,66 @@ precursor is observable in the feeds and precedes crossings, pre-registered and
 tested on data it did not generate. Not a correlation found by searching the
 same series.
 
+### D-015, revision 1. From reporting instrument to warning infrastructure
+Date: 2026-08-10. Status: adopted. The text above stands as the record of the
+earlier position; this revision supersedes its framing and not its boundary.
+
+**Decision.** MAVO is designed as an element of warning infrastructure rather
+than solely as a situational reporting instrument. The design target is to be
+the best available warning channel on the interval *before* a potential
+crossing, judged on its own merits rather than against what the sirens, the RCB
+text alerts or the RSO application do. Good situational awareness is the
+product; latency is a property of it, not an enrichment of it.
+
+**What does not change, and it is the part that matters.** The epistemic
+boundary above holds in full. MAVO does not predict crossings; the 0 of 22
+result stands, and no output may be phrased so that a reader can mistake a
+report for a prediction. Being a warning channel means delivering the Ukrainian
+picture faster and more legibly than the alternatives, not claiming to know
+what crosses. `docs/FEED-SPEC.md` section 6 says sirens remain the fastest
+channel to a sleeping person; that describes a different interval, after a
+crossing and inside Poland, and is not in tension with this revision.
+
+**What changes.**
+
+1. **Silence becomes a liability rather than a gap.** A reporting instrument
+   that goes quiet has missing data. Warning infrastructure that goes quiet is
+   telling its reader the sky is calm. Heartbeat, staleness on the face of the
+   output, and an explicit blind state move from backlog to core requirement.
+   `docs/FEED-SPEC.md` section 4 was written about the Polish feed that does
+   not exist; it now applies to this project's own output.
+2. **Latency becomes a measured property end to end**, from channel post to
+   state to rendered page. T39, T40, T41 and D-018 move from a backlog thread
+   into the core. The MTProto latency claim in T41 stays
+   `[inference, unmeasured]` until it is measured: infrastructure does not get
+   to assume its own speed.
+3. **T11 is a blocker rather than a formality.** Two conversations with
+   recipients is the floor before shadow mode, not a box to tick.
+4. **T6 escalates from a September date.** The distance between what the tool
+   claims and what a reader does with it at half past three is a design
+   surface, not a legal afterthought.
+5. **Public framing follows.** Once this ships, no description of the project
+   as pure reporting is accurate. The notifications sentence removed from the
+   LinkedIn draft is a temporary hedge to revisit rather than a settled
+   position.
+
+**Reasoning.** Stated by the operator on 2026-08-10: sirens fail by reach and
+audibility; machine data fails differently, by a silence that looks like calm.
+That asymmetry is the one this repository documents about itself (F69, and
+FEED-SPEC section 4), so accepting it as a design constraint is consistent
+rather than novel. Designing to be best-possible on the pre-crossing interval
+is the honest version of what the project was already doing, and the
+reporting-instrument framing was in part a hedge against a responsibility now
+explicitly accepted.
+
+**What would change this.** T11 surfacing recipients who treat the output as a
+take-cover signal despite the framing, which would reopen whether this posture
+is tenable without institutional backing. A regulatory development making an
+unofficial warning channel untenable for a private operator in Poland. Or
+shadow-mode measurement showing end-to-end latency cannot in fact beat the
+channels this means to precede, in which case the claim is withdrawn from the
+framing rather than softened in it.
+
 ## D-016. Geocoding is a versioned file, not a service call
 Date: 2026-08-09. Status: adopted
 
@@ -445,7 +505,7 @@ someone else's preview page forfeits the standing to ask.
 
 **What would change this.** Not throughput. Only a demonstration that ordinary,
 identified consumption at the required rate is refused *and* that no faster
-interface exists — and the second half is already false, because MTProto is a
+interface exists - and the second half is already false, because MTProto is a
 push interface and is the answer to the latency question anyway (T41).
 
 ## D-018. Collection does not scale; delivery does
@@ -499,3 +559,51 @@ up with the channel, which the window arithmetic currently says is not close, or
 a second independent signal (ADS-B, T20) whose collection genuinely parallelises
 because it is a different source rather than a second reader of the same one.
 
+## D-019. ADS-B visibility of military aircraft: measured, aggregated, published
+Date: 2026-08-10. Status: adopted
+
+**Decision.** MAVO consumes OpenSky Network state vectors for the western box
+(latitude 48 to 52, longitude 22 to 27) and may publish an aggregate count of
+transmitting military aircraft in the report and on the site. Raw vectors -
+positions, callsigns, ICAO24 addresses - stay in the offline measurement layer
+and are not published.
+
+**Reasoning.** ADS-B is voluntary emission. An aircraft broadcasting on 1090 MHz
+has chosen to be visible, and an operator that wants silence switches the
+transponder off, which is routine practice. Aggregating public emissions is
+standard and openly practised OSINT; this project adds no collection capability
+and no datum unavailable to anyone with a receiver. During a war, logistics
+activity at a hub is part of the situational picture a reader near the border
+is entitled to see.
+
+**The counterargument, recorded and rejected.** Raised in review on 2026-08-10:
+a Polish-language threat-awareness site aggregating "ISR active over
+Podkarpacie now" lowers the access threshold to information about defensive
+assets, which inverts the argument this project makes in `docs/FEED-SPEC.md`
+section 5, where the information defended was already broadcast by siren.
+Rejected on the grounds above. The aggregate-only publication form is kept as a
+hedge rather than as an admission that the objection holds.
+
+**Semantics of the published figure, which is the load-bearing part.** The
+count is a lower bound on *transmitting* aircraft and not a measurement of
+activity. A high number means something; a low number means nothing, and
+transponder silence plausibly correlates with exactly the situations a reader
+would most want to know about [inference from operational practice,
+unmeasured]. The field carries that framing in itself rather than in a
+footnote. A zero rendering as calm would be this repository's founding failure
+wearing a new coat.
+
+**Preconditions before the field ships.** Sampler measurement across at least
+three nights, one of them with a western-Ukraine alert, establishing the base
+rate, its variance by hour, and the frequency of a null response. A schema
+version bump on `state.json`, because FEED-SPEC section 3 property four is a
+requirement this project wrote for others and therefore owes its own consumers.
+And no participation in any score: the figure is reported, never weighed, the
+same separation applied to the 96.5% of front-line traffic.
+
+**What would change this.** A request from a Polish or allied institution to
+withhold the field. Evidence that the aggregate is being cited as
+targeting-relevant in a way raw trackers are not. A change in OpenSky's terms
+restricting redistribution of derived aggregates. Or a measured base rate so
+low that the field carries no signal, in which case it is dropped for being
+uninformative rather than for being dangerous.

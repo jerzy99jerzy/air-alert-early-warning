@@ -1,7 +1,7 @@
 # THREAT-MODEL
 
 ```
-Document:  docs/THREAT-MODEL.md, version 2.0
+Document:  docs/THREAT-MODEL.md, version 2.2
 Audience:  a contributor adding a control, and anyone trying to break this
 Companion: MECHANISMS (how each control works), tests/harness/CATALOGUE.md (the
            scripted attack per row), METHODOLOGY (what was found by trying)

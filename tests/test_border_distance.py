@@ -54,10 +54,10 @@ def test_a_border_touching_raion_admits_it_may_reach_zero(table: AreaTable) -> N
     four raions, i.e. each registered centre sits closer to the border than its
     equal-area radius. What it does NOT check: that they actually share an edge
     with Poland. That claim is geographic knowledge [reported], not measured
-    here — no polygon source with KATOTTG codes is reachable — and an earlier
+    here - no polygon source with KATOTTG codes is reachable - and an earlier
     version of this docstring stated it as if the assertion below proved it.
     Independent support, measured 2026-08-10 against an OSM-derived border
-    geometry (WGS84): centre distances reproduce within 0.4 km — Sambirskyi
+    geometry (WGS84): centre distances reproduce within 0.4 km - Sambirskyi
     14.3, Yavorivskyi 24.8, Chervonohradskyi 16.5, Volodymyr-Volynskyi 20.9 km,
     all inside their radii. If any of the four turns out not to touch Poland,
     the interval still holds: it says "may reach zero", not "reaches zero".

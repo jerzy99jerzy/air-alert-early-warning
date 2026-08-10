@@ -16,7 +16,7 @@ being silently absorbed.
 single regex required ``<time>`` to precede the text div. On the live page the
 time element sits in the message *footer*, after the text, so the scan paired
 message N's timestamp with message N+1's text, dropped the first text on the
-page, and orphaned the last timestamp — a systematic one-message shift in
+page, and orphaned the last timestamp - a systematic one-message shift in
 ``ts_source`` on every live poll (F50). The suite did not catch it because the
 page fixture was synthetic and written in the regex's order rather than the
 channel's: a fixture that encodes the code's assumption measures the code
@@ -99,7 +99,7 @@ CONTINUES_MARKERS = ("тривога ще триває", "тривога три�
 # markers measures this parser, not the channel. Two named risks the review
 # must specifically look for: (1) "небезпека" is a common word and may match
 # messages that are not declarations; (2) the lift table assumes every lift
-# says "відбій загрози" — a lift phrased any other way that happens to contain
+# says "відбій загрози" - a lift phrased any other way that happens to contain
 # a declare marker (e.g. a past-tense "небезпека …") would be read as a fresh
 # DECLARED, which is an inversion, the worst failure available to this table.
 KIND_DECLARE_MARKERS = ("загроза застосування", "загроза удар", "атака дрон", "небезпека")
@@ -273,7 +273,7 @@ def classify_message(text: str, areas: AreaTable | None = None) -> tuple[AreaMen
     carry one, naming 4,064 areas in the design window, none of which reached
     the store. The tag names what was cleared; the prose after the continuation
     marker names where the alert is *still running*. They are written in
-    different vocabularies — tags for the subject, prose for the list — so the
+    different vocabularies - tags for the subject, prose for the list - so the
     tag path could not see the list at all.
 
     **Where the two overlap, the message contradicts itself and the weaker

@@ -4,7 +4,7 @@ What this project is, why the hard part is not the programming, and how to
 tell whether any of it is true. Written for a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 1.0
+Document:  docs/BRIEF.md, version 1.2
 Audience:  anyone who wants to understand this project without reading the
            code: a colleague from another field, a potential recipient of the
            warnings, a reviewer deciding whether the author is careful
@@ -223,7 +223,7 @@ embarrassment.
 
 ## 8. Two real defects, told plainly
 
-From the defect log, which currently holds 35 entries, each with what it was,
+From the defect log, which currently holds 54 entries, each with what it was,
 why it survived, and what class of mistake it belongs to. Two recent ones,
 translated out of jargon.
 
@@ -264,13 +264,13 @@ checks are comprehensive.
 You should not, and the repository is built so that you do not have to. Four
 things a non-technical reader can verify or ask about directly.
 
-**The defect log.** 35 entries, each stating what broke, why nobody noticed,
+**The defect log.** 54 entries, each stating what broke, why nobody noticed,
 and what family of mistake it belongs to. Nobody fabricates a document like
 that. Its existence is the strongest available evidence about how the work is
 actually done, and it is far more informative than any list of features.
 
 **The tests attack the system rather than confirm it.** There is a catalogue of
-12 scripted attacks, each corresponding to a specific way the system could be
+13 scripted attacks, each corresponding to a specific way the system could be
 fooled: a feed that lights up everything at once, a feed that goes silent, a
 replayed message, a message flood that overflows the page.
 
@@ -278,9 +278,9 @@ replayed message, a message flood that overflows the page.
 test that never fails is indistinguishable from a test that checks nothing. So
 a tool deliberately breaks each protection in a scratch copy of the code, one
 at a time, and confirms the corresponding attack test starts failing. If
-breaking a protection changes nothing, the test was decorative. Currently 11 of
-12 attacks are verified this way, and the twelfth is **printed as unverified
-on every single run** rather than quietly counted as passing.
+breaking a protection changes nothing, the test was decorative. Currently 12 of
+13 attacks are verified this way, and the one without a mutation is **printed as
+unverified on every single run** rather than quietly counted as passing.
 
 **One command checks everything.** `make verify` runs the tests, the coverage
 floor, the style and type checks, the documentation audits and the
@@ -294,7 +294,7 @@ false. There is no second, softer path.
 Plainly, without flattery.
 
 Working: the machinery. Data collection from the live channel, a corpus of
-60,680 real messages spanning 118 days, the storage layer, the statistical
+61,240 real messages spanning 118 days, the storage layer, the statistical
 gate, the attack harness, the documentation and its audits.
 
 Not working: the part that reads the meaning of a message. Tested against 20

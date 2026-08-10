@@ -40,7 +40,7 @@ Its positional error is measured, not quoted from the nominal scale: against an
 independently derived geometry of the same state border (oblast outlines from
 `github.com/EugeneBorshch/ukraine_geojson`, OSM-derived), the 183 shared border
 vertices sit at median 0.0 km, p95 1.6 km, max 2.6 km from this outline
-(2026-08-10, WGS84 geodesic). Order a kilometre, as the scale suggests — but
+(2026-08-10, WGS84 geodesic). Order a kilometre, as the scale suggests - but
 now that is a measurement, two orders below the centroid uncertainty above,
 which is why refining it would be work spent on the wrong term.
 
@@ -57,7 +57,7 @@ projection, no external dependency. Sphericity is measured, not assumed: WGS84
 geodesic (geographiclib) against this spherical method on the four spot-check
 points differs by at most +0.31% (Kyiv, +1.4 km at 452 km; 2026-08-10), and
 that delta also contains the vertex-versus-arc discretisation, so the pure
-sphericity cost is bounded below it. Under 0.5%, inside the rounding — and now
+sphericity cost is bounded below it. Under 0.5%, inside the rounding - and now
 that sentence is a result rather than a recollection.
 """
 

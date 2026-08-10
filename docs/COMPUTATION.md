@@ -1,6 +1,6 @@
 # The computation MAVO stands on
 
-Version: 1.0 / 2026-08-09
+Version: 1.1 / 2026-08-09
 Audience: a reader who wants to check the arithmetic rather than trust it.
 Code: `mavo/baserate.py` (every statistic), `mavo/evaluate.py` (how histories
 become tables), `mavo/policy.py` (how regimes are bound to rules). Nothing statistical

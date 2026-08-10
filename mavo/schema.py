@@ -79,7 +79,7 @@ def is_degraded(state: AlertState) -> bool:
     """True when the state must surface as degradation, never as an alarm.
 
     The third predicate. Until 0.6.0.0 the docstring above *claimed* a
-    degradation path that no code implemented — a promise in prose, which is the
+    degradation path that no code implemented - a promise in prose, which is the
     claim-drift class the README lints exist to catch, living one file below
     them. Written by negation deliberately, and in the safe direction: a fifth
     state added tomorrow is degraded by default, so the new member is *loud*
@@ -227,7 +227,7 @@ class ThreatEvent:
         Deliberately still excludes ``kind`` and the
         raw text: identity means "this area entered this state at this moment
         according to this source", and a reclassification of the same transition
-        is a better *reading*, not a new *event* — see D-013 for why re-reading
+        is a better *reading*, not a new *event* - see D-013 for why re-reading
         happens by rebuilding a store from the raw corpus rather than by
         appending to an old one.
         """

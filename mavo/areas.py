@@ -47,7 +47,7 @@ WESTERN_OBLASTS = (
 # the one place the two vocabularies are joined, and it is a table rather than a
 # transliteration function because a function would invent a slug for a name it
 # had never seen and the invented slug would match nothing, silently. A name
-# missing from this table resolves to "" — unknown, and visible as unknown.
+# missing from this table resolves to "" - unknown, and visible as unknown.
 #
 # All 23 oblasts the corpus tags, in the register's nominative spelling.
 # The slugs are project-internal transliterations, not any external standard;

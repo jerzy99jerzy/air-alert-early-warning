@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 3.0
+Document:  docs/MVP.md, version 3.3
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -91,9 +91,36 @@ re-read.
 
 | Blocker | Type |
 | --- | --- |
-| Defect log entries from real data | **met.** F23 from 20 live messages, F50 verified against the corpus, F58 from the threshold sweep |
+| Defect log entries from real data | **met.** F23 from 20 live messages, F50 verified against the corpus, F58 from the threshold sweep, F71 from the whole corpus |
 | Threat model residuals re-probed | engineering (S11) |
 | Onboarding probe from a clean clone | engineering (S11, T7) |
+
+**T7, resolved on 0.16.1.0 after six releases of deferral.** The question was
+whether the repository may be public before this section's blockers are met.
+It has been public throughout, which made the deferral a gap between the
+document and the tree rather than an open decision - the class this repository
+logs against itself (F66), sitting in the document that defines the criteria.
+
+Resolved as **scope, not compliance**: repository visibility is not a criterion
+of Audience C and is removed from the ones it was informally treated as
+gating. The reasoning is that the two remaining blockers, the residual re-probe
+and the clean-clone onboarding probe, describe the quality of what a reader
+finds, not whether a reader may find it. A repository that is complete before
+it is visible cannot be reviewed before it is complete, and this project's
+error-finding has repeatedly come from readers: the corpus review of 0.13.0.0,
+the 0.16.0.0 audit, and F72 and F73 in this release. Several people reviewed
+the tree between 0.15.0.0 and 0.16.0.0, which is the evidence that the
+mechanism works.
+
+**What this does not license.** Publication is not promotion. Public repository
+and public *warning service* are different things, and the second is gated by
+T6 and T11 (D-015 revision 1), both of which stay closed. Nothing here relaxes
+the README's limitations or the pre-alpha status.
+
+**What would reopen it.** A finding that the public tree leaks something the
+threat model did not anticipate, or a decision to accept recipients before T6
+and T11 are answered, which would make visibility part of a service question
+rather than a portfolio one.
 
 ## 5. Audience D: a publicly available reporting instrument
 

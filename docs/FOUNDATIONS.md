@@ -4,7 +4,7 @@ What this project rests on. Every load-bearing claim, its provenance, and what
 would falsify it.
 
 ```
-Document:  docs/FOUNDATIONS.md, version 1.0
+Document:  docs/FOUNDATIONS.md, version 1.1
 Audience:  a contributor deciding whether a change is consistent with why this
            exists, and a reader deciding whether to believe any of it
 Companion: METHODOLOGY (what may be claimed and the defect log), MECHANISMS

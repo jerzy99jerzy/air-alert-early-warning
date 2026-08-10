@@ -127,7 +127,7 @@ def test_a9_hostile_bodies_to_the_live_adapter_do_not_raise() -> None:
     # the parser ever seeing it. The attack passed by not arriving. The same
     # rule holds under the block parser (F50): a message must carry the
     # data-post anchor the live page always carries, or it never becomes a
-    # message at all — so every hostile body below except the first two is
+    # message at all - so every hostile body below except the first two is
     # anchored, and the reached-counter still guards against a silent miss.
     txt = '<div class="tgme_widget_message_text js-message_text">'
 

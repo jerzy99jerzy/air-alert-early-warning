@@ -149,7 +149,7 @@ def test_f63_a_duplicate_tag_in_the_map_is_refused(tmp_path: Path) -> None:
 
     ``csv.DictReader`` yields both rows and the dict write makes the later one
     win silently, so a duplicated tag in the versioned map would change what an
-    area resolves to based on row order — absorbed, never reported. The map is
+    area resolves to based on row order - absorbed, never reported. The map is
     the single artifact area resolution trusts; a contradiction inside it is a
     refusal, not a coin toss.
     """

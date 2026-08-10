@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 208](https://img.shields.io/badge/tests-208-brightgreen)](tests/)
+[![tests 219](https://img.shields.io/badge/tests-219-brightgreen)](tests/)
 [![coverage 96.16%](https://img.shields.io/badge/coverage-96.16%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 51](https://img.shields.io/badge/defects%20logged-51-informational)](docs/METHODOLOGY.md)
+[![defects logged 54](https://img.shields.io/badge/defects%20logged-54-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -61,6 +61,16 @@ hromadas down to kilometres from the border rather than scoring a binary
 prediction, and why the statistical gate applies only to an alarm class that
 does not yet exist. The reporting tier is judged on correctness, latency and
 completeness.
+
+**What it is being built as, since 0.16.1.0.** An element of warning
+infrastructure rather than a reporting instrument alone (D-015, revision 1).
+The boundary above does not move: no prediction, and the 0 of 22 result stands.
+What moves is the standard the output is held to. Infrastructure that goes
+quiet tells its reader the sky is calm, so a heartbeat, staleness on the face
+of the output and an explicit blind state are core requirements rather than
+backlog items, and end-to-end latency is a measured property rather than a
+claimed one. A public repository is not a public warning service: recipients
+are gated by T6 and T11, both open.
 
 The observation that started the project stands and is now background rather
 than thesis: every violation of Polish airspace in the observed period
@@ -299,10 +309,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 16 | 3,225 |
-| Tests | 31 | 3,254 |
-| Tools | 11 | 2,582 |
-| Documentation | 32 | 10,076 |
+| Package `mavo/` | 16 | 3,268 |
+| Tests | 33 | 3,519 |
+| Tools | 11 | 2,841 |
+| Documentation | 32 | 10,567 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -313,14 +323,14 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 206, of which 13 are scripted attacks |
-| Coverage | 96.14% against a floor of 95, a ratchet that is never lowered |
-| Mutation-verified controls | 12 of 13 attacks; the twelfth is printed as unverified on every run |
+| Tests | 219, of which 13 are scripted attacks |
+| Coverage | 96.16% against a floor of 95, a ratchet that is never lowered |
+| Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 49, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 19 |
-| Releases | 30, of which 19 carry tags |
-| Corpus | 60,680 posts, 118 days, contiguous, held outside the tree |
+| Defects logged with their class | 54, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 20 |
+| Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
+| Corpus | 61,240 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation
 

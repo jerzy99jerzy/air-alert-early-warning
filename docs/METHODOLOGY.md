@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.9
+Document:  docs/METHODOLOGY.md, version 2.10
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -27,6 +27,7 @@ Note:      the defect log is the most useful document here for a new
 9. [Sprint 3 finding](#sprint-3-finding)
 10. [Verification probes run in sprint 2](#verification-probes-run-in-sprint-2)
 11. [Sprint 2 finding](#sprint-2-finding)
+12. [Threat-kind coverage measurement, 2026-08-10](#threat-kind-coverage-measurement-2026-08-10)
 
 ## What may be claimed
 
@@ -147,6 +148,9 @@ repository has come to the mistake it was built after.
 | [F68](#f68-01500-the-evidence-base-had-no-inventory) | 0.15.0.0 | The evidence base had no inventory |
 | [F69](#f69-01600-the-inventory-writer-ate-the-freeze-record-beside-it) | 0.16.0.0 | The inventory writer ate the freeze record beside it |
 | [F70](#f70-01600-one-counter-for-two-different-events-and-it-flattered-the-join) | 0.16.0.0 | One counter for two different events, and it flattered the join |
+| [F71](#f71-01610-the-kind-tables-cover-one-alert-in-ten-and-nobody-had-counted) | 0.16.1.0 | The kind tables cover one alert in ten, and nobody had counted |
+| [F72](#f72-01610-nine-documents-disagreed-with-their-pins-while-the-gate-said-pins-held) | 0.16.1.0 | Nine documents disagreed with their pins while the gate said pins held |
+| [F73](#f73-01610-the-readme-claimed-its-own-tables-were-checked-and-they-were-not) | 0.16.1.0 | The README claimed its own tables were checked, and they were not |
 
 ## Defect log
 
@@ -925,7 +929,7 @@ report naming the wrong place is worse than no report, because it is actionable.
 `fromisoformat` accepts `2026-09-01T21:00:00`: valid ISO, no UTC offset, a naive
 datetime. `poll()` built a `ThreatEvent` around it and honoured its never-raise
 contract, and the store then refused the event at `append` with
-`NaiveTimestamp` (F52) — so a malformed *message* became an *outage*, one layer
+`NaiveTimestamp` (F52) - so a malformed *message* became an *outage*, one layer
 above the contract that exists to prevent exactly that. Found in an external
 review by composing the two guarantees rather than reading either one.
 
@@ -937,7 +941,7 @@ layer was correct against its own contract, and the defect lived in the seam.
 
 Class: **two refusals composed into a raise.** Repaired at the parser: a naive
 datetime is malformed by the same standard as an unparseable one and takes the
-same path — unparsed, counted, reported.
+same path - unparsed, counted, reported.
 `tests/test_telegram.py::test_f61_a_naive_content_timestamp_never_becomes_an_event`
 asserts the composition itself, not either layer alone.
 
@@ -966,7 +970,7 @@ invisible.** Repaired with a scheme check that refuses anything but http(s) as
 `AreaTable.from_csv` wrote rows into a dict keyed by tag, so a tag appearing
 twice resolved to whichever row came later in the file. The map has no
 duplicates today, which is why nothing fired; the defect is that if it ever
-gained one — a hand edit, a bad merge of a register update — the contradiction
+gained one - a hand edit, a bad merge of a register update - the contradiction
 would be absorbed and an area would resolve to a code chosen by row order,
 silently.
 
@@ -976,7 +980,7 @@ loop. Absorbing a duplicate key is what dicts do; that is exactly why the one
 artifact area resolution trusts must not be loaded by one without a check.
 
 Class: **a key with multiple values, resolved by accident rather than reported**
-— the same class as F59, one layer earlier in the pipeline. Repaired with a
+ - the same class as F59, one layer earlier in the pipeline. Repaired with a
 refusal: `DuplicateTag` at load, before any resolution can happen.
 `tests/test_areas.py::test_f63_a_duplicate_tag_in_the_map_is_refused` holds it.
 
@@ -1075,7 +1079,7 @@ a missile rule at 7 of 7 and a drone rule at 0 of 8, and separating them is what
 made an honest claim possible at all. On real input that separation had nothing
 to separate by.
 
-Class: **one identifier, two meanings, joined by an equality test** — the same
+Class: **one identifier, two meanings, joined by an equality test** - the same
 as F65, one field over. Repaired by giving the kind its own stream, its own
 table and its own lifetime, and joining it to alerts by oblast and time in
 `mavo/kinds.py` before the rules see them.
@@ -1120,7 +1124,7 @@ re-fetched is a page unchanged, so re-collecting the same id range yields the
 same corpus. The trap is that without an inventory, "the second copy is the
 first one" is an assumption, in exactly the place this project refuses them.
 
-Class: **a critical artifact with no inventory** — the same shape as F64, a pin
+Class: **a critical artifact with no inventory** - the same shape as F64, a pin
 nothing compared against the tree, one layer further out: a claim about
 something the gate could not see. Repaired with
 `tools/corpus_inventory.py`, which writes per-page checksums, id range,
@@ -1358,8 +1362,8 @@ tell an administrative unit from the area of an old town.
 
 `tools/corpus_inventory.py --write-status` assigned `status["corpus"] = {...}`,
 replacing the block rather than merging into it. The block already held the
-D-012a holdout record — `design_window_high_id`, `holdout_low_id`,
-`holdout_share`, `content_read_before_freeze` — the boundary frozen before any
+D-012a holdout record - `design_window_high_id`, `holdout_low_id`,
+`holdout_share`, `content_read_before_freeze` - the boundary frozen before any
 message content was read, which is what makes the holdout a holdout rather than
 a second look at data already seen. One run erased all four, and `make verify`
 passed.
@@ -1380,7 +1384,7 @@ address the reader, not only the writer.
 explicit list rather than by acquaintance: inventory fields overwrite, the
 superseded hand-written schema (`posts`, `post_id_low`, `post_id_high`,
 `retrieved`, `contiguous`, `span_days`) is retired with each removal printed,
-and every other key survives — including keys invented after this function was
+and every other key survives - including keys invented after this function was
 written. A naive merge was rejected: it would leave two contradictory
 descriptions of the corpus in one block, `posts: 60680` beside
 `messages: 61240`, and the stale one is the one somebody quotes.
@@ -1407,14 +1411,143 @@ cause, and no test asked where a resolution came from. Three tests asserted on
 `resolved` and each was satisfiable either way.
 
 Class: **an instrument reporting its own framing as a property of the material**
-— the family of F59 and the `?before=` probe of F44, where the measurement and
+ - the family of F59 and the `?before=` probe of F44, where the measurement and
 the thing measured were not separable in the output.
 
 **Repair.** `carried` and `joined` are separate fields; `resolved` survives as
 their sum, so existing assertions keep their meaning. `join_coverage` is the
-join's own performance — of the alerts that arrived without a kind, the share it
-resolved to exactly one — and it is the figure to quote when the question is
+join's own performance - of the alerts that arrived without a kind, the share it
+resolved to exactly one - and it is the figure to quote when the question is
 whether the join works. `JoinReport.line()` prints both, so the TTL sweep in
 `tools/kind_coverage.py` shows the split without a caller having to know about
 it. Held by `tests/test_sprint9.py::test_t16_a_message_that_states_its_own_kind_is_not_overwritten`,
 verified red against a scratch copy that merges the counters again.
+
+### F71, 0.16.1.0. The kind tables cover one alert in ten, and nobody had counted
+
+`tools/kind_coverage.py` was built in 0.16.0.0 to measure what the threat-kind
+marker tables actually catch. Run on 2026-08-10 against 61,041 messages, it
+answered: coverage 0.128 at a one-hour TTL, `join_coverage` 0.104, and 36,697
+of 42,910 alerts leaving the join as UNKNOWN.
+
+The figure that matters most is smaller. Of 2,392 declarations, **25 were
+MISSILE, or 1.0%**. The missile rule is the only rule that has ever passed the
+gate on its own regime (7 of 7), and the channel announces ballistics as
+`Загроза балістики`, a form carrying no declaration marker at all. The one
+working rule is invisible to the join on almost every occasion it applies.
+
+Four failure modes, each confirmed against corpus text [measured]:
+
+| Text from the channel | Declaration marker | Kind | Outcome |
+| --- | --- | --- | --- |
+| `Атака дронів-камікадзе` | hits | none, `дрон` is not in KIND_MARKERS | rejected |
+| `Загроза балістики` | none | `балістик` yields missile | rejected |
+| `Загроза керованих авіабомб` / `Загроза КАБ` | none | `каб` yields glide_bomb | rejected |
+| `Відбій загрози артобстрілу` | lift hits | none, artillery does not exist in ThreatKind | rejected |
+
+**Why it survived.** T16 was recorded as unblocking the classifier, and it does
+unblock it - on the traffic the tables happen to parse. Nothing measured the
+denominator until the instrument existed, and the instrument was built one
+release after the claim.
+
+**Two named risks did not materialise, which is also a result.** The comment
+added in 0.16.0.0 flagged `небезпека` as possibly over-broad; it has **zero**
+hits, so the marker is dead rather than wide, and the guessed direction of
+error was beside the actual one. No lift inversion appears in the sample.
+
+**TTL is not the binding constraint.** Coverage moves from 0.128 to 0.127
+between a one-hour and a twenty-four-hour TTL. Tuning it would be work on the
+wrong term; the parser's reach is the term that binds.
+
+Class: **an instrument reporting its own framing as a property of the
+material** - the family of F59 and F70. Logged rather than repaired: the tables
+are `[assumption, unmeasured]` and the repair needs this measurement as its
+reference point, so the fix ships against a baseline instead of against a
+memory of one.
+
+### F72, 0.16.1.0. Nine documents disagreed with their pins while the gate said pins held
+
+`STATUS.json` pins a version for every document. On 0.16.1.0, nine of them
+disagreed with the marker inside the document: `docs/FEED-SPEC.md` declared 1.0
+against a pin of 1.3, `docs/MVP.md` 3.0 against 3.2, and seven more by one or
+two minor versions. Every release since 0.12.0.0 printed `docs-audit: pins hold`.
+
+**Why it survived.** `check_every_document_is_pinned` compares the *set* of
+documents against the tree, and its own docstring says so outright: a marker
+"could drift, or it could carry no marker at all, and every check here would
+still pass". The failure was written down at the moment the check was added and
+was not guarded then. That makes this worse than an ordinary unguarded pin: the
+prediction existed in the file that needed it.
+
+Class: **F64, a pin with no reader**, with a note attached explaining where the
+next one would come from.
+
+**Repair.** `check_document_versions_match_their_pins` reads both marker styles
+in the tree (the fenced `Document: ..., version N.N` block and the newer
+`Version: N.N / date` line), reports a document carrying neither rather than
+skipping it, and treats `docs/reviews/` as out of scope because a review is
+versioned by the release it reviews. Held by
+`tests/test_docs_audit_versions.py`, six regressions, verified red on a scratch
+copy carrying the pre-repair headers.
+
+**The repair had the defect it was repairing, caught in verification.** Removing
+the check's line from `main` left every regression green, because the tests
+import the function directly and the gate is what calls it. A sixth test now
+reads `main` and fails if either new check is defined and not registered.
+
+### F73, 0.16.1.0. The README claimed its own tables were checked, and they were not
+
+Directly above the size table, the README says these rows are recounted from
+the tree on every run and that a stale row is "a gate failure rather than a
+typo". That sentence describes `check_statistics_match_the_tree`, added in
+0.6.2.0, which compares `STATUS.json` against the tree. Nothing compared the
+README against either.
+
+By 0.16.1.0 every row of both README tables was stale, including **206 tests,
+96.14% coverage and 49 defects** printed twelve lines below badges reading 208,
+96.16% and 51 - badges the gate does enforce. The same document stated two
+different test counts, and the enforced one was not the one a reader reaches
+first. The corpus row still described the 9 August retrieval after the tree had
+moved to the 10 August inventory.
+
+**Why it survived.** The repair in 0.6.2.0 closed one edge of a triangle. Pins
+were compared against the tree, badges against the pins, and the prose tables
+against nothing - while the paragraph introducing them asserted the opposite.
+A claim that a check exists, sitting in a document the check does not read, is
+the F66 shape aimed at this repository's front page.
+
+Class: **class 1, a document describing a tree that has moved on**, compounded
+by class 4: the drifted numbers were introduced by a repair that stopped one
+step short and said it had not.
+
+**Repair.** `check_readme_tables_match_the_pins` locates rows by label rather
+than by position, so reordering the table cannot silently drop a row from the
+audit, and reports a missing label instead of skipping it. Held by
+`tests/test_docs_audit_readme.py`, verified red against the pre-repair README.
+
+## Threat-kind coverage measurement, 2026-08-10
+
+Produced by `PYTHONPATH=. python3 tools/kind_coverage.py --raw data/raw --sample 30`
+against the corpus inventoried the same day: 3,062 pages, 61,240 messages, ids
+260790 to 321830, digest `sha256:10266cbf7753...`. 61,041 messages carried
+parseable text. The measurement is the reference point for F71 and for any
+later repair of the marker tables.
+
+| Quantity | Value | Provenance |
+| --- | --- | --- |
+| Declarations | 2,392 | measured |
+| Lifts | 993 | measured |
+| Still unparsed | 4,447 | measured |
+| Kinds assigned | GLIDE_BOMB 1,868, DRONE 1,492, MISSILE 25 | measured |
+| Marker hits | `загроза застосування` 1,374, `загроза удар` 1,018, `відбій загрози` 993, `небезпека` 0 | measured |
+| Near misses | 2,957 | measured |
+| Declaration to lift | n=790, median 97 min, p90 586 min, max 7,094 min | measured |
+| Active alerts | 42,910 | measured |
+| Coverage by TTL | 0.128 at 1 h, 0.127 at 24 h | measured |
+| `join_coverage` by TTL | 0.104 at 1 h, 0.103 at 24 h | measured |
+| UNKNOWN after the join | 36,697 of 42,910 | measured |
+
+**What it does not say.** Nothing here measures whether an assigned kind is
+*correct*; it measures how often one is assigned at all. The hand-labelled
+correctness sample (T36) remains open, and a coverage figure without it can
+only bound the problem from one side.

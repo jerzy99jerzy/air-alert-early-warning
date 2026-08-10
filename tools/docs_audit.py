@@ -233,7 +233,7 @@ def check_corpus_measurements_carry_an_inventory(status: dict[str, object]) -> l
     same id range yields the same pages. That is also the trap: without an
     inventory, "the second copy is the first one" is an assumption, in the one
     place this project refuses them. So the rule is executable rather than
-    remembered — any figure naming the design window in `STATUS.json` requires
+    remembered - any figure naming the design window in `STATUS.json` requires
     `data/aggregates/corpus_manifest.csv` to exist and to agree with the
     `corpus` block beside those figures.
 
@@ -316,6 +316,103 @@ def check_every_document_is_pinned(status: dict[str, object]) -> list[str]:
         f"{name} is pinned in STATUS.json and not in the tree"
         for name in sorted(pinned - on_disk)
     ]
+    return problems
+
+
+def check_readme_tables_match_the_pins(status: dict[str, object]) -> list[str]:
+    """The numbers in the README's own tables equal the pins beside them.
+
+    0.6.2.0 added `check_statistics_match_the_tree` and the README says so, in
+    the paragraph directly above the size table: recounted on every run,
+    "a gate failure rather than a typo". Only one edge of that triangle was
+    ever closed. STATUS.json is compared against the tree; the README is
+    compared against nothing, and by 0.16.1.0 every row of both tables was
+    stale while the badges twelve lines higher were current and enforced. The
+    same document therefore stated two different test counts, and the checked
+    one was not the one a reader reaches first.
+
+    A sentence claiming a check exists, in a document the check does not read,
+    is the F66 shape aimed at this repository's own front page. Rows are
+    located by label rather than by position so that reordering the table does
+    not silently drop a row from the audit; a label that stops matching is
+    reported as missing rather than skipped.
+    """
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    statistics = status.get("statistics")
+    measured = status.get("measured")
+    corpus = status.get("corpus")
+    if not (isinstance(statistics, dict) and isinstance(measured, dict)):
+        return ["STATUS.json is missing the statistics or measured block"]
+    expected: dict[str, list[object]] = {
+        r"\| Package `mavo/` \|": [statistics["package_files"], statistics["package_lines"]],
+        r"\| Tests \| \d": [statistics["test_files"], statistics["test_lines"]],
+        r"\| Tools \|": [statistics["tool_files"], statistics["tool_lines"]],
+        r"\| Documentation \| \d": [
+            statistics["documentation_files"], statistics["documentation_lines"],
+        ],
+        r"\| Tests \| \*?\*?\d+,": [measured["tests_passing"], status["harness_attacks"]],
+        r"\| Coverage \|": [measured["coverage_percent"]],
+        r"\| Threat-model rows \|": [status["threat_model_rows"]],
+        r"\| Defects logged with their class \|": [status["defects_logged"]],
+        r"\| Decisions recorded with reopen conditions \|": [status["decisions_recorded"]],
+    }
+    if isinstance(corpus, dict) and "messages" in corpus:
+        expected[r"\| Corpus \|"] = [corpus["messages"]]
+    problems: list[str] = []
+    for pattern, values in expected.items():
+        rows = [line for line in readme.splitlines() if re.match(pattern, line)]
+        if not rows:
+            problems.append(f"README has no row matching {pattern!r} for the gate to read")
+            continue
+        row = rows[0]
+        digits = {figure.replace(",", "") for figure in re.findall(r"\d[\d,]*\.?\d*", row)}
+        for value in values:
+            if str(value) not in digits:
+                problems.append(f"README row {row.strip()!r} does not carry the pin {value}")
+    return problems
+
+
+def check_document_versions_match_their_pins(status: dict[str, object]) -> list[str]:
+    """The version marker inside a document equals the version pinned for it.
+
+    ``check_every_document_is_pinned`` compares the *set* of documents against
+    the tree and says so in its own docstring: a marker "could drift, or it
+    could carry no marker at all, and every check here would still pass". It
+    did drift. On 0.16.1.0 nine documents disagreed with their pins, up to
+    three minor versions apart (`docs/FEED-SPEC.md` header 1.0 against pin 1.3),
+    while the gate reported that pins held. A prediction written into a
+    docstring and left unguarded is a pin without a reader (F64) with a note
+    attached, which is worse than one without: the failure was foreseen and the
+    check was still not written. This is that check.
+
+    Two marker styles exist in the tree and both are read here: the fenced
+    ``Document:  docs/X.md, version N.N`` block used by the older documents,
+    and the ``Version: N.N / date`` line used by the ones written since
+    0.12.0.0. A document carrying neither is reported rather than skipped,
+    because a document with no marker cannot drift and cannot be checked, and
+    silence about it would be the same gap one level down.
+    """
+    documents = status.get("documents")
+    if not isinstance(documents, dict):
+        return []  # the pinning check beside this one reports the missing block
+    problems: list[str] = []
+    for name, pinned in sorted(documents.items()):
+        path = ROOT / name
+        if not path.exists():
+            continue  # reported by check_every_document_is_pinned
+        head = path.read_text(encoding="utf-8")[:1500]
+        match = re.search(rf"Document:\s+{re.escape(name)}, version (\d+\.\d+)", head)
+        if match is None:
+            match = re.search(r"^Version:\s+(\d+\.\d+)", head, re.M)
+        if match is None:
+            if name.startswith("docs/reviews/"):
+                continue  # a review is versioned by the release it reviews
+            problems.append(f"{name} carries no version marker, STATUS.json pins {pinned}")
+            continue
+        if match.group(1) != pinned:
+            problems.append(
+                f"{name} declares version {match.group(1)}, STATUS.json pins {pinned}"
+            )
     return problems
 
 
@@ -405,7 +502,7 @@ def check_the_holdout_boundary_survives_in_the_corpus_block(
     any message content was read, and STATUS.json's ``corpus`` block is where
     that record lives. On 2026-08-09 ``corpus_inventory.py --write-status``
     replaced the block wholesale and erased it, and the gate passed, because no
-    check read those fields — the exact F64 shape, one field further out. This
+    check read those fields - the exact F64 shape, one field further out. This
     check is the missing reader: the fields must be present, the boundary must
     be internally consistent, and the freeze flag must be an explicit boolean,
     so the next tool that eats the block turns the gate red instead of passing.
@@ -453,6 +550,8 @@ def main() -> int:
         + check_cited_tests_exist()
         + check_readme_links_resolve()
         + check_every_document_is_pinned(status)
+        + check_document_versions_match_their_pins(status)
+        + check_readme_tables_match_the_pins(status)
         + check_corpus_measurements_carry_an_inventory(status)
         + check_the_holdout_boundary_survives_in_the_corpus_block(status)
         + check_defect_count_is_pinned(status)
