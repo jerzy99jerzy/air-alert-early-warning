@@ -373,6 +373,22 @@ own holes and missed a real one until the claims were tested.
 the diagram to the document section explaining it. Maintained as a table
 precisely so a rename leaves a visibly stale row.
 
+**Every diagram is mermaid. No ASCII art, in any document, ever.** Boxes drawn
+with dashes and arrows do not render on a phone, cannot be diffed in any way a
+reviewer can read, and fall out of alignment the moment a label gets one
+character longer. Mermaid is text, so it diffs; it is rendered by the forge, so
+it survives a rename; and it is the same notation in every document, so a
+reader learns it once.
+
+The rule needs a reader or it is a preference. `tests/lint_mermaid.py` fails
+on any non-mermaid code block containing a bare arrow that is not a shell
+command. The heuristic is deliberately narrow and its false positives are
+cheap: making the block mermaid is what the rule asked for anyway. Added at
+0.19.2.0, after a deployment diagram shipped as ASCII art into a repository
+where four documents already used mermaid. The convention existed and lived
+only in the files that happened to follow it, which is not a convention, it is
+a coincidence with a good reputation.
+
 **Mermaid diagrams: no semicolons inside statements.** `;` is a statement
 separator, and a diagram that fails to parse is invisible to every local check
 because the markdown is valid and only the forge renders it. Add a lint.

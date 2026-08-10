@@ -95,11 +95,26 @@ def is_degraded(state: AlertState) -> bool:
 
 
 class ThreatKind(Enum):
-    """Classified means of attack, driving which timing regime applies."""
+    """Classified means of attack, driving which timing regime applies.
+
+    ARTILLERY was added at 0.19.3.0 after F71 measured what the tables miss.
+    The channel announces `Відбій загрози артобстрілу` and the parser rejected
+    the whole message, because artillery had no member to resolve to: a means
+    of attack the source names and the schema cannot hold is a message thrown
+    away, not a message classified.
+
+    It carries no timing regime and it is not meant to. `Regime` names MISSILE
+    and DRONE explicitly and the rules compare with `is`, so an artillery
+    declaration is reported and never reaches an alarm rule. That is correct
+    rather than provisional: artillery is a front-line phenomenon at ranges
+    that do not reach the Polish border, and giving it a regime would be
+    inventing one for a threat this project cannot be warning anyone about.
+    """
 
     MISSILE = "missile"
     DRONE = "drone"
     GLIDE_BOMB = "glide_bomb"
+    ARTILLERY = "artillery"
     UNKNOWN = "unknown"
 
 

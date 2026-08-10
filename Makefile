@@ -2,9 +2,9 @@
 PY := python3
 PKG := mavo
 
-.PHONY: verify coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit harness-mutation clean
+.PHONY: verify coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check harness-mutation clean
 
-verify: coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit harness-mutation
+verify: coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check harness-mutation
 	@echo "verify: OK"
 
 # pytest exits 5 when nothing is collected. That exit code is NOT swallowed:
@@ -37,6 +37,13 @@ docs-audit:
 
 manual-audit:
 	$(PY) tools/manual_audit.py
+
+# D-020 put the state.json schema in this repository on the argument that the
+# producer's gate can exercise it. Then nothing did, and F74 shipped: the
+# consumer's map drew nothing while its distance list drew everything. This is
+# the reader that argument implied.
+contract-check:
+	$(PY) tools/contract_check.py
 
 # F14, paid after two slips. A harness that has never been observed failing is
 # not evidence. This copies the tree and runs pytest once per mutation, measured

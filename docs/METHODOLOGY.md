@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.12
+Document:  docs/METHODOLOGY.md, version 2.14
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -27,6 +27,7 @@ Note:      the defect log is the most useful document here for a new
 9. [Sprint 3 finding](#sprint-3-finding)
 10. [Verification probes run in sprint 2](#verification-probes-run-in-sprint-2)
 11. [Sprint 2 finding](#sprint-2-finding)
+13. [Cost of composing a report, 2026-08-10](#cost-of-composing-a-report-2026-08-10)
 12. [Threat-kind coverage measurement, 2026-08-10](#threat-kind-coverage-measurement-2026-08-10)
 
 ## What may be claimed
@@ -153,6 +154,9 @@ repository has come to the mistake it was built after.
 | [F73](#f73-01610-the-readme-claimed-its-own-tables-were-checked-and-they-were-not) | 0.16.1.0 | The README claimed its own tables were checked, and they were not |
 | [F74](#f74-01900-the-contracts-join-field-was-a-display-name-and-the-map-drew-nothing) | 0.19.0.0 | The contract's join field was a display name, and the map drew nothing |
 | [F75](#f75-01900-the-terminal-announced-a-schema-version-the-file-did-not-carry) | 0.19.0.0 | The terminal announced a schema version the file did not carry |
+| [F76](#f76-01920-the-trailing-counter-measured-how-finely-an-oblast-is-subdivided) | 0.19.2.0 | The trailing counter measured how finely an oblast is subdivided |
+| [F77](#f77-01920-the-regression-file-claimed-a-verification-it-had-not-had) | 0.19.2.0 | The regression file claimed a verification it had not had |
+| [F78](#f78-01930-the-missile-stem-was-one-letter-too-long-for-half-its-forms) | 0.19.3.0 | The missile stem was one letter too long for half its forms |
 
 ## Defect log
 
@@ -1586,11 +1590,20 @@ already existed and already agreed with the consumer's vocabulary on 22 of 23
 oblasts. Held by `tests/test_sprint10.py`, verified red against a scratch copy
 publishing the display name again.
 
-**The twenty-third, recorded rather than papered over.** MAVO's register has
-one `kyiv`; the consumer's geometry splits `kyiv-city` from `kyiv-oblast`,
-which is a real administrative distinction this project does not make. The
-consumer maps it, and that is the correct side for it: a producer that learns
-its consumer's vocabulary has taken the coupling back.
+**The twenty-third, and the sentence that was written about it was wrong.**
+MAVO's register has one `kyiv`; the consumer's geometry splits `kyiv-city`
+from `kyiv-oblast`, a real administrative distinction this project does not
+make. The entry as first written said "the consumer maps it", in the present
+tense. **It does not.** Checked afterwards against `mavo-site` 1.2.0.0: the
+geometry carries `kyiv-oblast` and `kyiv-city`, there is no `kyiv`, and no
+mapping exists anywhere in that package. Seven Kyiv-oblast raions therefore
+land in `unplaceable` and draw no marker.
+
+The correct side for the mapping is still the consumer, for the reason the
+original sentence gave. What was wrong was the tense: a statement about
+somebody else's code, written without reading it, in the entry recording a
+defect caused by exactly that. Corrected at 0.19.2.0 and carried as a task
+(T44) rather than as a settled fact.
 
 **What this release did not fix.** MAVO publishes no raion centroids, so every
 marker is drawn at oblast scale with an uncertainty ellipse the size of the
@@ -1618,3 +1631,108 @@ constant duplicated into a message has a shelf life nobody writes down.
 the version in the printed line equals the version in the file on disk rather
 than equalling any particular number. Verified red against a scratch copy with
 the literal restored.
+
+### F76, 0.19.2.0. The trailing counter measured how finely an oblast is subdivided
+
+`trailing_counts` added one per transition into ACTIVE. The channel declares
+alerts per raion, and a western episode lights every raion in an oblast at
+once: 22 of the 81 western episodes in the design window touched all 36
+western raions simultaneously. Measured on the shipped code: one episode over
+Lviv oblast produced `alerts_count: 7`, one per raion in the map.
+
+The consumer shades each oblast by that count. The map would therefore have
+rendered administrative subdivision as intensity, and oblasts with more raions
+would have been systematically darker, on a page whose whole purpose is to
+show where the activity is.
+
+**Why it survived.** The docstring stated the right intent - "how busy has
+this oblast been" - and the regression beside it used **one raion**, so the
+mutation that should have caught it had nothing to bite. This is the second
+time in one sprint that a test passed because its data could not distinguish
+the correct implementation from the wrong one; the first was the distance
+sort, where the two orderings agreed on the pair chosen. A test whose data is
+picked for convenience is a test whose data is picked by the implementation.
+
+Class: **an instrument reporting its own framing as a property of the
+material** (F59, F70, F71), with the unit of the count and the unit of the
+event silently different.
+
+**Repair.** An episode opens when an oblast goes from no active raion to one
+and closes when the last is affirmatively cleared. `UNKNOWN` does not close an
+episode, because silence is not an all-clear inside a counter any more than
+anywhere else; an episode left open by an outage stays open, which is
+conservative in the direction that does not understate. Held by four
+regressions, three mutation-verified.
+
+### F77, 0.19.2.0. The regression file claimed a verification it had not had
+
+`tests/test_sprint10.py` opened with: "Each was verified red on a scratch copy
+carrying the mutation named in its docstring." Counted at the moment it was
+questioned: 40 tests, 22 naming a mutation, 13 actually run against one. The
+sentence was written before any verification had happened, and was not revised
+as tests were added over three releases.
+
+This is the defect this repository exists to attack, in the file whose subject
+is that a test which cannot fail is worthless. It cost nothing operationally
+and everything in standing: every mutation-verification claim in the project
+now needs to be read as a claim rather than a record, which is exactly the
+suspicion an unearned assurance buys.
+
+Class: **a claim about the tree that nothing compared against the tree** -
+F73's family, aimed at the test suite instead of the README.
+
+**Repair.** The header now says precisely which tests are mutation-verified
+(those naming a mutation) and that the rest are ordinary regressions claiming
+nothing more. No blanket assurance replaces it, because the honest version of
+that sentence is a list, and the list is the docstrings.
+
+## Cost of composing a report, 2026-08-10
+
+`compose()` replays the whole event store on every call, and `mavo report
+--watch` calls it once per interval. Measured [measured, Python 3.12.3, this
+container, synthetic store, 120 areas]:
+
+| Events in store | Time to compose |
+| --- | --- |
+| 5,000 | 57 ms |
+| 20,000 | 211 ms |
+| 60,000 | 723 ms |
+
+Linear, 12.7x for 12x the events. At a 60 s interval this is not close to
+binding today, and it is a curve rather than a constant: the store grows
+monotonically and nothing prunes it. Recorded as a number rather than a
+worry so the day it matters is visible before it arrives, and so that a claim
+about end-to-end latency (D-018, T40) has this term in it rather than assuming
+it away.
+
+**What would change the shape.** A snapshot the loop reads instead of a full
+replay, or a store that answers "current state per area" directly. Both are
+work this project has no measurement to justify yet, which is why neither is
+here.
+
+
+### F78, 0.19.3.0. The missile stem was one letter too long for half its forms
+
+Found while testing the F71 repair rather than by the measurement that
+prompted it. `балістик` matches the noun the channel writes in
+`Загроза балістики`, and misses the adjective in
+`Загроза застосування балістичного озброєння`, because the stems diverge at
+the eighth character. The declaration resolved to no kind and the message was
+refused.
+
+This sat underneath F71 and was invisible to it: the coverage run counted
+MISSILE at 25 declarations and the obvious explanation, the missing short
+declare form, was sufficient to account for a figure that low. A second cause
+producing the same symptom does not show up in a number, only in the texts.
+
+Class: **a pattern written from one example of a word**, the family of F23,
+where the shipped area table searched a vocabulary the channel does not use.
+
+**Repair.** `баліст`, which carries both forms. Held by
+`tests/test_sprint11.py`, verified red against a scratch copy with the longer
+stem restored.
+
+**What it does not fix.** How many other kind markers have the same problem is
+unknown: `ракет`, `бпла`, `шахед`, `каб`, `авіабомб` and the two artillery
+stems were each written from one or two forms. T45 is the measurement, and the
+near-miss review is the part of it that would find this class again.

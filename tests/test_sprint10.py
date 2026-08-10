@@ -5,9 +5,15 @@ shipped sprint, which is why this is sprint 10 on disk. The mapping is stated
 here rather than left to be worked out from two sequences that diverged at
 0.9.0.0.
 
-Every test below is an invariant the product would be worthless without. Each
-was verified red on a scratch copy carrying the mutation named in its
-docstring.
+Every test below is an invariant the product would be worthless without.
+
+**Which of them are mutation-verified, stated precisely rather than
+generously.** The tests whose docstring names a mutation were run against a
+scratch copy carrying exactly that mutation and observed red. The rest are
+ordinary regressions and are not claimed to be more. The blanket sentence that
+stood here until 0.19.2.0 said every test had been verified that way, which was
+written before any verification had happened and never corrected as tests were
+added; it was false for more than half of them (F77).
 """
 
 from __future__ import annotations
@@ -629,25 +635,95 @@ def test_a_blind_report_publishes_a_null_source_time_rather_than_now() -> None:
     assert payload["source_last_message_at"] is None
 
 
-def test_the_trailing_window_counts_declarations_not_days_under_alert() -> None:
-    """One long alert is one declaration.
+def test_one_episode_across_every_raion_of_an_oblast_counts_once() -> None:
+    """F76: the counter measured administrative subdivision, not activity.
 
-    Mutation: count every event in the window rather than transitions into
-    ACTIVE. An area under a single six-day alert would then shade as the
-    busiest oblast on the map, which is the opposite of what the shading is
-    for.
+    A western episode lights every raion at once; 22 of the 81 in the design
+    window touched all 36 western raions simultaneously. Counting transitions
+    made one alert over Lviv count as seven, and an oblast with more raions
+    render systematically darker. The earlier regression used a single raion,
+    so the mutation had nothing to bite - the same test-data failure as the
+    distance sort.
+
+    Mutation: increment per transition into ACTIVE rather than per episode.
+    """
+    from mavo.report import trailing_counts
+
+    table = _table()
+    lviv = [
+        table.resolve(tag).code  # type: ignore[union-attr]
+        for tag in table.tags
+        if table.resolve(tag) is not None
+        and table.resolve(tag).oblast == "Львівська"  # type: ignore[union-attr]
+    ]
+    assert len(lviv) > 1, "the fixture needs an oblast with several raions"
+    events = [_event(code, AlertState.ACTIVE, 120) for code in lviv]
+    counts = trailing_counts(events, as_of=NOW, table=table)
+    assert [(c.slug, c.alerts_count) for c in counts] == [("lviv", 1)]
+
+
+def test_a_second_episode_after_a_full_all_clear_counts_again() -> None:
+    """An episode closes when the last active raion is cleared, and only then."""
+    from mavo.report import trailing_counts
+
+    table = _table()
+    lviv = [
+        table.resolve(tag).code  # type: ignore[union-attr]
+        for tag in table.tags
+        if table.resolve(tag) is not None
+        and table.resolve(tag).oblast == "Львівська"  # type: ignore[union-attr]
+    ]
+    events = (
+        [_event(code, AlertState.ACTIVE, 120) for code in lviv]
+        + [_event(code, AlertState.CLEAR, 100) for code in lviv]
+        + [_event(lviv[0], AlertState.ACTIVE, 60)]
+    )
+    counts = trailing_counts(events, as_of=NOW, table=table)
+    assert counts[0].alerts_count == 2
+    assert counts[0].last_alert_ended_at == NOW - timedelta(minutes=100)
+
+
+def test_a_partial_all_clear_does_not_close_an_episode() -> None:
+    """One raion cleared while others are still under alert is not an ending.
+
+    Mutation: close the episode on the first CLEAR. The count would then rise
+    with the number of raions again, by a different route.
+    """
+    from mavo.report import trailing_counts
+
+    table = _table()
+    lviv = [
+        table.resolve(tag).code  # type: ignore[union-attr]
+        for tag in table.tags
+        if table.resolve(tag) is not None
+        and table.resolve(tag).oblast == "Львівська"  # type: ignore[union-attr]
+    ]
+    events = [_event(code, AlertState.ACTIVE, 120) for code in lviv]
+    events += [_event(code, AlertState.CLEAR, 100) for code in lviv[:-1]]
+    counts = trailing_counts(events, as_of=NOW, table=table)
+    assert counts[0].alerts_count == 1
+    assert counts[0].last_alert_ended_at is None, (
+        "an episode still running has not ended"
+    )
+
+
+def test_unknown_does_not_close_an_episode() -> None:
+    """Silence is not an all-clear, inside a counter as everywhere else.
+
+    Mutation: treat UNKNOWN like CLEAR. A feed outage would then close every
+    episode and the next message would open a new one, inflating the count
+    exactly when the feed is least reliable.
     """
     from mavo.report import trailing_counts
 
     events = [
-        _event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 5),
-        _event(SAMBIR, AlertState.CLEAR, 60 * 24 * 4),
-        _event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 2),
-        _event(SAMBIR, AlertState.UNKNOWN, 60),
+        _event(SAMBIR, AlertState.ACTIVE, 300),
+        _event(SAMBIR, AlertState.UNKNOWN, 200),
+        _event(SAMBIR, AlertState.ACTIVE, 100),
     ]
     counts = trailing_counts(events, as_of=NOW, table=_table())
-    assert [(c.slug, c.alerts_count) for c in counts] == [("lviv", 2)]
-    assert counts[0].last_alert_ended_at == NOW - timedelta(minutes=60 * 24 * 4)
+    assert counts[0].alerts_count == 1
+    assert counts[0].last_alert_ended_at is None
 
 
 def test_events_outside_the_window_do_not_count() -> None:

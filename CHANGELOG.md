@@ -16,6 +16,112 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.19.3.0 - 2026-08-10
+
+**F71's repair: the kind tables now accept the four forms they were measured
+refusing, and a fifth found while testing that.**
+
+- **`загроза` replaces the two longer declare markers.** The channel announces
+  ballistics as `Загроза балістики`; the table listed only
+  `загроза застосування` and `загроза удар`, which are its superstrings and
+  therefore unreachable. That single omission is why MISSILE resolved on 25 of
+  2,392 declarations, and why the only rule that has ever passed its own
+  regime gate was invisible to the join almost every time it applied.
+- **Breadth is bounded on the other side rather than by a longer marker.** A
+  declaration needs a declare marker **and** exactly one kind marker, so
+  `загроза` on its own resolves nothing. Held by a regression.
+- **`дрон` and `авіабомб` added**, closing `Атака дронів-камікадзе` and
+  `Загроза керованих авіабомб`.
+- **`ThreatKind.ARTILLERY` added, and it carries no timing regime.**
+  `Відбій загрози артобстрілу` was refused outright because artillery had
+  nowhere to land: a means of attack the source names and the schema cannot
+  hold is a message discarded, not classified. `Regime` names MISSILE and
+  DRONE explicitly and the rules compare with `is`, so artillery is reported
+  and never reaches an alarm rule. That is a geography decision, not caution:
+  artillery does not range to the Polish border.
+- **F78: `балістик` was one letter too long for the adjectival form.**
+  `балістичного озброєння` diverges from the stem at the eighth character, so
+  half the ballistic vocabulary was invisible. Found by testing the repair
+  against the quoted forms, not by the measurement that motivated it: a second
+  cause producing the same symptom does not show up in a number, only in the
+  texts. Now `баліст`.
+- **Six mutations run, one passed, and the test was rewritten.** The inversion
+  test used `Відбій загрози застосування балістики`, which contains `загрози`
+  in the genitive and therefore no declare marker, so reversing the lift and
+  declare ordering did not fail it. Third time in two sprints that a test
+  passed on data unable to distinguish the implementations.
+- **The first measurement against real text: four of twenty became five.**
+  The pinned means-layer count over the twenty real messages in this
+  repository since sprint 4 gained `Атака дронів-камікадзе типу Молнія`, one
+  of the four forms F71 recorded, which had been sitting in the fixture
+  unmatched the whole time. `real_messages_with_kind_marker` moves 4 to 5 in
+  `STATUS.json`. Twenty messages is not a sample for a coverage claim and this
+  is not one.
+- **The new entries are `[assumption, unmeasured]` and say so.** They are
+  derived from five message forms, which is evidence the parser accepts what
+  it demonstrably refused and evidence for nothing else. **How much of the
+  corpus this recovers is not measured**, and no coverage claim about this
+  release should be made until T45 runs on the operator's machine, with the
+  near-miss pile reviewed by hand. A table tuned against a number it also
+  produces is the failure this project was founded on refusing.
+
+## 0.19.2.0 - 2026-08-10
+
+**An audit of the two releases before it, at the author's request, and it
+found more than expected.** Three of the findings are corrections to claims
+this repository made about itself.
+
+- **F76: the trailing counter measured how finely an oblast is subdivided.**
+  One episode over Lviv oblast produced `alerts_count: 7`, one per raion,
+  because the channel declares per raion and the counter added one per
+  transition. The consumer shades by that number, so the map would have
+  rendered administrative subdivision as intensity and oblasts with more
+  raions as systematically darker. An episode now opens when an oblast goes
+  from no active raion to one and closes when the last is affirmatively
+  cleared; `UNKNOWN` does not close one, because silence is not an all-clear
+  inside a counter either.
+- **The regression that missed it used one raion.** Second time in one sprint
+  that a test passed because its data could not distinguish right from wrong,
+  after the distance sort whose two orderings agreed on the chosen pair. A
+  test whose data is picked for convenience is a test whose data is picked by
+  the implementation.
+- **F77: `tests/test_sprint10.py` claimed every test in it was
+  mutation-verified.** 40 tests, 22 naming a mutation, 13 actually run against
+  one. The sentence was written before any verification happened and survived
+  three releases. It cost nothing operationally and everything in standing:
+  an unearned assurance makes every earned one need re-reading. The header now
+  says which tests are verified and claims nothing about the rest.
+- **The claim that the consumer maps `kyiv` was false.** Written in the
+  present tense about somebody else's code, in the entry recording F74, which
+  is a defect caused by exactly that. Checked afterwards: no `kyiv` in the
+  consumer's geometry, no mapping in the package, seven Kyiv-oblast raions
+  drawing nothing. Corrected in the log and carried as T44.
+- **"A measured failure" about the palette was somebody else's inference.**
+  `docs/WEBAPP.md` described the theme-inversion diagnosis as measured. The
+  site's own audit records it as an inference from two screenshots, with the
+  client never seen and no control image. Relabelled; the design it produced
+  stands on its own regardless of which explanation is true.
+- **`tools/contract_check.py` runs in the gate.** D-020 moved contract
+  ownership here arguing the producer's gate can exercise the schema, and then
+  nothing did, which is how F74 shipped. The check composes a report, writes
+  the file and asserts what a consumer relies on: the join field is a register
+  slug or empty, nulls stay null, a cleared area leaves the list, an
+  unresolvable area stays in it. It deliberately does not import the consumer,
+  which would rebuild the coupling D-020 removed. Verified by reintroducing
+  F74 on a scratch copy: three of its four assertions fire.
+- **Every diagram is mermaid, and the rule now has a reader.** A deployment
+  diagram shipped as ASCII art into a repository where four documents already
+  used mermaid, so the convention existed only in the files that happened to
+  follow it. `tests/lint_mermaid.py` fails on a non-mermaid block containing a
+  bare arrow that is not a shell command, and `ENGINEERING.md` section 8 says
+  why: ASCII does not render on a phone, cannot be diffed usefully, and falls
+  out of alignment the moment a label grows.
+- **The cost of composing a report is a number now**: 57 ms at 5,000 events,
+  211 ms at 20,000, 723 ms at 60,000, linear. Not binding at a 60 s interval,
+  and a curve rather than a constant, because the store grows and nothing
+  prunes it. Recorded so a latency claim carries this term instead of assuming
+  it away.
+
 ## 0.19.1.0 - 2026-08-10
 
 **The map mockup was a grid of rectangles, in the document whose argument is
@@ -57,8 +163,10 @@ produced, rather than by reading either.
   vocabulary. The slug came from `oblast_slug()`, which already existed and
   already agreed with the consumer on 22 of 23 oblasts. The twenty-third,
   `kyiv` against `kyiv-city`/`kyiv-oblast`, is a real administrative
-  distinction this project does not make, and the consumer maps it: a producer
-  that learns its consumer's vocabulary has taken the coupling back.
+  distinction this project does not make. **The sentence originally written
+  here said the consumer maps it, in the present tense, and that was false**:
+  checked afterwards, no such mapping exists and seven Kyiv-oblast raions draw
+  no marker. Corrected at 0.19.2.0.
 - **`recent_7d` and `window_days`: the trailing window MAVO was assumed to
   compute and did not.** The site built a whole visual layer on a field its own
   audit recorded as a contract for data that might not exist. It exists now.
@@ -251,10 +359,6 @@ asserts about itself.
   gating the drone tier. ADS-B cannot see the drone tier: Shahed-type munitions
   and missiles carry no transponder, and the feed shows only what chooses to be
   seen. The premise is corrected in place rather than deleted.
-- **Fifty-four em-dashes replaced across the tree**, leaving the changelog and
-  the release reviews untouched because those are records rather than prose
-  under maintenance. `docs/MANUAL.md` needed fifteen contents anchors updated
-  with them, since the separator participates in GitHub's anchor rules.
 
 ## 0.16.0.0 - 2026-08-10
 

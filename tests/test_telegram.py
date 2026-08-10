@@ -160,18 +160,33 @@ def test_a_partial_all_clear_is_not_classified_as_clear() -> None:
     assert classify(partial) is None
 
 
-def test_means_markers_match_four_of_twenty_real_messages() -> None:
-    # F35. The 2026-08-08 measurement pinned the state layer (15) and the area
-    # layer (0) as assertions but left the means layer (4) in prose, so two of
-    # three layers could not drift quietly and one could. Pinned like the
-    # others: this flips when the marker table is redesigned, deliberately.
+def test_means_markers_match_five_of_twenty_real_messages() -> None:
+    """The means layer, pinned so a table change cannot pass quietly.
+
+    F35. The 2026-08-08 measurement pinned the state layer (15) and the area
+    layer (0) as assertions and left the means layer in prose, so two of three
+    layers could not drift quietly and one could. Pinned like the others: this
+    flips when the marker table is redesigned, deliberately.
+
+    **It flipped at 0.19.3.0, from four to five, and the flip is the first
+    measurement of the F71 repair against real channel text.** The message it
+    gained is `Атака дронів-камікадзе типу Молнія`, which the old table
+    refused because `дрон` was absent while its declare marker matched: one of
+    the four failure modes F71 recorded, appearing in the twenty messages that
+    have been in this repository since sprint 4. A second message,
+    `Загроза керованих авіабомб`, now matches on `авіабомб` as well as `каб`,
+    which changes no outcome and is recorded so the count is explicable.
+
+    Five of twenty is not a coverage claim. Twenty messages was never a sample
+    for that, and the measurement that is one is T45.
+    """
     from mavo.sources.telegram import KIND_MARKERS
 
     matched = sum(
         any(marker in message.lower() for marker in KIND_MARKERS)
         for message in _real_messages()
     )
-    assert matched == 4, "means table changed; update this pin alongside F23"
+    assert matched == 5, "means table changed; update this pin alongside F23"
 
 
 # --- F50, the pairing --------------------------------------------------------

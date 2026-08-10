@@ -92,24 +92,63 @@ CONTINUES_MARKERS = ("тривога ще триває", "тривога три�
 # is exactly the kind of distinction this project loses when it reads for the
 # marker it expects instead of the one that is there.
 #
-# Provenance of both tables: written from the F25 examples and the author's
-# knowledge of the language, before the corpus existed to check them against
-# [assumption, unmeasured]. Until `tools/kind_coverage.py --sample` output has
-# been reviewed and the review recorded, a coverage figure computed over these
-# markers measures this parser, not the channel. Two named risks the review
-# must specifically look for: (1) "небезпека" is a common word and may match
-# messages that are not declarations; (2) the lift table assumes every lift
-# says "відбій загрози" - a lift phrased any other way that happens to contain
-# a declare marker (e.g. a past-tense "небезпека …") would be read as a fresh
-# DECLARED, which is an inversion, the worst failure available to this table.
-KIND_DECLARE_MARKERS = ("загроза застосування", "загроза удар", "атака дрон", "небезпека")
+# Provenance, 0.19.3.0: these tables were written from the F25 examples and the
+# author's knowledge of the language, then **measured** by
+# `tools/kind_coverage.py` over 61,041 messages on 2026-08-10 (F71). The
+# measurement is what the current entries answer to, and it found four ways the
+# original table refused messages the channel was plainly making:
+#
+#   `Атака дронів-камікадзе`      declare marker hit, no kind: `дрон` absent
+#   `Загроза балістики`           no declare marker at all: only the longer
+#                                 `загроза застосування` / `загроза удар` forms
+#                                 were listed
+#   `Загроза керованих авіабомб`  same, and `авіабомб` was absent
+#   `Відбій загрози артобстрілу`  lift hit, no kind: artillery had no member
+#
+# The consequence measured before the repair: MISSILE resolved on 25 of 2,392
+# declarations, 1.0%, because the channel announces ballistics in the short
+# form. The only rule that has ever passed its own regime gate (7 of 7) was
+# therefore invisible to the join almost every time it applied.
+#
+# `загроза` replaces the two longer declare forms rather than joining them:
+# they are its superstrings and therefore unreachable, the same reasoning that
+# keeps `каб` and drops `кабів`. Breadth is bounded on the other side: a
+# declaration needs a declare marker **and** exactly one kind marker, so
+# `загроза` on its own resolves nothing.
+#
+# Lift is evaluated before declaration, so a message containing both reads as a
+# lift. That ordering is what keeps the inversion risk named below from firing.
+#
+# **Status of the new entries: [assumption, unmeasured].** They are derived
+# from corpus text quoted in F71, which is evidence for the four forms above
+# and evidence for nothing else. The measurement that would replace this label
+# is a second `kind_coverage` run on the same corpus, and the acceptance is
+# stated in T45: coverage and per-marker hit counts before and after, with
+# near-misses reviewed by hand.
+#
+# Two named risks the next review must still look for: (1) `небезпека`
+# measured **zero** hits, so it is dead rather than over-broad as previously
+# guessed, and it is a candidate for removal once a second run confirms that;
+# (2) the lift table assumes every lift says `відбій загрози`, so a lift
+# phrased another way that happens to contain a declare marker would read as a
+# fresh DECLARED, which is an inversion and the worst failure available here.
+KIND_DECLARE_MARKERS = ("загроза", "атака дрон", "небезпека")
 KIND_LIFT_MARKERS = ("відбій загрози",)
 
 KIND_MARKERS: dict[str, ThreatKind] = {
-    "балістик": ThreatKind.MISSILE,
+    # `баліст` rather than `балістик`: the channel writes both the noun
+    # (`балістики`) and the adjective (`балістичного озброєння`), and the
+    # longer stem misses every adjectival form. Found while testing the repair
+    # against the forms quoted in F71, which is one form later than the
+    # measurement that motivated it.
+    "баліст": ThreatKind.MISSILE,
     "ракет": ThreatKind.MISSILE,
     "бпла": ThreatKind.DRONE,
     "шахед": ThreatKind.DRONE,
+    "дрон": ThreatKind.DRONE,
+    "авіабомб": ThreatKind.GLIDE_BOMB,
+    "артобстріл": ThreatKind.ARTILLERY,
+    "артилерійськ": ThreatKind.ARTILLERY,
     # "кабів" is a superstring of "каб" and therefore unreachable; only the
     # shorter stem is kept. The stem is three characters and deliberately so:
     # false hits are a measured question for the corpus, not a guess to encode.

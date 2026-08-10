@@ -226,46 +226,66 @@ def trailing_counts(
     days: int = DEFAULT_TRAILING_DAYS,
     table: AreaTable,
 ) -> tuple[RecentOblast, ...]:
-    """Alert declarations per oblast over the trailing window.
+    """Alert *episodes* per oblast over the trailing window.
 
-    Counts *transitions into* ACTIVE rather than areas currently active: the
-    question the shading answers is "how busy has this oblast been", and an
-    area that has been under one long alert for six days is one declaration,
-    not six days of them.
+    An episode is one stretch during which the oblast had at least one raion
+    under alert. It opens when the oblast goes from no raion active to one,
+    and closes when the last active raion is affirmatively cleared.
 
-    An oblast whose name the register map cannot resolve is dropped from this
-    count and **not** folded into another. The alternative is a count that is
-    quietly wrong for the oblast it lands in, which is worse than a count that
-    is visibly missing: the areas that fail to resolve are already reported as
-    `unresolved_areas` on the report beside this.
+    **This counts episodes rather than raion transitions, and the difference
+    is not cosmetic (F76).** The first version of this function added one per
+    transition into ACTIVE. A single western episode lights every raion in the
+    oblast at once, so one alert over Lviv counted as seven, and 22 of the 81
+    western episodes in the design window touched all 36 western raions
+    simultaneously. The shading would then have measured how finely an oblast
+    is subdivided rather than how often it was under attack, and oblasts with
+    more raions would have rendered systematically darker. The regression that
+    should have caught it used one raion, so the mutation had nothing to bite.
 
-    `last_alert_ended_at` is the most recent affirmative all-clear, or None
-    where no all-clear was seen in the window. None means unknown, and a
-    consumer must not render it as "ended just now".
+    **UNKNOWN does not close an episode.** A source that stops talking about a
+    raion has not said the alert ended, and treating silence as the end of an
+    episode would be unknown-resolves-to-clear inside a counter. Only an
+    affirmative all-clear closes one, which means an episode left open by a
+    feed outage stays open, and the count is conservative in the direction
+    that does not understate.
+
+    An oblast the register map cannot resolve is dropped from this count and
+    **not** folded into another: a count quietly wrong for the oblast it lands
+    in is worse than one visibly missing, and those areas are already reported
+    as `unresolved_areas` beside this.
+
+    `last_alert_ended_at` is the most recent episode close, or None where no
+    episode closed inside the window. None means unknown, and a consumer must
+    not render it as "ended just now".
     """
     cutoff = as_of - timedelta(days=days)
-    counts: dict[str, int] = {}
-    last_clear: dict[str, datetime] = {}
-    for event in events:
-        if event.ts_source < cutoff:
-            continue
+    active: dict[str, set[str]] = {}
+    episodes: dict[str, int] = {}
+    last_close: dict[str, datetime] = {}
+    for event in sorted(
+        (e for e in events if e.ts_source >= cutoff),
+        key=lambda e: (e.ts_source, e.area_id),
+    ):
         area = table.by_code(event.area_id)
         slug = oblast_slug(area.oblast) if area is not None else ""
         if not slug:
             continue
+        running = active.setdefault(slug, set())
         if event.state is AlertState.ACTIVE:
-            counts[slug] = counts.get(slug, 0) + 1
+            if not running:
+                episodes[slug] = episodes.get(slug, 0) + 1
+            running.add(event.area_id)
         elif is_clear(event.state):
-            previous = last_clear.get(slug)
-            if previous is None or event.ts_source > previous:
-                last_clear[slug] = event.ts_source
+            running.discard(event.area_id)
+            if not running and slug in episodes:
+                last_close[slug] = event.ts_source
     return tuple(
         RecentOblast(
             slug=slug,
             alerts_count=count,
-            last_alert_ended_at=last_clear.get(slug),
+            last_alert_ended_at=last_close.get(slug),
         )
-        for slug, count in sorted(counts.items())
+        for slug, count in sorted(episodes.items())
     )
 
 

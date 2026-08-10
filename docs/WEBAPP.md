@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.1 / 2026-08-10
+Version: 2.2 / 2026-08-10
 Status: **built, in a separate repository.** `mavo-site` 1.2.0.0 exists, runs
 and carries its own gate, its own defect log and its own audit. Everything
 described here was read out of that package rather than remembered: where this
@@ -243,10 +243,16 @@ Red `#ff2f45` carries the alert accent, on the author's instruction of
 no-red constraint). The rule that replaced "no red" is narrower and more
 useful: **red on the mark, dark everywhere that covers area.**
 
-The reason is a measured failure rather than taste. An earlier amber palette
-carried the alert on the lightness axis, and a viewing client that rewrites
-dark themes by flipping lightness while keeping hue turned a dark olive plate
-into a bright yellow one and erased the glyph on top of it (D-S02). The fix was
+The reason is an observed failure rather than taste, and the diagnosis under
+it is weaker than the failure. What was observed: an earlier amber palette,
+carried on the lightness axis, rendered as a bright yellow plate with the
+glyph erased on the author's viewing client [reported, from two screenshots].
+The explanation offered at the time, that the client rewrites dark themes by
+flipping lightness while keeping hue, is **[inference]**: the client, its CSS
+and a control image were never seen, and a rendering or screenshot pipeline
+with its own transform was never ruled out. The site's own audit says as much
+about its D-S02 entry, and this document said "measured" until 0.19.2.0, which
+promoted somebody else's inference by quoting it carelessly. The fix was
 an outline sandwich: white halo, saturated disc, near-black rim, white glyph
 stroked in near-black. That construction survives the flip because it carries
 the mark on *saturation and contrast order* rather than on lightness alone,
@@ -288,11 +294,18 @@ sit on top of what must not fail. A post that lands well puts thousands of
 readers on one machine, and a collection outage during a strike is the failure
 this project exists to avoid.
 
+```mermaid
+flowchart LR
+  channel[Telegram channel] --> collector[MAVO collector]
+  collector --> store[(event store)]
+  store --> report[mavo report --watch]
+  report -->|writes every cycle| state[/state.json/]
+  state --> site[mavo-site, separate host]
+  site --> reader([reader])
 ```
-MAVO collector  ->  event store  ->  mavo report --watch  ->  state.json
-                                                                 |
-                                                       mavo-site (separate host)
-```
+
+The arrow into `state.json` is the only coupling. Everything to its left is
+this repository; everything to its right imports nothing from it.
 
 The site never reads the store, never imports `mavo`, and needs no credentials.
 Its only input is a file. That is also what makes the failure mode benign: if

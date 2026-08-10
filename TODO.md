@@ -665,3 +665,68 @@ verifies its own anchors by point-in-polygon.
 still reports administrative states, not objects, and a raion-anchored marker
 is "somewhere in this raion", which is why the uncertainty field must shrink
 with the anchor rather than disappear.
+
+
+## T44. The consumer has no `kyiv`, and seven raions draw no marker
+Status: `ready`, small, and it belongs to the site rather than here.
+
+MAVO's register carries one `kyiv`. The consumer's geometry splits `kyiv-city`
+from `kyiv-oblast`, a real administrative distinction this project does not
+make. Measured against `mavo-site` 1.2.0.0: no `kyiv` in the geometry and no
+mapping anywhere in the package, so the seven Kyiv-oblast raions in
+`data/reference/tag_map.csv` land in `unplaceable` and draw nothing.
+
+**Where the fix belongs.** The consumer, because it is the consumer's
+geometry that makes the distinction. A producer that starts emitting
+`kyiv-oblast` has learned its consumer's vocabulary and taken back the
+decoupling D-020 bought.
+
+**Acceptance:** one line in the consumer mapping `kyiv` onto `kyiv-oblast`,
+with a test, and a note in this repository's contract documentation naming the
+slug pair. Until then, the gap is real and is stated in `docs/WEBAPP.md`
+rather than left for a reader to discover from an empty patch of map.
+
+**Why it is here at all.** Because the entry recording F74 originally asserted
+that the consumer already did this, in the present tense, without anybody
+having looked. That sentence is corrected in the log; this task is what
+replaces it.
+
+
+## T45. Measure the kind tables again, against the same corpus
+Status: `ready`, blocks any coverage claim about 0.19.3.0. Needs the corpus,
+so it runs on the operator's machine.
+
+The repair in 0.19.3.0 is derived from four message forms quoted in F71 plus
+one found while testing it. That is evidence the parser now accepts forms it
+demonstrably refused, and evidence for nothing else. **How much of the corpus
+it recovers is unmeasured**, and the entries carry `[assumption, unmeasured]`
+until this runs.
+
+**Acceptance:** `tools/kind_coverage.py --raw data/raw --sample 30` on the same
+corpus that produced the baseline, reported beside these figures:
+
+| Quantity | Baseline, 2026-08-10 |
+| --- | --- |
+| Declarations | 2,392 |
+| Lifts | 993 |
+| Still unparsed | 4,447 |
+| MISSILE / DRONE / GLIDE_BOMB | 25 / 1,492 / 1,868 |
+| Coverage at 1 h TTL | 0.128 |
+| `join_coverage` at 1 h TTL | 0.104 |
+| UNKNOWN after the join | 36,697 of 42,910 |
+
+Plus two things the numbers alone will not say:
+
+1. **The near-miss pile, reviewed by hand.** A coverage figure that rises
+   because a marker became over-broad looks identical to one that rises
+   because a marker became correct. `небезпека` measured zero hits and is a
+   candidate for removal; `загроза` is short and its false-hit rate is the
+   thing this review exists to find.
+2. **Whether artillery is now a large share of declarations.** If it is, the
+   reporting tier gains a category the alarm rules deliberately never see, and
+   `docs/WEBAPP.md` needs a legend entry rather than a silent fifth glyph.
+
+**What would count as failure.** Coverage rising while the hand-reviewed
+sample shows the new hits are wrong. In that case the entries are reverted
+rather than tuned, because a table tuned against a number it also produces is
+the fitting-to-noise failure this project was founded on refusing.
