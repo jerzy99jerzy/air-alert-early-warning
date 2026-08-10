@@ -2,9 +2,9 @@
 PY := python3
 PKG := mavo
 
-.PHONY: verify coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index harness-mutation clean
+.PHONY: verify coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
 
-verify: coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index harness-mutation
+verify: coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation
 	@echo "verify: OK"
 
 # pytest exits 5 when nothing is collected. That exit code is NOT swallowed:
@@ -51,6 +51,13 @@ contract-check:
 # a decision nobody has made.
 todo-index:
 	$(PY) tools/todo_index.py --check
+
+# The two briefs are one document in two languages and drifted apart within an
+# hour of the second one being written. This compares the figures they share,
+# and only those: prose accuracy is not reachable by a check and pretending
+# otherwise would be worse than the honest gap.
+brief-check:
+	$(PY) tools/brief_check.py
 
 # F14, paid after two slips. A harness that has never been observed failing is
 # not evidence. This copies the tree and runs pytest once per mutation, measured

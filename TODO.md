@@ -4,12 +4,12 @@
 
 ### Where the backlog stands
 
-**11 of 45 closed, 34 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**11 of 46 closed, 35 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 11 | Finished, with the release that closed it named in the entry |
-| `ready` | 25 | Nothing external blocks it; it needs a session |
+| `ready` | 26 | Nothing external blocks it; it needs a session |
 | `decision` | 3 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -27,7 +27,7 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 
 **Tier 1, 7 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name)
 
-**Tier 2, 16 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker)
+**Tier 2, 17 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement)
 
 **Tier 3, 11 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced)
 
@@ -42,7 +42,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement) |
 
 <!-- index:end -->
 
@@ -183,8 +183,11 @@ matters is seconds, not minutes. That is correct, and it reframes the polling
 question rather than answering it: poll-interval latency is only worth arguing
 about relative to the latency already spent upstream, which nobody has measured.
 `docs/METHODOLOGY.md` lists the channel's latency relative to the APIs as
-unknown, and the 30 July episode ran thirteen minutes from detection to impact
-without anyone knowing where in those thirteen minutes the channel speaks.
+unknown, and the 30 July episode ran **six minutes** from detection at 03:40 to
+loss of radar contact at 03:46 `[reported]` without anyone knowing where in
+those six minutes the channel speaks. The figure was thirteen in this entry
+until 2026-08-10 and was unsourced; six is less room, which makes the
+measurement more worth doing rather than less.
 
 **What to measure.** For every message: the post's own timestamp against the
 moment it was received. A week gives a distribution rather than an anecdote.
@@ -890,3 +893,91 @@ missile and drone explicitly); the reporting tier should.
 **What would reopen the third point.** Evidence that a glide bomb has ever
 crossed or landed near the Polish border, which would make it a warning
 question rather than a reporting one. Nothing in the corpus suggests it.
+
+
+## T48. Apple critical-alerts entitlement
+Status: `ready` (own action), **not started** [tier 2]
+
+On iOS, a notification that bypasses Do Not Disturb and the ringer switch needs
+the critical-alerts entitlement. Apple grants it per application, on
+application. A civil-safety warning app is squarely the category the
+entitlement exists for, but the decision and its timing belong to Apple
+`[reported; the process is Apple-documented, the approval odds are not]`.
+
+**Why this is tier 2 and self-service rather than blocked, corrected on
+2026-08-10.** The first version of this entry called it `blocked-external` and
+tier 3, on the reasoning that there is nothing to apply with because no app
+exists. That reasoning was wrong.
+
+What Apple's request requires, stated as the requirement rather than as a
+status: a developer account with a Team ID, a registered bundle identifier, and
+a written description of the use case. **The application does not require a
+published app, or a written one.** Everything on that list is obtainable
+without waiting on anybody, which is what makes this self-service rather than
+externally blocked.
+
+**And the use-case description is the part this project is unusually well
+placed for.** The entitlement is granted on the strength of what the app is
+for. A public repository with a test suite, a defect log, a written statement
+of what the tool refuses to claim, and a working report is a stronger case
+than an unbuilt idea, which is what most applications are. The material that
+would go in the description already exists in `docs/BRIEF.md`.
+
+**Why it is not tier 1.** Applying costs an afternoon and answers a question
+whose answer changes the architecture, so waiting has a cost. But two things
+are still true and both belong in the application: nobody receives anything
+yet, and T6 has produced no written legal position. Describing a service with
+no recipients is not dishonest, and it is a weaker application than the same
+one made after T11.
+
+**The reason to do it early anyway.** The lead time is entirely outside this
+project's control and the answer changes the design rather than the schedule.
+A refusal makes the voice-call bridge the iOS alarm path outright. Finding
+that out after building around the entitlement is the expensive order.
+
+### Progress, to be filled in as it moves
+
+| Stage | State | Date | Note |
+| --- | --- | --- | --- |
+| Constraint documented | **done** | 2026-08-10 | `docs/MOBILE.md`, "The iOS constraint, named" |
+| Use-case description drafted | not started | | Source material is `docs/BRIEF.md` |
+| Application submitted | not started | | |
+| Apple response | | | **A pending application is not progress. This row is the only one that closes the question** |
+
+**On the "call bridge", and this needs correcting rather than planning.**
+`docs/MOBILE.md` contains one clause, in parentheses, saying that until the
+entitlement exists an iOS recipient's alarm path is a voice call. An earlier
+version of this entry gave that clause a row in the table above and a
+recommendation to exercise it early. **That was an overreach**: a passing
+remark in one document was promoted to a component with a plan, which is the
+drift this repository is supposed to catch.
+
+Examined properly, the idea conflicts with three things written elsewhere:
+
+- **Phone numbers are personal data.** This project refused Google map tiles so
+  a reader's viewport never reaches a third party (D-016) and keeps client
+  addresses out of the access log. Storing recipients' numbers and handing them
+  to a carrier on every alarm is a different category from anything it has
+  declined so far.
+- **A telephony provider is an external dependency with a contract and a bill**,
+  in a project whose hard rule is stdlib-only with no runtime dependencies. A
+  push server can be self-hosted; a carrier cannot.
+- **Automatically telephoning people at night is a larger change of class than
+  a push notification**, in a system that has just decided (D-015 revision 1)
+  that moving from reporting to warning needs T6 and T11 answered first.
+
+**Nothing about the bridge is decided, and this entry does not decide it.** If
+the entitlement is refused, the options are: no alarm class on iOS at all, a
+non-guaranteed push that says plainly that it may be silenced, or a voice path
+with the privacy and dependency costs above accepted in writing. That is a
+decision for `DECISIONS.md`, taken when there is a reason to take it, not a
+row in a progress table.
+
+**Acceptance for this task, narrowed accordingly:** the entitlement granted and
+one alarm delivered through Do Not Disturb on a real handset, or the refusal
+recorded here with its date. **What happens after a refusal is out of scope
+until it happens.**
+
+**What would remove this task entirely.** A decision that iOS is out of scope
+(`docs/MOBILE.md` already keeps it off the M1 and M2 critical path), or
+recipients who all use Android, which is knowable only after T11.

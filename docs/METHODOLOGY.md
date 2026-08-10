@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.17
+Document:  docs/METHODOLOGY.md, version 2.18
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -161,6 +161,7 @@ repository has come to the mistake it was built after.
 | [F77](#f77-01920-the-regression-file-claimed-a-verification-it-had-not-had) | 0.19.2.0 | The regression file claimed a verification it had not had |
 | [F78](#f78-01930-the-missile-stem-was-one-letter-too-long-for-half-its-forms) | 0.19.3.0 | The missile stem was one letter too long for half its forms |
 | [F79](#f79-02010-the-reviews-kept-happening-and-stopped-being-filed) | 0.20.1.0 | The reviews kept happening and stopped being filed |
+| [F80](#f80-02120-a-fabricated-detail-and-an-overstated-adjective-in-the-document-written-to-be-believed) | 0.21.2.0 | A fabricated detail and an overstated adjective, in the document written to be believed |
 
 ## Defect log
 
@@ -1909,3 +1910,82 @@ it was actually done.
 and never will. `docs/reviews/README.md` names them. Writing one now from the
 changelog would assert that a tree was examined when it was not, and a
 fabricated review is worse than an absent one: the absent one is visible.
+
+### F80, 0.21.2.0. A fabricated detail and an overstated adjective, in the document written to be believed
+
+Two defects in `docs/BRIEF.md` and `docs/BRIEF-PL.md`, found within an hour of
+those documents being written, by the operator asking where a claim came from.
+
+**A specific incident, unsourced, and with the wrong number in it.** The
+section on where the project came from opened with a date, a voivodeship and a
+duration, in the register of settled fact and with no provenance label, in a
+document whose header promises every number carries one.
+
+**The first repair was to delete it. That was half right and the second half
+matters more.** Checked against reporting on 2026-08-10, the incident is real
+and well documented: a Kh-101 cruise missile entered Polish airspace on the
+night of 29 to 30 July 2026 during a mass attack on Ukraine, was detected at
+03:40, was lost from radar at 03:46, and came down near Tarnawa-Kolonia in
+Lubelskie about a hundred kilometres inside the country.
+
+**The duration was wrong.** The brief said thirteen minutes. The reported
+interval is **six**. No source supports thirteen, and the figure had been
+carried in this repository since it was first written: it is in **D-015**, the
+decision that defines what this project is, and in the T39/T40 latency thread
+where it frames how much room a measurement has to fit into. Both are corrected
+at 0.21.2.0.
+
+**This is worse than the fabrication it was first classified as.** A detail
+nobody can source is visible once somebody asks. A true event carrying a
+number that is wrong by a factor of two travels, gets cited by the decision it
+supports, and reads as verified because everything around it is. Deleting it
+would have removed the visible copy and left the two load-bearing ones in
+place.
+
+**The correction strengthens what it corrects.** Six minutes is less room than
+thirteen, so D-015's argument holds harder, and the same reporting supplies the
+mechanism D-015 could only assert: Ukrainian fighters pursued the missiles to
+the border and their radar signature was difficult to separate from the
+missiles, which delayed identification. That is the unobservable this project
+declines to predict, described by the people watching it.
+
+**"Checked three independent ways."** `docs/METHODOLOGY.md` says "checked three
+ways, and the three answer different questions": one independent source, one
+re-check of the same outline simplified differently, and one measurement of the
+source's own error whose row states it rules out nothing. The brief compressed
+that into three independent confirmations, which is a stronger claim than the
+section it summarised.
+
+**A third, smaller, and it is the one a check can catch.** Both briefs said "34
+open items" while the backlog held 35, because a task was added between writing
+and reading. `docs/reviews/0.21.0.0.md` had recorded, in the release before,
+that nothing compares the two language versions and that this is a concrete
+risk. The risk materialised at the next change.
+
+**Why all three arrived together.** Prose for people is the one surface in this
+repository with no reader in the gate, and it is also the surface where the
+goal changes from being correct to being understood. Those pull in opposite
+directions: a specific date reads better than "in the period observed", and
+"three independent ways" reads better than "three ways answering different
+questions". Every other artifact here has something that punishes the more
+persuasive phrasing. A brief has nothing.
+
+Class: **class 1 in the one place where class 1 is least visible.** F73 and F79
+were documents describing a tree that had moved on; this is a document
+describing a tree that never was.
+
+**Repair.** The incident is removed rather than sourced. The three-ways claim
+is restated as the methodology states it, naming which of the three is
+independent and which is a floor. The item count is removed entirely rather
+than pinned, because a figure that changes weekly does not belong in a document
+nobody re-reads weekly. `tools/brief_check.py` compares the figures the two
+briefs share and their pinned values, and it is deliberately narrow: it reads
+whole numbers of four digits or more, because Polish decimal commas and English
+decimal points are the same figure in two unmatchable spellings and the first
+run produced three false positives inside a minute.
+
+**What no check will catch, stated so nobody assumes otherwise.** A fabricated
+date and an overstated adjective are not reachable by any heuristic worth
+having. They were caught by a person asking where a claim came from, and that
+is the only mechanism that works here. This is an argument for reviewing prose
+by reading it, not for building a weak check and feeling covered.

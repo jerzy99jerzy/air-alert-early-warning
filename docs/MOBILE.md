@@ -1,6 +1,6 @@
 # The notification channel: technology choice and MVP
 
-Version: 1.2 / 2026-08-09
+Version: 1.3 / 2026-08-09
 Status: **plan.** Nothing in this document is built. Sections are marked with
 the manual's convention where present behaviour is described: everything here
 is NOT BUILT unless it names a module that exists.
@@ -223,9 +223,25 @@ Consequences, stated rather than papered over:
   delivers via the hosted APNs gateway - acceptable for the observation
   digest, a third-party relay and a non-guarantee for the alarm class.
 - If an iOS recipient enters at M2, the entitlement application starts at M2
-  entry, in parallel, and until it is granted that recipient's alarm path is
-  a phone call bridge (alarm-class messages trigger a voice call), which
-  bypasses silencing by a mechanism no entitlement gates.
+  entry, in parallel.
+- What that recipient's alarm path is until then is **undecided**. An earlier
+  version of this document named a voice-call bridge in passing, and that
+  clause was subsequently read as a plan. It is not one: telephoning recipients
+  means holding phone numbers and handing them to a carrier, which is a
+  privacy cost this project has refused in smaller amounts elsewhere (D-016),
+  and a runtime dependency the stdlib-only rule does not admit. The options on
+  a refusal are no alarm class on iOS, a push that states plainly it may be
+  silenced, or a voice path with those costs accepted in writing, and choosing
+  between them is a decision nobody has needed to take yet.
+
+**Tracked as T48 in `TODO.md`**, with a stage table rather than a status word,
+because the lead time is entirely outside this project's control and a pending
+application is the kind of thing that reads as progress for months. The
+application itself is self-service and does not wait on an app existing: Apple
+asks for a developer account, a bundle identifier and a description of the use
+case, and the description is a thing this project has already written. The call
+bridge is designed and not implemented, and if the entitlement is refused it
+stops being a fallback and becomes the iOS alarm path.
 
 ## The message contract
 

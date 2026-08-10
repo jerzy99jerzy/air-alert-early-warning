@@ -16,6 +16,136 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.21.2.0 - 2026-08-10
+
+**F80: a fabricated detail and an overstated adjective, in the document written
+to be believed. Both were in prose, which is the one surface here with no
+reader in the gate.**
+
+- **A specific incident, unsourced, and carrying a number wrong by a factor of
+  two.** The brief opened its origin section with a date, a voivodeship and a
+  duration, unlabelled, in a document that promises every figure carries a
+  label. Deleted first; then checked. The incident is real and well reported: a
+  Kh-101 entered Polish airspace on the night of 29 to 30 July 2026, was
+  detected at 03:40, was lost from radar at 03:46 and came down near
+  Tarnawa-Kolonia in Lubelskie. **The duration was six minutes, not thirteen**,
+  and thirteen was also in **D-015** and in the T39/T40 latency thread, carried
+  unsourced since each was written. Both corrected.
+- **That is worse than the fabrication it was first taken for.** An unsourceable
+  detail is visible the moment somebody asks. A true event with a number wrong
+  by a factor of two travels, gets cited by the decision it supports, and reads
+  as verified because everything around it is. Deleting the brief's copy would
+  have left the two load-bearing ones untouched.
+- **The correction strengthens what it corrects.** Six minutes is less room
+  than thirteen, and the same reporting supplies the mechanism D-015 could only
+  assert: Ukrainian fighters pursued the missiles to the border and their radar
+  return was hard to separate from the missiles, which delayed identification
+  on the Polish side. The paragraph is restored to both briefs with sources and
+  labels.
+- **"Checked three independent ways."** The methodology says "checked three
+  ways, and the three answer different questions": one independent source, one
+  re-check of the same outline simplified differently, and one measurement of
+  the source's own error whose own row says it rules out nothing. Restated as
+  the methodology states it.
+- **Both briefs said 34 open items while the backlog held 35.** The count was
+  removed entirely rather than pinned: a figure that changes weekly does not
+  belong in a document nobody re-reads weekly.
+- **`docs/reviews/0.21.0.0.md` is corrected in place.** It had verified eleven
+  figures, found them sound, and concluded that no figure in the brief was
+  unsupported. True and irrelevant: the two defects were a fabricated fact and
+  an adjective, and neither is a figure. A review that enumerates the checkable
+  and reports clean is a review of the checkable, and its summary must say so.
+- **`tools/brief_check.py` in the gate**, comparing the figures the two briefs
+  share and their pinned values. Deliberately narrow, and the narrowness was
+  forced by its first run: Polish decimal commas and English decimal points are
+  the same number in two unmatchable spellings, and comparing them produced
+  three false positives inside a minute. It now reads whole numbers of four
+  digits or more, which is the class that actually drifted.
+- **What no check will catch, said rather than assumed.** A fabricated date and
+  an overstated adjective are not reachable by any heuristic worth having.
+  Both were caught by the operator asking where a claim came from. That is an
+  argument for reading prose, not for building a weak check and feeling
+  covered.
+
+## 0.21.1.0 - 2026-08-10
+
+**The one requirement where the answer may simply be no now has a task and a
+stage table.**
+
+- **T48: the Apple critical-alerts entitlement.** On iOS, waking somebody
+  through Do Not Disturb needs an entitlement Apple grants per application, on
+  application. `docs/MOBILE.md` opens with "the alarm path must wake a person
+  through Do Not Disturb at 02:00", so this is the single item in the
+  notification design that an external party can refuse outright.
+- **Tracked with stages rather than a status word**, because the lead time is
+  entirely outside this project's control and a pending application reads as
+  progress for months. The table carries the trigger, the submission, the
+  response and the fallback, and says in as many words that a pending
+  application is not progress.
+- **The progress table states requirements rather than the author's readiness.**
+  A public repository saying which accounts and subscriptions its author does
+  not hold is publishing a fact about a person, not about the project. What
+  Apple's request needs is written as the requirement, and the table tracks
+  only the steps that belong to the application itself.
+- **Tier 2 and self-service, after the first version of this entry got it
+  wrong.** It was filed as blocked-external and tier 3, reasoning that there is
+  nothing to apply with because no app exists. Checked afterwards: Apple's
+  request is a form needing a developer account, a Team ID, a bundle
+  identifier and a description of the use case, and **the app does not have to
+  be published or written**. The prerequisite is an account and an identifier,
+  which is an hour, not a blocker.
+- **The use-case description is the part this project is unusually well placed
+  for.** The entitlement is granted on the strength of what the app is for, and
+  a public repository with a test suite, a defect log and a written statement
+  of what the tool refuses to claim is a stronger case than the unbuilt idea
+  most applications describe. The material already exists in `docs/BRIEF.md`.
+- **A drift caught in the same release that introduced it.** The first version
+  of T48 gave the "call bridge" a row in its progress table and a
+  recommendation to exercise it early. That phrase exists in
+  `docs/MOBILE.md` as **one clause in parentheses**, with no decision, no
+  architecture and no costing behind it; promoting a passing remark to a
+  component with a plan is the drift this repository exists to catch, and it
+  was caught by the operator rather than by any check.
+- **Examined properly, the idea conflicts with three things already written.**
+  Phone numbers are personal data, in a project that refused Google map tiles
+  so a reader's viewport never reaches a third party (D-016) and keeps client
+  addresses out of the access log. A carrier is an external dependency with a
+  contract and a bill, under a stdlib-only rule. And telephoning people at
+  night is a larger change of class than a push notification, in a system that
+  has just decided that moving from reporting to warning needs T6 and T11
+  answered first.
+- **Nothing about it is decided and T48 no longer pretends otherwise.** What
+  happens on a refusal is out of scope until there is a refusal, and the
+  options are recorded in `docs/MOBILE.md` for whoever has to choose.
+
+## 0.21.0.0 - 2026-08-10
+
+**The brief was written for somebody who does not write code and read like a
+specification with the jargon removed.**
+
+- **Rebuilt from nothing**, 402 lines to 209, thirteen sections to nine. The
+  table of contents and the glossary are gone: a reader who needs a glossary is
+  reading a document that failed earlier than the glossary.
+- **Numbers explained rather than named.** "Base rate", "recall" and
+  "confidence interval" no longer appear as terms to learn. What appears is
+  "it will fire more than 200 times a year and be right 3 times", and a coin
+  that might be loaded but not on twelve tosses.
+- **The argument is corrected, and the corrected one is stronger.** The old
+  text said a calendar rule tells the reader nothing, which is not quite true
+  and is checkable: such a rule does beat chance slightly. The defensible claim
+  is that with three events a year the improvement cannot be demonstrated, and
+  it has no counter of the form "but it does beat the calendar".
+- **The status section described a tree from fifteen releases ago.** It said
+  the component that reads a message does not work, citing 0 of 20. That was
+  repaired in 0.12.0.0 when the reader moved to the channel's own hashtags. The
+  0 of 20 stays as history, because it is the best evidence in the repository
+  that reasoning loses to real data, and the current weak point is named
+  instead: threat kind resolves in about 20% of alerts.
+- **`docs/BRIEF-PL.md`, and it is the original.** The readers this document is
+  written for are Polish: a journalist, an analyst, somebody near the border
+  deciding whether to pay attention. The English version follows it. Everything
+  else in this repository stays in English.
+
 ## 0.20.2.0 - 2026-08-10
 
 **Two figures in the README were read as one thing and are three.**
@@ -626,9 +756,9 @@ runs, and MTProto is a push interface that removes the interval entirely (T41).
 Both are downstream of a number nobody has: how late the channel already is
 relative to publication (T40). D-018 separates the two axes a move to cloud infrastructure gets confused
 between: collection is one stream and does not scale, delivery does and arrives
-with M2, and a host is an availability decision — with the consequence that a
+with M2, and a host is an availability decision - with the consequence that a
 change of address class restarts T39's ladder rather than continuing it. D-017
-records what was refused along the way —
+records what was refused along the way -
 rotating addresses to raise throughput, which would measure a limit we do not
 intend to approach, make availability depend on concealment, and cost the
 standing to ask Polish institutions for an honestly consumable feed.

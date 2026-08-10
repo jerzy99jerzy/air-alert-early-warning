@@ -6,7 +6,7 @@
 [![tests 275](https://img.shields.io/badge/tests-275-brightgreen)](tests/)
 [![coverage 96.19%](https://img.shields.io/badge/coverage-96.19%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 60](https://img.shields.io/badge/defects%20logged-60-informational)](docs/METHODOLOGY.md)
+[![defects logged 61](https://img.shields.io/badge/defects%20logged-61-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -347,6 +347,7 @@ tools/
   harness_mutation.py  disables each control and fails if its attack stays green
 docs/
   BRIEF.md         the project for a reader who does not write code
+  BRIEF-PL.md      the same, in Polish, and the original
   MANUAL.md        operator's manual; every section declares BUILT or NOT BUILT
   FOUNDATIONS.md   the observations and assumptions, each with its falsifier
   ARCHITECTURE.md  infrastructure: components, boundaries, dependency rules
@@ -376,8 +377,8 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | --- | --- | --- |
 | Package `mavo/` | 17 | 4,024 |
 | Tests | 35 | 4,588 |
-| Tools | 13 | 3,305 |
-| Documentation | 37 | 12,990 |
+| Tools | 14 | 3,433 |
+| Documentation | 39 | 13,468 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -392,7 +393,7 @@ confidence interval attached.
 | Coverage | 96.19% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 60, the count pinned against the log itself |
+| Defects logged with their class | 61, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 22 |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,240 posts, contiguous, digest recorded, held outside the tree |
@@ -401,7 +402,8 @@ confidence interval attached.
 
 | Document | Contents |
 | --- | --- |
-| [**`docs/BRIEF.md`**](docs/BRIEF.md) | **Start here if you do not write code.** What the project is, why the base rate is the hard part, and the questions that would expose a weak answer |
+| [**`docs/BRIEF.md`**](docs/BRIEF.md) | **Start here if you do not write code.** What the project is, why three violations a year make prediction indefensible, what it refuses to say, and the questions that would expose a weak answer |
+| [`docs/BRIEF-PL.md`](docs/BRIEF-PL.md) | The same document in Polish, and the original: the readers it is written for are Polish |
 | [**`docs/MANUAL.md`**](docs/MANUAL.md) | **Start here to use it.** Install, every command, how to read the output, operational limits, glossary. Each section declares BUILT, PARTIAL, NOT BUILT or NARRATIVE |
 | [**`docs/FOUNDATIONS.md`**](docs/FOUNDATIONS.md) | **Start here to contribute.** The observations and assumptions everything rests on, each with its provenance label and what would falsify it |
 | [`docs/DATA-FLOW.md`](docs/DATA-FLOW.md) | The data architecture: one message from byte to verdict, every transformation, and a table of exactly where information can be lost |
