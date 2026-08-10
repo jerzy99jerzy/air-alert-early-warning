@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 3.3
+Document:  docs/MVP.md, version 3.4
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -173,7 +173,7 @@ than absorbed into the next one.
 | Sprint | Window | What ships | Exit criterion, checkable |
 | --- | --- | --- | --- |
 | **S7** | closed 9 Aug | Area resolution: the tag parse, the 127-row map, the alias table (T33) and the untagged remainder (T34). Smaller than planned, because the channel tags 99.34% of messages with the area and unit type (`docs/CHANNEL.md`) | Met on an amended criterion, recorded as amended. Every tag resolves or is explicitly unresolved, and tag and prose agree on 38,520 of 38,521 comparable messages. The hand sample is retargeted at the population that check cannot see (T36) |
-| **S8** | **N/A** | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | A hand-checked sample of real messages where the rendered report is correct in area, means and distance, with the error rate stated. Distances spot-checked by hand before the column is trusted anywhere |
+| **S8** | **N/A** | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | A hand-checked sample of real messages where the rendered report is correct in area, means and distance, with the error rate stated. Distances spot-checked by hand before the column is trusted anywhere. **Partial on 0.17.0.0: the composition, the command and the contract ship and are held by twenty regressions with five mutation-verified honesty rules; the hand-checked sample (T36) is not done, so the exit criterion is not met and the sprint is recorded as partial rather than closed** |
 | **S9** | **N/A** | Real time. `mavo watch` (M0), the run log and its reader (T23, T24), interval jitter from the first commit (T27), the host decision (T25) | 72 hours unattended with every cycle accounted for, and the first end-to-end latency measurement: channel publication to rendered report, reported as a distribution rather than a best case |
 | **S10** | **N/A** | Delivery. Self-hosted ntfy, the three message classes, blindness reporting, per-recipient topics (M1) | A synthetic report reaches a phone through Do-Not-Disturb within a measured time; killing the feed produces a blindness message within one interval; the delivery ledger and the phone agree over a week |
 | **S11** | **N/A** | Hardening to beta. Threat-model rows for the delivery path with tests, the clean-clone probe (T7), the identifier lint (T22), the disengagement instrument (T29) | `make verify` green from a clean clone on a machine with nothing installed, every new threat row carrying a test, and T6 recorded |

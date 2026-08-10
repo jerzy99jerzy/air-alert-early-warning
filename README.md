@@ -3,8 +3,8 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 219](https://img.shields.io/badge/tests-219-brightgreen)](tests/)
-[![coverage 96.16%](https://img.shields.io/badge/coverage-96.16%25-brightgreen)](Makefile)
+[![tests 249](https://img.shields.io/badge/tests-249-brightgreen)](tests/)
+[![coverage 96.09%](https://img.shields.io/badge/coverage-96.09%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
 [![defects logged 54](https://img.shields.io/badge/defects%20logged-54-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
@@ -90,7 +90,7 @@ look.
 | **t.me/s/air_alert_ua**, the public web preview of the official Ukrainian air-alert channel | Every alert and all-clear, tagged with the area and its unit type, within seconds of publication | Public page, no token, no account, no agreement. It can be withdrawn at any time and nothing obliges anyone to keep it | **The only signal source in use.** ~20 messages per page, ~514 messages a day measured over the corpus |
 | **alerts.in.ua** and **api.ukrainealarm.com** | The same alerts, through APIs | Tokens, one applied for and unanswered | **Not independent.** Both draw from the channel above (D-010). Two feeds, one dependency, and treating them as two would be the kind of false redundancy that reads as robustness right up until the day it matters |
 | **KATOTTG**, the Ukrainian state register of administrative units | The code, oblast and hierarchy behind every area the channel names | A file, published as open data under Creative Commons Attribution | Used offline, versioned in the tree, never called at runtime (D-016). No API key in the warning path, no rate limit where latency is the product, and no third party learning which raions a Polish user asks about at three in the morning |
-| **OpenSky Network** (ADS-B) | A second, physically different kind of observation | Self-service registration | **Not in use and not in the beta plan.** It was a prerequisite for a drone alarm tier that D-015 took off the critical path. Valuable later, blocking nothing now |
+| **OpenSky Network** (ADS-B) | A second, physically different kind of observation: aircraft that broadcast their own position | Registered 2026-08-10, 4,000 credits a day, one credit per call over the western box [measured] | **Not a drone-tier source, and the premise that it was is recorded as false.** Transponders are carried by aircraft that choose to be seen; Shahed-type munitions and missiles carry none. What it can measure is **the operating intensity of the Rzeszow-Jasionka hub**, which has potential diagnostic value during a war and is reported rather than scored (D-019, T42) |
 | A Polish-side feed | Would close the loop | Unresolved (T8) | **None found that is machine-readable and timely.** RSO and NOTAM are readable; RCB and the announced government application are not, as far as anyone here has established |
 
 **What follows from that table.** Everything this tool says about Ukraine is
@@ -98,6 +98,14 @@ look.
 amount of processing upgrades that label. There is exactly one signal source,
 its loss would be total, and the correct response to losing it is to say so
 loudly rather than to go quiet.
+
+**On the ADS-B row specifically.** Counting transmitting military aircraft over
+the Jasionka hub is a lower bound and never a measurement of activity: an
+operator that wants silence switches the transponder off, and plausibly does so
+in exactly the situations a reader would most want to know about. A high count
+means something. A low count means nothing at all, and the field will carry
+that framing in itself rather than in a footnote. It takes no part in any
+score.
 
 ## How the source is actually structured
 
@@ -294,6 +302,7 @@ docs/
   DECISIONS.md     what was rejected, and what would reopen it
   COMPUTATION.md   the statistical machinery, with its stated weaknesses
   MOBILE.md        the notification channel: technology choice and its phases
+  WEBAPP.md        the web tier: the contract, the three states, and the mockups
   reviews/         one pre-push review per release, findings dispositioned
 data/
   raw/             tier 1, never committed, git-ignored
@@ -309,10 +318,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 16 | 3,268 |
-| Tests | 33 | 3,519 |
+| Package `mavo/` | 17 | 3,804 |
+| Tests | 34 | 4,107 |
 | Tools | 11 | 2,841 |
-| Documentation | 32 | 10,567 |
+| Documentation | 33 | 11,036 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -323,12 +332,12 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 219, of which 13 are scripted attacks |
-| Coverage | 96.16% against a floor of 95, a ratchet that is never lowered |
+| Tests | 249, of which 13 are scripted attacks |
+| Coverage | 96.09% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 54, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 20 |
+| Decisions recorded with reopen conditions | 21 |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,240 posts, contiguous, digest recorded, held outside the tree |
 
@@ -345,6 +354,7 @@ confidence interval attached.
 | [`docs/MECHANISMS.md`](docs/MECHANISMS.md) | Every mechanism with its rejected alternative |
 | [`docs/COMPUTATION.md`](docs/COMPUTATION.md) | The statistical machinery the thesis stands on, with its stated weaknesses |
 | [`docs/MOBILE.md`](docs/MOBILE.md) | The notification channel: technology choice, phases, and what gates distribution |
+| [`docs/WEBAPP.md`](docs/WEBAPP.md) | The web tier: the `state.json` contract and who owns it, three feed states that must read differently, the palette and the theme-inversion failure behind it, and mockups of every state |
 | [`docs/FEED-SPEC.md`](docs/FEED-SPEC.md) | What a machine-readable Polish alerting feed would have to be, written from consuming the Ukrainian one |
 | [`docs/CHANNEL.md`](docs/CHANNEL.md) | What the source actually emits, measured, and the join to the state register |
 | [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) | The durable run log and how a cycle is watched. Plan, not built |
@@ -406,6 +416,30 @@ A number appears in this documentation only when the code produced it.
 | Adding a component | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | Following the data | [`docs/DATA-FLOW.md`](docs/DATA-FLOW.md) |
 | Attacking it | [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) and [`tests/harness/CATALOGUE.md`](tests/harness/CATALOGUE.md) |
+
+## Author
+
+**Jerzy Siwecki**, Warsaw. Senior cybersecurity engineer; this is a weekend
+project rather than anything's product, and no employer's.
+
+The licence is open and the attribution requirement is real: Apache-2.0 keeps
+the copyright notice and the NOTICE file with any redistribution, including
+modified versions. Stated here rather than left to the licence text because
+the two things people most often assume about a permissive licence are that it
+waives attribution and that it waives the disclaimer, and it waives neither.
+
+**What the disclaimer means in this particular case**, since this is warning
+software: the licence's "AS IS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND"
+is not boilerplate to skim past. This tool is pre-alpha, it has never delivered
+a warning to anyone, its classifier scored 0 of 20 against real messages, and
+its threat-kind tables cover roughly one alert in ten (F71). Anyone deploying
+it for someone else's safety is taking a decision the author has not taken and
+would want to be asked about first.
+
+Corrections, defects and disagreements are welcome, and the useful form is in
+[`CONTRIBUTING.md`](CONTRIBUTING.md). A finding against this project's own
+interests is worth more here than a feature, and the defect log exists to prove
+that is not just a sentence.
 
 ## License
 

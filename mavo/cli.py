@@ -24,6 +24,15 @@ from mavo.backfill import (
 from mavo.errors import SourceUnavailable
 from mavo.evaluate import run_policy, run_rule
 from mavo.policy import Regime, policy_of
+from mavo.report import (
+    DEFAULT_VALID_FOR_S,
+    FeedState,
+    Report,
+    compose,
+    publish,
+    render_text,
+    write_contract,
+)
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
 from mavo.sources.fixture import FixtureSource, generate_history
 from mavo.sources.telegram import CHANNEL_URL, probe
@@ -175,6 +184,49 @@ def _cmd_collect(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def _cmd_report(args: argparse.Namespace) -> int:
+    """Render the current picture from a store, and optionally the contract file.
+
+    Exit codes carry the feed state, because a wrapper that only reads stdout
+    must not be able to treat blindness as a quiet sky: 0 for a fresh picture,
+    5 for degraded, 6 for blind. The report itself is printed in every case -
+    a blind report is an output, not an error, and suppressing it would be the
+    silence this command exists to prevent.
+    """
+    store = EventStore(Path(args.store))
+    if args.watch:
+        if not args.json:
+            print("--watch needs --json: the loop exists to publish the contract",
+                  file=sys.stderr)
+            return 2
+        def announce(report: Report) -> None:
+            print(f"{report.as_of.isoformat(timespec='seconds')} "
+                  f"feed={report.feed_state.value} "
+                  f"western_active={len(report.western_active)}", flush=True)
+
+        outcome = publish(
+            store.replay,
+            Path(args.json),
+            interval_s=args.interval,
+            max_cycles=args.max_cycles,
+            valid_for_s=args.valid_for,
+            on_cycle=announce,
+        )
+        print(outcome.line())
+        # A loop that ends is not an error: it was told to stop, or the
+        # operator stopped it. A write that failed is, and it is the only
+        # reason that returns non-zero, because it is the only one that
+        # leaves the consumer reading a file nobody is refreshing.
+        return 7 if outcome.reason.startswith("write failed") else 0
+    report = compose(store.replay(), valid_for_s=args.valid_for)
+    print(render_text(report))
+    if args.json:
+        written = write_contract(report, Path(args.json))
+        print(f"contract={written} v={1}")
+    return {FeedState.OK: 0, FeedState.DEGRADED: 5, FeedState.BLIND: 6}[report.feed_state]
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Construct the argument parser."""
     parser = argparse.ArgumentParser(prog="mavo", description=__doc__)
@@ -226,6 +278,32 @@ def build_parser() -> argparse.ArgumentParser:
              "(builds the sprint-5 corpus; the page is a ~20-message window, F27)",
     )
     collect.set_defaults(func=_cmd_collect)
+
+    report_cmd = subparsers.add_parser(
+        "report", help="render the current picture from a store"
+    )
+    report_cmd.add_argument("--store", required=True, help="path to the event store")
+    report_cmd.add_argument(
+        "--json", help="also write the state.json contract file to this path"
+    )
+    report_cmd.add_argument(
+        "--valid-for", type=int, default=DEFAULT_VALID_FOR_S,
+        help="seconds a report may be trusted after its newest observation "
+             "(default %(default)s, an assumption rather than a measurement)",
+    )
+    report_cmd.add_argument(
+        "--watch", action="store_true",
+        help="publish the contract on a fixed interval until stopped (needs --json)",
+    )
+    report_cmd.add_argument(
+        "--interval", type=float, default=60.0,
+        help="seconds between cycles under --watch (default %(default)s)",
+    )
+    report_cmd.add_argument(
+        "--max-cycles", type=int, default=None,
+        help="stop after this many cycles; omit to run until interrupted",
+    )
+    report_cmd.set_defaults(func=_cmd_report)
 
     return parser
 

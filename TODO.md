@@ -592,3 +592,52 @@ state, continuation areas included and distinguishable from the subject of the
 all-clear; the two rows in `docs/DATA-FLOW.md` move from invisible to visible;
 and a regression asserts that a message with a continuation list produces more
 than one event.
+
+
+## T42. Operating intensity of the Jasionka hub, measured from ADS-B
+Status: `ready`, follows T20. Not on the beta critical path, and not in any
+score.
+
+**What this is.** Rzeszow-Jasionka is the logistics hub through which support
+for Ukraine moves. During a war, how hard that hub is working is part of the
+situational picture a reader near the border is entitled to see, and it is
+observable from public ADS-B: aircraft that broadcast their own position are
+counted, and nothing else is. Reported alongside the alert picture, never
+weighed into any assessment (D-019).
+
+**Why it is worth measuring rather than assuming.** Nobody involved has a base
+rate for it. How many military aircraft transmit over that box on an ordinary
+night, how the count varies by hour, and whether it moves at all against alert
+nights on the Ukrainian side are four separate unknowns, and the field cannot
+be published before the first two are answered. The 10 August snapshot returned
+ten vectors, all of them west of longitude 23.5 and two of them military on the
+ground at Jasionka [measured, n=1], which is an observation and not a base rate.
+
+**Semantics, load-bearing and not negotiable.** The count is a lower bound on
+*transmitting* aircraft. A high number means something. A low number means
+nothing: transponder silence plausibly correlates with exactly the situations a
+reader would most want to know about [inference from operational practice,
+unmeasured]. Any rendering that lets zero read as calm rebuilds this project's
+founding defect in a new place, so the framing travels in the field itself.
+
+**Acceptance:**
+1. Sampler run over at least three nights, one of them with a western-Ukraine
+   alert, raw snapshots retained outside the tree.
+2. Base rate and hourly variance of the transmitting-military count, stated
+   with n and the window, plus the frequency of a null response from the API.
+3. A decision recorded either way on whether the count is published: it ships
+   with its lower-bound framing, or it is dropped for carrying no signal.
+   D-019 already names the threshold under which dropping is the answer.
+4. If it ships, a `state.json` schema version bump, because adding a field
+   silently is what `docs/FEED-SPEC.md` section 3 tells other people not to do.
+
+**Out of scope, stated so it does not creep in.** No aircraft identities, no
+positions, no callsigns on any public surface. No tracking of individual
+airframes over time. No inference about what any specific flight is carrying.
+The published artefact is one integer and its framing.
+
+**The secondary hypothesis, kept separate.** Whether ISR or tanker presence
+over south-eastern Poland correlates with alert nights on the Ukrainian side is
+a different question with a different acceptance, and it has no lift computed
+[hypothesis, unmeasured]. Recorded here so it is not quietly folded into the
+count above, which would be one measurement carrying two claims.

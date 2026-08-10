@@ -207,6 +207,7 @@ class AreaTable:
         # prose name resolves to nothing rather than to whichever row came
         # first. That is the F59 defect, and it is not being repeated one
         # sprint later in a different function.
+        self._by_code: dict[str, AreaRef] | None = None
         self._by_name: dict[str, list[AreaRef]] = {}
         for area in rows.values():
             self._by_name.setdefault(normalise_name(area.tag.rsplit("_", 1)[0]), []).append(area)
@@ -271,6 +272,20 @@ class AreaTable:
     def resolve(self, tag: str) -> AreaRef | None:
         """The area for a tag, or None when the table does not know it."""
         return self._rows.get(tag)
+
+    def by_code(self, code: str) -> AreaRef | None:
+        """The area for a register code, or None.
+
+        Stored events identify an area by its KATOTTG code rather than by the
+        channel's tag (`AreaMention.area_id` is `ref.code` on the live path),
+        so reading a store back needs this direction of the lookup. Built
+        lazily and once: the table is 127 rows and the reverse index costs
+        nothing, but building it in `__init__` would make every caller pay for
+        a direction most of them never use.
+        """
+        if self._by_code is None:
+            self._by_code = {area.code: area for area in self._rows.values()}
+        return self._by_code.get(code)
 
     def resolve_all(self, text: str) -> tuple[tuple[AreaRef, ...], tuple[str, ...]]:
         """Resolved areas and the tags that resolved to nothing.

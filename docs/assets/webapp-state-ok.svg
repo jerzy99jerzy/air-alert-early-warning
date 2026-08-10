@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" width="900" height="560" font-family="ui-sans-serif, system-ui, sans-serif">
+  <title>MAVO web tier, feed ok</title>
+  <rect width="900" height="560" fill="#12151a"/>
+  <rect x="0" y="0" width="900" height="56" fill="#1a1f26"/>
+  <text x="24" y="27" fill="#e6e9ee" font-size="15" font-weight="700">MAVO</text>
+  <text x="24" y="45" fill="#8b95a3" font-size="11">To nie jest serwis państwowy. Narzędzie raportuje obraz, nie przewiduje przekroczenia granicy.</text>
+  <line x1="0" y1="56" x2="900" y2="56" stroke="#2a323c"/>
+  <rect x="24" y="76" width="852" height="46" rx="4" fill="#1a1f26" stroke="#ff2f45" stroke-width="2"/>
+  <circle cx="48" cy="99" r="7" fill="#ff2f45"/>
+  <text x="66" y="97" fill="#e6e9ee" font-size="14" font-weight="700">Alarm w 3 rejonach zachodniej Ukrainy</text>
+  <text x="66" y="114" fill="#8b95a3" font-size="11">Stan na 23:41:02 · dane sprzed 38 s · feed: ok</text>
+  <rect x="24" y="140" width="470" height="300" rx="4" fill="#1a1f26" stroke="#2a323c"/>
+  <text x="40" y="162" fill="#8b95a3" font-size="11">Zachodnia Ukraina, rejony deklarujące alarm</text>
+  <rect x="60" y="180" width="120" height="90" fill="#5b2a2f" stroke="#2a323c"/>
+  <text x="68" y="196" fill="#8b95a3" font-size="9">Wołyńska</text>
+  <rect x="190" y="180" width="130" height="90" fill="#2a1e22" stroke="#2a323c"/>
+  <text x="198" y="196" fill="#8b95a3" font-size="9">Rówieńska</text>
+  <rect x="60" y="280" width="120" height="90" fill="#5b2a2f" stroke="#2a323c"/>
+  <text x="68" y="296" fill="#8b95a3" font-size="9">Lwowska</text>
+  <rect x="190" y="280" width="130" height="90" fill="#2a1e22" stroke="#2a323c"/>
+  <text x="198" y="296" fill="#8b95a3" font-size="9">Tarnopolska</text>
+  <rect x="330" y="180" width="140" height="190" fill="#2a1e22" stroke="#2a323c"/>
+  <text x="338" y="196" fill="#8b95a3" font-size="9">Zakarpacka</text>
+  <line x1="48" y1="180" x2="48" y2="370" stroke="#4a545f" stroke-width="3" stroke-dasharray="6 4"/>
+  <text x="30" y="390" fill="#8b95a3" font-size="9" transform="rotate(-90 30 390)">granica PL</text>
+  <circle cx="120" cy="225" r="17" fill="#ffffff" opacity="0.9"/>
+  <circle cx="120" cy="225" r="14" fill="#ff2f45"/>
+  <circle cx="120" cy="225" r="14" fill="none" stroke="#0b0d10" stroke-width="2"/>
+  <text x="120" y="230" fill="#ffffff" stroke="#0b0d10" stroke-width="0.6" font-size="13" font-weight="700" text-anchor="middle">▲</text>
+  <circle cx="250" cy="300" r="17" fill="#ffffff" opacity="0.9"/>
+  <circle cx="250" cy="300" r="14" fill="#ff2f45"/>
+  <circle cx="250" cy="300" r="14" fill="none" stroke="#0b0d10" stroke-width="2"/>
+  <text x="250" y="305" fill="#ffffff" stroke="#0b0d10" stroke-width="0.6" font-size="13" font-weight="700" text-anchor="middle">◆</text>
+  <circle cx="120" cy="300" r="17" fill="#ffffff" opacity="0.9"/>
+  <circle cx="120" cy="300" r="14" fill="#ff2f45"/>
+  <circle cx="120" cy="300" r="14" fill="none" stroke="#0b0d10" stroke-width="2"/>
+  <text x="120" y="305" fill="#ffffff" stroke="#0b0d10" stroke-width="0.6" font-size="13" font-weight="700" text-anchor="middle">▲</text>
+  <text x="40" y="428" fill="#8b95a3" font-size="10">Ciemny odcień: rejon deklarował alarm w ciągu ostatnich 7 dni. Znacznik: alarm teraz.</text>
+  <rect x="510" y="140" width="366" height="300" rx="4" fill="#1a1f26" stroke="#2a323c"/>
+  <text x="526" y="162" fill="#8b95a3" font-size="11">Odległość do granicy, przedział</text>
+  <rect x="526" y="184" width="334" height="52" rx="3" fill="#151a20" stroke="#ff2f45" stroke-width="1"/>
+  <rect x="526" y="184" width="4" height="52" fill="#ff2f45"/>
+  <text x="542" y="205" fill="#e6e9ee" font-size="13" font-weight="600">Samborski, obwód lwowski</text>
+  <text x="542" y="223" fill="#8b95a3" font-size="11">0–46 km   ·   rakieta</text>
+  <rect x="526" y="244" width="334" height="52" rx="3" fill="#151a20" stroke="#ff2f45" stroke-width="1"/>
+  <rect x="526" y="244" width="4" height="52" fill="#ff2f45"/>
+  <text x="542" y="265" fill="#e6e9ee" font-size="13" font-weight="600">Jaworowski, obwód lwowski</text>
+  <text x="542" y="283" fill="#8b95a3" font-size="11">0–52 km   ·   typ nieznany</text>
+  <rect x="526" y="304" width="334" height="52" rx="3" fill="#151a20" stroke="#ff2f45" stroke-width="1"/>
+  <rect x="526" y="304" width="4" height="52" fill="#ff2f45"/>
+  <text x="542" y="325" fill="#e6e9ee" font-size="13" font-weight="600">Kowelski, obwód wołyński</text>
+  <text x="542" y="343" fill="#8b95a3" font-size="11">0–89 km   ·   dron</text>
+  <rect x="526" y="364" width="334" height="52" rx="3" fill="#151a20" stroke="#4a545f" stroke-width="1"/>
+  <rect x="526" y="364" width="4" height="52" fill="#4a545f"/>
+  <text x="542" y="385" fill="#e6e9ee" font-size="13" font-weight="600">Sarneński, obwód rówieński</text>
+  <text x="542" y="403" fill="#8b95a3" font-size="11">stan nieznany   ·   typ nieznany</text>
+  <text x="526" y="428" fill="#8b95a3" font-size="10">Przedział, nigdy jedna liczba. „typ nieznany” to brak danych, nie brak zagrożenia.</text>
+  <rect x="0" y="516" width="900" height="44" fill="#1a1f26"/>
+  <line x1="0" y1="516" x2="900" y2="516" stroke="#2a323c"/>
+  <text x="24" y="542" fill="#8b95a3" font-size="11">Makieta, nie zrzut ekranu. Renderowana z danych przykładowych; żadna liczba nie jest pomiarem.</text>
+</svg>

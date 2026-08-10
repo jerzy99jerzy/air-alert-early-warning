@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.2
+Document:  docs/DECISIONS.md, version 2.3
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -607,3 +607,40 @@ targeting-relevant in a way raw trackers are not. A change in OpenSky's terms
 restricting redistribution of derived aggregates. Or a measured base rate so
 low that the field carries no signal, in which case it is dropped for being
 uninformative rather than for being dangerous.
+
+## D-020. The contract file is written by the producer, not inferred by the consumer
+Date: 2026-08-10. Status: adopted
+
+**Decision.** MAVO writes `state.json` itself, through `mavo report --json`.
+The schema lives in `mavo/report.py` and is exercised by this repository's own
+gate. The companion site reads that file and nothing else: no import of
+`mavo`, no traversal of the event store, no knowledge of the domain types.
+
+**Reasoning.** The site was built with an adapter that imported MAVO, walked
+its store and read attributes off its domain objects, and the binding was
+honestly labelled `[inference]` because it had never run against the package.
+Its own pre-flight tool exists to discover which attribute names are wrong.
+That arrangement puts the contract in the hands of the party that cannot check
+it: a rename in `AreaRef` passes MAVO's gate, ships, and breaks the site
+silently, at a moment nobody is watching a web page for regressions. Ownership
+belongs where the checking is. The producer publishes a file with a schema
+version in it; the consumer validates that version and refuses what it does
+not understand.
+
+**This is also what `docs/FEED-SPEC.md` asks of everyone else.** The
+specification demands a public feed with codes rather than prose, both
+transitions, a versioned schema and a heartbeat. Consuming our own output
+through an inferred adapter, while asking a ministry for a versioned schema,
+would be arguing a case this project does not follow. The `state.json` in
+section 5 of `SITE-ARCHITECTURE.md` and the payload in `mavo/report.py` are
+now the same artifact, written once.
+
+**What this costs.** The site's adapter and its MAVO-introspection checks
+become dead code and should be deleted rather than left as a second path. Two
+readers of one contract is how the schema drifts.
+
+**What would change this.** A consumer needing a projection MAVO has no reason
+to compute, which would be an argument for a second exporter rather than for
+an adapter reaching into the store. Or a measurement showing the file write is
+a bottleneck under load, which the window arithmetic says is not close.
+

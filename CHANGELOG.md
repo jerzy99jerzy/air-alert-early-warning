@@ -16,6 +16,96 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.18.0.0 - 2026-08-10
+
+**The web tier gets a document, a heartbeat and mockups; the ADS-B thread gets
+an honest task.** Sprint continues from S8, which stays partial.
+
+- **`mavo report --watch`: the heartbeat as a loop rather than a cron line.**
+  Writes the contract every cycle whether or not the picture changed. Stops on
+  the first of three named conditions and says which, the way `mavo backfill`
+  does since F46. **A failure to read the store publishes blindness rather
+  than skipping the write**, which is the one place in this codebase where
+  reintroducing silence-means-safety would be easiest. Held by three
+  mutation-verified regressions, one per stop condition.
+- **What cron would not have given:** a process that can report how many of
+  its cycles were blind. A dead cron job cannot report anything about itself,
+  and the count is the number an operator needs.
+- **`docs/WEBAPP.md`**, the web tier's counterpart to `docs/MOBILE.md`: the
+  contract field by field with the trap in each, three feed states with the
+  sentence each must produce, the palette rule that replaced "no red" after a
+  measured theme-inversion failure, and what the page must never say. The
+  clause about `kind` is the one worth arguing with: the tables cover roughly
+  one alert in ten (F71), so the missing icon is the common case and a legend
+  implying otherwise would turn a parser limitation into a safety claim.
+- **Three mockups, versioned as SVG rather than pasted as screenshots**
+  (`docs/assets/webapp-state-{ok,quiet,blind}.svg`). Generated from sample
+  data, deterministic, so a design change is a diff rather than a memory. No
+  number in them is a measurement and the caption on each says so.
+- **T42: the operating intensity of the Jasionka hub, from ADS-B.** Registered
+  in 0.16.1.0, and the premise it was registered under was false: ADS-B cannot
+  see the drone tier. What it can see is how hard the logistics hub is working,
+  which has diagnostic value during a war. Reported, never scored (D-019), and
+  the semantics are load-bearing: the count is a lower bound on *transmitting*
+  aircraft, so a high number means something and a low number means nothing.
+  Acceptance requires a base rate before anything is published.
+- **The README names its author.** Apache-2.0 waives neither attribution nor
+  the warranty disclaimer, and for warning software the second matters more
+  than the first: pre-alpha, never delivered a warning to anyone, classifier
+  0 of 20 on real messages. Anyone deploying it for someone else's safety is
+  taking a decision the author has not taken.
+
+## 0.17.0.0 - 2026-08-10
+
+**Sprint S8, partial and recorded as partial.** The report composes, the
+command runs, the contract file is written by the producer instead of guessed
+at by the consumer. The exit criterion in `docs/MVP.md` is a hand-checked
+sample of real messages (T36), which is not done, so the sprint is not closed.
+
+- **`mavo/report.py`: the picture at one moment, with its own blindness in
+  it.** `compose()` folds the event log into the current state per area;
+  `render_text()` prints it for a person; `to_contract()` and
+  `write_contract()` publish `state.json`. The feed state leads the output
+  rather than trailing it, because a reader who stops after one line must have
+  read whether the picture can be trusted.
+- **Three feed states, and the exit code carries them.** `ok` is 0, `degraded`
+  is 5, `blind` is 6. A wrapper that reads only the status cannot treat a dead
+  pipeline as a quiet sky, which is the failure D-015 revision 1 moved from
+  backlog into the core.
+- **The all-clear asymmetry is now executable.** An area affirmatively cleared
+  leaves the list; an area whose state is unknown stays on it as `unknown`.
+  Held by a regression verified red against a fold that drops both.
+- **Staleness is measured and printed, and null is never zero.** A store with
+  nothing in it reports an observation age of `unknown`, not `0`, in both the
+  text and the JSON.
+- **The western list sorts by the nearest edge, not the centre.** The first
+  version of that test used a pair of areas the two orderings agreed on, so
+  the mutation passed it. The pair in the test now was found by searching the
+  distance table for an inversion: Sarnenskyi is nearer by edge (162.2 against
+  162.9) and further by centre (206.7 against 202.9), so a centre sort hides
+  the closer area. **Two of the five mutations passed on first run**, and both
+  tests were rewritten rather than the mutations being declared unrealistic.
+- **`write_contract` is atomic and unconditional.** Written through `mkstemp`
+  in the target directory, fsynced, then renamed, because rename is the atomic
+  operation and rename is only atomic within a filesystem. Written on every
+  cycle whether or not anything changed: a file that is only rewritten on a
+  change is indistinguishable, to its reader, from a producer that died during
+  a quiet hour (`docs/FEED-SPEC.md` section 4, applied to this project's own
+  output for the first time).
+- **D-020: the contract belongs to the producer.** The companion site had an
+  adapter that imported MAVO, walked the event store and read attributes off
+  the domain types, with the binding labelled `[inference]` because it had
+  never run against the package. That puts the schema in the hands of the
+  party that cannot check it: a rename in `AreaRef` passes this gate, ships,
+  and breaks a web page nobody is watching. MAVO now writes the file its own
+  gate exercises, and the site's adapter becomes dead code to delete rather
+  than a second path to maintain.
+- **`AreaTable.by_code()`**, because a stored event identifies an area by its
+  register code while the table was only indexed by the channel's tag. Built
+  lazily, since most callers never need that direction.
+- **`docs/MANUAL.md` section 4.7**, which the gate demanded: `manual_audit`
+  fails on a command with no section, and did.
+
 ## 0.16.1.0 - 2026-08-10
 
 **The gate said pins held while nine documents disagreed with theirs, and the

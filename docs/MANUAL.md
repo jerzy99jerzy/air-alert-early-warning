@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.0
+Document:  docs/MANUAL.md, version 3.2
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -41,6 +41,7 @@ Note:      every constant, exit code and output line here was read out of the
    4. [`mavo backfill`](#44-mavo-backfill---built)
    5. [`mavo collect`](#45-mavo-collect---partial)
    6. [`mavo watch`](#46-mavo-watch---not-built-sprint-7)
+   7. [`mavo report`](#47-mavo-report---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -314,6 +315,68 @@ Exit codes:
 
 Will run the decision policy continuously and emit to an output channel. Until
 shadow mode has run its full window, this command will refuse to send anything.
+
+### 4.7 `mavo report` - BUILT
+
+Renders the current picture from a store, and optionally writes the
+`state.json` contract a separate web application consumes.
+
+```
+mavo report --store data/events
+mavo report --store data/events --json /var/lib/mavo-site/state.json
+```
+
+**Read the first line before the list.** It carries the moment the report
+describes, the feed state, and the age of the newest observation behind it.
+A short list of active areas under `feed=blind` is not a quiet night, it is a
+pipeline that cannot see, and the ordering of the output puts that first on
+purpose.
+
+| Feed state | Meaning | Exit code |
+| --- | --- | --- |
+| `ok` | The newest observation is inside `--valid-for` | 0 |
+| `degraded` | Observations exist and are older than that | 5 |
+| `blind` | There is no observation to report on at all | 6 |
+
+The exit code exists so that a cron wrapper reading only the status cannot
+treat blindness as calm. The report is printed in every case: a blind report
+is an output, not an error.
+
+**What appears in the list, and what does not.** An area affirmatively cleared
+by the source leaves the list. An area whose state is unknown stays on it and
+says `unknown`. Those are different claims and the asymmetry is deliberate.
+An area the register map cannot resolve is counted and printed as unresolved
+rather than dropped, and it is never counted as western.
+
+**Distances are intervals.** `border=0-46 km` means the nearest edge of that
+area is somewhere between those bounds; the western list is sorted by the
+lower bound, so an area touching the border sorts ahead of one whose centre
+happens to be nearer. `unknown` is printed where no distance is known and
+sorts last, because an unknown distance must not read as a near one.
+
+**`--watch` publishes on an interval, and reports what it did.**
+
+```
+mavo report --store data/events --json /var/lib/mavo-site/state.json --watch --interval 60
+```
+
+Writes the contract every cycle whether or not the picture changed, because a
+file rewritten only on a change is indistinguishable, to its reader, from a
+producer that died during a quiet hour. Stops on the first of: `--max-cycles`
+reached, a write that fails, or an operator interrupt, and names which. A
+failure to read the store is **not** a reason to skip a cycle: the picture
+becomes blind and the blind picture is published.
+
+The final line counts cycles, writes, blind cycles and degraded cycles. Exit
+code is 0 when the loop was told to stop or was interrupted, and 7 when a
+write failed, because that is the only ending that leaves a consumer reading a
+file nobody is refreshing. `--watch` without `--json` is refused: the loop
+exists to publish.
+
+**`--valid-for` is an assumption, not a measurement.** The default of 600
+seconds is five times the two-minute polling requirement derived from the page
+window arithmetic (T39). Neither the poll interval nor the rate the source
+tolerates has been measured yet, which is S9's work.
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)
 
