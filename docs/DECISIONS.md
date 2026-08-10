@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.3
+Document:  docs/DECISIONS.md, version 2.4
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -643,4 +643,39 @@ readers of one contract is how the schema drifts.
 to compute, which would be an argument for a second exporter rather than for
 an adapter reaching into the store. Or a measurement showing the file write is
 a bottleneck under load, which the window arithmetic says is not close.
+
+## D-021. One review per major release, and the ones that never got one are named
+Date: 2026-08-10. Status: adopted
+
+**Decision.** A review is written for every **major** release, meaning a change
+to the second version component: 0.19.x to 0.20.0.0 needs one, 0.20.0.0 to
+0.20.1.0 does not. `tools/docs_audit.py` fails the gate on a major release with
+no file in `docs/reviews/`, and the releases that shipped without one are a
+frozen list in that check rather than a date cutoff.
+
+**Reasoning.** Four documents said this repository files one review per
+release. It had filed nine for fifty. The rule was not being broken by
+carelessness: reviews kept being written, and kept landing in session artifacts
+outside the tree, so the practice continued while the record of it stopped
+(F79). At five releases in an afternoon, one per release is a rule nobody can
+follow, and a rule nobody can follow is not a stricter version of this one, it
+is an absent one wearing a stricter one's language.
+
+**Why a frozen list rather than a cutoff date.** A cutoff would silently absorb
+the next release that skips a review, which is exactly how the first nineteen
+accumulated. Adding a version to `UNREVIEWED` is an edit somebody makes on
+purpose, in a file the gate reads, with a sentence in `docs/reviews/README.md`
+saying why.
+
+**What a review is, and what forbids writing them backwards.** A reading of a
+tree by somebody who does not yet know what they will find. Three were filed
+late at 0.20.1.0, unedited, each carrying a note saying when it was written;
+that is legitimate because the reading happened. Producing a file now for
+0.12.0.0 from the changelog would assert that something was examined when it
+was not, which is the fabrication the rest of this apparatus exists against.
+
+**What would change this.** A run of majors where the review finds nothing
+three times running, which would suggest the trigger is wrong rather than the
+practice. Or a move to release trains, where the unit worth reviewing stops
+being the version number.
 

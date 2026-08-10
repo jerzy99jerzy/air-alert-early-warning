@@ -6,7 +6,7 @@
 [![tests 275](https://img.shields.io/badge/tests-275-brightgreen)](tests/)
 [![coverage 96.19%](https://img.shields.io/badge/coverage-96.19%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 59](https://img.shields.io/badge/defects%20logged-59-informational)](docs/METHODOLOGY.md)
+[![defects logged 60](https://img.shields.io/badge/defects%20logged-60-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -74,10 +74,20 @@ are gated by T6 and T11, both open.
 
 The observation that started the project stands and is now background rather
 than thesis: every violation of Polish airspace in the observed period
-coincided with a night of massed strikes on western Ukraine, and those campaigns
-cover roughly 57% of days, which is why a prediction built on them would be a
-calendar. Restated at 0.9.0.0; the earlier predictive framing is recorded in
-D-015 rather than overwritten.
+coincided with a night of massed strikes on western Ukraine, and those campaign
+nights cover roughly **57% of days** in the same period. A rule firing on every
+one of them has perfect recall, precision equal to the base rate, a lift of
+1.0, and has told its reader nothing the calendar did not. Restated at
+0.9.0.0; the earlier predictive framing is recorded in D-015 rather than
+overwritten.
+
+**That 57% is somebody else's number, and it is not this project's definition
+of the west.** It is `[reported]`: taken from outside, over a period this
+repository did not observe, using whatever the source meant by "western
+Ukraine" - which may include Kyiv oblast, Vinnytsia, or everything west of the
+Dnipro. This project means something narrower and checkable: the 36 raions of
+the eight western oblasts as the state register lists them. The two are
+compared nowhere, and until they are, the 57% is context rather than evidence.
 
 ## Where the information comes from
 
@@ -125,13 +135,59 @@ tag in 515 of 69,676 occurrences and names raions the rest of the time. The
 table could not have scored above zero, and the problem was never an incomplete
 vocabulary.
 
-**3.5% of tag occurrences belong to western oblasts.** The other 96.5% are
-front-line raions in the east and south, which for a reader on the Polish side
-are facts about places 900 kilometres away. The channel labels the difference
-itself, so the filter this project needs arrives for free rather than as a
-classifier that has to be trained and trusted. A western-only report has a
-naturally small volume because the west is naturally quiet, with no artificial
-rate limit standing in for judgement.
+### Where the tags come from, and what the 3.5% is a share of
+
+The channel does not write prose about places. It appends a hashtag naming the
+administrative unit the message is about: `#Самбірський_район`, the register
+name in the nominative with spaces as underscores. **48,222 of 48,540 messages
+carry one, 99.34%.** There are 127 distinct tags across 99 nights, and 126 of
+them resolve to exactly one code in the state register.
+
+That is the whole geocoder. No stemming, no truncation parameter, no
+disambiguation, no classifier trained on anything: the channel labels every
+message itself and this project reads the label. For contrast, the approach
+this replaced - matching truncated register names against message text - reached
+6.06% of messages as a lower bound, so structure beats the heuristic by roughly
+a factor of six and needs no tuning (F23).
+
+Counted over those tags: **2,456 of 69,676 occurrences, 3.5%, name a western
+oblast.** The other 96.5% name front-line raions in the east and south, which
+for a reader on the Polish side are facts about places 900 kilometres away.
+The filter this project needs therefore arrives for free.
+
+### What 3.5% does and does not mean, because the two are easy to swap
+
+It is a share of **message traffic**. Of every hundred times this channel names
+a place, three and a half are places near Poland.
+
+It is **not** the share of nights the west is under alert, and it is **not**
+how often anything comes close to the border. Those are three different
+quantities and only the first one has been measured here:
+
+| Question | Unit | Status |
+| --- | --- | --- |
+| How much of the channel's traffic is about the west? | tag occurrences | **3.5%, measured** |
+| On how many nights is a western raion under alert? | nights | **not measured by this project.** The 57% above is a different source's figure for a possibly different area |
+| How often does anything actually approach the Polish border? | crossings | Roughly a dozen events in four years `[reported]`, and this feed cannot see it at all |
+
+Where the tags come from, what produces them, and the four things nobody has
+checked about them: `docs/CHANNEL.md` section 10.
+
+The third row is the one that matters most and the one nothing here can
+answer. **The channel reports declared alert states for administrative units.
+It does not observe objects, tracks or positions**, so no count derived from it
+is a count of things being close. An alert in Sambirskyi raion means an
+authority declared an alert for that raion; whether anything was over it, and
+where, is not in the data.
+
+So the two figures do not contradict each other and they are not two views of
+one thing. 57% of days carrying a campaign night is compatible with the west
+generating 3.5% of traffic, because the front-line oblasts have far more raions
+and their alerts run continuously while western ones are short. **The west is
+quiet in message volume**, which is why a western-only report has a naturally
+small volume with no artificial rate limit standing in for judgement. Quiet in
+volume is not the same as rarely under alert, and this project has not measured
+the second.
 
 Full measurement, the join to the register, the two rules it needed and what it
 corrects: `docs/CHANNEL.md`.
@@ -303,7 +359,7 @@ docs/
   COMPUTATION.md   the statistical machinery, with its stated weaknesses
   MOBILE.md        the notification channel: technology choice and its phases
   WEBAPP.md        the web tier: the contract, the three states, and the mockups
-  reviews/         one pre-push review per release, findings dispositioned
+  reviews/         one review per major release, findings dispositioned
 data/
   raw/             tier 1, never committed, git-ignored
   aggregates/      tier 2, counts only, committed
@@ -320,8 +376,8 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | --- | --- | --- |
 | Package `mavo/` | 17 | 4,024 |
 | Tests | 35 | 4,588 |
-| Tools | 13 | 3,192 |
-| Documentation | 33 | 11,994 |
+| Tools | 13 | 3,305 |
+| Documentation | 37 | 12,990 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -336,8 +392,8 @@ confidence interval attached.
 | Coverage | 96.19% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 59, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 21 |
+| Defects logged with their class | 60, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 22 |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,240 posts, contiguous, digest recorded, held outside the tree |
 
@@ -362,7 +418,7 @@ confidence interval attached.
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The infrastructure architecture: components, boundaries, dependency rules, process shape |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | What was rejected, and what would reopen it |
 | [`docs/MVP.md`](docs/MVP.md) | Release criteria per audience, and five dated sprints to beta |
-| [`docs/reviews/`](docs/reviews/) | Pre-push review per version, every finding dispositioned |
+| [`docs/reviews/`](docs/reviews/) | One review per major release, every finding dispositioned. Twelve early majors have none and are named in `docs/reviews/README.md` rather than left to be counted |
 | [`tests/harness/CATALOGUE.md`](tests/harness/CATALOGUE.md) | The attack catalogue, one row per threat |
 | [`STATUS.json`](STATUS.json) | Machine-readable pins, enforced by `tools/docs_audit.py` |
 

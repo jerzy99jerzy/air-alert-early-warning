@@ -6,7 +6,7 @@ break. `DATA-FLOW.md` is the companion and answers the other question, what
 happens to a message as it travels.
 
 ```
-Document:  docs/ARCHITECTURE.md, version 2.0
+Document:  docs/ARCHITECTURE.md, version 2.1
 Audience:  a contributor about to add a module, a dependency, or a process
 Companion: DATA-FLOW (what happens to the data), MECHANISMS (why each mechanism
            is built the way it is), METHODOLOGY (what may be claimed)
@@ -341,7 +341,7 @@ argument sits with the addition.
 | `tools/manual_audit.py` | Every command documented, every section marked, thresholds match the code | In `make verify` |
 | `tools/harness_mutation.py` | Disables each control, fails if its attack stays green | In `make verify` |
 | `docs/<NAME>.md` | Design documents, uppercase because they are authored rather than generated | `lint_domain`: a lowercase name in `docs/` fails |
-| `docs/reviews/<version>.md` | One pre-push review per release, every finding dispositioned | |
+| `docs/reviews/<version>.md` | One review per major release, every finding dispositioned (D-021). Releases without one are named in `docs/reviews/README.md` | |
 | `data/raw/` | Tier 1. Never committed | `.gitignore` |
 | `data/aggregates/` | Tier 2. Committed | |
 | `data/reference/` | Tier 2. Committed. Derived lookup tables with their provenance and licence, never raw messages. Currently `tag_map.csv` (`docs/CHANNEL.md`) | |

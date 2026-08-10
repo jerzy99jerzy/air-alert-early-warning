@@ -416,6 +416,55 @@ def check_document_versions_match_their_pins(status: dict[str, object]) -> list[
     return problems
 
 
+# D-021. Major releases only: the second component moving. At five releases in
+# an afternoon, one review per release is a rule that cannot be followed, and a
+# rule that cannot be followed is not narrower than this one, it is absent.
+UNREVIEWED = frozenset({
+    "0.1.0", "0.2.0.0", "0.7.0.0", "0.8.0.0", "0.9.0.0", "0.10.0.0",
+    "0.11.0.0", "0.12.0.0", "0.14.0.0", "0.16.0.0", "0.17.0.0", "0.18.0.0",
+    # 0.19.0.0 was the first of a five-release run worked in one sitting. The
+    # code it introduced is reviewed in `docs/reviews/0.20.0.0.md`, which read
+    # the whole run; writing a separate file for the first release of the run
+    # would be splitting one reading into two documents to satisfy a counter.
+    "0.19.0.0",
+})
+
+
+def check_major_releases_carry_a_review() -> list[str]:
+    """Every major release has a file in `docs/reviews/`, or is named as lacking one.
+
+    F79. Four documents said this directory held one review per release while
+    it held nine for fifty, and the gap grew for nineteen releases without
+    anything noticing, because reviews kept being written and kept landing in
+    session artifacts instead of the tree.
+
+    The grandfathered set is a frozen list rather than a date cutoff: a cutoff
+    would quietly absorb the next release that skips a review, which is how the
+    first nineteen accumulated. Adding to this set is a visible act, and
+    `docs/reviews/README.md` explains why each entry is in it.
+    """
+    releases = re.findall(r"^## (\d[\d.]*) - ", (ROOT / "CHANGELOG.md")
+                          .read_text(encoding="utf-8"), re.M)
+    filed = {path.stem for path in (ROOT / "docs" / "reviews").glob("*.md")}
+    problems: list[str] = []
+    for version in releases:
+        parts = version.split(".")
+        is_major = len(parts) >= 3 and parts[2] == "0" and (len(parts) < 4 or parts[3] == "0")
+        if not is_major or version in UNREVIEWED or version in filed:
+            continue
+        problems.append(
+            f"{version} is a major release with no docs/reviews/{version}.md, and it "
+            f"is not in the named unreviewed set"
+        )
+    stale = sorted(UNREVIEWED & filed)
+    if stale:
+        problems += [
+            f"{version} is listed as unreviewed and has a review file; remove it "
+            f"from UNREVIEWED" for version in stale
+        ]
+    return problems
+
+
 def check_defect_count_is_pinned(status: dict[str, object]) -> list[str]:
     """The defect badge equals the count of F-entries in the methodology.
 
@@ -552,6 +601,7 @@ def main() -> int:
         + check_every_document_is_pinned(status)
         + check_document_versions_match_their_pins(status)
         + check_readme_tables_match_the_pins(status)
+        + check_major_releases_carry_a_review()
         + check_corpus_measurements_carry_an_inventory(status)
         + check_the_holdout_boundary_survives_in_the_corpus_block(status)
         + check_defect_count_is_pinned(status)

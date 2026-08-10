@@ -632,6 +632,25 @@ seeded, fingerprinted sample in two strata, `score` reads it back and reports th
 error rate with a Wilson interval and refuses a partially filled file. What
 remains is the reading, which is a person and cannot be delegated to a probe.
 
+**Sharpened at 0.20.0.0, after the instrument grew and a first sample was
+taken.** `tools/label_sample.py` now draws three verdict columns, `area_ok`,
+`kind_ok` and `distance_ok`, because S8 asks whether the report is right in
+area, means and distance, and `score` reports a **whole-row** rate beside the
+three: a reader sees one line, so a row is wrong if any of the three is.
+
+A first sample exists and does not count: the twenty real messages in the tree,
+0 errors on all three dimensions, Wilson [0%, 16.1%]. All twenty are eastern,
+from twenty-six minutes of one afternoon. The intervals it judged are 700 to
+1,000 km wide, where an error of tens of kilometres is invisible; the intervals
+that matter reach zero at the border and none was tested.
+
+**Acceptance, restated so it cannot be met by accident:** fifty rows from the
+design window with western areas represented, all three columns filled one row
+at a time, scored with the whole-row rate and its Wilson interval, and the
+figure written into `docs/METHODOLOGY.md` beside the sample's fingerprint. A
+redraw is allowed and visible; a redraw until the number improves is not a
+measurement.
+
 **Acceptance:** at least 50 design-window messages read by hand, each with the
 resolved area recorded as correct or not, and the error rate stated as a number
 with its interval, its seed and its fingerprint, recorded in

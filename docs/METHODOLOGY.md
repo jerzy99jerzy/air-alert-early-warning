@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.15
+Document:  docs/METHODOLOGY.md, version 2.17
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -29,6 +29,8 @@ Note:      the defect log is the most useful document here for a new
 11. [Sprint 2 finding](#sprint-2-finding)
 13. [Cost of composing a report, 2026-08-10](#cost-of-composing-a-report-2026-08-10)
 14. [Threat-kind coverage after the F71 repair, 2026-08-10](#threat-kind-coverage-after-the-f71-repair-2026-08-10)
+15. [Border column, independent verification, 2026-08-10](#border-column-independent-verification-2026-08-10)
+16. [Hand-checked report sample, 2026-08-10, and its limits](#hand-checked-report-sample-2026-08-10-and-its-limits)
 12. [Threat-kind coverage measurement, 2026-08-10](#threat-kind-coverage-measurement-2026-08-10)
 
 ## What may be claimed
@@ -158,6 +160,7 @@ repository has come to the mistake it was built after.
 | [F76](#f76-01920-the-trailing-counter-measured-how-finely-an-oblast-is-subdivided) | 0.19.2.0 | The trailing counter measured how finely an oblast is subdivided |
 | [F77](#f77-01920-the-regression-file-claimed-a-verification-it-had-not-had) | 0.19.2.0 | The regression file claimed a verification it had not had |
 | [F78](#f78-01930-the-missile-stem-was-one-letter-too-long-for-half-its-forms) | 0.19.3.0 | The missile stem was one letter too long for half its forms |
+| [F79](#f79-02010-the-reviews-kept-happening-and-stopped-being-filed) | 0.20.1.0 | The reviews kept happening and stopped being filed |
 
 ## Defect log
 
@@ -1800,3 +1803,109 @@ in 0.19.4.0; it needs its own run, with this table as the new baseline.
 and zero again after a substantially different table. Removed rather than kept
 as a hedge: a marker that has never matched anything is a claim about the
 channel that the channel has refused 61,041 times.
+
+## Border column, independent verification, 2026-08-10
+
+S8 asks for the distance column to be spot-checked by hand before it is
+trusted anywhere. It has been checked three ways, and the three answer
+different questions.
+
+| Check | Result | What it rules out |
+| --- | --- | --- |
+| Independent geometry and method: OSM-derived oblast outlines, WGS84 geodesic (geographiclib), 2026-08-10 | Lviv 57.2, Lutsk 85.4, Uzhhorod 51.6 km, each within 1.1 km of the column | A wrong method, and a wrong source |
+| Independent simplification: the same Natural Earth 10m outline as simplified for the companion site, 1,039 vertices against this repository's 1,332 | Maximum divergence over the four spot-check points **0.04 km** | The column being sensitive to how the outline is simplified |
+| Positional error of the source itself: 183 shared border vertices against OSM | median 0.0, p95 1.6, maximum 2.6 km | Nothing. This is the floor the column cannot do better than |
+
+**What is therefore established.** The arithmetic is right, the sphere is not
+the problem (worst case +0.31% at Kyiv, +1.4 km on 452 km), and the choice of
+simplification costs two orders of magnitude less than the source's own
+positional error. **The remaining uncertainty is the source's**, at roughly a
+kilometre, and it is stated wherever the column is quoted.
+
+**What is not established, and it is the part S8 actually cares about.** Every
+check above tests distance from a *point*. The column publishes an interval
+because the question is the distance to an area's nearest *edge*, and the
+interval is derived from a disc of equal area rather than from the polygon.
+For the border raions the interval reaches zero and is correct by
+construction; for an oddly shaped raion it is an approximation nobody has
+measured against real geometry. That measurement needs raion polygons with
+register codes, which is T43's neighbourhood and is not in reach here.
+
+## Hand-checked report sample, 2026-08-10, and its limits
+
+The twenty real channel messages this repository has carried since sprint 4,
+each rendered as the report would render it, and each judged by hand on the
+three things S8 names.
+
+| Dimension | Errors | Rate | Wilson 95% |
+| --- | --- | --- | --- |
+| Area | 0 of 20 | 0.0% | [0.0%, 16.1%] |
+| Means | 0 of 20 | 0.0% | [0.0%, 16.1%] |
+| Distance interval | 0 of 20 | 0.0% | [0.0%, 16.1%] |
+| **Whole row** | **0 of 20** | **0.0%** | **[0.0%, 16.1%]** |
+
+**This does not close S8, and saying it does would be the defect this
+repository logs about other people.** Three reasons, each disqualifying on its
+own:
+
+1. **Not one western area in it.** All twenty resolve to Kharkiv,
+   Dnipropetrovsk, Zaporizhzhia or Sumy: the 96.5% of traffic this product
+   filters *out*. The distance intervals it judged are 700 to 1,000 km wide
+   cases where an error of tens of kilometres is invisible. The intervals that
+   matter are the ones reaching zero at the border, and none was tested.
+2. **Twenty-six minutes of one afternoon.** The messages run 15:44 to 16:10 on
+   one day, so they are not independent draws and several are the same
+   announcement for neighbouring raions.
+3. **The interval says almost nothing.** Zero errors in twenty bounds the true
+   rate below 16%, which is compatible with a report wrong on one row in
+   seven.
+
+**What closes S8** is `tools/label_sample.py draw` against the design window,
+fifty rows across both strata with western areas represented, scored with the
+whole-row rate. The instrument now carries the three verdict columns S8 asks
+for, and the whole-row figure exists because a reader sees one line rather
+than three fields: a row is wrong if any of the three is.
+
+### F79, 0.20.1.0. The reviews kept happening and stopped being filed
+
+`docs/reviews/` is described in four documents as holding one review per
+release. Counted on 2026-08-10: **nine files against fifty releases**, the most
+recent for 0.11.1.0, with nineteen releases since.
+
+The obvious reading is that the practice lapsed. It did not. Reviews were
+carried out on 0.13.0.0 (items A1 to A13, with the border measurements that
+moved three spot-check values from recited to measured), on 0.15.0.0, on
+0.16.0.0, and on 0.20.0.0. Every one of them was written, and every one of them
+became a session artifact outside the tree. **The work continued; the record of
+it stopped**, and the four documents describing the record kept describing what
+it was supposed to be.
+
+**Why it survived.** `check_every_document_is_pinned` compares the set of files
+in `docs/` against the pins in `STATUS.json`, so it notices a review that
+exists and is unpinned. Nothing compared the number of reviews against the
+number of releases, because that claim lived in prose in four documents and
+prose is what every check in this gate is careful not to read.
+
+Class: **class 1, a document describing a tree that has moved on**, and F73's
+family specifically: a claim about the repository's own practice, in the
+documents a reader trusts first.
+
+**What makes this one worse than F73.** The claim was not merely stale. It
+described a discipline the project uses to argue for its own reliability, in a
+README that a reviewer reads before deciding whether to believe anything else
+in it. Nine of fifty is not a lapse in bookkeeping; it is the difference
+between "reviewed before every push" and "reviewed sometimes, filed rarely".
+
+**Repair, three parts.** The rule is narrowed to one review per **major**
+release and recorded as D-021, because one per release at five releases in an
+afternoon is a rule that cannot be followed and therefore is not one.
+`check_major_releases_carry_a_review` fails the gate on a major with no file,
+with the twelve historical exceptions as a frozen list rather than a cutoff
+date, since a cutoff is how the first nineteen accumulated. And the three
+reviews that were written are filed, unedited, each carrying a note saying when
+it was actually done.
+
+**What is not repaired and cannot be.** Twelve major releases have no review
+and never will. `docs/reviews/README.md` names them. Writing one now from the
+changelog would assert that a tree was examined when it was not, and a
+fabricated review is worse than an absent one: the absent one is visible.

@@ -16,6 +16,122 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.20.2.0 - 2026-08-10
+
+**Two figures in the README were read as one thing and are three.**
+
+- **57% of days and 3.5% of tag occurrences sat in adjacent paragraphs without
+  their units.** One counts days, the other counts times the channel names a
+  place; one is somebody else's `[reported]` figure over a period this
+  repository did not observe, the other is measured on the corpus. Together
+  they read as a contradiction, and read carelessly the second becomes "3.5% of
+  the time something is near the border", which it is not.
+- **The 57% is not this project's definition of the west, and that is now
+  stated.** The source's "western Ukraine" may include Kyiv oblast or
+  everything past the Dnipro; this project means the 36 raions of eight oblasts
+  as the register lists them. The two have never been compared, so the figure
+  is context rather than evidence.
+- **A table of the three quantities**, because they are easy to swap: share of
+  traffic (measured, 3.5%), share of nights under alert (not measured here),
+  and how often anything approaches the border (a dozen events in four years,
+  reported, and invisible to this feed at any point).
+- **`docs/CHANNEL.md` section 10 accounts for the tags themselves**: 127
+  distinct, 118 raions, 7 hromadas, 2 oblasts, every one carrying its unit
+  suffix, **zero spelling variants across 69,676 occurrences**, every name in
+  the nominative where prose would decline it. That shape reads as a register
+  field being formatted rather than a sentence being written, so the tags are
+  almost certainly machine-generated, recorded as `[inference]` because nobody
+  here has seen the channel's internals.
+- **Four things about the tags nobody has checked**, listed rather than
+  glossed: who attaches them, whether the tag is the alert's own identity or an
+  annotation that could disagree with it, whether one has ever named the wrong
+  area, and whether 127 is stable outside the design window. A silent mislabel
+  would be invisible to every check here, because the tag is what this
+  repository trusts.
+- **One tag, two symptoms, connected only once both were written down.**
+  `Покровська_територіальна_громада` is the single ambiguous tag, because the
+  register holds four Pokrovska hromadas in four oblasts. It is also the tag
+  behind the artillery near misses in the threat-kind measurement: those
+  messages carry a declare marker and a kind and fail on the area.
+
+## 0.20.1.0 - 2026-08-10
+
+**`docs/reviews/` said one per release and held nine for fifty. The reviews had
+been happening; they had been landing somewhere else.**
+
+- **F79.** Reviews were carried out on 0.13.0.0, 0.15.0.0, 0.16.0.0 and
+  0.20.0.0 and every one became a session artifact outside the tree. Four
+  documents kept describing a record that had stopped being kept, including the
+  README a reviewer reads before deciding whether to believe anything else.
+  Nine of fifty is not a bookkeeping lapse; it is the difference between
+  "reviewed before every push" and "reviewed sometimes, filed rarely".
+- **D-021: one review per major release**, meaning a change to the second
+  version component. One per release, at five releases in an afternoon, is a
+  rule nobody can follow, and a rule nobody can follow is not a stricter
+  version of this one.
+- **The rule has a reader now.** `check_major_releases_carry_a_review` fails
+  the gate on a major release with no file. The twelve that shipped without one
+  are a **frozen list** rather than a cutoff date, because a cutoff silently
+  absorbs the next skipped review, which is how the first nineteen
+  accumulated.
+- **Three reviews filed late, unedited**, each carrying a note saying when it
+  was written. Editing a review after the fact to read better is the same
+  failure as writing one after the fact.
+- **Twelve major releases have no review and never will**, and they are named
+  in `docs/reviews/README.md`. Producing one now from the changelog would
+  assert that a tree was examined when it was not. A fabricated review is worse
+  than an absent one, because the absent one is visible.
+- **0.19.0.0 is listed among them for a different reason**, stated rather than
+  folded in: it opens a run of five releases worked in one sitting, and
+  `0.20.0.0.md` reviews that whole run. Splitting one reading into two files to
+  satisfy a counter is the compliance this repository is meant to be able to
+  spot.
+
+## 0.20.0.0 - 2026-08-10
+
+**Sprint S8, worked to the end of what this side can do, and still partial.
+The remaining gap is named rather than rounded off.**
+
+- **The distance column is verified three ways, and they answer different
+  questions.** An independent geometry and method (OSM outlines, WGS84
+  geodesic) puts three of four spot-check points within 1.1 km. An independent
+  simplification of the same Natural Earth outline, the one the companion site
+  carries at 1,039 vertices against this repository's 1,332, diverges by at
+  most **0.04 km**. The source's own positional error, 183 shared border
+  vertices against OSM, is median 0.0 and maximum 2.6 km. So the arithmetic is
+  right, the sphere costs +0.31% at worst, the simplification costs two orders
+  of magnitude less than the source, and the remaining uncertainty is the
+  source's. That half of S8's exit criterion is met.
+- **What those checks do not establish**, stated because it is the part the
+  product cares about: every one of them measures distance from a *point*, and
+  the column publishes an interval for an area's nearest edge, derived from a
+  disc of equal area rather than from the polygon. For border raions the
+  interval reaches zero and is right by construction; for an oddly shaped raion
+  it is an approximation nobody has measured.
+- **`tools/label_sample.py` grew the three verdict columns S8 asks for**:
+  `area_ok`, `kind_ok`, `distance_ok`, plus a **whole-row** rate beside the
+  three, because a reader sees one line and not three fields. A row is wrong if
+  any of the three is. A file drawn before this split is refused rather than
+  scored against the wrong column.
+- **A first hand-checked sample exists and does not close the sprint.** The
+  twenty real messages in the tree, rendered as the report would render them,
+  judged one at a time: 0 errors on all three dimensions, Wilson [0%, 16.1%].
+  **All twenty are eastern.** They resolve to Kharkiv, Dnipropetrovsk,
+  Zaporizhzhia and Sumy, which is the traffic this product filters out, and
+  the intervals they tested are 700 to 1,000 km wide where an error of tens of
+  kilometres is invisible. The intervals that matter reach zero at the border
+  and none was tested. They also span twenty-six minutes of one afternoon, so
+  they are not independent draws.
+- **S8 therefore stays partial in `docs/MVP.md`**, with the gap written into
+  the row rather than into a footnote. Zero errors in twenty bounds the true
+  rate below 16%, which is compatible with a report wrong on one row in seven.
+- **T47 has a patch on the producer's side and a document for the consumer.**
+  MAVO classifies four kinds; the site labels three, so glide bombs at 2,104
+  declarations and artillery at 934 arrive named and render as *typ nieznany*.
+  The producer's gate now fails when a kind is missing from
+  `docs/WEBAPP.md`, so a fifth kind cannot reach the consumer silently. The
+  labels themselves belong on the consumer's side and the patch says so.
+
 ## 0.19.5.0 - 2026-08-10
 
 **The backlog can now be read without reading all of it, and two threat kinds

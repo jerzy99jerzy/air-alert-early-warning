@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.2 / 2026-08-09
+Version: 1.3 / 2026-08-10
 What the source emits, measured on 48,540 real messages, and what that changes.
 Companion: `docs/DATA-FLOW.md` (how a message becomes an event),
 `docs/METHODOLOGY.md` (F23 and F59), `docs/DECISIONS.md` (D-016, geocoding).
@@ -22,6 +22,7 @@ Note: every figure in this document was produced by running something against
 7. [What this corrects](#7-what-this-corrects)
 8. [What follows for the parser](#8-what-follows-for-the-parser)
 9. [What is still unknown](#9-what-is-still-unknown)
+10. [Appendix: where the tags come from](#10-appendix-where-the-tags-come-from)
 
 ---
 
@@ -301,3 +302,94 @@ it can see. The reason to write this down is not to act on it. It is to stop
 anyone reviving the predictive framing on the grounds that more data would fix
 it, and to keep the product where it belongs: reporting what is happening now,
 faster than anything else a private person can reach.
+
+## 10. Appendix: where the tags come from
+
+Written because the 3.5% figure is repeatedly read as "3.5% of the time
+something is near the border", and it is not that. It is a share of tag
+occurrences, so the tags themselves need to be accounted for: what they are,
+what produces them, and what they can and cannot support.
+
+### What is measured
+
+| Quantity | Value |
+| --- | --- |
+| Distinct tags across 99 nights | 127 |
+| Raion tags | 118 |
+| Hromada tags | 7 |
+| Oblast tags | 2 |
+| Tags carrying an explicit unit suffix | **127 of 127, 100%** |
+| Distinct base names appearing at two unit levels | **0** |
+| Spelling variants of one name | **0**, across 69,676 occurrences |
+| Tags resolving to exactly one register code | 126 |
+| Tags resolving ambiguously | 1 |
+
+The one ambiguous tag is `Покровська_територіальна_громада`: the state
+register lists **four** Pokrovska hromadas, in four different oblasts, and the
+tag carries nothing that separates them. This is the same tag that produced the
+artillery near misses in the threat-kind measurement of 2026-08-10 - those
+messages carry a declare marker and a kind and fail on the area, not on the
+parser. One tag, two symptoms, in two different measurements, and the connection
+was only visible once both were written down.
+
+### What follows, and it is an inference rather than a finding
+
+**The tags are almost certainly generated from the register by software, not
+typed by a person.** `[inference]`, and the evidence is the shape of the
+vocabulary rather than any statement by anyone:
+
+- Zero spelling variants across 69,676 occurrences. Human typing produces
+  variants; 69,676 keystroke-free occurrences do not happen.
+- Every name in the nominative, where Ukrainian prose would decline it. A
+  person writing "alert in Sambirskyi raion" writes the genitive; a program
+  emitting a register field writes the dictionary form.
+- Every tag carries its unit suffix, including where a human would drop it as
+  obvious.
+- The vocabulary is closed at 127 and every member matches a register entry,
+  including the one that matches four.
+
+Taken together this reads as a field being formatted rather than a sentence
+being written.
+
+### What is not known, and stating it matters more than the inference
+
+- **Who operates the publishing channel**, and whether the tag is added by the
+  channel or arrives already attached from whatever feeds it. This project reads
+  a public channel; it has no relationship with whoever runs it and no
+  documentation of its internals.
+- **Whether the tag is authoritative or descriptive.** It could be the field an
+  alerting system keyed the alert on, or a label attached afterwards for the
+  reader's benefit. The first would make it the alert's own identity; the second
+  makes it an annotation that could in principle disagree with the alert.
+  Nothing here distinguishes them.
+- **Whether tags are ever wrong.** 0.66% of messages carry none, and nothing has
+  checked whether any tag has ever named the wrong area. A silent mislabel would
+  be invisible to every check in this repository, because the tag is what the
+  repository trusts.
+- **Whether 127 is stable.** It is 127 across 99 nights of the design window.
+  The holdout would say whether a quiet quarter simply failed to exercise a
+  tag.
+
+### What this means for the 3.5%
+
+The figure counts how often the channel names a western unit, against how often
+it names any unit. It is therefore a statement about **the channel's attention**,
+mediated by whatever produces the tags, and only indirectly about the sky.
+
+Three things it does not measure, listed because each has been read into it at
+least once:
+
+1. **Not the share of nights the west is under alert.** That would count nights,
+   not occurrences, and would need alerts collapsed into episodes per night.
+   Nothing here does that.
+2. **Not how close anything came.** The channel reports declared states for
+   administrative units. It does not observe objects, tracks or positions, so no
+   figure derived from it is a count of proximity. An alert in Sambirskyi raion
+   means an authority declared one; what was over it, and where, is not in the
+   data at any point.
+3. **Not a probability of anything.** The count is of messages, and the
+   frequency with which a place is discussed is not the frequency with which
+   something happens there. Front-line raions are named constantly because they
+   are under near-continuous alert; western raions are named rarely because
+   their alerts are short and their raions are few. Both facts are about
+   message volume.

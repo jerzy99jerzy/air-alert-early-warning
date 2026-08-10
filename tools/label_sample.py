@@ -54,10 +54,27 @@ sys.path.insert(0, str(ROOT))
 
 from mavo.areas import AreaTable  # noqa: E402
 from mavo.backfill import SNAPSHOT_NAME as PAGE_RANGE  # noqa: E402
-from mavo.sources.telegram import _BLOCK, _TEXT, _TIME, _strip, classify  # noqa: E402
+from mavo.sources.telegram import (  # noqa: E402
+    _BLOCK,
+    _TEXT,
+    _TIME,
+    _strip,
+    classify,
+    classify_kind_message,
+)
 
-FIELDS = ["post_id", "when", "resolved_code", "resolved_name", "oblast", "stratum",
-          "correct", "note", "text"]
+# 0.20.0.0. Three verdict columns rather than one. `docs/MVP.md` asks S8 for a
+# sample where the rendered report is correct "in area, means and distance",
+# and a single `correct` column cannot answer three questions: a row wrong on
+# the means and right on the area would score as an area error, and the error
+# rate would be about nothing in particular.
+FIELDS = ["post_id", "when", "resolved_code", "resolved_name", "oblast",
+          "kind", "border_km", "stratum",
+          "area_ok", "kind_ok", "distance_ok", "note", "text"]
+
+# Kept so a half-filled file from before the split is reported rather than
+# silently scored against the wrong column.
+LEGACY_FIELD = "correct"
 
 
 def _boundary() -> int:
@@ -97,14 +114,22 @@ def _collect(
             time_match = _TIME.search(block)
             when = time_match.group(1) if time_match else ""
             areas, unknown = table.resolve_all(text)
+            kinds = classify_kind_message(text, table)
             row = {
                 "post_id": "",
                 "when": when,
                 "resolved_code": areas[0].code if areas else "",
                 "resolved_name": areas[0].name if areas else "",
                 "oblast": areas[0].oblast if areas else "",
+                # What the report would print for this message, so the labeller
+                # judges the output rather than the intermediate state. Unknown
+                # prints as unknown here exactly as it does on the page.
+                "kind": kinds[0][2].value if kinds else "unknown",
+                "border_km": areas[0].border_interval if areas else "unknown",
                 "stratum": "resolved" if areas else "unknown_tag",
-                "correct": "",
+                "area_ok": "",
+                "kind_ok": "",
+                "distance_ok": "",
                 "note": "",
                 "text": text.replace("\n", " / ")[:400],
             }
@@ -154,8 +179,13 @@ def _draw(args: argparse.Namespace) -> int:
     print(f"  fingerprint: {_fingerprint([row['when'] + row['text'][:40] for row in sample])}")
     print(f"  written to: {out}")
     print()
-    print("  Fill the `correct` column with y or n for every row, one at a time, and")
-    print("  put the reason in `note` when the answer is n. Then run `score`.")
+    print("  Fill `area_ok`, `kind_ok` and `distance_ok` with y or n for every row,")
+    print("  one row at a time, and put the reason in `note` for any n. Then `score`.")
+    print("  Three columns because S8 asks whether the report is right in area, means")
+    print("  and distance, and one column cannot answer three questions.")
+    print("  `distance_ok` judges the printed interval, not a number you compute: the")
+    print("  question is whether the interval plausibly contains the nearest edge of")
+    print("  that area, and `unknown` is correct when nothing is known.")
     print("  Redrawing with a different seed is allowed and will change the")
     print("  fingerprint. Redrawing until the number looks better is not a")
     print("  measurement, and the fingerprint is what makes that visible.")
@@ -180,17 +210,26 @@ def _score(args: argparse.Namespace) -> int:
     with path.open(encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
 
-    blank = [row for row in rows if row.get("correct", "").strip().lower() not in {"y", "n"}]
-    if blank:
-        print(f"label-sample: {len(blank)} of {len(rows)} rows carry no verdict. A partial "
-              "sample scored as if complete is a measurement of the rows somebody found "
-              "easy, and refusing is the whole point of this check", file=sys.stderr)
-        return 1
+    verdicts = ("area_ok", "kind_ok", "distance_ok")
+    if rows and LEGACY_FIELD in rows[0] and verdicts[0] not in rows[0]:
+        print("label-sample: this file has the pre-0.20.0.0 single `correct` column. "
+              "Redraw it: scoring one column against three questions would report a "
+              "number about nothing in particular", file=sys.stderr)
+        return 2
 
-    def rate(subset: list[dict[str, str]]) -> str:
+    for column in verdicts:
+        blank = [row for row in rows if row.get(column, "").strip().lower() not in {"y", "n"}]
+        if blank:
+            print(f"label-sample: {len(blank)} of {len(rows)} rows carry no {column} "
+                  "verdict. A partial sample scored as if complete is a measurement of "
+                  "the rows somebody found easy, and refusing is the whole point of "
+                  "this check", file=sys.stderr)
+            return 1
+
+    def rate(subset: list[dict[str, str]], column: str) -> str:
         if not subset:
             return "no rows"
-        wrong = sum(1 for row in subset if row["correct"].strip().lower() == "n")
+        wrong = sum(1 for row in subset if row[column].strip().lower() == "n")
         interval = _wilson(wrong, len(subset))
         assert interval is not None
         return (f"{wrong}/{len(subset)} = {wrong / len(subset):.1%} "
@@ -203,8 +242,32 @@ def _score(args: argparse.Namespace) -> int:
     print(f"  rows labelled: {len(rows)}")
     print(f"  fingerprint: {_fingerprint([row['when'] + row['text'][:40] for row in rows])}")
     print()
-    print(f"  ERROR RATE, resolved stratum: {rate(resolved)}")
-    print(f"  error rate, unknown-tag stratum: {rate(unknown)}")
+    for column in verdicts:
+        label = column.replace("_ok", "").upper()
+        print(f"  ERROR RATE, {label:9} resolved stratum: {rate(resolved, column)}")
+    print()
+    for column in verdicts:
+        label = column.replace("_ok", "")
+        print(f"  error rate, {label:9} unknown-tag stratum: {rate(unknown, column)}")
+    print()
+    # The figure S8 is judged on: a row is right only if the whole rendered line
+    # is right. Reporting three separate rates and omitting this one would let a
+    # report that is wrong somewhere on half its rows read as three good numbers.
+    def whole(subset: list[dict[str, str]]) -> str:
+        if not subset:
+            return "no rows"
+        wrong = sum(
+            1 for row in subset
+            if any(row[column].strip().lower() == "n" for column in verdicts)
+        )
+        interval = _wilson(wrong, len(subset))
+        assert interval is not None
+        return (f"{wrong}/{len(subset)} = {wrong / len(subset):.1%} "
+                f"[{interval[0]:.1%}, {interval[1]:.1%}]")
+
+    print(f"  WHOLE-ROW ERROR RATE, resolved stratum: {whole(resolved)}")
+    print("  ^ this is the figure S8 is judged on: a row counts as wrong if any of")
+    print("    the three is wrong, because a reader sees one line, not three fields.")
     print()
     print("  The interval is Wilson at 95%, not a bare proportion, because fifty labels")
     print("  is a small sample and the point estimate moves by a percentage point on one")
