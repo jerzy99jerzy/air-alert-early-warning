@@ -151,3 +151,60 @@ def test_a_lift_wins_over_a_declaration_in_the_same_message() -> None:
         ThreatKind.MISSILE,
         KindState.LIFTED,
     )
+
+
+def test_the_channel_lifts_a_threat_in_four_phrasings_and_all_four_resolve() -> None:
+    """0.19.4.0. The lift table listed one of them and dropped the rest.
+
+    All four measured in the near-miss pile on 2026-08-10, after the first
+    repair: the narrow `відбій загрози` matched only the first.
+
+    Mutation: narrow the marker back to `відбій загрози`.
+    """
+    assert _kind("Відбій загрози артобстрілу") == (
+        ThreatKind.ARTILLERY,
+        KindState.LIFTED,
+    )
+    assert _kind("Відбій атаки дронів-камікадзе") == (ThreatKind.DRONE, KindState.LIFTED)
+    assert _kind("Відбій атак дронів-камікадзе") == (ThreatKind.DRONE, KindState.LIFTED)
+    assert _kind("Відбій по КАБам") == (ThreatKind.GLIDE_BOMB, KindState.LIFTED)
+
+
+def test_a_lift_is_never_read_as_a_fresh_declaration() -> None:
+    """The inversion guard, and it exists because the near miss was measured.
+
+    `Відбій атаки дронів-камікадзе` is refused rather than inverted today only
+    because `атака дрон` does not match `атаки дронів` - an accident of
+    declension, not a control. Adding `атак` to the declare table, which is
+    the obvious way to catch `Атака ударних БПЛА`, would turn every lift of
+    that shape into a fresh DECLARED: an alarm raised by the message
+    announcing its end.
+
+    This test asserts the property rather than the accident. A message
+    carrying a lift phrase reads as a lift no matter what else it carries, so
+    the declare extension can be considered on its own merits instead of
+    silently trading an inversion for coverage.
+
+    Mutation: evaluate the declare markers before the lift markers.
+    """
+    for text in (
+        "Відбій атаки дронів-камікадзе",
+        "Відбій загрози застосування балістичного озброєння",
+        "Відбій загрози. Загроза балістики більше не актуальна",
+    ):
+        classified = _kind(text)
+        assert classified is not None, text
+        assert classified[1] is KindState.LIFTED, f"{text} read as a declaration"
+
+
+def test_the_dead_marker_is_gone_and_stays_gone() -> None:
+    """`небезпека` measured zero hits twice, on two substantially different tables.
+
+    Kept as a hedge it would be a claim about the channel that the channel has
+    refused 61,041 times. Removed at 0.19.4.0. The test is here so that
+    re-adding it is a decision somebody makes rather than a line somebody
+    types.
+    """
+    from mavo.sources.telegram import KIND_DECLARE_MARKERS
+
+    assert "небезпека" not in KIND_DECLARE_MARKERS

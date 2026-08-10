@@ -2,9 +2,9 @@
 PY := python3
 PKG := mavo
 
-.PHONY: verify coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check harness-mutation clean
+.PHONY: verify coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index harness-mutation clean
 
-verify: coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check harness-mutation
+verify: coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index harness-mutation
 	@echo "verify: OK"
 
 # pytest exits 5 when nothing is collected. That exit code is NOT swallowed:
@@ -44,6 +44,13 @@ manual-audit:
 # the reader that argument implied.
 contract-check:
 	$(PY) tools/contract_check.py
+
+# The backlog summarises itself, and a summary nobody checks is the shape of
+# F31 and F73. `--check` compares the index block against the entries below it
+# and fails on an open task with no tier, because a task nobody has ordered is
+# a decision nobody has made.
+todo-index:
+	$(PY) tools/todo_index.py --check
 
 # F14, paid after two slips. A harness that has never been observed failing is
 # not evidence. This copies the tree and runs pytest once per mutation, measured

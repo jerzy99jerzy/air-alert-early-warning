@@ -1,12 +1,76 @@
 # TODO
 
-Every item carries a status, a blocker type where one exists, and an acceptance
-test, so that "done" is not a matter of opinion.
+<!-- index:begin -->
 
-Status: `ready` | `blocked-external` | `decision` | `debt`
+### Where the backlog stands
+
+**11 of 45 closed, 34 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+
+| State | Count | What it means |
+| --- | --- | --- |
+| `done` | 11 | Finished, with the release that closed it named in the entry |
+| `ready` | 25 | Nothing external blocks it; it needs a session |
+| `decision` | 3 | Waiting on a judgement rather than on work |
+| `blocked-external` | 3 | Waiting on somebody outside this project |
+| `deferred` | 2 | Deliberately parked, with the decision that parked it named |
+| `debt` | 1 | Known cost carried on purpose |
+
+### Priority tiers
+
+Tiers are a claim about *order*, not about importance, and they move as the project moves. Declared per entry so this table is generated rather than maintained.
+
+| Tier | Meaning |
+| --- | --- |
+| **1** | Blocks something already promised, or a measurement without which a shipped claim is unsupported |
+| **2** | Real work that nothing is waiting on today |
+| **3** | Worth doing, worth dropping if the project turns |
+
+**Tier 1, 7 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name)
+
+**Tier 2, 16 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker)
+
+**Tier 3, 11 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced)
+
+### By sprint
+
+Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside the beta path or not yet placed on it.
+
+| Sprint | Open tasks |
+| --- | --- |
+| **S7** | [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag) |
+| **S8** | [T36](#t36-the-hand-labelled-sample-retargeted), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T47](#t47-two-threat-kinds-the-consumer-cannot-name) |
+| **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0) |
+| **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
+| **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word) |
+
+<!-- index:end -->
+
+Every item carries a status, a tier, a blocker type where one exists, and an
+acceptance test, so that "done" is not a matter of opinion and neither is
+"next".
+
+Status: `ready` | `blocked-external` | `decision` | `debt` | `deferred` | `done`
+Tier: `[tier 1]` | `[tier 2]` | `[tier 3]`, meaning below.
+
+### Where the project is
+
+**Sprint S8, declared partial and still open.** `docs/MVP.md` records it that
+way: the report composes, the command runs and the contract ships, and the
+exit criterion, a hand-checked sample of real messages with a stated error
+rate (T36), is not met. Nothing is closed by having been worked on.
+
+The last four releases were **not** sprint work and should not be counted as
+progress towards beta. 0.19.0.0 to 0.19.4.0 were an audit and its
+consequences: a contract joined on the wrong field, a counter measuring the
+wrong unit, a test file claiming a verification it had not had, and the
+threat-kind repair with its measurement. Useful, and orthogonal to S8.
+
+**What closes S8:** T36 plus the by-hand distance spot check. Both need the
+corpus, so both happen on the operator's machine.
 
 ## T1. Request the alerts.in.ua API token
-Status: `blocked-external` (access)
+Status: `blocked-external` (access) [tier 3]
 **This is the only item that does not shrink by writing code.** It gates the real
 backtest, which gates every audience in `docs/MVP.md`. It should have been the
 first action of sprint 0 and precedes any further editor work.
@@ -14,7 +78,7 @@ first action of sprint 0 and precedes any further editor work.
 call recorded with its latency.
 
 ## T2. Split the decision into missile and drone regimes
-Status: `done` (sprint 3, 0.2.0)
+Status: `done` (sprint 3, 0.2.0) [tier 3]
 Sprint 2 finding: no single rule holds both the alarm rate and drone-night
 recall.
 **Acceptance met:** `mavo policy` reports both regimes; the missile regime passes
@@ -22,13 +86,13 @@ all three conditions against its allocated share. The drone regime does not, and
 is demoted under D-009 rather than accommodated.
 
 ## T3. Resolve R2, which currently adds nothing
-Status: `ready` (still open after sprint 3)
+Status: `ready` (still open after sprint 3) [tier 3]
 The conjunction's numbers are identical to R3, so the third conjunct is inert.
 **Acceptance:** either R2 is redefined and the conjunction's contingency table
 differs from R3's, or R2 is removed and the README stops describing it.
 
 ## T4. Executable claim behind the never-raise parser guarantee
-Status: `ready` (narrowed after sprint 4)
+Status: `ready` (narrowed after sprint 4) [tier 3]
 Sprint 4 delivered the suite for the Telegram adapter (F17, harness A9); the
 fixture source generates rather than parses, so hostile input does not apply to
 it. What remains is the rule for adapters that do not exist yet.
@@ -38,14 +102,14 @@ without one visible. Malformed, truncated, oversized and hostile payloads; no
 exception escapes; unparseable records counted rather than dropped.
 
 ## T5. Rolling feed-latency drift detection
-Status: `ready`
+Status: `ready` [tier 3]
 Residual risk in the threat model: a subtly late source degrades lead time
 without tripping anything.
 **Acceptance:** a test where a source's latency doubles mid-history and the run
 reports degradation.
 
 ## T6. Legal position on distributing warnings to people other than the operator
-Status: `decision`, **due at the beginning of September**. Parallel track, and the only dated item left in the plan: it is answered by counsel or it is not, and no engineering time shortens it (`docs/MVP.md` section 7).
+Status: `decision`, **due at the beginning of September**. Parallel track, and the only dated item left in the plan: it is answered by counsel or it is not, and no engineering time shortens it (`docs/MVP.md` section 7). [tier 1]
 Does not shrink by writing code. Needs counsel, not a sprint.
 **Acceptance:** a written position in `docs/DECISIONS.md` with a named basis.
 *Restated 0.7.0.0.* The original title asked about a private circle, which is
@@ -56,7 +120,7 @@ the smaller question would have produced a correct answer to the wrong
 question, which is the more expensive kind of mistake here (F53).
 
 ## T7. Onboarding probe from a clean clone
-Status: `ready`, **S11**. The visibility question that had been travelling with
+Status: `ready`, **S11**. The visibility question that had been travelling with [tier 2]
 this task is resolved separately in `docs/MVP.md` section 4 on 0.16.1.0:
 repository visibility is not an Audience C criterion. What remains here is the
 probe itself, which was always an engineering task.
@@ -65,7 +129,7 @@ with the point of failure recorded. Not "it looks correct".
 
 
 ## T39. Tolerated poll rate under continuous operation
-Status: `ready`, blocks M0
+Status: `ready`, blocks M0 [tier 2], **S9**
 
 **Where this came from.** Re-collecting the corpus after F68 meant 3,000 requests
 in one burst, which raised the question of what rate the source tolerates. It
@@ -112,7 +176,7 @@ moving.
 
 
 ## T40. How late is the channel, measured
-Status: `ready`, blocks T41 and any latency claim
+Status: `ready`, blocks T41 and any latency claim [tier 1], **S9**
 
 **Where this came from.** The observation that during a strike the unit that
 matters is seconds, not minutes. That is correct, and it reframes the polling
@@ -137,7 +201,7 @@ interval used.
 
 
 ## T41. Prototype the push interface, and compare it against polling
-Status: `ready`, after T40
+Status: `ready`, after T40 [tier 3]
 
 **Where this came from.** Same place as T40. Polling is the wrong instrument for
 seconds however fast it runs: at a two-minute interval the mechanism itself adds
@@ -169,14 +233,14 @@ The comparison is the deliverable, not the listener.
 
 
 ## T8. Is there any ingestible Polish channel at all
-Status: `blocked-external` (access)
+Status: `blocked-external` (access) [tier 3]
 Sprint 6 assumes a Polish feed exists to switch to. RSO and NOTAM are machine
 readable; RCB and the announced government application probably are not.
 **Acceptance:** one working read from at least one Polish source, or a written
 finding that none exists and what that does to sprint 6.
 
 ## T9. Keep the coverage floor a ratchet
-Status: `debt`
+Status: `debt` [tier 3]
 The floor is set at 95, three points below the 98.3 measured in sprint 2. It
 rises when a sprint genuinely raises coverage and never as a target, because a
 target invites tests written for the number.
@@ -184,7 +248,7 @@ target invites tests written for the number.
 raises the floor in the same commit.
 
 ## T10. Find a history source deep enough to calibrate on
-Status: `blocked-external` (access)
+Status: `blocked-external` (access) [tier 3]
 Neither Ukrainian API carries multi-year history: alerts.in.ua exposes
 `month_ago`, ukrainealarm returns the last 25 alerts per region. The real-data
 backtest assumed several years and roughly a dozen positive events.
@@ -193,7 +257,7 @@ in `docs/DECISIONS.md` accepting calibration on one month with the resulting
 confidence intervals stated.
 
 ## T11. Ask whether anyone actually wants this
-Status: `ready`, **before S10**. No longer a budget calibration (D-014); it is now the question of whether recipients exist at all, which Audience B is gated on.
+Status: `ready`, **before S10**. No longer a budget calibration (D-014); it is now the question of whether recipients exist at all, which Audience B is gated on. [tier 1], **S10**
 No recipient has been identified. `docs/MVP.md` names a small trusted group and
 nobody in it has been asked. Until then the alarm threshold is calibrated against
 a hypothetical tolerance.
@@ -202,20 +266,20 @@ firing rate would they stop reading it. The second answer replaces the assumed
 two per week.
 
 ## T12. Detect changes to the ukrainealarm offer contract
-Status: `ready`
+Status: `ready` [tier 2]
 The contract changes unilaterally by being reposted, with no notification
 obligation. The only defence is our own check.
 **Acceptance:** the collector hashes `contract.pdf` on each run and logs a change.
 
 ## T13. Record the revocability of both Ukrainian feeds
-Status: `done` (0.3.2.0)
+Status: `done` (0.3.2.0) [tier 3]
 **Acceptance met:** MT9 and MT10 in `docs/THREAT-MODEL.md`, D-010 in
 `docs/DECISIONS.md` with the conditions that would reopen the dependency
 question. Found open during the 0.3.2.0 audit because MT9 cited D-010 before it
 existed (F33).
 
 ## T14. Second signal type for the drone regime
-Status: `deferred` (D-015). Was a prerequisite for a drone alarm tier. Under a reporting thesis ADS-B is enrichment: valuable, not blocking, and outside the five sprints to beta.
+Status: `deferred` (D-015). Was a prerequisite for a drone alarm tier. Under a reporting thesis ADS-B is enrichment: valuable, not blocking, and outside the five sprints to beta. [tier 3]
 Promoted from enrichment to prerequisite by the sprint 3 finding. Alert state
 alone cannot discriminate within drone nights, so the drone tier stays silent
 until another channel exists.
@@ -224,7 +288,7 @@ and a drone-regime rule that clears its allocated share on the adversarial
 history without lowering the recall floor.
 
 ## T15. Raion and hromada gazetteer
-Status: **largely met at 0.10.0.0**, by a route nobody planned. The channel tags 99.34% of messages with the area and unit type, so the gazetteer is a 127-row lookup rather than a vocabulary to search (`docs/CHANNEL.md`). What remains is correctness on the message the tag sits in, which is S7's hand-labelled sample. Original text:
+Status: **largely met at 0.10.0.0**, by a route nobody planned. The channel tags 99.34% of messages with the area and unit type, so the gazetteer is a 127-row lookup rather than a vocabulary to search (`docs/CHANNEL.md`). What remains is correctness on the message the tag sits in, which is S7's hand-labelled sample. Original text: [tier 3]
 Status: `ready`, **S7, core**. Promoted from support to product by D-015: a report that cannot name the rajon is a relay. Superseded in method by T31, which supplies the register this task consumes.
 F24. The channel names raions and hromadas; nothing in a message identifies the
 oblast. Without a mapping, the border-oblast rules that the entire thesis rests
@@ -233,7 +297,7 @@ on have no input.
 to an oblast, or is reported as unresolved. Unresolved is never silently skipped.
 
 ## T16. Means of attack as its own message class
-Status: `done` (sprint 9, 0.14.0.0)
+Status: `done` (sprint 9, 0.14.0.0) [tier 3]
 F25. `kind` is modelled as an attribute of an alert; the channel emits it as a
 separate message tied to a hromada, with its own lifetime.
 **Acceptance met:** a threat-type message produces its own `KindEvent`, stored in
@@ -257,7 +321,7 @@ question `docs/METHODOLOGY.md` marks as speculation.
 
 
 ## T17. The fourth state: a partial all-clear
-Status: `done` (sprint 5, 0.4.0.0)
+Status: `done` (sprint 5, 0.4.0.0) [tier 3]
 **Acceptance met:** `AlertState.PARTIAL_CLEAR` exists, `classify_state` returns
 it for a message carrying both an all-clear and a continuation marker, and
 `test_sprint5.py` asserts it never resolves to CLEAR or to actionable. The lint
@@ -270,7 +334,7 @@ continues. `AlertState` has no member for it.
 never resolves to CLEAR.
 
 ## T18. Detect a skipped message window
-Status: `done` (sprint 5, 0.4.0.0)
+Status: `done` (sprint 5, 0.4.0.0) [tier 3]
 **Acceptance met:** consecutive polls compare post ids and report the skipped
 count; where it cannot be measured, on a first poll or a page without ids, it is
 reported as unknown rather than zero. MT12 and harness A11.
@@ -282,7 +346,7 @@ trace.
 than inferred from silence.
 
 ## T19. Build the real-message corpus
-Status: `done` (0.5.5.0 retrieval, recorded at 0.6.0.0)
+Status: `done` (0.5.5.0 retrieval, recorded at 0.6.0.0) [tier 3]
 **Acceptance met:** post ids 260841 to 321520, 60,680 posts over 3,034 pages
 spanning 118 days, contiguous with no gaps, exit code 0; id range, span and the
 design/holdout boundary (D-012a) recorded in `STATUS.json`, boundary computed
@@ -300,7 +364,7 @@ the design/holdout boundary computed and written down per D-012 before any
 message content is read.
 
 ## T21. Measure the tolerated request rate
-Status: `done` (0.5.1.0), with a named limit
+Status: `done` (0.5.1.0), with a named limit [tier 3]
 **Acceptance met:** measured at 0.5 s and 0.2 s over 20 requests each, both clean
 with no silent page truncation, recorded in `docs/METHODOLOGY.md` with
 provenance. The default was **not** changed: a burst of 20 does not license a
@@ -315,7 +379,7 @@ recorded, the tolerated rate written into `docs/METHODOLOGY.md` with its
 provenance, and the default changed only if the measurement supports it.
 
 ## T20. OpenSky Network registration
-Status: **done, 0.16.1.0.** Account created 2026-08-10, API client activated,
+Status: **done, 0.16.1.0.** Account created 2026-08-10, API client activated, [tier 3]
 credentials stored outside the tree.
 
 **Acceptance met [measured, 2026-08-10]:** OAuth2 client-credentials token in
@@ -352,7 +416,7 @@ rather than a base rate.
 
 
 ## T22. Fail the build when a document cites an identifier the package lacks
-Status: `ready`, **S11**
+Status: `ready`, **S11** [tier 2]
 F55: `docs/COMPUTATION.md` cited a constant that does not exist, in the document
 whose subject is that figures come from measurement. The audits check cited test
 names and pinned counts; nothing checks the rest of the backticked identifiers.
@@ -363,7 +427,7 @@ hypothetical. Verified red by citing a fabricated symbol in a scratch copy.
 
 
 ## T23. The observability sink and its reader
-Status: `ready`, **S9**
+Status: `ready`, **S9** [tier 2]
 Blocks nothing today and blocks everything at M0: shadow mode's deliverable is a
 record of decisions that were never sent, so the log is the product rather than a
 diagnostic. Designed in `docs/OBSERVABILITY.md` with acceptance written before
@@ -374,7 +438,7 @@ a rendering that prints `unknown` where a stage could not measure, verified by a
 fixture whose parse report has no baseline.
 
 ## T24. Keep the run log out of the holdout
-Status: `ready`, **S9**
+Status: `ready`, **S9** [tier 2]
 The design and holdout split was frozen before any message content was read
 (D-012a). A run log echoing message bodies spends that split without anyone
 deciding to spend it.
@@ -384,7 +448,7 @@ and the debug switch that lifts this writes its own line into the record.
 
 
 ## T25. Decide where the daemon lives
-Status: `decision`, **S9**
+Status: `decision`, **S9** [tier 2]
 `docs/MOBILE.md` assumes an operator-controlled always-on host and does not say
 which. A laptop that sleeps is not one: shadow mode on a sleeping machine writes
 a record whose holes look like quiet nights, which is the defect this project
@@ -396,7 +460,7 @@ same attribution from a named systemd unit for free.
 supervision mechanism, with the reopen condition stated.
 
 ## T26. Reproduce the pid-namespace hole in DirectoryLock, then fix it
-Status: `ready`
+Status: `ready` [tier 3]
 `DirectoryLock._alive` calls `os.kill(pid, 0)`. Pids are per namespace, so two
 containers on one data volume can both hold the lock while each believes it owns
 it, disabling the control that keeps the request rate against the upstream from
@@ -408,7 +472,7 @@ current implementation, and a threat-model row. If it does not reproduce, the
 negative result is recorded in `docs/METHODOLOGY.md` and this entry closes.
 
 ## T27. Jitter the poll interval from the first commit of M0
-Status: `ready`, **S9**
+Status: `ready`, **S9** [tier 2]
 A fixed 60-second period is both a beacon profile to a sensor and a perfectly
 regular load on an upstream with which there is no agreement. Ten to twenty
 percent jitter addresses both and costs one line. It goes in first because
@@ -419,7 +483,7 @@ log, and the recorded distribution over 72 hours matches the configured range.
 
 
 ## T28. The crossing event list, dated and sourced
-Status: `deferred` (D-015). Was blocking while crossings were the target
+Status: `deferred` (D-015). Was blocking while crossings were the target [tier 3]
 variable; the tool reports rather than predicts, so a scored recall against a
 crossing list is no longer on the critical path. The list stays worth building
 for retrospective validation of any future alarm class, and it stops holding
@@ -438,7 +502,7 @@ verdict on real data is possible.
 
 
 ## T29. Measure disengagement instead of assuming it
-Status: `ready`, **S11**
+Status: `ready`, **S11** [tier 2]
 D-014 removed the alarm budget because the number behind it was assumed. The
 honest replacement is not a better guess but a measurement: mute rate,
 unsubscribe rate, and time to first mute, recorded as first-class metrics beside
@@ -451,7 +515,7 @@ number attached, and D-014 is reopened on its own stated terms.
 
 
 ## T31. KATOTTG as a versioned file
-Status: `ready`, **S7**. *Renamed 0.9.2.0: the register is КАТОТТГ, KATOTTG. The
+Status: `ready`, **S7**. *Renamed 0.9.2.0: the register is КАТОТТГ, KATOTTG. The [tier 2]
 earlier spelling KATOTTH followed one English transliteration and did not match
 what any source publishes.*
 
@@ -482,7 +546,7 @@ rather than an impression. A hit rate below what the channel actually emits is a
 finding about the register and is recorded as one.
 
 ## T32. Distance from each area to the Polish border, precomputed
-Status: `done with a stated deviation` (0.13.0.0)
+Status: `done with a stated deviation` (0.13.0.0) [tier 3]
 D-016. Distance is the field that turns an alert into a report a person can use,
 and it must be a stored column rather than a runtime call: no API key in the
 warning path, no rate limit where latency is the product, and no third party
@@ -509,7 +573,7 @@ to the scalar the criterion asked for.
 
 
 ## T33. Alias table between the channel and the register
-Status: `ready`, **S7**
+Status: `ready`, **S7** [tier 2]
 The channel tags `#ВолодимирВолинський_район`; the register lists
 `Володимирський` after a renaming. Found by accident while joining, which means
 nothing has systematically compared the two vocabularies and there may be more.
@@ -526,7 +590,7 @@ alias with the reason recorded, plus a check that fails when a tag appears in th
 corpus that the map does not know. A new tag is a finding, not a fallback.
 
 ## T34. What is in the 0.66% of messages without a tag
-Status: `ready`, **S7**
+Status: `ready`, **S7** [tier 1]
 321 of 48,540 design-window messages carry no `#Name_unit` tag and nothing says
 what they are. They may be administrative posts, or they may be exactly the
 messages that matter.
@@ -537,7 +601,7 @@ appears.
 
 
 ## T35. Turn the negative result into a measurement
-Status: `ready`
+Status: `ready` [tier 2]
 The design window's four western-wide alert nights show no reported Polish
 airspace violation, but the source is press coverage, and a single drone downed
 without debris may never reach national media. Absence of evidence, not evidence
@@ -549,7 +613,7 @@ missed incursion on any of them is a more interesting one.
 
 
 ## T36. The hand-labelled sample, retargeted
-Status: `ready`, **no longer blocking S7**. The sprint closed on an exhaustive
+Status: `ready`, **no longer blocking S7**. The sprint closed on an exhaustive [tier 1], **S8**
 consistency check instead (`docs/METHODOLOGY.md`, sprint 7 closed): 38,520 of
 38,521 comparable messages agree between tag and prose, 99.997%. What that check
 cannot see is the 9,701 messages carrying a tag and no prose area, 20% of the
@@ -578,7 +642,7 @@ map, and it is recorded either way. Until this exists S7 stays open and
 
 
 ## T37. The pipeline discards areas it was told about
-Status: `ready`, **S8**
+Status: `ready`, **S8** [tier 2]
 Two losses, both currently invisible, found by the sprint 7 consistency check.
 A message naming several areas yields one event, because `ThreatEvent` carries
 one area: 13.3% of comparable messages name two to eight. And an all-clear can
@@ -595,7 +659,7 @@ than one event.
 
 
 ## T42. Operating intensity of the Jasionka hub, measured from ADS-B
-Status: `ready`, follows T20. Not on the beta critical path, and not in any
+Status: `ready`, follows T20. Not on the beta critical path, and not in any [tier 2]
 score.
 
 **What this is.** Rzeszow-Jasionka is the logistics hub through which support
@@ -644,7 +708,7 @@ count above, which would be one measurement carrying two claims.
 
 
 ## T43. Raion centroids in the contract
-Status: `ready`, follows F74. Small, and it changes what the map can say.
+Status: `ready`, follows F74. Small, and it changes what the map can say. [tier 2]
 
 Every marker on the consumer's map is currently anchored to a whole oblast,
 with an uncertainty ellipse the size of that oblast's bounding box, because
@@ -668,7 +732,7 @@ with the anchor rather than disappear.
 
 
 ## T44. The consumer has no `kyiv`, and seven raions draw no marker
-Status: `ready`, small, and it belongs to the site rather than here.
+Status: `ready`, small, and it belongs to the site rather than here. [tier 2]
 
 MAVO's register carries one `kyiv`. The consumer's geometry splits `kyiv-city`
 from `kyiv-oblast`, a real administrative distinction this project does not
@@ -693,8 +757,11 @@ replaces it.
 
 
 ## T45. Measure the kind tables again, against the same corpus
-Status: `ready`, blocks any coverage claim about 0.19.3.0. Needs the corpus,
-so it runs on the operator's machine.
+Status: **done, 2026-08-10.** Result recorded in `docs/METHODOLOGY.md` under [tier 3]
+"Threat-kind coverage after the F71 repair". Coverage 0.128 to 0.196,
+`join_coverage` 0.104 to 0.170, MISSILE 25 to 242, unparsed down 56%. The
+near-miss review produced three findings and one avoided inversion, all in
+that section. The acceptance below stands as the record of what was asked.
 
 The repair in 0.19.3.0 is derived from four message forms quoted in F71 plus
 one found while testing it. That is evidence the parser now accepts forms it
@@ -730,3 +797,77 @@ Plus two things the numbers alone will not say:
 sample shows the new hits are wrong. In that case the entries are reverted
 rather than tuned, because a table tuned against a number it also produces is
 the fitting-to-noise failure this project was founded on refusing.
+
+
+## T46. Declarations phrased without a declaration word
+Status: `ready`, and **blocked on nothing except its own measurement**. Do not [tier 1]
+start it without reading the inversion note first.
+
+Two patterns remain in the near-miss pile after 0.19.4.0, both measured:
+
+1. `Атака ударних БПЛА над містом` - a declaration whose verb is `атака` in a
+   form the table does not carry. Catching it means adding `атак` to
+   `KIND_DECLARE_MARKERS`.
+2. `КАБи 9677 на КРАМАТОРСЬК`, `каб напрямок Краматорськ` - the
+   Donetsk-facing traffic announces a means with **no declaration word at
+   all**. Catching it means treating the name of a munition as a declaration
+   in its own right, which is a different kind of claim: it would classify any
+   message mentioning a munition, including summaries and after-action
+   reports.
+
+**Read this before touching the declare table.** Adding `атак` was measured
+against the corpus as an inversion risk: `Відбій атаки дронів-камікадзе`
+carries `атак`, and under the pre-0.19.4.0 lift table carried no lift phrase,
+so every lift of that shape would have been read as a fresh declaration. That
+is why the lift table was widened first. **The lift table is widened before
+the declare table, never after**, and any future extension of the declare side
+re-checks that ordering rather than assuming it holds.
+
+**Acceptance:** a third `kind_coverage` run with the 0.19.4.0 table as
+baseline, the near-miss pile read by hand again, and specifically: the count
+of messages classified as DECLARED whose text also contains `відбій`, which
+must be zero. Item 2 is a separate decision and should not be folded into the
+same run: two changes, one measurement, no attribution.
+
+
+## T47. Two threat kinds the consumer cannot name
+Status: `ready`, **S8** [tier 1]
+
+MAVO classifies four kinds. The consumer knows three strings and maps
+everything else onto one label:
+
+| Kind | Declarations, 2026-08-10 | What the page shows |
+| --- | --- | --- |
+| `drone` | 2,756 | alarm dronowy, with a glyph |
+| `glide_bomb` | 2,104 | **typ nieznany**, no glyph |
+| `missile` | 242 | alarm rakietowy, with a glyph |
+| `artillery` | 934 | **typ nieznany**, no glyph |
+
+So three thousand declarations, more than the missile and drone counts
+together, arrive named and render as unnamed. That is not a lie, and it is the
+same collapse this project refuses everywhere else: "the source said nothing"
+and "the source said something this reader has no word for" are different
+facts, and one label for both loses the difference. It is `AlertState.UNKNOWN`
+against `PARTIAL_CLEAR`, one layer out.
+
+**Glide bombs specifically are worth a category even though they do not reach
+Poland.** They are the largest single class in the corpus, they mark which
+oblast is being worked over right now, and a reader watching the western belt
+learns something real from seeing that Zaporizhzhia is under KAB rather than
+under drones. The alarm tier never sees them (D-015, and the regimes name
+missile and drone explicitly); the reporting tier should.
+
+**Acceptance:**
+1. `docs/WEBAPP.md` carries the full list of `kind` values as part of the
+   contract, and `tools/contract_check.py` fails when a member of
+   `ThreatKind` is missing from it. That check is in this repository because
+   the producer is where the enum lives.
+2. The consumer gains a label and a glyph for each, or states in its legend
+   that it renders them as unknown deliberately. Either is honest; silence is
+   not.
+3. No new regime. A glide-bomb or artillery declaration must remain unable to
+   reach an alarm rule, and a test asserts it.
+
+**What would reopen the third point.** Evidence that a glide bomb has ever
+crossed or landed near the Polish border, which would make it a warning
+question rather than a reporting one. Nothing in the corpus suggests it.

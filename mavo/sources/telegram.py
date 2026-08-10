@@ -126,14 +126,35 @@ CONTINUES_MARKERS = ("тривога ще триває", "тривога три�
 # stated in T45: coverage and per-marker hit counts before and after, with
 # near-misses reviewed by hand.
 #
-# Two named risks the next review must still look for: (1) `небезпека`
-# measured **zero** hits, so it is dead rather than over-broad as previously
-# guessed, and it is a candidate for removal once a second run confirms that;
-# (2) the lift table assumes every lift says `відбій загрози`, so a lift
-# phrased another way that happens to contain a declare marker would read as a
-# fresh DECLARED, which is an inversion and the worst failure available here.
-KIND_DECLARE_MARKERS = ("загроза", "атака дрон", "небезпека")
-KIND_LIFT_MARKERS = ("відбій загрози",)
+# Both named risks have now been measured twice, and both are resolved:
+# (1) `небезпека` returned **zero** hits on 2026-08-10 and again after the
+# repair, on a table that had otherwise changed substantially. Dead rather
+# than over-broad, and removed at 0.19.4.0 rather than kept as a hedge: a
+# marker that has never matched anything is a claim about the channel that the
+# channel keeps refusing.
+# (2) the lift table did assume every lift says `відбій загрози`, and the
+# near-miss pile showed three other phrasings. Widened to `відбій` at
+# 0.19.4.0, which is what makes the ordering below load-bearing rather than
+# incidental.
+KIND_DECLARE_MARKERS = ("загроза", "атака дрон")
+# 0.19.4.0. `відбій` alone, because the channel lifts a threat in at least
+# four phrasings and only one of them was listed: `відбій загрози`,
+# `відбій атаки дронів-камікадзе`, `відбій атак дронів`, `відбій по КАБам`,
+# all measured in the near-miss pile on 2026-08-10. The narrow marker dropped
+# the other three.
+#
+# **This table must stay ahead of the declare table, and the order is a safety
+# property rather than a preference.** `Відбій атаки дронів-камікадзе` carries
+# no declare marker today only because `атака дрон` does not match `атаки
+# дронів`: an accident of declension. The obvious next improvement, adding
+# `атак` so that `Атака ударних БПЛА` resolves, would turn every one of those
+# lifts into a fresh DECLARED, which is the inversion this file has warned
+# about since T16 and the worst failure available here. Lift is evaluated
+# first in `classify_kind_message`, so a message carrying both reads as a
+# lift; that ordering plus this marker is what makes the declare extension
+# safe to consider at all. It is not in this release: it needs its own
+# measurement (T45, second run).
+KIND_LIFT_MARKERS = ("відбій",)
 
 KIND_MARKERS: dict[str, ThreatKind] = {
     # `баліст` rather than `балістик`: the channel writes both the noun

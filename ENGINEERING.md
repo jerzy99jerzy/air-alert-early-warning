@@ -2,7 +2,7 @@
 
 **Portable engineering standard. Copy into any repository in this portfolio.**
 
-Version 1.0, 2026-08-05. Distilled from `pqc-crypto-agility-assessment`
+Version 1.1, 2026-08-10. Distilled from `pqc-crypto-agility-assessment`
 (ANANKE), `cve-digest`, `phantomatics`, `signal-journal-bot` and `gmach`, and
 from what went wrong in each.
 
@@ -130,6 +130,19 @@ Minimum contents of `verify`:
 | `lint-limitations` | a claim in the README no longer matches the tree |
 | domain lints | the repository's own invariants are violated |
 
+**Three additions from MAVO, 2026-08-10, each paid for by a defect.**
+
+| Target | Fails the build when | Bought by |
+| --- | --- | --- |
+| `contract-check` | the file another repository consumes stops holding its shape | F74: the consumer's map drew nothing while its list drew everything, for a release, because the join field carried a display name |
+| `todo-index` | the backlog's own summary disagrees with the backlog, or an open task has no tier | F31 and F73's family: a count nobody checks is a count everybody quotes |
+| `lint-mermaid`, extended | a diagram ships as ASCII art | a convention that lived in four documents and had no reader |
+
+**The pattern behind all three, and it is the one worth taking away: a rule
+without a reader is a preference.** Every one of them existed as an intention
+first, was written down, and was broken by the next person who had not read
+the file it was written in. Writing it down is step one of two.
+
 **Coverage is a floor, not a target.** Set it in `pyproject.toml`, at roughly
 the current level minus a few points, and raise it when a sprint genuinely
 raises coverage. A target invites tests written for the number; a floor only
@@ -148,6 +161,15 @@ this shipped in the first draft of this very document's starter kit.
 
 **Test on the version you develop on.** ANANKE's CI pinned 3.12 while local
 work happened on 3.14. Use a matrix with both ends of the supported range.
+
+**Verify the gate against a real consumer, not only against itself.** MAVO
+took ownership of a schema on the argument that its own gate could exercise
+it, then shipped a release where nothing did. The defect was found by running
+the *consumer's* code over a file the producer wrote, by hand, one release
+later. If another repository depends on an artifact this one produces, the
+producing gate encodes what the consumer needs, and does so **without
+importing the consumer**: importing it would rebuild the coupling the split
+was for.
 
 ### Dependencies and cost
 
@@ -175,6 +197,28 @@ Cheap, and each one exists because it went wrong:
   different version string happened twice in one day.
 
 ---
+
+### Test data is chosen by the implementation unless you choose it
+
+Three times in two sprints on MAVO, a mutation survived a test that named it.
+Every time the cause was the same and none of them was carelessness about the
+assertion:
+
+- A distance sort was tested on a pair of areas where sorting by nearest edge
+  and sorting by centre give the same order. The mutation swapped the key and
+  the test passed. The pair that separates them was found by searching the
+  table for an inversion.
+- A per-oblast counter was tested on an oblast with one raion, so counting
+  raions and counting episodes were indistinguishable. The real data has
+  oblasts with seven.
+- An inversion guard used a phrase carrying the marker in the genitive, so the
+  marker never matched and the ordering under test never ran.
+
+**The question that catches all three: what data would make the wrong
+implementation pass this test, and is my data that data?** Convenient data is
+usually the implementation's data, because both were written by the same
+person on the same afternoon. Where a table or a corpus exists, pick the case
+by searching it rather than by imagining it.
 
 ## 3. Test density and shape
 
@@ -404,6 +448,12 @@ None of these rules is about code.
 ---
 
 ## 9. Session discipline and choosing work
+
+**Audit work is not sprint work, and counting it as progress is how a plan
+rots.** MAVO spent five releases on an audit and its consequences while S8 sat
+declared-partial. That was the right call and it moved the sprint zero
+distance. State both facts in the same sentence when reporting, or the next
+reader infers the sprint advanced.
 
 **Before a sprint, one question: does this bring the project closer to a
 recipient, or does it improve something already built?**

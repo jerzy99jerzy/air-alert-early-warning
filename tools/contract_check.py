@@ -32,6 +32,8 @@ from mavo.areas import OBLAST_SLUGS, AreaTable  # noqa: E402
 from mavo.report import SCHEMA_VERSION, compose, to_contract, write_contract  # noqa: E402
 from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind  # noqa: E402
 
+WEBAPP = Path(__file__).resolve().parent.parent / "docs" / "WEBAPP.md"
+
 # Every slug the register can produce. A consumer joins geometry on these, so a
 # new one appearing without the consumer knowing is a marker that vanishes.
 KNOWN_SLUGS = frozenset(OBLAST_SLUGS.values())
@@ -124,9 +126,31 @@ def check_contract() -> list[str]:
     return problems
 
 
+def check_every_kind_is_documented() -> list[str]:
+    """Every `ThreatKind` member appears in the contract's documentation.
+
+    T47. MAVO classifies four kinds; the consumer knows three strings and
+    renders the rest as "unknown", so three thousand declarations arrive named
+    and display as unnamed. The producer cannot fix the consumer's labels, and
+    it can stop adding a member without telling anyone: a kind that exists in
+    the enum and nowhere in the contract's documentation is a value a consumer
+    will meet for the first time in production.
+    """
+    if not WEBAPP.exists():
+        return ["docs/WEBAPP.md is missing; the contract has no documentation"]
+    text = WEBAPP.read_text(encoding="utf-8")
+    missing = [
+        kind.value for kind in ThreatKind if f"`{kind.value}`" not in text
+    ]
+    return [
+        f"ThreatKind.{name.upper()} is not named in docs/WEBAPP.md; a consumer "
+        f"would meet it first in production" for name in missing
+    ]
+
+
 def main() -> int:
     """Run the contract check. Returns a process exit code."""
-    problems = check_contract()
+    problems = check_contract() + check_every_kind_is_documented()
     for problem in problems:
         print(f"contract-check: {problem}", file=sys.stderr)
     if problems:

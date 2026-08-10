@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.2 / 2026-08-10
+Version: 2.3 / 2026-08-10
 Status: **built, in a separate repository.** `mavo-site` 1.2.0.0 exists, runs
 and carries its own gate, its own defect log and its own audit. Everything
 described here was read out of that package rather than remembered: where this
@@ -72,7 +72,7 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `window_days` | The trailing window behind `recent_7d` | A count without its window is a number the reader has to guess about |
 | `recent_7d[]` | Per-oblast alert count over that window | Counts *declarations*, not days under alert: one six-day alert is one declaration, not six |
 | `border_km_lower` / `_upper` | Interval to the border, may be `null` | A single number here would be false with a decimal point on it |
-| `kind` | `missile`, `drone`, `unknown` | `unknown` for roughly nine alerts in ten (F71). See the caption rule below |
+| `kind` | `missile`, `drone`, `glide_bomb`, `artillery`, `unknown` | Five values, and the consumer currently labels three. See below |
 
 ## Three states, three different sentences
 
@@ -187,6 +187,20 @@ a point impossible to miss:
   honest rendering of what the feed knows.
 - **No pin, no crosshair, no dot with a tail.** All three are the visual
   vocabulary of a fix, and there is no fix here.
+
+**Five kinds, and the consumer names three.** Measured 2026-08-10 over the
+corpus: `drone` 2,756 declarations, `glide_bomb` 2,104, `artillery` 934,
+`missile` 242. The site knows `missile`, `drone` and `unknown`, so more than
+three thousand declarations arrive named and render as *typ nieznany*. That
+collapses two different facts, "the source said nothing" and "the source said
+something this page has no word for", which is `AlertState.UNKNOWN` against
+`PARTIAL_CLEAR` one layer out. T47 carries the fix.
+
+Glide bombs are worth a category of their own even though they do not reach
+Poland: they are the largest class in the corpus and they say which oblast is
+being worked over right now. Artillery likewise. Neither can reach an alarm
+rule, by construction rather than by policy, because `Regime` names missile
+and drone explicitly and the rules compare with `is`.
 
 **Icons carry only what the source named** [BUILT]. Missile and drone glyphs
 appear for a declared kind. An active alert whose kind was not parsed gets a

@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.14
+Document:  docs/METHODOLOGY.md, version 2.15
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -28,6 +28,7 @@ Note:      the defect log is the most useful document here for a new
 10. [Verification probes run in sprint 2](#verification-probes-run-in-sprint-2)
 11. [Sprint 2 finding](#sprint-2-finding)
 13. [Cost of composing a report, 2026-08-10](#cost-of-composing-a-report-2026-08-10)
+14. [Threat-kind coverage after the F71 repair, 2026-08-10](#threat-kind-coverage-after-the-f71-repair-2026-08-10)
 12. [Threat-kind coverage measurement, 2026-08-10](#threat-kind-coverage-measurement-2026-08-10)
 
 ## What may be claimed
@@ -1736,3 +1737,66 @@ stem restored.
 unknown: `ракет`, `бпла`, `шахед`, `каб`, `авіабомб` and the two artillery
 stems were each written from one or two forms. T45 is the measurement, and the
 near-miss review is the part of it that would find this class again.
+
+## Threat-kind coverage after the F71 repair, 2026-08-10
+
+Second run of `tools/kind_coverage.py --raw data/raw --sample 30` against the
+same corpus that produced the baseline: 61,041 messages, the acceptance
+recorded in T45. Both runs are on the operator's machine, Python 3.14.6.
+
+| Quantity | Before (F71) | After the repair | Provenance |
+| --- | --- | --- | --- |
+| Declarations | 2,392 | 4,576 | measured |
+| Lifts | 993 | 1,460 | measured |
+| Still unparsed | 4,447 | 1,959 | measured |
+| MISSILE | 25 | **242** | measured |
+| DRONE | 1,492 | 2,756 | measured |
+| GLIDE_BOMB | 1,868 | 2,104 | measured |
+| ARTILLERY | no member existed | 934 | measured |
+| Coverage, 1 h TTL | 0.128 | **0.196** | measured |
+| `join_coverage`, 1 h TTL | 0.104 | **0.170** | measured |
+| UNKNOWN after the join | 36,697 of 42,910 | 29,400 of 42,733 | measured |
+| Near misses | 2,957 | 1,593 | measured |
+| Declaration to lift, minutes | n=790, median 97 | n=1,223, median 96, p90 674 | measured |
+
+**TTL is still not the binding constraint.** Coverage reads 0.196 at every
+window from one hour to twenty-four. The parser's reach binds, exactly as at
+the first measurement, and the figure that moved is the one the repair
+touched.
+
+**The missile regime is visible again.** 242 declarations against 25. The rule
+that passes its own regime gate at 7 of 7 was previously invisible to the join
+on 99% of the occasions it applied.
+
+**What the near-miss pile said, which is worth more than the coverage
+figure.** Three patterns, all measured rather than guessed:
+
+1. **The channel lifts a threat in at least four phrasings** and the table
+   listed one. `Відбій атаки дронів-камікадзе`, `Відбій атак дронів`, and
+   `Відбій по КАБам` were all being dropped. Widened to `відбій` at 0.19.4.0.
+2. **A declaration without a verb.** `КАБи 9677 на КРАМАТОРСЬК`,
+   `каб напрямок Краматорськ`: the Donetsk-facing traffic announces a means
+   with no declaration word at all. Catching it means treating the name of a
+   munition as a declaration, which is a different kind of decision and is not
+   taken here.
+3. **The artillery near misses are not a kind-table problem.** `Загроза
+   артобстрілу` over `Покровська територіальна громада` carries both a
+   declare marker and a kind; it fails because that tag is not in the 127-row
+   map. That is T34, the untagged remainder, and it measures something else.
+
+**The inversion that a coverage improvement would have bought.** The obvious
+next step is adding `атак` so `Атака ударних БПЛА` resolves. Measured against
+the near-miss pile: `Відбій атаки дронів-камікадзе` contains `атак` and, with
+the old narrow lift marker, no lift phrase. Every lift of that shape would
+have become a fresh DECLARED, an alarm raised by the message announcing its
+end. It is refused today only because `атака дрон` does not match `атаки
+дронів`, which is an accident of declension rather than a control.
+
+Order therefore matters and is now stated as a rule: **the lift table is
+widened before the declare table, never after.** The declare extension is not
+in 0.19.4.0; it needs its own run, with this table as the new baseline.
+
+**`небезпека` is dead, confirmed twice.** Zero hits at the first measurement
+and zero again after a substantially different table. Removed rather than kept
+as a hedge: a marker that has never matched anything is a claim about the
+channel that the channel has refused 61,041 times.
