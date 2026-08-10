@@ -16,6 +16,29 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.19.1.0 - 2026-08-10
+
+**The map mockup was a grid of rectangles, in the document whose argument is
+that a map reads as a measurement.**
+
+- **Redrawn from the site's own geometry asset**, through the site's own
+  projection: Natural Earth 10m outlines, all 25 oblasts, the Polish border
+  where the border is. The shapes in the document are now the shapes on the
+  page. Alert states in it remain sample data and the caption says so.
+- ** 2.1 states the map as a requirement rather than a
+  feature.** A page that answers "which raion" with a name and a distance asks
+  a reader at half past three to hold Ukrainian administrative geography in
+  their head. The interval says how far; only the map says where.
+- **The control panel is documented in the order it appears**: zoom out, zoom
+  in, "Przy granicy", "Cała Ukraina". The two presets are the map's two jobs:
+  the working view at the border, and the context view that is the reason all
+  25 oblasts are carried rather than the six the distance list needs.
+- **The geometry's own verification is quoted rather than assumed**: 22 checks
+  against external values, the shared border measured at 24 parallels with a
+  worst offset of 3.9 km, every marker anchor confirmed inside its polygon.
+  Including the failure that produced the rule: mixing 10m admin-1 with 50m
+  admin-0 once put the two sides of the border 59 km apart.
+
 ## 0.19.0.0 - 2026-08-10
 
 **The contract was joined on a display name, and the consumer's map drew
@@ -60,6 +83,13 @@ produced, rather than by reading either.
   smoke test, not by a check, because the file was right and only the message
   was wrong. A constant copied into a message has a shelf life nobody writes
   down.
+- **The map mockup is drawn from the site's own geometry asset**, through the
+  site's own projection, rather than sketched. The first attempt was a grid of
+  rectangles, which is a diagram wearing a map's clothes in a document whose
+  argument is that a map reads as a measurement. `docs/WEBAPP.md` 2.1 also
+  states the map as a requirement rather than a feature: a page that answers
+  "which raion" with a name and a number asks a reader at half past three to
+  hold Ukrainian administrative geography in their head, and almost nobody can.
 - **Recorded, not fixed: MAVO publishes no raion centroids**, so every marker
   is oblast-anchored and two raions under alert in one oblast render as one
   marker. Honest and coarse. The fix is a centroid column beside the distance

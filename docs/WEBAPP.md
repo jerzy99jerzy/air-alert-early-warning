@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.0 / 2026-08-10
+Version: 2.1 / 2026-08-10
 Status: **built, in a separate repository.** `mavo-site` 1.2.0.0 exists, runs
 and carries its own gate, its own defect log and its own audit. Everything
 described here was read out of that package rather than remembered: where this
@@ -20,6 +20,9 @@ than assembled there.
 - [Three states, three different sentences](#three-states-three-different-sentences)
 - [What the page looks like](#what-the-page-looks-like)
 - [The map](#the-map)
+  - [The geometry is real, and this is checkable](#the-geometry-is-real-and-this-is-checkable)
+  - [The control panel](#the-control-panel)
+  - [What a marker means](#what-a-marker-means)
 - [What the map refuses to draw](#what-the-map-refuses-to-draw)
 - [The palette, and the failure that produced it](#the-palette-and-the-failure-that-produced-it)
 - [Freshness is the browser's job](#freshness-is-the-browsers-job)
@@ -117,28 +120,71 @@ quiet sky.
 
 ## The map
 
-All 25 oblasts, not only the western ones. It opens on the Polish border; pan
-right and the east is there, because an alert in Kharkiv is part of the picture
-even when it is not the part a Polish reader is watching for.
+**The map is a requirement, not a feature.** A page for a reader in Hrubieszow
+at half past three that answers "which raion" with a name and a number, and
+nothing else, is asking that reader to hold Ukrainian administrative geography
+in their head. Almost nobody can. The distance interval says how far; only the
+map says *where*, and where is half the question. Anything that ships without
+it ships without the half the reader cannot supply themselves.
+
+That is also why the distance list, and not the map, is the part that works
+without JavaScript: the map is necessary, and it is not sufficient on its own,
+so the text version is the floor and the map is what makes the floor legible.
+
+### The geometry is real, and this is checkable
+
+The outlines are Natural Earth 10m admin-1 and admin-0, public domain,
+simplified offline by the site's `tools/build_geometry.py` and committed as a
+versioned asset. Nothing about them is drawn by hand or approximated for
+effect.
+
+The asset is verified rather than trusted [measured, in the site's own gate]:
+22 checks against values that did not come from the file, including published
+oblast areas, published administrative-centre positions, the extent of Poland,
+and a direct measurement of the shared Polish border at 24 parallels, worst
+offset 3.9 km. Every marker anchor is confirmed to lie inside its own polygon
+by point-in-polygon, at build time and again in the test suite. Both sources
+must be at the same Natural Earth scale: mixing 10m admin-1 with 50m admin-0
+once put the two sides of the border up to 59 km apart, which is the kind of
+error that looks like nothing on screen and is fatal to the one number this
+project exists to publish.
+
+**The mockup below is drawn from that same asset through that same
+projection**, so the shapes in this document are the shapes on the page. The
+alert states in it are sample data; the coastline, the oblast boundaries and
+the border are not.
 
 ![Web tier, map view](assets/webapp-map.svg)
 
-**Interaction** [BUILT]: drag, wheel, pinch, arrow keys, `+`/`-`, `Home`, and
-four view presets. Markers counter-scale, so an icon stays an icon at every
-zoom instead of collapsing into a blob.
+### The control panel
 
-**What a marker means, and this is the load-bearing sentence on the whole
-page.** The feed sees declared alert states for administrative units. It does
-not see objects. A marker therefore stands for *an area that has declared an
-alert of that type*, drawn at the centre of that area, and two mechanisms make
-the difference between an area and a point impossible to miss:
+Four controls, in this order: **zoom out, zoom in, "Przy granicy", "Cała
+Ukraina"**. The two presets exist because the map has two jobs that pull in
+opposite directions. "Przy granicy" is the working view: the western belt and
+the Polish border, which is where a Polish reader's question lives. "Cała
+Ukraina" is the context view, and it is the reason the map carries all 25
+oblasts rather than the six that matter to the distance list.
+
+Also wired [BUILT]: drag, wheel, pinch, arrow keys, `+` and `-`, and `Home`.
+Markers counter-scale, so an icon stays an icon at every zoom instead of
+collapsing into a blob, while the uncertainty field does **not** counter-scale,
+because it is a geographic extent and shrinking it on zoom-out would understate
+it.
+
+### What a marker means
+
+The load-bearing sentence on the whole page. The feed sees declared alert
+states for administrative units. It does not see objects. A marker therefore
+stands for *an area that has declared an alert of that type*, drawn at the
+centre of that area, and two mechanisms make the difference between an area and
+a point impossible to miss:
 
 - **The uncertainty field.** A marker anchored to a raion, where a centroid is
   supplied, gets a small field. A marker anchored to a whole oblast gets an
-  ellipse the size of that oblast's bounding box. The field scales with the map
-  rather than counter-scaling, because it is a geographic extent and shrinking
-  it on zoom-out would understate it. MAVO currently supplies no raion
-  centroids, so **every marker today is oblast-anchored**.
+  ellipse the size of that oblast's bounding box. MAVO supplies no raion
+  centroids today (T43), so **every marker on the map right now is
+  oblast-anchored**, and the ellipse is correspondingly large. That is the
+  honest rendering of what the feed knows.
 - **No pin, no crosshair, no dot with a tail.** All three are the visual
   vocabulary of a fix, and there is no fix here.
 
@@ -151,10 +197,11 @@ is the common case, which is why the legend says *alarm, typ nieznany* rather
 than leaving a reader to infer that a bare disc is something milder.
 
 **Shading is the trailing window.** Fill saturation is the count of alerts in
-that oblast over the last seven days, in five buckets. Donetsk, Kharkiv and
-Zaporizhzhia come out darkest, which is a property of the war rather than of
-the design. An ongoing alert always beats the trailing layer: one oblast never
-carries two markers.
+that oblast over the last seven days, in five buckets, from `recent_7d` and
+`window_days` in the contract. An ongoing alert always beats the trailing
+layer: one oblast never carries two markers. The bucket edges (1, 3, 8, 20) are
+a display choice made by eye and labelled as such in the site's source; nobody
+has checked that they discriminate usefully on real data.
 
 **Animation carries liveness, never motion.** Ripples run on a five-second
 radar cadence, the marker breathes, rotor blades spin in place. **Nothing
