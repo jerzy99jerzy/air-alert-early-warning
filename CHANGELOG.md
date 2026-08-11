@@ -16,6 +16,40 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.25.2.0 - 2026-08-12
+
+**T39 gets its first field measurement, and the entry is rewritten around it.
+Backlog only; no code changed.**
+
+- **The collector misses roughly one poll in eight.** 9 of 60 over 20:18-22:37
+  UTC on 2026-08-11, 11 of 95 over the wider journal, Wilson 6.6-19.6%.
+  Consecutive failures happen: the longest run is two and the longest gap
+  between successful reads is 7.0 minutes against a 600-second staleness
+  threshold. The margin is three minutes, not the eight an independence
+  assumption predicted.
+- **Two explanations closed.** Source-side rate limiting: ten requests in
+  fifty seconds all returned 200 at a median 0.24 s, twenty-six times more
+  aggressive than production. The IAP tunnel: the collector reaches the
+  channel directly over IPv6 and knows nothing about IAP. The tunnel does drop
+  and that is a separate finding about operator access.
+- **One left open with a mechanism.** Packet loss on the IPv6 path fits: a
+  successful poll takes 0.24-0.45 s against a 10 s timeout, so a failure is a
+  stall of an order of magnitude, and a lost SYN retried at 1, 2, 4 and 8
+  seconds lands past the ceiling. The 60-packet ping that showed 0% loss had
+  45% power against a 1% rate and settles nothing.
+- **One claim retracted before it could travel.** The apparent rise from 6.7%
+  to 30.8% across the window is Fisher p = 0.145 on nine failures. It was
+  written before the arithmetic and is recorded as retracted rather than
+  removed.
+- **Next step is a diagnostic, not a fix.** `[UNREACHABLE]` does not say how
+  long it waited, so a stall at the timeout ceiling and a refusal that bounced
+  immediately look identical in the journal: a probe whose outcomes do not
+  separate its hypotheses. Changing the interval, adding a retry or raising
+  the timeout would each mask the symptom before its cause is known.
+- **T39 raised to tier 1.** It stopped being a politeness question about a
+  future daemon and became the instrument's own measured blindness, in
+  production, on the artefact about to be publicly reachable.
+
 ## 0.25.1.0 - 2026-08-12
 
 **The regression the last release shipped without, and two documents that had

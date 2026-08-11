@@ -25,9 +25,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 7 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name)
+**Tier 1, 8 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name)
 
-**Tier 2, 20 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both)
+**Tier 2, 19 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both)
 
 **Tier 3, 11 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T53](#t53-full-width-map-fullscreen-theme-switch)
 
@@ -129,7 +129,70 @@ with the point of failure recorded. Not "it looks correct".
 
 
 ## T39. Tolerated poll rate under continuous operation
-Status: `ready`, blocks M0 [tier 2], **S9**
+Status: `ready` [tier 1], **S9**. *Raised from tier 2 on 2026-08-11: the first
+field measurement is not what this entry expected.*
+
+**Measured on the cloud host, 2026-08-11, 20:18 to 22:37 UTC** [measured, one
+window, n=60 polls at a ~130 s interval]:
+
+| Quantity | Value |
+| --- | --- |
+| Unreachable polls | 9 of 60, 15.0% |
+| Over the wider 12-hour journal | 11 of 95, 11.6% (Wilson 6.6-19.6%) |
+| Longest run of consecutive failures | 2 |
+| Longest gap between successful reads | 7.0 min (median 2.3 min) |
+| `valid_for_s` threshold for a degraded page | 600 s |
+
+**The failures do not trip the staleness threshold, and the margin is three
+minutes rather than the eight an independence assumption would predict.**
+Consecutive failures happen; they were assumed away and should not have been.
+
+**Three explanations tested, two closed:**
+
+- *Rate limiting by the source.* **Closed by measurement.** Ten requests in
+  fifty seconds all returned 200 with a median of 0.24 s, a rate twenty-six
+  times more aggressive than production. A limiter that tolerates that would
+  not be tripping at 130 s.
+- *The IAP tunnel.* **Closed by construction.** `mavo-collect.service` reaches
+  `t.me` directly over IPv6 and knows nothing about IAP, which is the
+  administrative path. The tunnel does drop, observed twice on 2026-08-11, and
+  that is a separate finding about the operator's own access rather than about
+  collection.
+- *Packet loss on the IPv6 path.* **Open.** The mechanism fits: successful
+  polls take 0.24-0.45 s against a 10 s timeout, so a failure is a stall of an
+  order of magnitude, and a lost SYN retried at 1, 2, 4 and 8 seconds lands
+  past the ceiling. A 60-packet ping showed 0% loss and RTT 22 ms with 0.12 ms
+  deviation, **but that probe had 45% power against a 1% loss rate**, so it
+  neither confirms nor refutes. 600 packets gives 99.8%.
+
+**Retracted from the first reading of this data:** the apparent rise from 6.7%
+in the first half of the window to 30.8% in the last thirty minutes. Fisher
+p = 0.145 on 2/30 against 7/30. Nine failures cannot carry a trend, and the
+claim was made before the arithmetic.
+
+**What to do next, in order, and deliberately not "change the interval":**
+
+1. **Report the elapsed time on the refusal.** `[UNREACHABLE]` says nothing
+   about how long it waited, so a stall that hit the 10 s ceiling and a
+   refusal that bounced in 20 ms are indistinguishable in the journal. That is
+   a probe whose outcomes do not separate its hypotheses, which is F44 in the
+   diagnostics rather than in the schedule. Small change, and the next night's
+   journal answers the question by itself.
+2. **600-packet ping, and a TCP-level equivalent**, because ICMP can be
+   policed differently from TCP and a clean ping is only circumstantial.
+3. **A week of the instrumentation this entry already asks for**, at the
+   current interval, before any ladder step. The baseline is the thing missing.
+4. **Only then** consider a single in-poll retry or a longer timeout. Both
+   would mask the symptom before its cause is known, and a masked symptom in
+   the component that decides whether the sky is being watched is worse than a
+   visible one.
+
+**Raised to tier 1** because this is no longer a politeness question about a
+future daemon. A collector that misses roughly one poll in eight is the
+instrument's own blindness, measured, in production, on the artefact that is
+about to become publicly reachable.
+
+*Original entry below.*
 
 **Where this came from.** Re-collecting the corpus after F68 meant 3,000 requests
 in one burst, which raised the question of what rate the source tolerates. It
