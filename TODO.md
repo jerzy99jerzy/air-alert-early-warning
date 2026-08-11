@@ -1116,6 +1116,13 @@ must not reach production before the site release that reads v3**. Deploying
 it alone turns the public page blind, correctly and unhelpfully. The two
 releases go out in one window, producer first by minutes rather than by days.
 
+**Measured since, and it changes the entry from a warning to a fact.** The
+consumer shipped its v3 reader at `mavo-site` 4.0.0.0 on 2026-08-12 and
+refuses v2 explicitly, which was verified by running it. The deployment window
+is therefore not a precaution against something that might happen; it is a
+property of two programs that exist. Producer first, by minutes, and the page
+is blind in between.
+
 **What a deprecation policy would have to say**, when it is written: how long
 the producer keeps writing a v2-shaped file beside the v3 one, and what ends
 that period. This project has one consumer and controls it, which is why the

@@ -1,10 +1,41 @@
 # Deployment profile
 
-Version: 1.0 / 2026-08-09
-Status: **plan and open decisions. NOT BUILT.** No daemon exists yet, so nothing
-here is running anywhere. What is written down is the shape of the endpoint the
-daemon will present, and the choices that have to be made before it presents
-anything.
+Version: 1.1 / 2026-08-12
+Status: **partly built and running, and the document is behind it.** The
+collector runs unattended on a host from 2026-08-11 and the publishing loop
+writes the contract; the daemon this document plans is still the shape of what
+comes next. What follows describes the endpoint the daemon will present. What
+is running today is described in the section immediately below, which was
+written after the fact rather than before, and says so.
+
+## What is actually deployed, as of 2026-08-12
+
+[measured, by reading the host]
+
+Two hosts. The producer polls the channel on a timer and appends to its own
+store; a report service renders `state.json` beside it; a push timer carries
+the file to the site host over SSH under a forced command that validates it
+and installs it atomically.
+
+**Two files from 0.25.0.0 onward, not one.** `mavo report` writes
+`state.json` and `feed.json` in the same cycle from the same composition, and
+both must cross the push channel. The consequences, each of which is a step
+somebody has to take and none of which the gate can check:
+
+- The report unit needs `--feed /var/lib/mavo/feed.json` beside its `--json`.
+  Without the flag the file is never written and the consumer's history panel
+  is permanently empty with nothing anywhere saying why: absence looking like
+  calm, which is the failure this whole project refuses.
+- The push unit needs to carry both files, naming its target on each
+  invocation. The forced command takes the target as its argument.
+- The forced command on the site host is `deploy/accept-state` in the
+  `mavo-site` repository. Until 2026-08-12 its only copy was on the host,
+  with no version, no test and no history; the entry in `authorized_keys`
+  must point at the version-controlled copy, not at whatever is there now.
+
+**The producer and the consumer deploy in one window.** The consumer refuses
+any schema version it does not recognise, so a producer at v3 in front of a
+consumer at v2 turns the public page blind. Producer first, by minutes.
 Companion: `docs/MOBILE.md` (phase M0, the daemon), `docs/OBSERVABILITY.md`
 (what it writes while running), `docs/THREAT-MODEL.md` (what it defends
 against).

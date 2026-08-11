@@ -1,11 +1,32 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.4 / 2026-08-12
-Status: **built, in a separate repository.** `mavo-site` 1.2.0.0 exists, runs
-and carries its own gate, its own defect log and its own audit. Everything
-described here was read out of that package rather than remembered: where this
-document states a behaviour, it was checked against the code or measured by
-running it.
+Version: 2.5 / 2026-08-12
+Status: **built, in a separate repository, and under version control since
+2026-08-12.** `mavo-site` 4.1.0.0 runs and carries its own gate (seven checks,
+19 mutants, a jsdom browser harness), its own defect log and its own audit.
+Everything described here was read out of that package rather than remembered.
+
+**This document was four releases behind the consumer until 2.5.** The version
+recorded here said 1.2.0.0 while the site had reached 4.1.0.0, which is the
+class F72 covers: a document that keeps reading plausibly while the thing it
+describes moves. It is recorded rather than quietly corrected, and the reason
+it went stale is worth naming - the consumer lives in another repository, so
+nothing in this repository's gate can notice when it moves.
+
+**What the consumer does with v3, in one paragraph.** It refuses any version it
+does not recognise, including v2, because a page rendering an unfamiliar
+payload with familiar assumptions is worse than one saying it cannot read the
+file. It renders the twenty-minute window as a transitions panel between the
+distance list and the map, with both roles and all of Ukraine, and an empty
+window as a sentence rather than a blank list. It compares `window_start`
+against its own last successful render and states a gap rather than presenting
+a continuous-looking list. It fetches `feed.json` when the reader opens the
+history, not on every cycle.
+
+**The consequence for deployment, and it is measured rather than assumed:**
+because the consumer refuses v2, producer 0.25.0.0 and site 4.0.0.0 must be
+deployed in one window. Shipping the producer alone turns the public page
+blind, correctly and uselessly.
 
 Companion documents: [`MOBILE.md`](MOBILE.md) is the same kind of document for
 the notification channel, [`FEED-SPEC.md`](FEED-SPEC.md) is the specification

@@ -240,3 +240,74 @@ def test_the_feed_and_the_stream_answer_to_the_same_field_names(field: str) -> N
     assert isinstance(stream, dict)
     assert field in stream
     assert field in to_feed(report)
+
+
+def test_the_publishing_loop_writes_both_files_every_cycle(tmp_path: Path) -> None:
+    """The gap this release shipped with, closed.
+
+    `--feed` reached the CLI and `feed_path` reached `publish`'s signature,
+    and nothing exercised the loop with it: the one-shot path was tested and
+    the continuous one, which is the path production actually runs, was not.
+    A feed that stops being refreshed while `state.json` keeps moving is
+    exactly the divergence the two-file design has to avoid, and it would have
+    looked to a reader like history that stopped at some earlier hour.
+
+    Both files are checked on the second cycle rather than the first, because
+    a first-cycle-only write is indistinguishable from a heartbeat that works.
+    Mutation: drop the `write_feed` call from the loop, or guard it on the
+    picture having changed.
+    """
+    from mavo.report import publish
+
+    state = tmp_path / "state.json"
+    feed = tmp_path / "feed.json"
+    outcome = publish(
+        lambda: [_event(WEST, 1)],
+        state,
+        interval_s=0,
+        max_cycles=2,
+        sleep=lambda _s: None,
+        feed_path=feed,
+    )
+    assert outcome.cycles == 2
+    assert state.exists() and feed.exists(), "the loop wrote only one file"
+
+    first = json.loads(feed.read_text(encoding="utf-8"))
+    assert first["v"] == SCHEMA_VERSION
+    assert first["window_s"] == FEED_WINDOW_S
+
+    # The heartbeat property, on the feed as well: rewritten every cycle even
+    # when nothing changed, because a consumer polling a file that stopped
+    # being written cannot tell a dead producer from a quiet night.
+    feed.unlink()
+    publish(
+        lambda: [_event(WEST, 1)],
+        state,
+        interval_s=0,
+        max_cycles=1,
+        sleep=lambda _s: None,
+        feed_path=feed,
+    )
+    assert feed.exists(), "the feed is not rewritten on an unchanged picture"
+
+
+def test_the_loop_without_a_feed_path_writes_only_the_contract(
+    tmp_path: Path,
+) -> None:
+    """The negative control for the check above.
+
+    Without it, a loop that wrote the feed unconditionally to a default path
+    would pass the previous test and quietly create a file nobody asked for.
+    """
+    from mavo.report import publish
+
+    state = tmp_path / "state.json"
+    publish(
+        lambda: [_event(WEST, 1)],
+        state,
+        interval_s=0,
+        max_cycles=1,
+        sleep=lambda _s: None,
+    )
+    assert state.exists()
+    assert list(tmp_path.iterdir()) == [state], "the loop wrote an unasked-for file"

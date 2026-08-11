@@ -16,6 +16,35 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.25.1.0 - 2026-08-12
+
+**The regression the last release shipped without, and two documents that had
+fallen behind the things they describe.**
+
+- **The publishing loop was never exercised with a feed.** `--feed` reached
+  the CLI and `feed_path` reached `publish`'s signature; the one-shot path had
+  a test and the continuous path, which is what production runs, did not. Both
+  files are now checked on the second cycle, because a first-cycle-only write
+  is indistinguishable from a heartbeat that works, and a negative control
+  checks that a loop without `--feed` writes no file nobody asked for.
+  Mutation observed red: the `write_feed` call dropped from the loop.
+- **`docs/WEBAPP.md` said the consumer was at 1.2.0.0 while it was at
+  4.1.0.0.** Four releases, and nothing in this repository's gate could have
+  noticed, because the consumer lives in another repository. Recorded rather
+  than quietly corrected; the document now describes what the consumer does
+  with v3 and why the two deploy together.
+- **`docs/DEPLOYMENT.md` said NOT BUILT while a collector had been running
+  unattended for a day.** It gains a section describing what is actually
+  deployed, including the three steps the schema-v3 window requires and which
+  none of them a gate can check: `--feed` in the report unit, both files
+  across the push channel, and the forced command pointing at the
+  version-controlled `accept-state` rather than the copy on the host.
+- **T50 gains a measured fact.** The consumer refuses v2, verified by running
+  it, so the deployment window is a property of two programs that exist rather
+  than a precaution against something that might happen. The task stays
+  partial: the deprecation policy and the size measurement under a mass alert
+  are still missing.
+
 ## 0.25.0.0 - 2026-08-12
 
 **T50, partial: the contract carries history. Schema v3, and the site cannot
