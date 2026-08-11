@@ -143,10 +143,6 @@ noticed, and what class of error it was. Entries against the project's own
 interest are in there too, including the 0 of 20 above, and one where the
 documentation claimed something was checked and it was not.
 
-**There is a negative result, and it was kept.** A hypothesis that lunar phase
-relates to drone attacks was tested. It does not, and that is recorded with its
-numbers rather than quietly deleted.
-
 **Part of the data was sealed before anyone read any of it.** The last 20% of
 collected messages is set aside and untouched. You cannot tune a system against
 evidence you have not seen, and that is the only way a later result means

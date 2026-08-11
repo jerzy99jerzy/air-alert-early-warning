@@ -144,10 +144,6 @@ tego nie zauważył i jaka to klasa błędu. Wpisy przeciw interesowi projektu t
 tam są, łącznie z tym o wyniku 0 na 20 i z tym, w którym dokumentacja
 twierdziła, że coś jest sprawdzane, a nie było.
 
-**Jest wynik negatywny, zachowany.** Sprawdzano hipotezę, że fazy księżyca mają
-związek z atakami dronowymi. Wyszło, że nie mają, i to jest zapisane razem z
-liczbami, zamiast po cichu usunięte.
-
 **Część danych została zapieczętowana, zanim ktokolwiek je przeczytał.** Ostatnie
 20% zebranych wiadomości jest odłożone i nietknięte. Nie da się dostroić
 systemu do dowodów, których się nie widziało - to jedyny sposób, żeby późniejszy
