@@ -16,6 +16,126 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.21.5.0 - 2026-08-11
+
+**Six defects from the 0.21.4.0 code review, F83 through F88. Two are the
+items the review named; four were found by reading the repairs for the case
+beside the one they fixed.**
+
+- **F83: the cause of blindness reached nobody.** `publish()` printed the
+  store-read failure only when no `on_cycle` callback was installed, and the
+  CLI installs one unconditionally, so in the one mode an operator runs the
+  loop said `feed=blind` and discarded the reason. Printed unconditionally
+  now, on stderr, so a redirected stdout still carries only announcements.
+- **F84: a broken observer could stop the heartbeat.** An exception from
+  `on_cycle` - a `BrokenPipeError` from an announce print is enough -
+  propagated out of `publish()` as a stack trace with no `PublishReport`,
+  F46's shape reintroduced through the observability hook, and stopped the
+  contract file because a console listener went away. The callback is
+  disabled after its first failure, the failure is counted and named in
+  `PublishReport.callback_failures`, and publishing continues: the observer
+  is not the product, the file is.
+- **The loop's tests all fed it a constant**, so a loop that read the store
+  once and republished the first picture forever would have passed every one
+  of them - the handover's second pattern, in the newest code. A sequence
+  regression now drives the loop through active, cleared and unreadable, and
+  the hoist mutation was observed red on a scratch copy.
+- **F85: the trailing counter lost the episode that outlived the window.**
+  The seven-day fold filtered events before folding, so an episode opened
+  before the cutoff vanished: the oblast under the longest single alert
+  rendered as the quietest, and a close inside the window went unrecorded -
+  against the module's own invariant, standing since F76, that the count does
+  not understate. The fold now replays the whole log; episodes open at the
+  window's edge count once, and only an episode both opened and affirmatively
+  closed before the window is outside it. `recent_7d` counts can move only
+  upward under this change. The old cutoff regression's fixture was exactly
+  the case the counter was wrong about and is replaced by the correct guard.
+- **F86: the alert path picked a threat kind by dict insertion order.** An
+  alert naming missiles and drones classified as whichever `KIND_MARKERS` row
+  was typed first, while `classify_kind_message` refuses the same ambiguity
+  three functions up. The alert path now makes the same refusal: exactly one
+  named kind resolves, two resolve to UNKNOWN, and one kind in two forms
+  still resolves. Corpus frequency of two-kind alerts is unmeasured and
+  folded into T45's second run.
+- **F87: the fingerprint promised a comparison that did not exist.**
+  `label_sample`'s docstring said `score` reports a mismatch; the hash was
+  stored nowhere and compared against nothing - a rule with no reader, in the
+  instrument built to be hard to fudge. `draw` now writes a draw record
+  (seed, fingerprint over post ids, stratum counts) beside the CSV and
+  `score` refuses a file whose rows do not match it. The `post_id` column
+  carries the channel's real ids rather than a row number, and messages
+  refused by `classify` are counted in the draw output instead of silently
+  leaving the population. The sample a given seed draws is unchanged, so the
+  planned seed 20260810 stands.
+- **F88: a post repeated inside one file was counted twice, twice.** The F81
+  repair closed the cross-file duplicate and left the within-file one:
+  `messages` counted occurrences and `new_messages` counted every repetition
+  in the first file as new. Latent - no live page has been observed doing
+  this - and closed the way F62 was: deduplicated, and reported rather than
+  absorbed.
+- 286 tests, coverage 96.22% (Python 3.12.3, sandbox). Every fix verified red
+  before repair; named mutations observed red on scratch copies.
+
+
+
+## 0.21.4.0 - 2026-08-10
+
+**F81: the corpus total counted 199 posts twice, and two tools had been
+disagreeing about it in plain sight.**
+
+- **Two backfill runs produced snapshots on different offsets over the same
+  posts.** `page-000321631-000321650.html` beside
+  `page-000321650-000321669.html`, ten such pairs from post 321631 to 321829.
+  `corpus_inventory` summed per file, so every post in that range was counted
+  in both.
+- **The arithmetic closes exactly.** The inventory reports 61,240;
+  `kind_coverage`, which reads posts rather than files, reported **61,041** on
+  the same corpus. The difference is 199, which is the size of the overlap.
+  Both numbers were in the repository and neither was questioned.
+- **Why it survived.** The inventory checks that a filename agrees with its own
+  content, and every one of these files passes: each is internally consistent
+  and the problem exists only between files. Contiguity was checked;
+  disjointness was not. A snapshot set was treated as a partition with nothing
+  testing that it is one.
+- **What limits the damage, and it is not a defence.** Every duplicated post is
+  above 309380, so all of it is in the holdout. The design window is untouched
+  and no measurement so far used a duplicated post. What is wrong is the
+  advertised size of the corpus, which is a claim about how much evidence this
+  project has.
+- **The count is now over distinct post ids**, duplicates are reported rather
+  than silently deduplicated, and a `new_messages` column shows which snapshot
+  first contributed each post. Verified on a synthetic corpus with a
+  constructed overlap.
+- **Still owed on the operator's machine:** re-run the inventory and correct
+  `STATUS.json`, the README, both briefs and `docs/CHANNEL.md`. Until that
+  happens the figure in this repository is 199 too high **and is known to be**,
+  which is the state this defect log exists to make visible.
+
+## 0.21.3.0 - 2026-08-10
+
+**The instrument for T36 could not have met T36's acceptance, and nobody would
+have noticed from its output.**
+
+- **`label_sample draw` sampled proportionally.** The west is 3.5% of tag
+  occurrences, so a fifty-row draw held one or two western messages on
+  average, while the acceptance asks for a figure about the areas near the
+  border. The sample would have been the right size, with a recorded seed and
+  a fingerprint, and about a question nobody asked.
+- **Three strata now**: `western`, `front_line`, `unknown_tag`, with half the
+  resolved rows western by construction. When the corpus holds fewer western
+  messages than requested it says so, rather than returning a short stratum
+  quietly.
+- **`score` prints no combined rate, deliberately.** Pooling an oversampled
+  stratum with a proportional one averages over weights the sampler chose,
+  which is neither the rate for the product nor the rate for the channel. The
+  western whole-row figure is the one S8 is judged on and it is labelled as
+  such.
+- **Files drawn before this are refused rather than scored.** Their `resolved`
+  stratum is a mixture nobody chose, and scoring it would report a number about
+  that mixture.
+- **Verified end to end on a synthetic corpus** before hand-off: draw, fill,
+  score. The first real run should be a measurement, not a debugging session.
+
 ## 0.21.2.0 - 2026-08-10
 
 **F80: a fabricated detail and an overstated adjective, in the document written

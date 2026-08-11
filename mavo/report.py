@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import tempfile
 import time
 from collections.abc import Callable, Iterable
@@ -254,6 +255,17 @@ def trailing_counts(
     in is worse than one visibly missing, and those areas are already reported
     as `unresolved_areas` beside this.
 
+    **An episode that overlaps the window counts, wherever it opened (F85).**
+    The first cutoff was a filter on events, and it broke the promise two
+    paragraphs up at the window's edge: an episode opened before the cutoff
+    had its opening event aged out, so an oblast under a single alert longer
+    than the window rendered as the quietest on the map, and a close falling
+    inside the window went unrecorded because the episode it closed had never
+    been seen. The fold now replays the whole log: events before the cutoff
+    move the running state without counting, episodes still open at the
+    cutoff are counted once as they cross it, and only an episode both opened
+    and affirmatively closed before the window is outside it.
+
     `last_alert_ended_at` is the most recent episode close, or None where no
     episode closed inside the window. None means unknown, and a consumer must
     not render it as "ended just now".
@@ -262,10 +274,26 @@ def trailing_counts(
     active: dict[str, set[str]] = {}
     episodes: dict[str, int] = {}
     last_close: dict[str, datetime] = {}
-    for event in sorted(
-        (e for e in events if e.ts_source >= cutoff),
-        key=lambda e: (e.ts_source, e.area_id),
-    ):
+    ordered = sorted(events, key=lambda e: (e.ts_source, e.area_id))
+    inside = next(
+        (i for i, e in enumerate(ordered) if e.ts_source >= cutoff), len(ordered)
+    )
+    for event in ordered[:inside]:
+        area = table.by_code(event.area_id)
+        slug = oblast_slug(area.oblast) if area is not None else ""
+        if not slug:
+            continue
+        running = active.setdefault(slug, set())
+        if event.state is AlertState.ACTIVE:
+            running.add(event.area_id)
+        elif is_clear(event.state):
+            running.discard(event.area_id)
+    # Episodes open as the window begins: counted here, once, so the loop
+    # below cannot count them again (`running` is already non-empty).
+    for slug, running in active.items():
+        if running:
+            episodes[slug] = 1
+    for event in ordered[inside:]:
         area = table.by_code(event.area_id)
         slug = oblast_slug(area.oblast) if area is not None else ""
         if not slug:
@@ -498,14 +526,24 @@ class PublishReport:
     blind_cycles: int
     degraded_cycles: int
     reason: str
+    # F84. The observer hook failed and was disabled; the loop kept writing.
+    # Counted rather than absorbed, because a console that went quiet
+    # mid-run needs an explanation the operator can find.
+    callback_failures: int = 0
 
     def line(self) -> str:
         """One line for an operator, with every count named."""
-        return (
+        base = (
             f"cycles={self.cycles} written={self.written} "
             f"blind={self.blind_cycles} degraded={self.degraded_cycles} "
             f"stopped: {self.reason}"
         )
+        if self.callback_failures:
+            base += (
+                f" (callback failed {self.callback_failures}x and was disabled;"
+                " publishing continued)"
+            )
+        return base
 
 
 def publish(
@@ -543,7 +581,7 @@ def publish(
     """
     table = table if table is not None else AreaTable.from_csv()
     clock = now if now is not None else (lambda: datetime.now(UTC))
-    cycles = written = blind = degraded = 0
+    cycles = written = blind = degraded = callback_failures = 0
     reason = f"reached max_cycles={max_cycles}"
     try:
         while max_cycles is None or cycles < max_cycles:
@@ -557,8 +595,13 @@ def publish(
                 # somewhere below turns the loop silent, and silence is the
                 # one outcome this function exists to prevent.
                 events = []
-                if on_cycle is None:
-                    print(f"[BLIND] store unreadable: {failure}")
+                # F83. Unconditionally, and on stderr. The old guard printed
+                # the cause only when no callback was installed, and the CLI
+                # always installs one, so in the one mode anybody runs the
+                # operator saw `feed=blind` with the reason discarded. stderr
+                # so a redirected stdout still carries only the announcements.
+                print(f"[BLIND] store unreadable: {failure}",
+                      file=sys.stderr, flush=True)
             report = compose(
                 events, as_of=clock(), table=table, valid_for_s=valid_for_s
             )
@@ -573,7 +616,24 @@ def publish(
                 break
             written += 1
             if on_cycle is not None:
-                on_cycle(report)
+                # F84. The observer is not the product; the file is. A
+                # BrokenPipeError from an announce print (stdout piped to a
+                # reader that went away) used to propagate out of this loop as
+                # a stack trace with no PublishReport - F46's shape,
+                # reintroduced through the observability hook - and stopped
+                # the one output a consumer depends on. The callback is
+                # disabled after its first failure, the failure is printed and
+                # counted, and the heartbeat keeps beating. KeyboardInterrupt
+                # is not caught here: an operator interrupt during a callback
+                # is still an operator interrupt.
+                try:
+                    on_cycle(report)
+                except Exception as failure:  # noqa: BLE001
+                    callback_failures += 1
+                    on_cycle = None
+                    print(f"[CALLBACK-DISABLED] on_cycle raised: {failure}; "
+                          "publishing continues without announcements",
+                          file=sys.stderr, flush=True)
             if max_cycles is None or cycles < max_cycles:
                 sleep(interval_s)
     except KeyboardInterrupt:
@@ -584,4 +644,5 @@ def publish(
         blind_cycles=blind,
         degraded_cycles=degraded,
         reason=reason,
+        callback_failures=callback_failures,
     )

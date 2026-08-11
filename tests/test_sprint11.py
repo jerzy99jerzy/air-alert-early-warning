@@ -208,3 +208,33 @@ def test_the_dead_marker_is_gone_and_stays_gone() -> None:
     from mavo.sources.telegram import KIND_DECLARE_MARKERS
 
     assert "небезпека" not in KIND_DECLARE_MARKERS
+
+
+def test_an_alert_naming_two_kinds_reports_unknown_rather_than_the_first_row() -> None:
+    """`classify_message` picked the kind by KIND_MARKERS insertion order (F86).
+
+    `classify_kind_message` refuses a message naming two means; the alert path
+    beside it resolved the same ambiguity to whichever marker happened to be
+    defined first in the table - a semantic decision hidden in a dict's
+    insertion order, and one a table reordering would silently change. A
+    message naming missiles and drones together now reads as UNKNOWN, the same
+    refusal the kind path already makes. A message naming one means in two
+    forms (`ракет` beside `баліст`) still resolves, because both rows name the
+    same kind. Mutation: restore the first-match `next()`.
+    """
+    from mavo.schema import AlertState
+    from mavo.sources.telegram import classify_message
+
+    table = AreaTable.from_csv()
+    both = classify_message(
+        f"Повітряна тривога: ракетна небезпека та атака шахедів {TAG}", table
+    )
+    assert both and both[0].state is AlertState.ACTIVE
+    assert both[0].kind is ThreatKind.UNKNOWN, (
+        "two named means is not a classification, on the alert path as on the kind path"
+    )
+
+    same_kind = classify_message(
+        f"Повітряна тривога: балістика, швидкісна ракета {TAG}", table
+    )
+    assert same_kind and same_kind[0].kind is ThreatKind.MISSILE

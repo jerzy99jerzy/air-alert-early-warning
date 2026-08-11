@@ -58,7 +58,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / "data" / "aggregates" / "corpus_manifest.csv"
 POST = re.compile(r'data-post="[^/]+/(\d+)"')
 
-FIELDS = ("page", "id_lo", "id_hi", "messages", "bytes", "sha256")
+FIELDS = ("page", "id_lo", "id_hi", "messages", "new_messages", "bytes", "sha256")
 
 # Keys the inventory schema supersedes, written by hand before this tool
 # existed. Removed on write, each removal printed: leaving them would keep two
@@ -103,9 +103,19 @@ def patch_corpus_block(
 
 
 def inventory(directory: Path) -> tuple[list[dict[str, str]], list[str]]:
-    """One row per snapshot, plus whatever is wrong with the set of them."""
+    """One row per snapshot, plus whatever is wrong with the set of them.
+
+    **The message count is over distinct post ids, not over files (F81).** Two
+    backfill runs can produce snapshots on different offsets covering the same
+    posts: `page-000321631-000321650.html` beside
+    `page-000321650-000321669.html`. Summing per file counted 199 posts twice
+    and put the corpus total 199 higher than it is, in a figure quoted in the
+    README, the briefs and every measurement that divided by it.
+    """
     rows: list[dict[str, str]] = []
     problems: list[str] = []
+    seen: dict[int, str] = {}
+    duplicated: dict[int, list[str]] = {}
 
     for snapshot in sorted(directory.glob("page-*.html")):
         match = SNAPSHOT_NAME.search(snapshot.name)
@@ -114,7 +124,24 @@ def inventory(directory: Path) -> tuple[list[dict[str, str]], list[str]]:
             continue
         payload = snapshot.read_bytes()
         text = payload.decode("utf-8", errors="replace")
-        ids = [int(found) for found in POST.findall(text)]
+        found = [int(post) for post in POST.findall(text)]
+        # F88. A post id repeated inside one file was counted twice by
+        # `len(ids)` and twice again by `new_messages`, whose "first file to
+        # carry this post" test is true for every repetition within that file.
+        # The F81 repair fixed the cross-file case and left this one: same
+        # class, one file inward. Deduplicated with order kept, and the
+        # repetition reported rather than absorbed.
+        ids = list(dict.fromkeys(found))
+        if len(ids) != len(found):
+            problems.append(
+                f"{snapshot.name}: {len(found) - len(ids)} post id(s) repeated "
+                "inside the file; each is counted once (F88)"
+            )
+        for post_id in ids:
+            if post_id in seen:
+                duplicated.setdefault(post_id, [seen[post_id]]).append(snapshot.name)
+            else:
+                seen[post_id] = snapshot.name
         low, high = int(match.group(1)), int(match.group(2))
         if ids and (min(ids) != low or max(ids) != high):
             # The filename is what every tool reads; if it disagrees with the
@@ -130,9 +157,17 @@ def inventory(directory: Path) -> tuple[list[dict[str, str]], list[str]]:
                 "id_lo": str(low),
                 "id_hi": str(high),
                 "messages": str(len(ids)),
+                "new_messages": str(sum(1 for i in ids if seen.get(i) == snapshot.name)),
                 "bytes": str(len(payload)),
                 "sha256": hashlib.sha256(payload).hexdigest(),
             }
+        )
+    if duplicated:
+        pages = sorted({name for names in duplicated.values() for name in names})
+        problems.append(
+            f"{len(duplicated)} post ids appear in more than one snapshot, across "
+            f"{len(pages)} files. Distinct posts is the count that means anything; "
+            f"summing files counts them twice (F81)"
         )
     return rows, problems
 
@@ -168,7 +203,13 @@ def main() -> int:
     gaps = list(contiguity_gaps(arguments.raw))
     low = min(int(row["id_lo"]) for row in rows)
     high = max(int(row["id_hi"]) for row in rows)
-    messages = sum(int(row["messages"]) for row in rows)
+    # Distinct posts, not a sum over files. See F81 and the docstring above.
+    messages = sum(int(row["new_messages"]) for row in rows)
+    counted_by_file = sum(int(row["messages"]) for row in rows)
+    if counted_by_file != messages:
+        print(f"corpus-inventory: {counted_by_file - messages} posts appear in more "
+              f"than one snapshot; the corpus holds {messages} distinct posts, not "
+              f"{counted_by_file}")
     digest = aggregate_digest(rows)
 
     arguments.out.parent.mkdir(parents=True, exist_ok=True)

@@ -156,3 +156,25 @@ def test_the_gate_refuses_a_corpus_block_missing_the_holdout_record() -> None:
         }
     }
     assert check_the_holdout_boundary_survives_in_the_corpus_block(intact) == []
+
+
+def test_a_post_repeated_inside_one_file_is_counted_once_and_reported(
+    tmp_path: Path,
+) -> None:
+    """F88: the F81 repair fixed the cross-file duplicate and left this one.
+
+    `new_messages` asks which file first carried a post, and every repetition
+    within that file answers yes, so a within-file duplicate was counted twice
+    in both columns with nothing said. Same class as F81, one file inward.
+    Mutation: count `found` instead of the deduplicated list.
+    """
+    path = tmp_path / "page-100-101.html"
+    path.write_text(
+        "".join(PAGE.format(i=i) for i in (100, 100, 101)), encoding="utf-8"
+    )
+    rows, problems = inventory(tmp_path)
+    assert rows[0]["messages"] == "2", "two distinct posts, not three occurrences"
+    assert rows[0]["new_messages"] == "2"
+    assert any("repeated inside the file" in p for p in problems), (
+        "the repetition must be reported, not silently deduplicated"
+    )

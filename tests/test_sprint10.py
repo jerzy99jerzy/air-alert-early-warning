@@ -26,6 +26,7 @@ from mavo.areas import AreaTable
 from mavo.report import (
     DEFAULT_VALID_FOR_S,
     FeedState,
+    Report,
     compose,
     render_text,
     to_contract,
@@ -726,14 +727,6 @@ def test_unknown_does_not_close_an_episode() -> None:
     assert counts[0].last_alert_ended_at is None
 
 
-def test_events_outside_the_window_do_not_count() -> None:
-    """Mutation: drop the cutoff comparison."""
-    from mavo.report import trailing_counts
-
-    old = [_event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 30)]
-    assert trailing_counts(old, as_of=NOW, table=_table()) == ()
-
-
 def test_an_unresolvable_area_is_not_folded_into_another_oblast() -> None:
     """A count that is quietly wrong is worse than one that is visibly absent."""
     from mavo.report import trailing_counts
@@ -799,3 +792,151 @@ def test_the_command_reports_the_schema_version_it_actually_wrote(
     written = json.loads(target.read_text(encoding="utf-8"))["v"]
     assert written == SCHEMA_VERSION
     assert f"v={written}" in printed, "the message must name the version on disk"
+
+
+def test_the_blind_cause_is_printed_even_when_a_callback_is_installed(
+    tmp_path: Path, capsys: object
+) -> None:
+    """The production path always installs `on_cycle`, so a cause printed only
+    without one is a cause no operator has ever seen (F83).
+
+    `mavo report --watch` passes `announce` unconditionally, which made the
+    `if on_cycle is None` guard select exactly the mode nobody runs. The
+    operator saw `feed=blind` on every cycle and the exception that caused it
+    went nowhere. Mutation: restore the guard.
+    """
+    from mavo.report import publish
+
+    def broken() -> list[ThreatEvent]:
+        raise OSError("store file vanished mid-read")
+
+    publish(
+        broken, tmp_path / "state.json", interval_s=0, max_cycles=1,
+        table=_table(), sleep=lambda _s: None, on_cycle=lambda _r: None,
+    )
+    printed = capsys.readouterr().err  # type: ignore[attr-defined]
+    assert "store file vanished mid-read" in printed, (
+        "the cause of blindness must reach the operator on the path they run"
+    )
+
+
+def test_the_loop_tracks_a_changing_store_cycle_by_cycle(tmp_path: Path) -> None:
+    """Every existing loop test fed a constant, so a loop that read the store
+    once and replayed the first picture forever would have passed all of them.
+
+    The store here changes between cycles - active, then cleared, then
+    unreadable - and each cycle's file must reflect that cycle's store.
+    Mutation: hoist `list(load())` above the loop; the second cycle then
+    republishes the first picture and this fails on the cleared area.
+    """
+    from mavo.report import publish
+
+    target = tmp_path / "state.json"
+    logs: list[object] = [
+        [_event(SAMBIR, AlertState.ACTIVE, 5)],
+        [_event(SAMBIR, AlertState.ACTIVE, 5), _event(SAMBIR, AlertState.CLEAR, 2)],
+        OSError("store is gone"),
+    ]
+    calls = {"n": 0}
+
+    def evolving_store() -> list[ThreatEvent]:
+        step = logs[calls["n"]]
+        calls["n"] += 1
+        if isinstance(step, OSError):
+            raise step
+        return step  # type: ignore[return-value]
+
+    seen: list[tuple[str, int]] = []
+
+    def observe(_report: Report) -> None:
+        payload = json.loads(target.read_text(encoding="utf-8"))
+        seen.append((payload["state"], len(payload["areas"])))
+
+    outcome = publish(
+        evolving_store, target, interval_s=0, max_cycles=3,
+        table=_table(), sleep=lambda _s: None, on_cycle=observe,
+        now=lambda: NOW,
+    )
+    assert seen == [("ok", 1), ("ok", 0), ("blind", 0)], (
+        "each cycle's file must carry that cycle's store, not the first one's"
+    )
+    assert outcome.written == 3
+    assert outcome.blind_cycles == 1
+
+
+def test_a_broken_callback_does_not_stop_the_heartbeat(tmp_path: Path) -> None:
+    """The observer is not the product; the file is (F84).
+
+    `announce` prints to stdout, and a closed pipe raises BrokenPipeError
+    inside `on_cycle`, which propagated out of `publish` as a stack trace with
+    no PublishReport - the F46 shape, reintroduced through the observability
+    hook. Killing the heartbeat because `head` closed a pipe would stop the
+    one output a consumer depends on.
+
+    The callback is disabled after its first failure and the loop keeps
+    writing; the failure is counted and named. Mutation: let the exception
+    propagate.
+    """
+    from mavo.report import publish
+
+    target = tmp_path / "state.json"
+    calls = {"n": 0}
+
+    def fragile(_report: Report) -> None:
+        calls["n"] += 1
+        raise BrokenPipeError("stdout reader went away")
+
+    outcome = publish(
+        lambda: [_event(SAMBIR, AlertState.ACTIVE, 1)],
+        target, interval_s=0, max_cycles=3,
+        table=_table(), sleep=lambda _s: None, on_cycle=fragile,
+    )
+    assert outcome.written == 3, "the file must keep being written"
+    assert calls["n"] == 1, "a callback that failed once is not retried forever"
+    assert outcome.callback_failures == 1
+    assert "callback" in outcome.line(), "the failure must be named to the operator"
+
+
+def test_an_episode_open_at_the_window_edge_still_counts() -> None:
+    """An alert that began before the window and never cleared is not a quiet week.
+
+    The docstring has promised since F76 that an episode left open stays open
+    and the count "does not understate". The cutoff filter broke that promise
+    at the window edge: the opening event aged out, the episode had never
+    closed, and the oblast under the longest-running alert rendered as the
+    quietest (F85). Mutation: restore the pre-filter.
+    """
+    from mavo.report import trailing_counts
+
+    events = [_event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 10)]  # 10 days, never cleared
+    counts = trailing_counts(events, as_of=NOW, table=_table())
+    assert [(c.slug, c.alerts_count) for c in counts] == [("lviv", 1)]
+
+
+def test_an_episode_straddling_the_edge_records_its_close() -> None:
+    """Opened before the window, cleared inside it: one episode, with its end."""
+    from mavo.report import trailing_counts
+
+    events = [
+        _event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 10),
+        _event(SAMBIR, AlertState.CLEAR, 60 * 24 * 6),
+    ]
+    counts = trailing_counts(events, as_of=NOW, table=_table())
+    assert counts[0].alerts_count == 1
+    assert counts[0].last_alert_ended_at == NOW - timedelta(minutes=60 * 24 * 6)
+
+
+def test_an_episode_closed_before_the_window_does_not_count() -> None:
+    """The guard on the other side: affirmatively over before the window began.
+
+    This replaces the old fixture for the cutoff, whose single un-cleared
+    ACTIVE was exactly the open-at-the-edge case the counter was wrong about:
+    test data chosen by the implementation, measuring the code against itself.
+    """
+    from mavo.report import trailing_counts
+
+    events = [
+        _event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 10),
+        _event(SAMBIR, AlertState.CLEAR, 60 * 24 * 9),
+    ]
+    assert trailing_counts(events, as_of=NOW, table=_table()) == ()

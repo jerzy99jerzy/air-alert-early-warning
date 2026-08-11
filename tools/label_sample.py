@@ -14,9 +14,11 @@ and a bare proportion would overstate what it establishes.
 
 **The seed is recorded and the draw is fingerprinted.** A sample that can be
 redrawn until the error rate looks acceptable is not a measurement. `draw`
-prints the seed and a hash of the sampled post ids, `score` recomputes the hash
-from the file it is given, and a mismatch is reported rather than tolerated.
-Changing the seed is allowed and is visible; changing it silently is not.
+hashes the sampled post ids and writes the seed and hash into a draw record
+beside the CSV; `score` recomputes the hash from the file it is given and
+refuses a mismatch against the record (F87: this comparison was promised from
+the first version and had no mechanism until 0.21.5.0). Changing the seed is
+allowed and is visible; changing it silently is not.
 
 **Two strata, because they answer different questions.** Messages that resolved
 to an area test whether resolution is *correct*. Messages carrying tags that
@@ -46,6 +48,7 @@ import csv
 import hashlib
 import json
 import random
+import re
 import sys
 from pathlib import Path
 
@@ -55,12 +58,20 @@ sys.path.insert(0, str(ROOT))
 from mavo.areas import AreaTable  # noqa: E402
 from mavo.backfill import SNAPSHOT_NAME as PAGE_RANGE  # noqa: E402
 from mavo.sources.telegram import (  # noqa: E402
-    _BLOCK,
     _TEXT,
     _TIME,
     _strip,
     classify,
     classify_kind_message,
+)
+
+# F87. The block regex in `telegram.py` isolates a message but discards its
+# post id. This one keeps it, so the `post_id` column holds the channel's own
+# id rather than a row number, the docstring's "hash of the sampled post ids"
+# is what the fingerprint actually is, and a sampled row can be traced to its
+# post instead of only to its text.
+_BLOCK_WITH_ID = re.compile(
+    r'data-post="[^"/]+/(\d+)"(.*?)(?=data-post="[^"/]+/\d+"|\Z)', re.S
 )
 
 # 0.20.0.0. Three verdict columns rather than one. `docs/MVP.md` asks S8 for a
@@ -90,14 +101,26 @@ def _fingerprint(post_ids: list[str]) -> str:
     return hashlib.sha256(joined.encode("utf-8")).hexdigest()[:16]
 
 
+def _sidecar(csv_path: Path) -> Path:
+    """The draw record beside the sample: seed, fingerprint, stratum counts."""
+    return csv_path.with_suffix(csv_path.suffix + ".draw.json")
+
+
 def _collect(
     corpus: Path, table: AreaTable
-) -> tuple[list[dict[str, str]], list[dict[str, str]], int]:
-    """Every design-window message, split into the two strata."""
+) -> tuple[list[dict[str, str]], list[dict[str, str]], int, int]:
+    """Every design-window message, split into the three strata.
+
+    The fourth return is the number of messages that resolved an area and were
+    then refused by ``classify`` - printed by the caller rather than silently
+    dropped from the population, because a population trimmed without a count
+    is a denominator nobody can check (F87).
+    """
     boundary = _boundary()
     resolved_rows: list[dict[str, str]] = []
     unknown_rows: list[dict[str, str]] = []
     refused = 0
+    classify_refused = 0
     for path in sorted(corpus.glob("page-*.html")):
         match = PAGE_RANGE.search(path.name)
         if match is None:
@@ -106,7 +129,8 @@ def _collect(
             refused += 1
             continue
         body = path.read_text(encoding="utf-8", errors="replace")
-        for block in _BLOCK.findall(body):
+        for block_match in _BLOCK_WITH_ID.finditer(body):
+            post_id, block = block_match.group(1), block_match.group(2)
             text_match = _TEXT.search(block)
             if text_match is None:
                 continue
@@ -116,17 +140,39 @@ def _collect(
             areas, unknown = table.resolve_all(text)
             kinds = classify_kind_message(text, table)
             row = {
-                "post_id": "",
+                # F87. The channel's own id, not a row number: the fingerprint
+                # is computed over these, and a sampled row is traceable to its
+                # post rather than only to a text prefix.
+                "post_id": post_id,
                 "when": when,
-                "resolved_code": areas[0].code if areas else "",
-                "resolved_name": areas[0].name if areas else "",
-                "oblast": areas[0].oblast if areas else "",
+                # Every area the message names, not the first. A channel
+                # message routinely lists five raions and the report emits an
+                # event for each; showing one would ask the labeller to judge
+                # something the product does not do. Found in the first real
+                # draw, where 4 of 40 rows were multi-area.
+                "resolved_code": " ".join(area.code for area in areas),
+                "resolved_name": " / ".join(area.name for area in areas),
+                "oblast": " / ".join(dict.fromkeys(area.oblast for area in areas)),
                 # What the report would print for this message, so the labeller
                 # judges the output rather than the intermediate state. Unknown
                 # prints as unknown here exactly as it does on the page.
                 "kind": kinds[0][2].value if kinds else "unknown",
-                "border_km": areas[0].border_interval if areas else "unknown",
-                "stratum": "resolved" if areas else "unknown_tag",
+                "border_km": (
+                    " / ".join(area.border_interval for area in areas)
+                    if areas else "unknown"
+                ),
+                # Three strata, not two, since 0.21.3.0. The western stratum
+                # exists because it is the only one the product is for and it
+                # is 3.5% of traffic: a proportional draw of fifty rows
+                # contains one or two western messages, and S8 asks for a
+                # figure about the areas near the border. See `_draw`.
+                # A message naming any western area is western: it is one this
+                # product would report on, whatever else it also names.
+                "stratum": (
+                    "unknown_tag" if not areas
+                    else "western" if any(area.is_western for area in areas)
+                    else "front_line"
+                ),
                 "area_ok": "",
                 "kind_ok": "",
                 "distance_ok": "",
@@ -136,12 +182,13 @@ def _collect(
             if areas:
                 classified = classify(text, table)
                 if classified is None:
+                    classify_refused += 1
                     continue
                 resolved_rows.append(row)
             elif unknown:
                 row["note"] = "tags: " + " ".join(unknown)
                 unknown_rows.append(row)
-    return resolved_rows, unknown_rows, refused
+    return resolved_rows, unknown_rows, refused, classify_refused
 
 
 def _draw(args: argparse.Namespace) -> int:
@@ -150,19 +197,34 @@ def _draw(args: argparse.Namespace) -> int:
         print(f"label-sample: {corpus} is not a directory", file=sys.stderr)
         return 2
     table = AreaTable.from_csv(Path(args.map))
-    resolved, unknown, refused = _collect(corpus, table)
+    resolved, unknown, refused, classify_refused = _collect(corpus, table)
     if not resolved:
         print("label-sample: nothing resolved, so there is nothing to label. That is a "
               "finding, not an empty sample", file=sys.stderr)
         return 1
 
+    western = [row for row in resolved if row["stratum"] == "western"]
+    front_line = [row for row in resolved if row["stratum"] == "front_line"]
+
+    # Deliberate oversampling of the west, and the consequence is stated here
+    # and again in `score`: the result is **not** an error rate for the
+    # channel's traffic. It is one for the areas this product reports on, which
+    # is the question S8 asks. A proportional draw would answer the first
+    # question, which nobody is asking, using a sample of one or two rows for
+    # the second.
     rng = random.Random(args.seed)
     want_unknown = min(len(unknown), max(0, args.size // 5))
-    want_resolved = args.size - want_unknown
-    sample = rng.sample(resolved, min(want_resolved, len(resolved)))
+    remaining = args.size - want_unknown
+    want_western = min(len(western), remaining // 2)
+    want_front = remaining - want_western
+    if want_western < remaining // 2:
+        print(f"label-sample: only {len(western)} western messages exist in the "
+              f"design window, so the western stratum is smaller than asked for. "
+              f"That is a property of the corpus, not a sampling failure",
+              file=sys.stderr)
+    sample = rng.sample(western, want_western)
+    sample += rng.sample(front_line, min(want_front, len(front_line)))
     sample += rng.sample(unknown, want_unknown) if want_unknown else []
-    for index, row in enumerate(sample, 1):
-        row["post_id"] = str(index)
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -171,13 +233,47 @@ def _draw(args: argparse.Namespace) -> int:
         writer.writeheader()
         writer.writerows(sample)
 
+    # F87. The docstring has promised since the first version that `score`
+    # reports a fingerprint mismatch rather than tolerating it, and nothing
+    # implemented the comparison: the draw printed a hash to a terminal and
+    # the terminal is not a reader. The draw record now lands beside the CSV,
+    # `score` compares against it, and the promise has a mechanism.
+    fingerprint = _fingerprint([row["post_id"] for row in sample])
+    record = _sidecar(out)
+    record.write_text(
+        json.dumps(
+            {
+                "seed": args.seed,
+                "fingerprint": fingerprint,
+                "rows": len(sample),
+                "drawn": {
+                    "western": want_western,
+                    "front_line": min(want_front, len(front_line)),
+                    "unknown_tag": want_unknown,
+                },
+            },
+            indent=1,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
     print("label-sample draw [measured, design window only]")
     print(f"  pages refused above the boundary: {refused}")
-    print(f"  population: {len(resolved)} resolved, {len(unknown)} with unresolved tags")
-    print(f"  sample: {len(sample)} rows ({want_resolved} resolved, {want_unknown} unknown-tag)")
+    print(f"  population: {len(western)} western, {len(front_line)} front-line, "
+          f"{len(unknown)} with unresolved tags")
+    if classify_refused:
+        print(f"  resolved an area but refused by classify: {classify_refused} "
+              "(outside the population; the rate is about messages the report renders)")
+    print(f"  drawn: {want_western} western, {min(want_front, len(front_line))} "
+          f"front-line, {want_unknown} unresolved")
+    print("  ^ the west is oversampled on purpose. The resulting rate is about the")
+    print("    areas this product reports on, not about the channel's traffic.")
+    print(f"  sample: {len(sample)} rows")
     print(f"  seed: {args.seed}")
-    print(f"  fingerprint: {_fingerprint([row['when'] + row['text'][:40] for row in sample])}")
+    print(f"  fingerprint: {fingerprint} (over the sampled post ids)")
     print(f"  written to: {out}")
+    print(f"  draw record: {record}")
     print()
     print("  Fill `area_ok`, `kind_ok` and `distance_ok` with y or n for every row,")
     print("  one row at a time, and put the reason in `note` for any n. Then `score`.")
@@ -235,16 +331,48 @@ def _score(args: argparse.Namespace) -> int:
         return (f"{wrong}/{len(subset)} = {wrong / len(subset):.1%} "
                 f"[{interval[0]:.1%}, {interval[1]:.1%}]")
 
-    resolved = [row for row in rows if row.get("stratum") == "resolved"]
+    western = [row for row in rows if row.get("stratum") == "western"]
+    front_line = [row for row in rows if row.get("stratum") == "front_line"]
     unknown = [row for row in rows if row.get("stratum") == "unknown_tag"]
+    legacy = [row for row in rows if row.get("stratum") == "resolved"]
+    if legacy:
+        print("label-sample: this file was drawn before 0.21.3.0, when resolved "
+              "messages were one stratum rather than western and front-line. "
+              "Redraw it: scoring it would report a figure about a mixture "
+              "nobody chose", file=sys.stderr)
+        return 2
 
     print("label-sample score [measured]")
     print(f"  rows labelled: {len(rows)}")
-    print(f"  fingerprint: {_fingerprint([row['when'] + row['text'][:40] for row in rows])}")
+    recomputed = _fingerprint([row.get("post_id", "") for row in rows])
+    record = _sidecar(path)
+    if record.is_file():
+        recorded = json.loads(record.read_text(encoding="utf-8"))
+        if recorded.get("fingerprint") != recomputed:
+            # F87. This comparison is what the module docstring has promised
+            # all along. A file whose rows do not match its own draw record has
+            # been edited, mixed from two draws, or redrawn without its record,
+            # and a rate over it would be a measurement of nobody knows what.
+            print(f"label-sample: fingerprint mismatch. The draw record says "
+                  f"{recorded.get('fingerprint')}, the file's rows hash to "
+                  f"{recomputed}. The rows scored must be the rows drawn; "
+                  "refusing", file=sys.stderr)
+            return 2
+        print(f"  fingerprint: {recomputed} (matches the draw record, "
+              f"seed {recorded.get('seed')})")
+    else:
+        print(f"  fingerprint: {recomputed}")
+        print(f"  WARNING: no draw record at {record.name}; the fingerprint is "
+              "printed but nothing here can verify these are the rows that were "
+              "drawn. Quote the draw output alongside the score.")
     print()
     for column in verdicts:
         label = column.replace("_ok", "").upper()
-        print(f"  ERROR RATE, {label:9} resolved stratum: {rate(resolved, column)}")
+        print(f"  ERROR RATE, {label:9} western stratum:     {rate(western, column)}")
+    print()
+    for column in verdicts:
+        label = column.replace("_ok", "")
+        print(f"  error rate, {label:9} front-line stratum:  {rate(front_line, column)}")
     print()
     for column in verdicts:
         label = column.replace("_ok", "")
@@ -265,9 +393,16 @@ def _score(args: argparse.Namespace) -> int:
         return (f"{wrong}/{len(subset)} = {wrong / len(subset):.1%} "
                 f"[{interval[0]:.1%}, {interval[1]:.1%}]")
 
-    print(f"  WHOLE-ROW ERROR RATE, resolved stratum: {whole(resolved)}")
-    print("  ^ this is the figure S8 is judged on: a row counts as wrong if any of")
-    print("    the three is wrong, because a reader sees one line, not three fields.")
+    print(f"  WHOLE-ROW ERROR RATE, western stratum:    {whole(western)}")
+    print(f"  whole-row error rate, front-line stratum: {whole(front_line)}")
+    print("  ^ the western figure is the one S8 is judged on: it is about the areas")
+    print("    this product reports on, and a row counts as wrong if any of the three")
+    print("    is wrong, because a reader sees one line rather than three fields.")
+    print()
+    print("  NO COMBINED RATE IS PRINTED, and that is deliberate. The west was")
+    print("  oversampled on purpose, so a pooled figure would be neither the rate")
+    print("  for the product nor the rate for the channel: it would be an average")
+    print("  over a mixture whose weights were chosen by the sampler.")
     print()
     print("  The interval is Wilson at 95%, not a bare proportion, because fifty labels")
     print("  is a small sample and the point estimate moves by a percentage point on one")

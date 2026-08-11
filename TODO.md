@@ -635,6 +635,33 @@ seeded, fingerprinted sample in two strata, `score` reads it back and reports th
 error rate with a Wilson interval and refuses a partially filled file. What
 remains is the reading, which is a person and cannot be delegated to a probe.
 
+**Sharpened again at 0.21.3.0, and the instrument would not have met the
+acceptance before this.** `draw` sampled proportionally from everything that
+resolved. The west is 3.5% of tag occurrences, so a fifty-row draw contained
+**one or two western messages** on average, and the acceptance asks for a
+figure about the areas near the border. A sample can be the right size, drawn
+with a recorded seed and a fingerprint, and still answer a question nobody
+asked.
+
+`draw` now uses three strata: `western`, `front_line`, `unknown_tag`. Half of
+the resolved rows are western by construction, and when the corpus holds fewer
+western messages than asked for, it says so rather than quietly returning a
+short stratum.
+
+**The consequence is stated in both directions, because oversampling buys one
+thing and costs another.** The resulting rate is about the areas this product
+reports on, which is what S8 asks. It is **not** an error rate for the
+channel's traffic, and `score` prints no combined figure: pooling an
+oversampled stratum with a proportional one produces an average over weights
+the sampler chose, which is neither number.
+
+A file drawn before this change is refused by `score` rather than read, because
+its `resolved` stratum is a mixture nobody chose.
+
+**Verified end to end on a synthetic corpus** (draw, fill, score) before being
+handed over, so the first real run is a measurement rather than a debugging
+session.
+
 **Sharpened at 0.20.0.0, after the instrument grew and a first sample was
 taken.** `tools/label_sample.py` now draws three verdict columns, `area_ok`,
 `kind_ok` and `distance_ok`, because S8 asks whether the report is right in

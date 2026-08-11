@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.18
+Document:  docs/METHODOLOGY.md, version 2.20
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -162,6 +162,14 @@ repository has come to the mistake it was built after.
 | [F78](#f78-01930-the-missile-stem-was-one-letter-too-long-for-half-its-forms) | 0.19.3.0 | The missile stem was one letter too long for half its forms |
 | [F79](#f79-02010-the-reviews-kept-happening-and-stopped-being-filed) | 0.20.1.0 | The reviews kept happening and stopped being filed |
 | [F80](#f80-02120-a-fabricated-detail-and-an-overstated-adjective-in-the-document-written-to-be-believed) | 0.21.2.0 | A fabricated detail and an overstated adjective, in the document written to be believed |
+| [F81](#f81-02140-the-corpus-total-counted-199-posts-twice) | 0.21.4.0 | The corpus total counted 199 posts twice |
+| [F82](#f82-02140-the-labelling-instrument-showed-one-area-where-the-message-named-five) | 0.21.4.0 | The labelling instrument showed one area where the message named five |
+| [F83](#f83-02150-the-cause-of-blindness-was-printed-only-on-the-path-nobody-runs) | 0.21.5.0 | The cause of blindness was printed only on the path nobody runs |
+| [F84](#f84-02150-a-broken-observer-could-stop-the-heartbeat) | 0.21.5.0 | A broken observer could stop the heartbeat |
+| [F85](#f85-02150-the-trailing-counter-lost-the-episode-that-outlived-the-window) | 0.21.5.0 | The trailing counter lost the episode that outlived the window |
+| [F86](#f86-02150-the-alert-path-picked-a-threat-kind-by-dict-insertion-order) | 0.21.5.0 | The alert path picked a threat kind by dict insertion order |
+| [F87](#f87-02150-the-fingerprint-promised-a-comparison-that-did-not-exist) | 0.21.5.0 | The fingerprint promised a comparison that did not exist |
+| [F88](#f88-02150-a-post-repeated-inside-one-file-was-counted-twice-twice) | 0.21.5.0 | A post repeated inside one file was counted twice, twice |
 
 ## Defect log
 
@@ -1989,3 +1997,227 @@ date and an overstated adjective are not reachable by any heuristic worth
 having. They were caught by a person asking where a claim came from, and that
 is the only mechanism that works here. This is an argument for reviewing prose
 by reading it, not for building a weak check and feeling covered.
+
+### F81, 0.21.4.0. The corpus total counted 199 posts twice
+
+`corpus_inventory` summed the message count per snapshot file. Two backfill
+runs produced snapshots on different offsets over the same posts:
+`page-000321631-000321650.html` beside `page-000321650-000321669.html`, ten such
+pairs running from post 321631 to 321829. Every post in that range sits in two
+files and was counted in both.
+
+**199 posts, and the arithmetic closes.** The inventory reports 61,240;
+`tools/kind_coverage.py`, which reads posts rather than files, reported
+**61,041** on the same corpus. 61,240 minus 199 is 61,041. Two tools counting
+the same thing differed by exactly the size of the overlap, and the difference
+sat unexamined in both outputs.
+
+**Where the wrong number went.** `STATUS.json`, the README's at-a-glance table,
+both briefs, `docs/CHANNEL.md`, and the denominator of anything expressed as a
+share of the corpus.
+
+**What limits the damage, stated because it is real and because it is not a
+defence.** Every duplicated post is above 309380, so all of it is in the
+holdout. The design window is untouched, no measurement taken so far used a
+duplicated post, and the coverage figures are unaffected because the tool that
+produced them was already counting posts. What is affected is the size of the
+corpus as advertised, which is a claim this project makes about how much
+evidence it has.
+
+**Why it survived.** The inventory checks that a filename agrees with the
+content it names, and every one of these files passes that check: each is
+internally consistent, and the problem exists only between files. A snapshot
+set was treated as a partition without anything testing that it is one.
+Contiguity was checked; disjointness was not.
+
+Class: **an aggregate over a set nobody checked was a set** - the family of
+F70, where one counter served two different events.
+
+**Repair.** The count is over distinct post ids. Duplicated ids are reported as
+a problem rather than silently deduplicated, because a corpus holding the same
+post in two files is a thing an operator should know about even after the
+number is right. `new_messages` is a per-snapshot column so the CSV shows which
+file first contributed each post.
+
+**What still needs doing on the operator's machine:** re-run the inventory,
+which will produce the corrected total and the duplicate report, and correct
+`STATUS.json` and every document quoting the old figure. Until then the number
+in this repository is 199 too high and is known to be.
+
+### F82, 0.21.4.0. The labelling instrument showed one area where the message named five
+
+The first real draw for T36 produced 50 rows, and **4 of the 40 resolved rows
+were messages naming five raions each**: `Повітряна тривога в` followed by a
+bulleted list, with five hashtags. The instrument printed only the first area,
+so a labeller judging `area_ok` would have been judging a rendering the product
+does not produce. `classify` emits one event per mention, so the report shows
+all five.
+
+Not a defect in the product, and a defect in the measurement of it, which is
+the same seriousness: a hand-labelled error rate is only worth the fidelity of
+what was put in front of the hand.
+
+**Found because the sample was read before it was filled in.** The figures in
+the draw's own output said nothing about this. It is visible only in the
+messages.
+
+**Repair.** Every named area is shown, with its own distance interval, and a
+message naming any western area counts as western for stratification: it is one
+this product would report on whatever else it also names.
+
+### The first draw, and what it says about stratification
+
+Recorded because it is the evidence for the change in 0.21.3.0 rather than an
+argument for it.
+
+Drawn proportionally from the design window: 42,854 resolved messages, 409 with
+unresolved tags, 633 pages refused above the holdout boundary. Fifty rows, 40
+resolved.
+
+**Not one western area among the 40.** Kharkiv, Chernihiv, Dnipropetrovsk,
+Sumy, Odesa, Zaporizhzhia, Mykolaiv, Poltava, Cherkasy. The estimate before
+drawing was one or two; the draw returned zero, which is what a 3.5% share does
+to a sample of forty.
+
+**All ten unresolved-tag rows were the same tag**,
+`Покровська_територіальна_громада`. If that holds across the 409, then T34 is
+not a tail of unresolved tags: it is one tag that the register answers four
+ways, and the cost of the refusal is concentrated rather than spread.
+
+### F83, 0.21.5.0. The cause of blindness was printed only on the path nobody runs
+
+`publish()` printed the exception that made a cycle blind under
+`if on_cycle is None`, and `mavo report --watch` - the one production entry to
+this loop - installs `announce` unconditionally. So in the mode an operator
+actually runs, every blind cycle said `feed=blind` and the reason went nowhere;
+the diagnostic existed only for a bare-library caller that does not exist.
+
+**Why it survived.** The loop's tests exercise blindness through the library
+call, most of them without a callback, which is exactly the configuration
+where the message printed. A test that installed a callback and asserted the
+message would have been red from the day the guard was written.
+
+**Class.** A rule without a reader, in code rather than prose: the guard
+encoded "do not interleave with the announcer's stdout" and delivered "tell
+nobody". The repair prints unconditionally, on stderr, so a redirected stdout
+still carries only announcements. Regression:
+`test_the_blind_cause_is_printed_even_when_a_callback_is_installed`.
+
+### F84, 0.21.5.0. A broken observer could stop the heartbeat
+
+`on_cycle` was called bare. `announce` prints to stdout; a reader that closes
+the pipe turns that print into `BrokenPipeError`, which propagated out of
+`publish()` as a stack trace with no `PublishReport` - F46's shape,
+reintroduced through the observability hook - and stopped the contract file a
+consumer depends on because a console listener went away.
+
+**Why it survived.** Every callback in the suite was a lambda that could not
+fail. The observer was treated as infrastructure and tested as a constant.
+
+**Repair, and the decision inside it.** The observer is not the product; the
+file is. A callback that raises is disabled for the rest of the run, the
+failure is printed to stderr and counted in `PublishReport.callback_failures`,
+and publishing continues. The alternative - stopping with a named reason - was
+rejected because it converts a cosmetic failure into the exact silence the
+loop exists to prevent. `KeyboardInterrupt` is deliberately not caught there:
+an operator interrupt during a callback is still an operator interrupt.
+Reopen condition: if an operator is ever observed treating a quiet console as
+a healthy loop the trade-off inverts, and the counter this repair added is how
+that observation would be made. Regression:
+`test_a_broken_callback_does_not_stop_the_heartbeat`.
+
+### F85, 0.21.5.0. The trailing counter lost the episode that outlived the window
+
+`trailing_counts` filtered events to the last seven days before folding. An
+episode opened before the cutoff had its opening aged out of the fold, so an
+oblast under one continuous alert longer than the window rendered as the
+quietest on the map, and an all-clear falling inside the window closed an
+episode the fold had never seen, so `last_alert_ended_at` went unrecorded.
+This broke the module's own stated invariant, standing since F76: an episode
+left open stays open, and the count does not understate.
+
+**Why it survived.** The cutoff regression's fixture was a single un-cleared
+ACTIVE thirty days old, asserted to count zero - which is precisely the
+open-at-the-edge case the counter was wrong about. Test data chosen by the
+implementation, measuring the code against itself: the same failure the F76
+entry describes in its own regression, one release earlier.
+
+**Repair.** The fold replays the whole log. Events before the cutoff move the
+running state without counting; an episode still open as the window begins is
+counted once as it crosses; only an episode both opened and affirmatively
+closed before the window is outside it. The consumer-visible `recent_7d`
+counts can move only upward under this change. The old fixture is replaced by
+the correct guard, an episode opened *and closed* before the window.
+Regressions: `test_an_episode_open_at_the_window_edge_still_counts`,
+`test_an_episode_straddling_the_edge_records_its_close`,
+`test_an_episode_closed_before_the_window_does_not_count`.
+
+### F86, 0.21.5.0. The alert path picked a threat kind by dict insertion order
+
+`classify_message` resolved the kind with a first-match `next()` over
+`KIND_MARKERS`, so an alert naming missiles and drones together classified as
+whichever marker happened to be defined earlier in the table. Three functions
+up, `classify_kind_message` refuses the same ambiguity outright. One
+repository, two answers to one question, and the deciding vote held by the
+order rows were typed in: a reordering of the marker table - a pure
+refactoring by every other measure - would have silently changed
+classifications.
+
+**Why it survived.** No test fed the alert path a two-kind message; the
+refusal tests all target the kind path, where the refusal existed.
+
+**Repair.** The alert path collects the set of named kinds and resolves only
+when it has exactly one, `UNKNOWN` otherwise - the same refusal, now made in
+both places. A message naming one means in two forms (`балістика` beside
+`ракета`) still resolves, because both rows name the same kind. How often the
+design window carries genuinely two-kind alerts is not measured here and is
+folded into T45's second `kind_coverage` run. Regression:
+`test_an_alert_naming_two_kinds_reports_unknown_rather_than_the_first_row`.
+
+### F87, 0.21.5.0. The fingerprint promised a comparison that did not exist
+
+The `label_sample` docstring promised from its first version that `score`
+recomputes the draw's fingerprint "and a mismatch is reported rather than
+tolerated". Nothing implemented the comparison: `draw` printed a hash to a
+terminal, the hash was stored nowhere, and `score` printed a second hash with
+nothing to compare it against. Beside it, the `post_id` column held a row
+number 1..N while the docstring said the fingerprint covers "the sampled post
+ids", and the channel's real ids - present in every block's `data-post`
+anchor - were discarded, so a sampled row was traceable only to a text prefix.
+
+**Why it survived.** T36 has never been scored, so the score path has never
+run against a real file, and the promise was checked by nobody because its
+reader was the future. The 0.21.4.0 handover names this class six times in
+one session: a rule written down and enforced by nothing is a preference.
+
+**Repair.** `draw` writes a draw record beside the CSV - seed, fingerprint
+over the sampled post ids, stratum counts - and `score` recomputes the hash
+from the file and refuses a mismatch against the record. A file without a
+record scores with a loud warning that the draw cannot be verified. The
+`post_id` column carries the channel's own ids. The sample a given seed draws
+is unchanged, so the handover's seed 20260810 remains valid; the fingerprint
+value differs from what an earlier draw printed, because it now hashes what
+the docstring always said it hashed. Also made visible: messages that resolve
+an area and are then refused by `classify` were silently dropped from the
+population, and are now counted in the draw output. Regressions in
+`tests/test_label_sample.py`.
+
+### F88, 0.21.5.0. A post repeated inside one file was counted twice, twice
+
+The F81 repair counted the corpus over distinct post ids across files, and
+left the same defect one file inward: `messages` per snapshot was `len(ids)`
+over every occurrence, and `new_messages` asked which file first carried each
+post - a test every repetition *within* that file passes. A page that repeats
+a `data-post` id would inflate both columns with nothing said.
+
+**Why it survived.** No live page has been observed doing this; the defect is
+latent, the same standing F62 had when the transport's `file://` acceptance
+was closed. It was found by reading the repair for the case beside the one it
+fixed. Contiguity was checked, cross-file disjointness was checked at
+0.21.4.0, and within-file uniqueness completed the set nobody had named.
+
+**Repair.** Ids are deduplicated per file with order kept, and the repetition
+is reported as a problem rather than absorbed, matching F81's rule that a
+duplicate is a thing an operator hears about even after the number is right.
+Regression:
+`test_a_post_repeated_inside_one_file_is_counted_once_and_reported`.

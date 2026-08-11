@@ -362,10 +362,15 @@ def classify_message(text: str, areas: AreaTable | None = None) -> tuple[AreaMen
         subject_state = AlertState.ACTIVE
     else:
         subject_state = None
-    kind = next(
-        (value for pattern, value in KIND_MARKERS.items() if pattern in text.lower()),
-        ThreatKind.UNKNOWN,
-    )
+    # F86. One kind or none, never the first row. The old `next()` resolved a
+    # message naming two means to whichever marker was defined earlier in
+    # KIND_MARKERS - a semantic decision hidden in a dict's insertion order,
+    # and the opposite of the refusal `classify_kind_message` makes for the
+    # same ambiguity three functions up. A message naming one means in two
+    # forms still resolves: the set collapses rows that name the same kind.
+    # How often the corpus does this is not measured here; see T45.
+    named = {value for pattern, value in KIND_MARKERS.items() if pattern in lowered}
+    kind = next(iter(named)) if len(named) == 1 else ThreatKind.UNKNOWN
 
     if areas is None:
         area = next(
