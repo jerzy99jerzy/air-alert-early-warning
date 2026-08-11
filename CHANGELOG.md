@@ -16,6 +16,44 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.23.1.0 - 2026-08-11
+
+**F95: a task outlived its reason and kept the reason. T8 is replaced by a
+measurement and a decision.**
+
+- **T8 justified itself with "sprint 6 assumes a Polish feed exists to switch
+  to".** Sprint 6 closed long ago and `shipped_sprints` reaches 9; the
+  acceptance clause still asked what a result "does to sprint 6", a question
+  with no addressee. The task was still worth doing and every word explaining
+  why was stale.
+- **`blocked-external (access)` was false, and the label did the damage.**
+  Nothing in T8 needs anyone's permission - RCB posts publicly, and scraping a
+  public web preview is the technique that produced this project's entire
+  Ukrainian corpus. A wrong status is worse than a wrong priority: priority
+  invites argument, status ends it. Six sprints of waiting for nobody.
+- **Two unlabelled assertions.** "RSO and NOTAM are machine readable" carried
+  no provenance in a repository where every load-bearing claim carries one, and
+  neither was reconciled with `docs/FEED-SPEC.md` when that document appeared.
+- **The acceptance was unfalsifiable in the positive direction.** "One working
+  read" does not say a read of what, resolved to what geography, at what
+  latency. FEED-SPEC section 3 defines five properties; T8 measured against
+  none of them.
+- **T8a**, the measurement: a verdict per Polish source against all five
+  properties, with a real read committed as a fixture, an area resolved to a
+  TERYT code or an explicit statement that only prose exists, latency by T40's
+  method over a week as a distribution, and the absence of a heartbeat stated
+  where there is none. **A negative result closes it and is worth as much as a
+  positive one** - it is the empirical backing FEED-SPEC currently argues
+  without. Tier 2, own action.
+- **T8b**, the decision: whether Poland enters scope. Separated because one
+  entry was carrying a measurement and a product decision, and the measurement
+  was hostage to the decision nobody was making. Gated on T8b's own blockers -
+  T8a and T6 - both of which are the project's own rather than external.
+- References repointed in `ARCHITECTURE.md`, `DECISIONS.md`, `FEED-SPEC.md` and
+  `MVP.md`. The MVP row reading "unresolved access" had inherited T8's false
+  label and is corrected in place, with the correction stated rather than the
+  words quietly swapped.
+
 ## 0.23.0.0 - 2026-08-11
 
 **S9's observability layer, against acceptance written before the code. Five of

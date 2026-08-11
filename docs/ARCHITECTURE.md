@@ -37,7 +37,7 @@ flowchart TD
         UA["alerts.in.ua adapter<br/>not yet wired, token outstanding"]
         OFF["ukrainealarm adapter<br/>not yet wired"]
         FIX["fixture.py<br/>synthetic scenarios"]
-        PL["Polish channel adapter<br/>unscheduled, T8"]
+        PL["Polish channel adapter<br/>unscheduled, T8a/T8b"]
     end
     NET --> TG
     NET -.-> UA

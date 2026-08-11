@@ -4,14 +4,14 @@
 
 ### Where the backlog stands
 
-**11 of 47 closed, 36 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**11 of 46 closed, 35 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 11 | Finished, with the release that closed it named in the entry |
 | `ready` | 27 | Nothing external blocks it; it needs a session |
 | `decision` | 3 | Waiting on a judgement rather than on work |
-| `blocked-external` | 3 | Waiting on somebody outside this project |
+| `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
 
@@ -29,7 +29,7 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 
 **Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both)
 
-**Tier 3, 11 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced)
+**Tier 3, 10 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced)
 
 ### By sprint
 
@@ -42,7 +42,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both) |
 
 <!-- index:end -->
 
@@ -235,12 +235,101 @@ a decision recorded either way about whether polling stays as the fallback path.
 The comparison is the deliverable, not the listener.
 
 
-## T8. Is there any ingestible Polish channel at all
-Status: `blocked-external` (access) [tier 3]
-Sprint 6 assumes a Polish feed exists to switch to. RSO and NOTAM are machine
-readable; RCB and the announced government application probably are not.
-**Acceptance:** one working read from at least one Polish source, or a written
-finding that none exists and what that does to sprint 6.
+## T8a. Is there any ingestible Polish source, measured against FEED-SPEC
+Status: `ready` (own action, no permission needed) [tier 2]
+
+**This replaces T8, and why it was replaced is F95.** The old entry justified
+itself with "sprint 6 assumes a Polish feed exists to switch to". Sprint 6
+closed long ago; `shipped_sprints` reaches 9. The task outlived its reason and
+kept the reason, and its acceptance clause still asked "what that does to
+sprint 6", which is a question with no addressee. It also carried
+`blocked-external (access)`, which was wrong: nothing here needs anyone's
+permission, and labelling an unstarted measurement as externally blocked is how
+it stayed unstarted for six sprints.
+
+**What is actually being asked.** Not "does a Polish channel exist" - RCB
+messages and sirens exist and reach millions. The question is whether any
+Polish source can be *consumed*, and `docs/FEED-SPEC.md` section 3 already
+defines what that means. The old acceptance said "one working read", which does
+not say a read of what, with what geography, at what latency. That looseness is
+why a positive result would have been unfalsifiable.
+
+**Measured against the five properties, one row each, verdict per source.**
+The candidates, with what the project currently believes and its provenance:
+
+| Source | Believed | Provenance |
+| --- | --- | --- |
+| RCB alert (SMS) | free text to a phone, no stream | `[reported]`, FEED-SPEC section 2 |
+| RCB's public web and social postings | unexamined | **nothing** - this is the gap |
+| RSO application | partially machine readable, not an open stream | `[assumption, unmeasured]` |
+| NOTAM | machine readable | `[assumption, unmeasured]` - the old T8 asserted this flatly and nothing measured it |
+| MSWiA application | not released | `[reported]` |
+
+**The two rows with no provenance at all are the work.** RSO and NOTAM were
+asserted machine-readable in a one-line task nobody revisited; RCB's public
+postings were never looked at, which is the odd part, because scraping a
+public web preview is exactly the technique that produced this project's entire
+Ukrainian corpus.
+
+**Acceptance, and it closes in either direction.** For each candidate, a row in
+a written finding stating its verdict on each of FEED-SPEC's five properties -
+public and unauthenticated, areas by register code, transitions in both
+directions with timestamps, versioned schema, heartbeat - with the evidence
+that produced the verdict. Plus, for any source that scores at all:
+
+- **one real read**, committed as a fixture, with the raw response kept
+- **an area resolved to a TERYT code**, or an explicit statement that only
+  prose is available and what a name matcher would cost, which is F23's
+  failure mode arriving on the Polish side
+- **latency against something independent**, using T40's method: the source's
+  own timestamp against the moment of receipt, over a week, reported as a
+  distribution rather than a best case. A single sample is an anecdote
+- **the absence of a heartbeat stated explicitly** where there is none, because
+  a source that goes quiet indistinguishably from a quiet sky is the failure
+  this project refuses everywhere
+
+**A negative result closes this task and is worth as much as a positive one.**
+"No Polish source satisfies more than one of the five, and here is the evidence
+per source" is a publishable finding, it is the empirical backing FEED-SPEC
+currently argues without, and it is the strongest possible answer to anyone
+who says the specification is asking for something already available.
+
+**What this task must not do.** It must not decide whether Poland enters the
+product. That is T8b, it depends on T6, and mixing the two is what let the
+original entry sit in tier 3 looking like a research errand.
+
+## T8b. Does Poland enter the product's scope
+Status: `decision`, blocked by T8a and T6 [tier 2]
+
+Separated from T8a on 2026-08-11 because one entry was carrying a measurement
+and a product decision, and the measurement was hostage to the decision nobody
+was making.
+
+**The decision.** Whether MAVO reports the Polish side as well as the Ukrainian
+one. Today it does not: D-015 fixes the thesis on reporting the picture across
+the border, `docs/MVP.md` places no Polish areas in any sprint, and the site's
+geometry asset carries 25 Ukrainian oblasts and no Polish voivodeship.
+
+**What makes this a decision rather than a backlog item.**
+
+- **It changes what the product is to a reader.** A page showing western
+  Ukrainian oblasts and a distance to the border is a situational instrument
+  for someone in Poland. A page showing Polish alerts is a warning service for
+  the country the reader is standing in, and the bar it will be held to is not
+  the same bar.
+- **T6 stops being a formality.** Republishing state-issued Polish alerts under
+  a private brand is the exact case where "this is not a state service" has to
+  be more than a line in a header. Nothing here should ship before T6 has an
+  answer, and T6 has no date.
+- **It doubles the source surface** for a project whose single greatest stated
+  weakness is depending on one source.
+
+**Acceptance:** an entry in `docs/DECISIONS.md` stating whether Poland is in
+scope, with the reopen condition, and - if yes - the corresponding sprint
+entries in `docs/MVP.md` and a geometry decision for the site. If no, the same
+entry records why, so the question stops being reopened by enthusiasm.
+
+**Not blocked on anything external.** Both blockers are the project's own.
 
 ## T9. Keep the coverage floor a ratchet
 Status: `debt` [tier 3]

@@ -8,7 +8,11 @@ is a weekend project, and the parser at the centre of it took two afternoons.
 Both facts are stated because the argument below rests on the second: what the
 convention enables is cheap to exploit, and that is the point. Companion:
 [`docs/CHANNEL.md`](CHANNEL.md), which is the measurement this rests on, and
-T8 in [`../TODO.md`](../TODO.md), which is where the gap was first recorded.
+T8a in [`../TODO.md`](../TODO.md), which is where the gap was first recorded.
+T8a is the measurement this document argues from and has not yet made: a
+verdict per Polish source against the five properties in section 3. Until it
+exists, section 2 rests on `[reported]` and `[assumption, unmeasured]` rows
+rather than on a survey.
 
 ```
 Note: this document describes a feed that does not exist. It is not a claim
@@ -241,7 +245,7 @@ specific. Useful forms:
   document rather than with me.
 - A concrete reason why TERYT codes in the payload are harder than they look.
 - A pointer to a Polish source that already meets some of this and that the
-  author has not found. **This would be the most useful reply of all**, and T8
+  author has not found. **This would be the most useful reply of all**, and T8a
   in the backlog exists precisely because the search was inconclusive rather
   than exhaustive.
 - Evidence that the security objection in section 5 has a stronger form than the

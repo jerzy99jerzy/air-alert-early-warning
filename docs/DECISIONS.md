@@ -192,7 +192,7 @@ rather than assumed.
 
 **What would change this.** Either service moving to its own independent
 acquisition; the ADS-B channel landing as a genuinely independent observation
-(T14); or a Polish source with a stated availability commitment (T8), any of
+(T14); or a Polish source with a stated availability commitment (T8a), any of
 which would demote this from an accepted single point of failure to one input
 among several.
 

@@ -202,8 +202,12 @@ exploit, and pretending otherwise is how five sprints becomes eight.
 - **ADS-B (T14, T20).** It was a prerequisite for a drone *alarm* tier. Under a
   reporting thesis it is enrichment: valuable, not blocking, and it would cost
   most of a sprint in ingest work.
-- **A second Polish feed (T8).** Unresolved access, and the report does not
-  depend on it.
+- **A second Polish feed (T8a, T8b).** Amended 2026-08-11. This row said
+  "unresolved access", which was inherited from T8's `blocked-external` label
+  and was wrong: the survey needs nobody's permission and had simply never been
+  done (F95). What is true is the second half - the report does not depend on
+  it, and Poland entering scope is a decision (T8b) gated on T6 rather than an
+  item this plan can absorb.
 - **The API token (T1).** Both Ukrainian feeds share one upstream (D-010) and
   the Telegram adapter already reaches it without a token.
 

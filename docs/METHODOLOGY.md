@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.23
+Document:  docs/METHODOLOGY.md, version 2.24
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -176,6 +176,7 @@ repository has come to the mistake it was built after.
 | [F92](#f92-02200-an-inference-labelled-measured-in-the-entry-about-inferences-labelled-measured) | 0.22.0.0 | An inference labelled measured, in the entry about inferences labelled measured |
 | [F93](#f93-02200-shipped_sprints-means-a-test-file-exists-and-the-status-line-read-it-as-sprints-completed) | 0.22.0.0 | shipped_sprints means a test file exists, and the status line read it as sprints completed |
 | [F94](#f94-02210-a-streaming-reader-held-its-connection-across-every-yield) | 0.22.1.0 | A streaming reader held its connection across every yield |
+| [F95](#f95-02310-a-task-outlived-its-reason-and-kept-the-reason) | 0.23.1.0 | A task outlived its reason, and kept the reason |
 
 ## Defect log
 
@@ -2526,3 +2527,68 @@ script from a directory outside the tree, so `sys.path[0]` was the script's
 directory and the installed package answered instead. Same failure as the F91
 verification. A probe that does not print `module.__file__` is not a
 measurement of the tree in front of you.
+
+### F95, 0.23.1.0. A task outlived its reason, and kept the reason
+
+T8 read, in full and unchanged since it was written:
+
+> Sprint 6 assumes a Polish feed exists to switch to. RSO and NOTAM are machine
+> readable; RCB and the announced government application probably are not.
+> **Acceptance:** one working read from at least one Polish source, or a written
+> finding that none exists and what that does to sprint 6.
+
+Sprint 6 closed a long time ago; `shipped_sprints` reaches 9. The entry
+justified itself by an assumption of a sprint that no longer exists and its
+acceptance clause asked what a result "does to sprint 6", a question with no
+addressee. **The task was still worth doing and every word explaining why was
+stale.**
+
+Three separate defects in six lines, which is what makes this worth an entry
+rather than an edit:
+
+**The reason expired and nothing noticed.** Sprints close and their tasks
+outlive them; nothing in the backlog checks whether an entry's justification
+still refers to something. `todo_index.py` verifies that the index matches the
+entries and says nothing about whether an entry still makes sense.
+
+**`blocked-external (access)` was false, and the label did the damage.** Nothing
+in T8 needs anyone's permission. RCB posts publicly, and scraping a public web
+preview is the exact technique that produced this project's entire Ukrainian
+corpus. Labelling an unstarted measurement as externally blocked put it in the
+category of things one waits for, and it was waited for across six sprints.
+**A wrong status is worse than a wrong priority**, because priority invites
+argument and status ends it.
+
+**Two flat assertions with no provenance.** "RSO and NOTAM are machine
+readable" carries no label in a repository where every load-bearing claim
+carries one, and it sat beside "RCB (…) probably are not", which at least says
+*probably*. Both were written before `docs/FEED-SPEC.md` existed and neither was
+reconciled with it when it did.
+
+**And the acceptance criterion was unfalsifiable in the positive direction.**
+"One working read" does not say a read of what, resolved to what geography, at
+what latency. FEED-SPEC section 3 defines five properties a consumable feed
+must have, and a task about consumability that does not measure against them
+would have been closed by whatever the first read happened to return.
+
+**Class: an entry whose surrounding prose stopped being true while its subject
+stayed true.** The same family as F93 - `shipped_sprints` read as sprint
+completion - in that both are documents drifting from what they describe while
+continuing to read plausibly. The difference is direction: F93 was a document
+made to agree with a field nobody had read, and this is a document left
+agreeing with a sprint nobody had reread.
+
+**Repair.** T8 is replaced by T8a, a measurement with a verdict per source
+against FEED-SPEC's five properties, promoted to tier 2 and marked as needing
+nobody's permission; and T8b, the product-scope decision, separated out because
+one entry was carrying a measurement and a decision, and the measurement was
+hostage to the decision nobody was making. Every reference in
+`ARCHITECTURE.md`, `DECISIONS.md`, `FEED-SPEC.md` and `MVP.md` is repointed,
+and `MVP.md`'s "unresolved access" row - which had inherited T8's false label -
+is corrected in place with the correction stated.
+
+**No mechanism is proposed for the general case.** A lint that checks whether a
+task's justification still refers to a live sprint is writable, and it would
+have caught this one and probably nothing else. The count is the useful part:
+one occurrence, found by reading the entry aloud when somebody finally wanted
+to do the task.
