@@ -973,3 +973,44 @@ def test_a_carried_episode_absorbs_an_in_window_one() -> None:
     assert [(c.slug, c.alerts_count) for c in counts] == [("lviv", 1)], (
         "an oblast under continuous alert across the window edge is one episode"
     )
+
+
+def test_the_interval_is_drawn_per_cycle_and_recorded(tmp_path: Path) -> None:
+    """T27. A fixed period is a beacon profile and a regular load.
+
+    The draw goes in now rather than after the first measurements, because
+    adding it later would invalidate every interval measurement taken before
+    it - and those measurements are the evidence that would justify tightening
+    the poll. Each waited interval is recorded, because a distribution nobody
+    kept is a distribution nobody can check against the configured range.
+    Mutation: sleep `interval_s` directly.
+    """
+    from mavo.report import publish
+
+    waits: list[float] = []
+    draws = iter([54.0, 66.0, 60.0])
+    outcome = publish(
+        lambda: [_event(SAMBIR, AlertState.ACTIVE, 1)],
+        tmp_path / "state.json", interval_s=60.0, max_cycles=3,
+        table=_table(), sleep=waits.append, on_cycle=lambda _r: None,
+        jitter=0.10, draw=lambda low, high: next(draws),
+    )
+    assert waits == [54.0, 66.0], "the loop must sleep what it drew"
+    assert outcome.intervals == (54.0, 66.0)
+
+
+def test_the_draw_stays_inside_the_configured_spread(tmp_path: Path) -> None:
+    """The bounds handed to the draw are the configured range, not a guess."""
+    from mavo.report import publish
+
+    seen: list[tuple[float, float]] = []
+
+    def record(low: float, high: float) -> float:
+        seen.append((low, high))
+        return low
+
+    publish(
+        lambda: [], tmp_path / "state.json", interval_s=60.0, max_cycles=2,
+        table=_table(), sleep=lambda _s: None, jitter=0.15, draw=record,
+    )
+    assert seen == [(51.0, 69.0)]

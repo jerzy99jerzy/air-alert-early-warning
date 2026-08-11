@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import sys
 import tempfile
 import time
@@ -40,6 +41,7 @@ from enum import Enum
 from pathlib import Path
 
 from mavo.areas import AreaRef, AreaTable, oblast_slug
+from mavo.obs import RunLog
 from mavo.schema import AlertState, ThreatEvent, ThreatKind, is_clear
 
 # The contract version. Bumped when a consumer could break, never silently:
@@ -54,6 +56,12 @@ SCHEMA_VERSION = 2
 # derived from the page-window arithmetic in T39, which is a margin rather
 # than a finding. [assumption, unmeasured]
 DEFAULT_VALID_FOR_S = 600
+
+#: Fractional spread on the poll interval (T27). Ten to twenty percent is what
+#: `docs/OBSERVABILITY.md` and the task both name; fifteen sits in the middle
+#: and the caller can move it. Zero is allowed and means a fixed period, which
+#: is what a measurement of the upstream's tolerance would want.
+DEFAULT_JITTER = 0.15
 
 # The trailing window the consumer shades its map by. Seven days is the
 # consumer's choice rather than a measurement, and it is published as a
@@ -526,6 +534,10 @@ class PublishReport:
     blind_cycles: int
     degraded_cycles: int
     reason: str
+    #: Every interval actually waited, in order. T27 asks that the recorded
+    #: distribution match the configured range over 72 hours, and a distribution
+    #: nobody kept is a distribution nobody can check.
+    intervals: tuple[float, ...] = ()
     # F84. The observer hook failed and was disabled; the loop kept writing.
     # Counted rather than absorbed, because a console that went quiet
     # mid-run needs an explanation the operator can find.
@@ -557,6 +569,9 @@ def publish(
     sleep: Callable[[float], None] = time.sleep,
     now: Callable[[], datetime] | None = None,
     on_cycle: Callable[[Report], None] | None = None,
+    jitter: float = DEFAULT_JITTER,
+    draw: Callable[[float, float], float] | None = None,
+    log: RunLog | None = None,
 ) -> PublishReport:
     """Write the contract on a fixed interval until a named condition stops it.
 
@@ -581,11 +596,14 @@ def publish(
     """
     table = table if table is not None else AreaTable.from_csv()
     clock = now if now is not None else (lambda: datetime.now(UTC))
+    pick = draw if draw is not None else random.uniform
+    intervals: list[float] = []
     cycles = written = blind = degraded = callback_failures = 0
     reason = f"reached max_cycles={max_cycles}"
     try:
         while max_cycles is None or cycles < max_cycles:
             cycles += 1
+            cycle_id = log.cycle_id() if log is not None else ""
             try:
                 events: Iterable[ThreatEvent] = list(load())
             except Exception as failure:  # noqa: BLE001
@@ -635,7 +653,22 @@ def publish(
                           "publishing continues without announcements",
                           file=sys.stderr, flush=True)
             if max_cycles is None or cycles < max_cycles:
-                sleep(interval_s)
+                # T27. The interval is drawn per cycle, not fixed. A fixed
+                # period is a beacon profile to anyone watching the traffic and
+                # a perfectly regular load on an upstream with which there is no
+                # agreement. It goes in now rather than later because adding it
+                # later would invalidate every interval measurement taken before
+                # it, and those measurements are the evidence that would justify
+                # tightening the poll.
+                spread = interval_s * jitter
+                waited = pick(interval_s - spread, interval_s + spread)
+                intervals.append(waited)
+                if log is not None:
+                    log.line(
+                        "publish", "publish.interval", cycle=cycle_id,
+                        base_s=interval_s, jitter=jitter, waited_s=round(waited, 3),
+                    )
+                sleep(waited)
     except KeyboardInterrupt:
         reason = "interrupted by operator"
     return PublishReport(
@@ -645,4 +678,5 @@ def publish(
         degraded_cycles=degraded,
         reason=reason,
         callback_failures=callback_failures,
+        intervals=tuple(intervals),
     )

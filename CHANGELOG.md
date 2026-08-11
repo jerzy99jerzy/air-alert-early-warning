@@ -16,6 +16,50 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.23.0.0 - 2026-08-11
+
+**S9's observability layer, against acceptance written before the code. Five of
+seven criteria met, and the two that are not are named rather than the sprint
+being rounded up.**
+
+- **`mavo/obs.py` is the sink and the only writer.** One module owns the stage
+  vocabulary, the line schema and the file handle, which makes `SCHEMA = 1` a
+  single point of change rather than a convention. Lines are one `os.write` on
+  an `O_APPEND` descriptor, so a process killed mid-run leaves the last line
+  whole or absent, never truncated (F51). Asserted against an actually killed
+  child process, not described.
+- **Unknown is a value.** `Unknown("first_poll_has_no_baseline")` serialises to
+  `null` beside a `*_reason`, and a bare `None` with no reason is dropped from
+  the line rather than written - so a consumer can never meet a null and guess
+  what it meant. The reader prints `unknown`; a rendering containing
+  `skipped=0` fails a test.
+- **T24: the sink carries no message text.** Six body-shaped field names are
+  redacted by default and the redaction is visible in the line rather than
+  silent. A hostile fixture with a canary in every body produces the canary
+  nowhere. `MAVO_LOG_BODIES=1` works and writes its own `sink.bodies_enabled`
+  line, because a switch that disables an evidential guarantee should leave a
+  mark in the record it weakened.
+- **Rotation renames, never truncates, and the retention is stated in the
+  sink's own first line**, so a reader holding one rotated file learns the
+  policy from that file rather than from documentation it may not have. A
+  fragment with no `sink.opened` line renders `retention: unknown` instead of
+  reading as a complete history.
+- **`tools/progress.py` is the reader, and nothing in the pipeline may import
+  it.** Enforced by a new `lint_domain` rule and, separately, by a test: a rule
+  with one reader survives exactly as long as that reader. A progress indicator
+  wired into the run would be a second statement about where the run is, and
+  the first thing it would do is disagree with the log.
+- **T27: the poll interval is drawn per cycle and recorded.** Default spread
+  15%, the draw injectable, every waited interval kept on `PublishReport`. It
+  goes in now because adding it later would invalidate every interval
+  measurement taken before it, and those measurements are the evidence that
+  would justify tightening the poll.
+- **Not met, and stated in `docs/OBSERVABILITY.md` beside the criteria:** the
+  degradation-notification criterion needs a notifier (S10), and the
+  live-view-agreement criterion needs a live view, which waits on `mavo watch`,
+  which waits on T25 - a decision rather than an implementation.
+- 310 tests, coverage 96.41% (Python 3.12.3, sandbox).
+
 ## 0.22.1.0 - 2026-08-11
 
 **F94: a streaming reader held its database connection across every yield, and

@@ -65,6 +65,26 @@ def check_docs_case_convention() -> list[str]:
     return problems
 
 
+def check_the_pipeline_does_not_import_its_reader() -> list[str]:
+    """No module under `mavo/` may import `tools.progress`.
+
+    `docs/OBSERVABILITY.md` section 6 asks for this and the last acceptance
+    criterion in section 9 says it is a lint rather than an intention. The
+    reason is not layering hygiene: a progress indicator wired into the run
+    would be a second statement about where the run is, and the first thing it
+    would do is disagree with the log. One writer, one record, one direction.
+    """
+    problems = []
+    for module in sorted((ROOT / "mavo").rglob("*.py")):
+        text = module.read_text(encoding="utf-8")
+        if "tools.progress" in text or "from tools import progress" in text:
+            problems.append(
+                f"{module.relative_to(ROOT)} imports the run log's reader; the "
+                "pipeline writes the record and never reads it back"
+            )
+    return problems
+
+
 def main() -> int:
     """Run every domain invariant. Returns a process exit code."""
     problems = (
@@ -72,6 +92,7 @@ def main() -> int:
         + check_single_namespace()
         + check_every_sprint_has_a_regression_file()
         + check_docs_case_convention()
+        + check_the_pipeline_does_not_import_its_reader()
     )
     for problem in problems:
         print(f"lint-domain: {problem}", file=sys.stderr)
