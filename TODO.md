@@ -4,12 +4,12 @@
 
 ### Where the backlog stands
 
-**11 of 46 closed, 35 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**11 of 47 closed, 36 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 11 | Finished, with the release that closed it named in the entry |
-| `ready` | 26 | Nothing external blocks it; it needs a session |
+| `ready` | 27 | Nothing external blocks it; it needs a session |
 | `decision` | 3 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -27,7 +27,7 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 
 **Tier 1, 7 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name)
 
-**Tier 2, 17 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement)
+**Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both)
 
 **Tier 3, 11 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced)
 
@@ -42,7 +42,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8](#t8-is-there-any-ingestible-polish-channel-at-all), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both) |
 
 <!-- index:end -->
 
@@ -1008,3 +1008,37 @@ until it happens.**
 **What would remove this task entirely.** A decision that iOS is out of scope
 (`docs/MOBILE.md` already keeps it off the M1 and M2 critical path), or
 recipients who all use Android, which is knowable only after T11.
+
+## T49. Two denominators for the western share, and one number quoted for both
+Status: `ready` (own action), **not started** [tier 2]
+
+The T36 draw on 2026-08-11 measured the design-window population directly:
+**1,006 western messages against 41,848 front-line, so 2.35% of resolved
+messages** `[measured]`. The figure this repository quotes elsewhere is 3.5%,
+which comes from `docs/CHANNEL.md` and is a share of **tag occurrences**, not
+of messages `[measured, different denominator]`.
+
+Both are correct about what they count. They are not interchangeable, and the
+direction of the gap is explained rather than mysterious: a western alert
+routinely names several raions in one message - the draw contains one naming
+seven - so the same event contributes one message and seven tag occurrences,
+which lifts the occurrence share above the message share.
+
+**Why this is a task rather than a correction.** Each sentence quoting 3.5% has
+to be read to see which quantity it meant. `mavo/areas.py` says "96.5% of tag
+occurrences", which is exact. Other places say "3.5% western" with no
+denominator at all, and those are the ones at risk: a reader takes the nearest
+available meaning, and for a sentence about traffic that is messages.
+Rewriting them to 2.35% without reading them would replace one unlabelled
+number with another.
+
+**Acceptance.** Every occurrence of 3.5% or 96.5% either names its denominator
+in the sentence or is replaced by the message-share figure with its own. A
+`lint_domain` rule refusing a bare "3.5%" near the word "western" is the
+mechanism that would keep it, and whether that rule is worth its false
+positives is part of the task rather than assumed.
+
+**Not urgent, and the reason is worth stating.** No measurement divides by
+either figure; both appear in prose describing the shape of the traffic. The
+cost is a reader's misunderstanding, not a wrong result. That is exactly the
+class F80 came from, which is why it is logged rather than left in a session.

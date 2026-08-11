@@ -16,6 +16,37 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.21.6.0 - 2026-08-11
+
+**The corpus figure is corrected on measurement, and F89: the discrepancy that
+made F81 survive was not unnoticed, it was explained.**
+
+- **61,041, measured.** `corpus_inventory` on the operator's machine: 3,062
+  pages, 61,041 distinct posts, ids 260790 to 321830, **199 posts appearing in
+  more than one snapshot across 20 files**, no contiguity gaps. Digest
+  `sha256:10266cbf...`, **unchanged**. The digest not moving is the part that
+  matters: this is the same corpus counted correctly, not a different corpus.
+  Corrected in `STATUS.json`, the README, both briefs and the kind-coverage
+  section of the methodology.
+- **F89: the gap had a story, and the story was wrong.** This document said
+  "61,240 messages ... 61,041 messages carried parseable text", presenting the
+  difference as unparseable posts. `kind_coverage` keys by post id and had
+  always counted distinct posts, and the number of posts without parseable
+  text is zero. An unnoticed discrepancy gets found by the first person who
+  lines the numbers up; a discrepancy with a plausible explanation beside it
+  never gets lined up again. The claim carried no provenance label, which is
+  the rule that would have caught it: it was an inference sitting in a
+  measurement's position.
+- **F88 closed as null on the real corpus.** No snapshot repeats a post id
+  inside itself. Recorded as a measured null rather than dropped.
+- **Also measured, and it changes a sampling assumption:** western messages are
+  1,006 of 42,854 resolved design-window messages, **2.35%**. The figure quoted
+  elsewhere, 3.5%, is a share of *tag occurrences*, not of messages, and the
+  two are not interchangeable - western alerts routinely name seven raions in
+  one message. Both denominators are legitimate; using one number for both is
+  not. Logged as T49 rather than corrected blind, because which denominator
+  each existing sentence meant has to be read, not assumed.
+
 ## 0.21.5.0 - 2026-08-11
 
 **Six defects from the 0.21.4.0 code review, F83 through F88. Two are the

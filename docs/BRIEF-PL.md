@@ -7,7 +7,7 @@ powiadomienia.**
 Dokument dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.1
+Document:  docs/BRIEF-PL.md, version 2.2
 Audience:  a Polish reader without a technical background: a journalist, an
            analyst, a prospective recipient, anyone deciding whether the
            author is careful
@@ -58,7 +58,7 @@ rzeczy nie ma w feedzie, który ten projekt czyta.
 ## Skąd dane
 
 Z jednego publicznego kanału Telegram, na którym ukraińskie służby ogłaszają
-alarmy. Zebrano **61 240 wiadomości ze 118 dni** i to jest cały materiał
+alarmy. Zebrano **61 041 wiadomości ze 118 dni** i to jest cały materiał
 dowodowy projektu.
 
 Jedno źródło to poważna słabość i jest w dokumentacji opisana jako taka. Dwa

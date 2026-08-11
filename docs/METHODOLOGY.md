@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.20
+Document:  docs/METHODOLOGY.md, version 2.21
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -170,6 +170,7 @@ repository has come to the mistake it was built after.
 | [F86](#f86-02150-the-alert-path-picked-a-threat-kind-by-dict-insertion-order) | 0.21.5.0 | The alert path picked a threat kind by dict insertion order |
 | [F87](#f87-02150-the-fingerprint-promised-a-comparison-that-did-not-exist) | 0.21.5.0 | The fingerprint promised a comparison that did not exist |
 | [F88](#f88-02150-a-post-repeated-inside-one-file-was-counted-twice-twice) | 0.21.5.0 | A post repeated inside one file was counted twice, twice |
+| [F89](#f89-02160-the-discrepancy-had-an-explanation-and-the-explanation-was-wrong) | 0.21.6.0 | The discrepancy had an explanation, and the explanation was wrong |
 
 ## Defect log
 
@@ -1547,9 +1548,16 @@ audit, and reports a missing label instead of skipping it. Held by
 ## Threat-kind coverage measurement, 2026-08-10
 
 Produced by `PYTHONPATH=. python3 tools/kind_coverage.py --raw data/raw --sample 30`
-against the corpus inventoried the same day: 3,062 pages, 61,240 messages, ids
-260790 to 321830, digest `sha256:10266cbf7753...`. 61,041 messages carried
-parseable text. The measurement is the reference point for F71 and for any
+against the corpus inventoried the same day: 3,062 pages, **61,041 distinct
+posts**, ids 260790 to 321830, digest `sha256:10266cbf7753...`. All 61,041
+carried parseable text.
+
+**This paragraph said something different until 0.21.6.0, and the difference is
+F89.** It read "61,240 messages ... 61,041 messages carried parseable text",
+which presented the gap as a parseability subset. It was not: 61,240 was the
+inventory's file-sum with 199 posts counted twice (F81), `kind_coverage` keys
+by post id and had always counted distinct posts, and the number of posts
+without parseable text is zero. The measurement is the reference point for F71 and for any
 later repair of the marker tables.
 
 | Quantity | Value | Provenance |
@@ -2221,3 +2229,45 @@ is reported as a problem rather than absorbed, matching F81's rule that a
 duplicate is a thing an operator hears about even after the number is right.
 Regression:
 `test_a_post_repeated_inside_one_file_is_counted_once_and_reported`.
+
+### F89, 0.21.6.0. The discrepancy had an explanation, and the explanation was wrong
+
+Two numbers for the size of one corpus sat in this repository for months:
+the inventory's 61,240 and `kind_coverage`'s 61,041. F81 records that neither
+was questioned. That entry is incomplete, and the missing half is the more
+useful one: **the gap was not unnoticed, it was reconciled.** The kind-coverage
+section of this document said "61,240 messages ... 61,041 messages carried
+parseable text", which makes 61,041 a subset of 61,240 defined by
+parseability, and 199 the count of messages with no readable text.
+
+Both halves of that sentence are false. `kind_coverage` keys its message map by
+post id, so it had always counted distinct posts and never occurrences; 61,041
+*is* the total, not a subset of one. And the number of posts carrying no
+parseable text is zero, measured 2026-08-11 on the same corpus and the same
+digest, so the 199 it was supposed to explain never existed on that account.
+
+**Why this is the more serious half of F81.** An unnoticed discrepancy is
+found by the first person who lines the numbers up. A discrepancy with a
+plausible explanation beside it is not found at all: the explanation is what
+stops anyone from lining them up again. The sentence was written in good
+faith - a reader who sees 61,240 and 61,041 and knows some pages carry
+non-text posts will reach for exactly this reconciliation - and it was never
+checked against the tool it described.
+
+**Class: an inference recorded in the position of a measurement.** The figure
+carried no provenance label, so nothing in the document said the subset
+relationship was reasoned rather than counted. The repository's own rule
+covers this and the rule was not applied here.
+
+**Repair.** The paragraph states the corrected figure, names all 61,041 posts
+as carrying parseable text, and records what it used to say, because deleting
+the wrong sentence would leave the correction unexplained - the third pattern
+from the 0.21.4.0 handover. The corrected total is now measured on the
+operator's machine: 3,062 pages, 61,041 distinct posts, 199 posts in more than
+one snapshot across 20 files, digest `sha256:10266cbf...` unchanged from the
+figure already in `STATUS.json`. **The digest not moving is the load-bearing
+part**: this is the same corpus counted correctly, not a different corpus.
+
+**Also measured, and null:** no snapshot repeats a post id inside itself. F88
+is closed on the real corpus and stays latent rather than becoming a second
+finding.

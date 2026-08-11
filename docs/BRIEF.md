@@ -6,7 +6,7 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.1
+Document:  docs/BRIEF.md, version 2.2
 Audience:  anyone who wants to understand this project without reading the
            code: a journalist, an analyst from another field, a prospective
            recipient, a reviewer deciding whether the author is careful
@@ -57,7 +57,7 @@ the air. None of it is in any feed this project can read.
 ## Where the data comes from
 
 One public Telegram channel on which Ukrainian services declare alerts.
-**61,240 messages across 118 days** were collected, and that is the entire
+**61,041 messages across 118 days** were collected, and that is the entire
 evidence base of the project.
 
 A single source is a serious weakness and the documentation says so. Two
