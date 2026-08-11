@@ -42,12 +42,44 @@ from pathlib import Path
 
 from mavo.areas import AreaRef, AreaTable, oblast_slug
 from mavo.obs import RunLog
-from mavo.schema import AlertState, ThreatEvent, ThreatKind, is_clear
+from mavo.schema import AlertState, AreaRole, ThreatEvent, ThreatKind, is_clear
 
 # The contract version. Bumped when a consumer could break, never silently:
 # FEED-SPEC section 3 property four is a requirement this project wrote for
 # somebody else's feed, and owing it to our own consumers is the whole point.
-SCHEMA_VERSION = 2
+#
+# v3 adds the event stream (T50, D-024). v2 carried the current picture and
+# seven-day counts and no history, so a consumer could not build a feed of
+# transitions from it however it was written.
+SCHEMA_VERSION = 3
+
+#: The short window carried inside `state.json`, fetched on every cycle.
+#:
+#: Twenty minutes rather than an hour, chosen by the operator on 2026-08-12:
+#: a dead collector empties the panel three times faster, which is a signal
+#: the page exists to deliver. The cost is that a reader whose phone slept for
+#: longer than the window cannot tell a gap from a quiet stretch, which is why
+#: `window_start` is published beside the items rather than left to be derived.
+STREAM_WINDOW_S = 1200
+
+#: The long window, written to a separate file and fetched on demand.
+#:
+#: A day, because "what happened tonight" is the question a feed panel exists
+#: to answer. Measured at roughly 800 events a day across all of Ukraine, this
+#: is about 18 KiB gzipped: cheap once, and not cheap every two minutes, which
+#: is the whole reason it is a second file rather than a longer window in the
+#: first one.
+FEED_WINDOW_S = 86400
+
+#: Safety net on either window, not a design parameter.
+#:
+#: The first proposal capped the stream at 200 events, on a figure that turned
+#: out to describe western areas only while the stream carries all of Ukraine:
+#: two denominators for one number, the shape of T49. At the observed rate a
+#: cap of 5,000 binds only at an intensity more than six times anything
+#: measured, so `truncated` firing is itself a finding about intensity rather
+#: than a daily artefact.
+STREAM_CAP = 5000
 
 # How long a report may be trusted after the observation it rests on. Chosen
 # rather than measured, and labelled as such: the poll interval that will
@@ -137,6 +169,130 @@ class AreaPicture:
 
 
 @dataclass(frozen=True, slots=True)
+class StreamEvent:
+    """One transition as a consumer reads it, in the same vocabulary as `areas`.
+
+    A projection of `ThreatEvent` rather than the event itself: the store's
+    row carries ingest time, provenance and the raw message text, none of
+    which a page renders and the last of which is somebody's words about a
+    place being shelled. What crosses the contract is what gets displayed.
+
+    `role` crosses too, deliberately. One message can clear an area and list
+    five others as still under alert, and a stream carrying only the subject
+    would drop the five that are still dangerous. This project has made that
+    loss once already (4,064 continuation areas discarded before T37).
+    """
+
+    area_id: str
+    oblast_slug: str
+    oblast_name: str
+    state: AlertState
+    kind: ThreatKind
+    role: AreaRole
+    at: datetime
+    is_western: bool
+
+    def as_item(self) -> dict[str, object]:
+        """The contract form. Field names match `areas` where they overlap."""
+        return {
+            "area_id": self.area_id,
+            "oblast": self.oblast_slug,
+            "oblast_name": self.oblast_name,
+            "alert": self.state.value,
+            "kind": self.kind.value,
+            "role": self.role.value,
+            "at": self.at.isoformat(timespec="seconds"),
+            "west": self.is_western,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class EventWindow:
+    """A bounded slice of the log, with its own left edge and its own honesty.
+
+    `window_start` is published rather than derived because a consumer needs
+    to compare it against its own last successful read: a page whose device
+    slept through part of the window must not render what it received as a
+    continuous stretch. Deriving it from `generated_at` would work only while
+    the consumer's clock and the producer's agree, and the case that matters
+    is exactly the one where the consumer has been away.
+
+    `truncated` distinguishes a window the cap cut from a window nothing
+    happened in. Without it the two are one empty-looking answer, which is
+    the unknown-never-zero invariant wearing different clothes.
+    """
+
+    window_start: datetime
+    window_s: int
+    events: tuple[StreamEvent, ...]
+    truncated: bool
+
+    def as_block(self) -> dict[str, object]:
+        """The contract form, shared by `state.json` and `feed.json`.
+
+        One vocabulary so the consumer writes one reader for both files.
+        """
+        return {
+            "window_start": self.window_start.isoformat(timespec="seconds"),
+            "window_s": self.window_s,
+            "truncated": self.truncated,
+            "items": [event.as_item() for event in self.events],
+        }
+
+
+def event_window(
+    events: Iterable[ThreatEvent],
+    *,
+    as_of: datetime,
+    window_s: int,
+    table: AreaTable,
+    cap: int = STREAM_CAP,
+) -> EventWindow:
+    """Every transition in the trailing window, oldest first, newest kept.
+
+    No filtering by area or by role: D-024 settled that the stream carries all
+    of Ukraine and both roles, and that a reader near the border is entitled to
+    see the east because a quiet twenty minutes in the west during a night the
+    east is burning is a different fact from a quiet night.
+
+    When the cap binds, the **newest** events survive. A reader opening a feed
+    during a mass alert wants the last hour, not the first, and a truncation
+    that kept the oldest would hand them the beginning of the night while the
+    night was still happening.
+    """
+    edge = as_of - timedelta(seconds=window_s)
+    inside = [event for event in events if edge <= event.ts_source <= as_of]
+    inside.sort(key=lambda event: (event.ts_source, event.area_id))
+    truncated = len(inside) > cap
+    if truncated:
+        inside = inside[-cap:]
+    projected = []
+    for event in inside:
+        area = table.by_code(event.area_id)
+        projected.append(
+            StreamEvent(
+                area_id=event.area_id,
+                oblast_slug=oblast_slug(area.oblast) if area is not None and area.oblast else "",
+                oblast_name=area.oblast if area is not None and area.oblast else "unknown",
+                state=event.state,
+                kind=event.kind,
+                role=event.role,
+                at=event.ts_source,
+                # False rather than None-propagating for an area the map
+                # cannot resolve, the same asymmetry `AreaPicture.is_western`
+                # applies: unknown is not quietly promoted into the west.
+                is_western=area is not None and area.is_western,
+            )
+        )
+    return EventWindow(
+        window_start=edge,
+        window_s=window_s,
+        events=tuple(projected),
+        truncated=truncated,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class RecentOblast:
     """How often one oblast declared an alert over the trailing window.
 
@@ -162,6 +318,14 @@ class Report:
     unresolved_areas: tuple[str, ...]
     recent: tuple[RecentOblast, ...] = ()
     trailing_days: int = DEFAULT_TRAILING_DAYS
+    #: The short window published inside `state.json` (T50).
+    stream: EventWindow | None = None
+    #: The day-long window published to `feed.json`, from the same fold.
+    feed: EventWindow | None = None
+    #: Transitions in the last 24 hours, split west and rest. The context that
+    #: keeps a twenty-minute window from being a keyhole: a quiet stream during
+    #: a night the east is burning is a different fact from a quiet night.
+    counts_24h: tuple[int, int] = (0, 0)
 
     @property
     def staleness_s(self) -> float | None:
@@ -378,6 +542,17 @@ def compose(
         )
     newest = max((e.ts_source for e in latest.values()), default=None)
     moment = as_of if as_of is not None else datetime.now(UTC)
+    # Both windows come from one fold of one log, so the feed cannot describe
+    # a moment the contract does not. Two compositions would be two pictures,
+    # and a consumer rendering history that contradicts the present would have
+    # no way to tell which half to believe.
+    feed = event_window(
+        replayed, as_of=moment, window_s=FEED_WINDOW_S, table=table
+    )
+    stream = event_window(
+        replayed, as_of=moment, window_s=STREAM_WINDOW_S, table=table
+    )
+    west = sum(1 for event in feed.events if event.is_western)
     return Report(
         as_of=moment,
         newest_observation=newest,
@@ -388,6 +563,12 @@ def compose(
             replayed, as_of=moment, days=trailing_days, table=table
         ),
         trailing_days=trailing_days,
+        stream=stream,
+        feed=feed,
+        # Counted off the day-long window rather than recomputed, so the two
+        # cannot drift. The cap can bind here in principle; when it does,
+        # `feed.truncated` says so in the same payload.
+        counts_24h=(west, len(feed.events) - west),
     )
 
 
@@ -488,6 +669,62 @@ def to_contract(report: Report) -> dict[str, object]:
             }
             for picture in report.areas
         ],
+        # v3. Always present, empty or not: an absent block and an empty one
+        # read identically to a careless consumer, and with roughly eleven
+        # events per twenty minutes the empty case is the common case at four
+        # in the morning. Nothing happened is an answer and has to look like
+        # one.
+        "events": (
+            report.stream.as_block()
+            if report.stream is not None
+            else _empty_block(report, STREAM_WINDOW_S)
+        ),
+        "counts_24h": {
+            "west": report.counts_24h[0],
+            "rest": report.counts_24h[1],
+            "total": sum(report.counts_24h),
+        },
+    }
+
+
+def _empty_block(report: Report, window_s: int) -> dict[str, object]:
+    """The window a report composed before v3 would have had.
+
+    Reports are constructed directly in a few tests and tools that predate the
+    stream. They get a well-formed empty window rather than a missing key,
+    because the consumer's contract says the block is always there.
+    """
+    return EventWindow(
+        window_start=report.as_of - timedelta(seconds=window_s),
+        window_s=window_s,
+        events=(),
+        truncated=False,
+    ).as_block()
+
+
+def to_feed(report: Report) -> dict[str, object]:
+    """The `feed.json` payload: the day-long window, fetched on demand.
+
+    A separate file rather than a longer window inside `state.json` because
+    the two have different costs. `state.json` is re-read on every cycle, so
+    what it carries is a recurring cost on a phone that may be on one bar;
+    the day of history is fetched when a reader opens the panel and then obeys
+    ordinary HTTP caching. Measured against the same budget the geometry was
+    measured against: roughly 18 KiB gzipped on a typical day, 46 KiB on a
+    campaign night [estimate, from 800 and 2,000 events respectively].
+
+    Same item vocabulary as the block inside `state.json`, so the consumer
+    writes one reader for both.
+    """
+    block = (
+        report.feed.as_block()
+        if report.feed is not None
+        else _empty_block(report, FEED_WINDOW_S)
+    )
+    return {
+        "v": SCHEMA_VERSION,
+        "generated_at": report.as_of.isoformat(timespec="seconds"),
+        **block,
     }
 
 
@@ -504,18 +741,34 @@ def write_contract(report: Report, path: Path) -> Path:
     changes is indistinguishable, to its reader, from a pipeline that died
     during a quiet hour.
     """
+    return _write_json(to_contract(report), path, prefix=".state-")
+
+
+def write_feed(report: Report, path: Path) -> Path:
+    """Write `feed.json` atomically, every cycle, changed or not.
+
+    Same guarantees as the contract and for the same reasons, because a
+    consumer polling this file has the same problem: a half-written day of
+    history is worse than yesterday's, and a file that stops being refreshed
+    must not be indistinguishable from a quiet night.
+    """
+    return _write_json(to_feed(report), path, prefix=".feed-")
+
+
+def _write_json(payload: dict[str, object], path: Path, *, prefix: str) -> Path:
+    """The atomic write both files use. One implementation, one guarantee."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(to_contract(report), ensure_ascii=False, indent=1)
+    body = json.dumps(payload, ensure_ascii=False, indent=1)
     # mkstemp rather than NamedTemporaryFile: the file must outlive the handle
     # so it can be renamed, and a context manager that deletes on close is the
     # opposite of what an atomic replace needs. Same directory as the target,
     # because rename is only atomic within a filesystem.
     descriptor, temporary = tempfile.mkstemp(
-        dir=path.parent, prefix=".state-", suffix=".tmp"
+        dir=path.parent, prefix=prefix, suffix=".tmp"
     )
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as tmp:
-            tmp.write(payload + "\n")
+            tmp.write(body + "\n")
             tmp.flush()
             os.fsync(tmp.fileno())
         os.replace(temporary, path)
@@ -572,6 +825,7 @@ def publish(
     jitter: float = DEFAULT_JITTER,
     draw: Callable[[float, float], float] | None = None,
     log: RunLog | None = None,
+    feed_path: Path | None = None,
 ) -> PublishReport:
     """Write the contract on a fixed interval until a named condition stops it.
 
@@ -629,6 +883,13 @@ def publish(
                 degraded += 1
             try:
                 write_contract(report, path)
+                # The feed rides the same cycle and the same failure. A run
+                # that kept publishing the picture while silently failing to
+                # refresh the history would leave a consumer reading a feed
+                # frozen at some earlier hour beside a present that keeps
+                # moving, with nothing in either file saying so.
+                if feed_path is not None:
+                    write_feed(report, feed_path)
             except OSError as failure:
                 reason = f"write failed: {failure}"
                 break

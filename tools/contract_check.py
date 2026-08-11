@@ -29,8 +29,22 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from mavo.areas import OBLAST_SLUGS, AreaTable  # noqa: E402
-from mavo.report import SCHEMA_VERSION, compose, to_contract, write_contract  # noqa: E402
-from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind  # noqa: E402
+from mavo.report import (  # noqa: E402
+    FEED_WINDOW_S,
+    SCHEMA_VERSION,
+    STREAM_WINDOW_S,
+    compose,
+    to_contract,
+    write_contract,
+    write_feed,
+)
+from mavo.schema import (  # noqa: E402
+    AlertState,
+    AreaRole,
+    Provenance,
+    ThreatEvent,
+    ThreatKind,
+)
 
 WEBAPP = Path(__file__).resolve().parent.parent / "docs" / "WEBAPP.md"
 
@@ -39,12 +53,22 @@ WEBAPP = Path(__file__).resolve().parent.parent / "docs" / "WEBAPP.md"
 KNOWN_SLUGS = frozenset(OBLAST_SLUGS.values())
 
 REQUIRED_TOP = ("v", "generated_at", "valid_for_s", "state", "observation_age_s",
-                "source_last_message_at", "window_days", "recent_7d", "areas")
+                "source_last_message_at", "window_days", "recent_7d", "areas",
+                "events", "counts_24h")
+REQUIRED_STREAM = ("window_start", "window_s", "truncated", "items")
+REQUIRED_ITEM = ("area_id", "oblast", "oblast_name", "alert", "kind", "role",
+                 "at", "west")
 REQUIRED_AREA = ("katottg", "area_id", "oblast", "oblast_name", "alert", "kind",
                  "since", "border_km_lower", "border_km_upper")
 
 
-def _event(code: str, state: AlertState, minutes: int, now: datetime) -> ThreatEvent:
+def _event(
+    code: str,
+    state: AlertState,
+    minutes: int,
+    now: datetime,
+    role: AreaRole = AreaRole.SUBJECT,
+) -> ThreatEvent:
     stamp = now - timedelta(minutes=minutes)
     return ThreatEvent(
         area_id=code,
@@ -54,6 +78,7 @@ def _event(code: str, state: AlertState, minutes: int, now: datetime) -> ThreatE
         source_id="contract-check",
         kind=ThreatKind.MISSILE,
         provenance=Provenance.REPORTED,
+        role=role,
     )
 
 
@@ -72,6 +97,12 @@ def check_contract() -> list[str]:
     events = [
         _event(subject.code, AlertState.ACTIVE, 5, now),
         _event("UA00000000000000000", AlertState.ACTIVE, 5, now),  # unresolvable
+        # A continuation, so the role check above has something to find. A
+        # fixture that carried only subjects would make that check unable to
+        # fail, which is F44's rule: a probe whose negative result is
+        # indistinguishable from its positive one is not a probe.
+        _event(western[1].code if len(western) > 1 else subject.code,
+               AlertState.ACTIVE, 4, now, role=AreaRole.CONTINUATION),
     ]
     report = compose(events, as_of=now, table=table)
     with tempfile.TemporaryDirectory() as directory:
@@ -110,6 +141,64 @@ def check_contract() -> list[str]:
     else:
         if unresolved[0].get("oblast_name") != "unknown":
             problems.append("an unresolvable oblast must print as unknown, not blank")
+
+    # v3. The stream is a contract of its own and gets its own reading.
+    stream = payload.get("events")
+    if not isinstance(stream, dict):
+        problems.append("the event stream must be an object, present even when empty")
+    else:
+        for key in REQUIRED_STREAM:
+            if key not in stream:
+                problems.append(f"event stream is missing {key!r}")
+        if stream.get("window_s") != STREAM_WINDOW_S:
+            problems.append(
+                f"stream window {stream.get('window_s')} != {STREAM_WINDOW_S}"
+            )
+        for item in stream.get("items", []):
+            for key in REQUIRED_ITEM:
+                if key not in item:
+                    problems.append(f"stream item is missing {key!r}")
+            slug = item.get("oblast", "")
+            # Same join as `areas`, and the same defect if it is a display
+            # name: a consumer colouring a feed row by oblast joins on this.
+            if slug and slug not in KNOWN_SLUGS:
+                problems.append(f"stream item oblast {slug!r} is not a register slug")
+            if item.get("role") not in ("subject", "continuation"):
+                problems.append(f"stream item role {item.get('role')!r} is not a role")
+        # The stream carries both roles by decision (D-024). A build that
+        # filtered to subjects would pass every shape check above and drop the
+        # areas a message says are still under alert.
+        roles = {item.get("role") for item in stream.get("items", [])}
+        if "continuation" not in roles:
+            problems.append(
+                "the stream carried no continuation event; the check's own "
+                "fixture provides one, so this means they are being filtered"
+            )
+
+    counts = payload.get("counts_24h")
+    if not isinstance(counts, dict):
+        problems.append("counts_24h must be an object")
+    elif counts.get("total") != counts.get("west", 0) + counts.get("rest", 0):
+        problems.append("counts_24h total does not equal west plus rest")
+
+    # `feed.json` is a second file with the same vocabulary, so a consumer
+    # writes one reader. A divergence here would be discovered by the consumer
+    # rather than by this gate, which is the arrangement D-020 exists to avoid.
+    with tempfile.TemporaryDirectory() as directory:
+        feed_path = write_feed(report, Path(directory) / "feed.json")
+        feed = json.loads(feed_path.read_text(encoding="utf-8"))
+    for key in REQUIRED_STREAM:
+        if key not in feed:
+            problems.append(f"feed is missing {key!r}")
+    if feed.get("window_s") != FEED_WINDOW_S:
+        problems.append(f"feed window {feed.get('window_s')} != {FEED_WINDOW_S}")
+    if feed.get("v") != SCHEMA_VERSION:
+        problems.append(f"feed version {feed.get('v')} != {SCHEMA_VERSION}")
+    if feed.get("generated_at") != payload.get("generated_at"):
+        problems.append(
+            "the feed and the contract describe different moments; they must "
+            "come from one composition"
+        )
 
     # Nulls must survive as nulls. A consumer renders null as unknown and 0 as
     # a measurement, and the difference is the founding invariant.

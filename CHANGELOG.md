@@ -16,6 +16,51 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.25.0.0 - 2026-08-12
+
+**T50, partial: the contract carries history. Schema v3, and the site cannot
+read it yet.**
+
+- **`state.json` v3 adds `events`, a twenty-minute window of every transition,
+  and `counts_24h`.** v2 carried the current picture and seven-day counts and
+  no history, so a consumer could not build a panel of what happened tonight
+  however the page was written. The contract belongs to the producer (D-020),
+  so the absence was ours.
+- **`feed.json` is a second file over twenty-four hours, from the same
+  composition.** Two files rather than one longer window because the costs
+  differ: `state.json` is re-read every cycle by every open tab, `feed.json` is
+  fetched when a reader opens the history. Roughly 800 events a day is about
+  18 KiB gzipped, against 0.3 KiB per cycle for the short window.
+- **The stream carries all of Ukraine and both roles.** Filtering to the west
+  was drafted and rejected: a quiet twenty minutes in the west while the east
+  is burning is a different fact from a quiet night. Filtering to `subject`
+  would drop the areas a message names as still under alert, which is the loss
+  this repository made once already before T37.
+- **The cap is 5,000, not the 200 first proposed.** That 200 rested on a
+  figure describing western areas while the stream carries all of them: two
+  denominators for one number, the shape of T49. Measured, production ingested
+  27 events in 97 minutes on 2026-08-11, about 400 a day. A cap binding every
+  day makes `truncated` permanently true and therefore useless.
+- **`window_start` is published rather than derived.** A consumer compares it
+  against its own last successful read and refuses to render continuity across
+  a hole. Twenty minutes is short enough that a phone asleep in a pocket
+  crosses it, which is the cost of the operator's choice of window and the
+  reason the field exists.
+- **The window block is always present, empty or not.** An absent block and an
+  empty one read alike to a careless consumer, and at eleven events per twenty
+  minutes the empty case is the common case at four in the morning.
+- `tools/contract_check.py` reads the stream, the items, the roles, the counts
+  and the second file, and its fixture carries a continuation event so the
+  role check can fail. Four mutations verified red: filtering to subjects,
+  truncating the newest instead of the oldest, widening the window to an hour,
+  and dropping `window_start`.
+- **Not shipped, and named in T50 rather than rounded off:** the deprecation
+  policy for v2, and a size measurement under a mass alert rather than a quiet
+  night.
+- **This release must not reach production alone.** `mavo-site` 3.0.0.0
+  refuses a version it does not know, by design. The producer and the site go
+  out in one window.
+
 ## 0.24.2.0 - 2026-08-12
 
 **F97: replay dropped a row when a sort-key tie straddled a chunk boundary.**

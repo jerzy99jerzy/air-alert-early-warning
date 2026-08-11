@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.5
+Document:  docs/DECISIONS.md, version 2.6
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -724,3 +724,64 @@ had been quietly passing ever since.
 have. In that case the old implementation stays reachable under a name that
 says what it is (`classify_with_the_pre_sprint7_table`), never under a default,
 and the name carries the release in which it goes.
+
+## D-024. The event stream: two files, a twenty-minute window and a day
+
+**Decision.** The contract gains an event stream at schema v3, published in two
+places from one composition. `state.json` carries `events`, a twenty-minute
+window of every transition, with `window_start` beside it. `feed.json` carries
+the same shape over twenty-four hours. Both carry **all of Ukraine** and
+**both roles**, `subject` and `continuation`. A cap of 5,000 events applies to
+either window, with `truncated` in the payload when it binds.
+
+**Why a stream at all.** `state.json` v2 carried the current picture and
+seven-day counts and no history. A consumer cannot build a panel of what
+happened tonight from a picture of now, however the page is written, and the
+contract belongs to the producer (D-020), so the absence was ours to fix
+rather than the site's to work around.
+
+**Why two files rather than one longer window.** They have different costs.
+`state.json` is re-read on every cycle and every open tab pays for it; a day of
+history there is a recurring charge on a phone that may be on one bar during
+exactly the night it matters. `feed.json` is fetched when a reader opens the
+history and then obeys ordinary HTTP caching. Measured against the same budget
+as the geometry: roughly 800 events a day is about 18 KiB gzipped, 1.2 seconds
+on 120 kbit/s once, against 0.3 KiB per cycle for the short window.
+
+**Why twenty minutes and not sixty.** Operator's decision, 2026-08-12. A dead
+collector empties the panel three times faster, and the panel emptying is a
+signal the page exists to deliver. The cost is that a device asleep for longer
+than the window cannot distinguish a gap from a quiet stretch, which is why
+`window_start` is published rather than left to be derived: the consumer
+compares it against its own last successful read and refuses to render
+continuity across a hole.
+
+**Why all of Ukraine, and not the west.** The first draft filtered to the eight
+western oblasts on a bandwidth argument. Measured, that argument was weak:
+1.2 seconds once on the worst line this project designs for. The stronger
+reason against filtering is that a quiet twenty minutes in the west during a
+night when the east is burning is a different fact from a quiet night, and a
+reader near the border is entitled to both. `counts_24h` splits west from rest
+so the page can say which it is.
+
+**Why both roles.** One message can clear an area and list five others as still
+under alert: one `subject`, five `continuation`. A stream carrying only
+subjects would drop the five areas that are still dangerous. This repository
+has already made that loss once, in the 4,064 continuation areas discarded
+before T37, and F82 is the same family.
+
+**Why the cap is 5,000 rather than 200.** The first proposal said 200, on a
+figure of "a dozen transitions a day". That figure described **western** areas
+while the stream carries **all** of Ukraine: two denominators for one number,
+the shape of T49. Measured: production ingested 27 events in 97 minutes on
+2026-08-11, which is about 400 a day, and the per-message estimate over the
+corpus gives about 800. A 200-event cap would have bound every single day,
+which makes it a window with a misleading name and makes `truncated`
+permanently true and therefore useless. At 5,000 the cap binds only above six
+times anything measured, so `truncated` firing is itself a measurement.
+
+**What would reopen it.** `truncated` going true, which turns the cap from a
+safety net into a design parameter and means the window needs re-thinking
+rather than raising. Or a measurement showing consumers fetch `feed.json` far
+more often than the design assumes, which would collapse the cost argument for
+the split.

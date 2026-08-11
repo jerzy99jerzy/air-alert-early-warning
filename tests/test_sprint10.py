@@ -25,6 +25,7 @@ from pathlib import Path
 from mavo.areas import AreaTable
 from mavo.report import (
     DEFAULT_VALID_FOR_S,
+    SCHEMA_VERSION,
     FeedState,
     Report,
     compose,
@@ -222,7 +223,7 @@ def test_the_contract_carries_its_schema_version_and_heartbeat() -> None:
         compose([_event(SAMBIR, AlertState.ACTIVE, 1, ThreatKind.MISSILE)],
                 as_of=NOW, table=_table())
     )
-    assert payload["v"] == 2
+    assert payload["v"] == SCHEMA_VERSION
     assert payload["generated_at"] == NOW.isoformat(timespec="seconds")
     assert payload["valid_for_s"] == DEFAULT_VALID_FOR_S
     assert payload["state"] == "ok"
@@ -256,7 +257,7 @@ def test_writing_the_contract_is_atomic_and_leaves_no_partial_file(
     report = compose([_event(SAMBIR, AlertState.ACTIVE, 1)], as_of=NOW, table=_table())
     write_contract(report, target)
     payload = json.loads(target.read_text(encoding="utf-8"))
-    assert payload["v"] == 2
+    assert payload["v"] == SCHEMA_VERSION
     leftovers = [p.name for p in target.parent.iterdir() if p.name != "state.json"]
     assert leftovers == [], f"temporary files survived the write: {leftovers}"
 

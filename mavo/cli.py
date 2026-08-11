@@ -26,6 +26,7 @@ from mavo.evaluate import run_policy, run_rule
 from mavo.policy import Regime, policy_of
 from mavo.report import (
     DEFAULT_VALID_FOR_S,
+    FEED_WINDOW_S,
     SCHEMA_VERSION,
     FeedState,
     Report,
@@ -33,6 +34,7 @@ from mavo.report import (
     publish,
     render_text,
     write_contract,
+    write_feed,
 )
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
 from mavo.sources.fixture import FixtureSource, generate_history
@@ -239,6 +241,7 @@ def _cmd_report(args: argparse.Namespace) -> int:
             max_cycles=args.max_cycles,
             valid_for_s=args.valid_for,
             on_cycle=announce,
+            feed_path=Path(args.feed) if args.feed else None,
         )
         print(outcome.line())
         # A loop that ends is not an error: it was told to stop, or the
@@ -251,6 +254,15 @@ def _cmd_report(args: argparse.Namespace) -> int:
     if args.json:
         written = write_contract(report, Path(args.json))
         print(f"contract={written} v={SCHEMA_VERSION}")
+    if args.feed:
+        # Announced with its own line and its own count, because a feed file
+        # that exists and is empty is a different state from one that was
+        # never asked for, and an operator reading stdout should not have to
+        # infer which happened.
+        events = len(report.feed.events) if report.feed is not None else 0
+        written_feed = write_feed(report, Path(args.feed))
+        print(f"feed={written_feed} v={SCHEMA_VERSION} events={events} "
+              f"window={FEED_WINDOW_S}s")
     return {FeedState.OK: 0, FeedState.DEGRADED: 5, FeedState.BLIND: 6}[report.feed_state]
 
 
@@ -318,6 +330,12 @@ def build_parser() -> argparse.ArgumentParser:
     report_cmd.add_argument("--store", required=True, help="path to the event store")
     report_cmd.add_argument(
         "--json", help="also write the state.json contract file to this path"
+    )
+    report_cmd.add_argument(
+        "--feed",
+        help="also write the feed.json event history to this path "
+             "(24 hours, all areas, both roles; fetched on demand by a "
+             "consumer rather than on every cycle)",
     )
     report_cmd.add_argument(
         "--valid-for", type=int, default=DEFAULT_VALID_FOR_S,

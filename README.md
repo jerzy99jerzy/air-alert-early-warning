@@ -3,7 +3,7 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 314](https://img.shields.io/badge/tests-314-brightgreen)](tests/)
+[![tests 328](https://img.shields.io/badge/tests-328-brightgreen)](tests/)
 [![coverage 96.48%](https://img.shields.io/badge/coverage-96.48%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
 [![defects logged 78](https://img.shields.io/badge/defects%20logged-78-informational)](docs/METHODOLOGY.md)
@@ -387,10 +387,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 18 | 4,539 |
-| Tests | 37 | 5,618 |
-| Tools | 15 | 3,820 |
-| Documentation | 42 | 15,221 |
+| Package `mavo/` | 18 | 4,818 |
+| Tests | 38 | 5,861 |
+| Tools | 15 | 3,909 |
+| Documentation | 43 | 15,463 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -401,12 +401,12 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 314, of which 13 are scripted attacks |
+| Tests | 328, of which 13 are scripted attacks |
 | Coverage | 96.48% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 78, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 23 |
+| Decisions recorded with reopen conditions | 24 |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 

@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.3 / 2026-08-10
+Version: 2.4 / 2026-08-12
 Status: **built, in a separate repository.** `mavo-site` 1.2.0.0 exists, runs
 and carries its own gate, its own defect log and its own audit. Everything
 described here was read out of that package rather than remembered: where this
@@ -47,9 +47,18 @@ lives above the fold rather than in a footer.
 
 ## The contract, and who owns it
 
-One file, `state.json`, schema v1. MAVO writes it (`mavo report --json`, and
-`--watch` for the loop); the site reads it and imports nothing from this
-package. D-020 records why: the site previously reached into the event store
+Two files, `state.json` and `feed.json`, schema v3. MAVO writes them
+(`mavo report --json ... --feed ...`, and `--watch` for the loop); the site
+reads them and imports nothing from this package.
+
+**Two files rather than one, and the reason is cost rather than tidiness.**
+`state.json` is re-read on every cycle, so whatever it carries is a recurring
+charge on a phone that may be on one bar at four in the morning; it therefore
+carries the current picture and a twenty-minute window of transitions, about
+eleven events. `feed.json` carries the last twenty-four hours, roughly 800
+events on a typical day and about 18 KiB gzipped, and a consumer fetches it
+when a reader opens the history rather than on every cycle. D-024 records the
+decision and the measurements behind it. D-020 records why: the site previously reached into the event store
 through an adapter labelled `[inference]`, which put the schema in the hands of
 the party that could not check it.
 
@@ -59,7 +68,7 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 
 | Field | Meaning | The trap |
 | --- | --- | --- |
-| `v` | Schema version | A reader that ignores it breaks silently on v2 |
+| `v` | Schema version | A reader that ignores it breaks silently on the next bump |
 | `generated_at` | When this picture was composed | Not when the source last spoke |
 | `valid_for_s` | How long it may be trusted | Currently 600, an assumption rather than a measurement |
 | `state` | `ok`, `degraded` or `blind` | The page's headline follows this, not the length of `areas` |
@@ -73,6 +82,15 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `recent_7d[]` | Per-oblast alert count over that window | Counts *declarations*, not days under alert: one six-day alert is one declaration, not six |
 | `border_km_lower` / `_upper` | Interval to the border, may be `null` | A single number here would be false with a decimal point on it |
 | `kind` | `missile`, `drone`, `glide_bomb`, `artillery`, `unknown` | Five values, and the consumer currently labels three. See below |
+| `events` | The twenty-minute window, **always present** | An absent block and an empty one read alike to a careless reader. Empty means nothing happened, and the page must say so in words |
+| `events.window_start` | Left edge of the window | Published rather than derived: a consumer compares it against its own last successful read, and a device that slept through part of the window must not render what it got as continuous |
+| `events.window_s` | 1200 | Twenty minutes. A dead collector empties the panel three times faster than an hour would |
+| `events.truncated` | Whether the cap bound | `false` on any night measured so far. `true` is a finding about intensity, not a daily artefact |
+| `events.items[]` | One entry per transition, oldest first | Carries **both roles**. One message can clear an area and list five others as still under alert; keeping only the subject drops the five that are still dangerous |
+| `items[].role` | `subject` or `continuation` | See above. This project has already made that loss once |
+| `items[].west` | Whether the area is in the eight western oblasts | A flag to colour by, not a filter applied here: the stream carries all of Ukraine |
+| `items[].at` | The source's time for the transition | Not ingest time. The difference is the feed latency |
+| `counts_24h` | `west`, `rest`, `total` over the day | The context that keeps a twenty-minute window from being a keyhole: a quiet stream while the east is burning is a different fact from a quiet night |
 
 ## Three states, three different sentences
 
