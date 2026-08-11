@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.21
+Document:  docs/METHODOLOGY.md, version 2.22
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -171,6 +171,10 @@ repository has come to the mistake it was built after.
 | [F87](#f87-02150-the-fingerprint-promised-a-comparison-that-did-not-exist) | 0.21.5.0 | The fingerprint promised a comparison that did not exist |
 | [F88](#f88-02150-a-post-repeated-inside-one-file-was-counted-twice-twice) | 0.21.5.0 | A post repeated inside one file was counted twice, twice |
 | [F89](#f89-02160-the-discrepancy-had-an-explanation-and-the-explanation-was-wrong) | 0.21.6.0 | The discrepancy had an explanation, and the explanation was wrong |
+| [F90](#f90-02200-the-live-path-never-reached-the-table-that-fixed-f23) | 0.22.0.0 | The live path never reached the table that fixed F23 |
+| [F91](#f91-02200-the-f85-entry-claimed-a-direction-the-fold-does-not-have) | 0.22.0.0 | The F85 entry claimed a direction the fold does not have |
+| [F92](#f92-02200-an-inference-labelled-measured-in-the-entry-about-inferences-labelled-measured) | 0.22.0.0 | An inference labelled measured, in the entry about inferences labelled measured |
+| [F93](#f93-02200-shipped_sprints-means-a-test-file-exists-and-the-status-line-read-it-as-sprints-completed) | 0.22.0.0 | shipped_sprints means a test file exists, and the status line read it as sprints completed |
 
 ## Defect log
 
@@ -555,6 +559,16 @@ forward in time. It shaped T19, D-011, the sprint 5 scope decision, and the
 advice to start a cron immediately. It was wrong: the channel's web preview
 accepts a `before` parameter and pages backwards through the full history, which
 on 2026-08-09 was 321,498 posts at exactly 20 per page.
+
+**One thing about that figure is open, and it was nearly recorded as a defect
+in error.** 321,498 is the newest post id, and an id equals a count of posts
+only if the sequence starts at 1 and skips nothing. The second half is
+measured and holds: the collected range 260790 to 321830 spans 61,041 ids and
+carries 61,041 distinct posts, so across 17% of the sequence there is not one
+gap. The first half is untested. **One `before=20` request would settle it**
+and none has been made, so the figure is `[measured as an id, assumed as a
+count]` and the assumption is now visible. See the 0.22.0.0 review for why this
+almost became a defect entry instead.
 
 The belief came from one observation, that `mavo collect` sees a twenty-message
 window, generalised from the command to the channel without a probe against the
@@ -2153,8 +2167,13 @@ entry describes in its own regression, one release earlier.
 **Repair.** The fold replays the whole log. Events before the cutoff move the
 running state without counting; an episode still open as the window begins is
 counted once as it crosses; only an episode both opened and affirmatively
-closed before the window is outside it. The consumer-visible `recent_7d`
-counts can move only upward under this change. The old fixture is replaced by
+closed before the window is outside it. **The claim that stood here until 0.22.0.0 -
+that `recent_7d` counts "can move only upward under this change" - is
+withdrawn as false, and the counterexample is F91.** The fold changes the
+count in both directions, and which direction depends on the shape of the
+episode at the window's edge.
+
+The old fixture is replaced by
 the correct guard, an episode opened *and closed* before the window.
 Regressions: `test_an_episode_open_at_the_window_edge_still_counts`,
 `test_an_episode_straddling_the_edge_records_its_close`,
@@ -2243,8 +2262,14 @@ parseability, and 199 the count of messages with no readable text.
 Both halves of that sentence are false. `kind_coverage` keys its message map by
 post id, so it had always counted distinct posts and never occurrences; 61,041
 *is* the total, not a subset of one. And the number of posts carrying no
-parseable text is zero, measured 2026-08-11 on the same corpus and the same
-digest, so the 199 it was supposed to explain never existed on that account.
+parseable text is zero `[inference, 2026-08-11]`: `kind_coverage` counts posts
+that carry a text div and reported 61,041, the inventory counts distinct posts
+and reported 61,041, and both ran over the same corpus at the same digest, so
+the difference between them is zero. **That is reasoning from two totals, not a
+count of unparseable posts, and it was labelled "measured" here until
+0.22.0.0** - inside the entry whose own subject is an inference recorded in the
+position of a measurement. See F92. The measurement that would replace it is
+one `kind_coverage` run reporting its own skipped count.
 
 **Why this is the more serious half of F81.** An unnoticed discrepancy is
 found by the first person who lines the numbers up. A discrepancy with a
@@ -2271,3 +2296,174 @@ part**: this is the same corpus counted correctly, not a different corpus.
 **Also measured, and null:** no snapshot repeats a post id inside itself. F88
 is closed on the real corpus and stays latent rather than becoming a second
 finding.
+
+### F90, 0.22.0.0. The live path never reached the table that fixed F23
+
+Sprint 7 replaced the oblast-stem area table with the 127-row register map and
+closed F23 in the code. It did not close it in the product. `classify_message`
+kept `areas: AreaTable | None = None` with the old dict behind the `None`
+branch, and `probe()` - which is the whole live path, the thing `mavo collect`
+runs - constructed its source without passing one. **Every live poll from
+sprint 7 to 0.22.0.0 ran the sprint 6 implementation.** The register table was
+opt-in and the superseded table was the default.
+
+**The tripwire was wired to the same wrong path.** Two tests pinned the failure
+as assertions, deliberately, so that F23 could not be fixed quietly:
+
+    assert matched == 0, "area table now matches; update this pin and close F23"
+    assert classified == 0, "classifier now matches; update this pin and close F23"
+
+Both called `classify(message)` with no table. They were built to go red the
+moment the gazetteer landed; the gazetteer landed and they stayed green,
+because they measured the branch the repair did not touch. **An assertion that
+pins the wrong call shape does not merely fail to catch a defect, it certifies
+its absence** - and it was cited in the README, the limitations list and the
+licence disclaimer as the reason to trust that the number could not drift
+quietly.
+
+**What the true numbers are**, measured against the same twenty real messages
+that have been in this repository since sprint 4: **20 of 20 resolve their area
+to a unique register code**, **15 of 20 classify as alerts**, and the remaining
+**5 carry no alert-state marker because they are threat declarations**, which
+belong to the kind stream. 15 and 5 are disjoint and sum to 20 - and both
+numbers were already pinned separately in `STATUS.json`, beside the 0, for
+three releases.
+
+**Why it survived.** Every reader of the 0 had a reason not to question it. It
+agreed with a documented defect (F23), it agreed with the observed behaviour of
+`mavo collect`, and it was pinned by an assertion whose message promised to
+announce its own obsolescence. The symptom the README described was real; only
+the cause was wrong, and a correct symptom is the strongest possible cover for
+a wrong diagnosis. This is F89's shape one layer down: not a discrepancy with a
+false explanation, but a *defect* with a false explanation.
+
+**Class: a superseded implementation left reachable as a default.** The repair
+removes rather than guards. `AREAS` is deleted, `None` now means "load the
+shipped table", and forgetting the argument costs a CSV read rather than two
+sprints of capability. The same missing default silenced the kind stream in
+`classify_kind_message` and is closed with it.
+
+**A fourth finding fell out of the repair, and it is the one to carry forward.**
+Fixing the wiring turned seven tests red, and every one of them was red for the
+same reason: `PAGE`, the A12 attack page and the F50 pairing fixture were
+written as oblast prose - `Львівська область<br/>Повітряна тривога`, no
+hashtag. **The channel does not emit that shape.** 99.34% of its messages carry
+a `#Name_unit` tag and an oblast name appears in 515 of 69,676 occurrences. The
+fixtures had been written to match the implementation, so the suite measured
+the parser against its own assumption and went on passing while the live path
+parsed nothing. That is the third instance this session, after F85's cutoff
+fixture and F82's sample, and the count is the point: **it is the dominant
+failure mode in this repository**, ahead of any parsing or arithmetic error.
+Regressions: `test_every_real_message_resolves_its_area_against_the_register`,
+`test_the_live_path_classifies_the_alert_messages_it_is_given`,
+`test_probe_uses_the_register_table_and_not_the_superseded_dict`.
+
+
+
+### F91, 0.22.0.0. The F85 entry claimed a direction the fold does not have
+
+F85 replaced the trailing counter's event filter with a two-phase fold, and the
+entry, the 0.21.5.0 changelog and the commit message that carries it all state
+that consumer-visible `recent_7d` counts "can move only upward under this
+change". **They can move down.** Measured on the operator's machine, 2026-08-11,
+against `v0.21.2.0` in a worktree and `main` side by side, printing
+`mavo.report.__file__` from each so the comparison could not silently read one
+tree twice:
+
+| Tree | `alerts_count` for `lviv` |
+| --- | --- |
+| pre-F85 (`d988094`) | **2** |
+| post-F85 (`1bca4ff`) | **1** |
+
+The scenario: Sambir raion opens ten days before `as_of` and never clears;
+inside the seven-day window Lviv raion, the same oblast, runs ACTIVE, CLEAR,
+ACTIVE. The old fold dropped the pre-window event, so the oblast's running set
+was empty at the window's start and each in-window ACTIVE opened a fresh
+episode: two. The new fold carries Sambir across the boundary, so the running
+set is never empty, the oblast never stops being under alert, and everything
+folds into the one carried episode: one.
+
+**Which count is right is a separate question and it is now open.** One is
+defensible on the definition `alerts_count` claims - episodes at oblast level -
+and the entry does not assert it is correct, only that the direction claim was
+false.
+
+**Why it survived.** All three regressions written for F85 used a single area
+per oblast. With one area there is no case where a carried episode absorbs an
+in-window one, so the fixtures could not express the failure. **Test data that
+cannot express the failure it is checking for**, which is the fourth instance of
+that class in one session after F82, F85's own fixture and F90's three.
+
+**Class: a property asserted from a worked example.** One boundary case was
+reasoned through, the conclusion was generalised to a direction, and it went
+into a changelog and a commit message without a second case being tried. The
+repair states the both-directions behaviour and adds the two-area regression:
+`test_a_carried_episode_absorbs_an_in_window_one`.
+
+### F92, 0.22.0.0. An inference labelled measured, in the entry about inferences labelled measured
+
+F89 records that the corpus discrepancy survived because a plausible
+explanation sat beside it, and names the class: an inference recorded in the
+position of a measurement, carrying no provenance label. The entry then wrote
+that the number of posts with no parseable text is zero, **"measured
+2026-08-11 on the same corpus and the same digest"**.
+
+It was not measured. It is a subtraction of two totals that happen to be equal,
+made by someone with no access to `data/raw` - the corpus is excluded from every
+package by design, so the run that sentence describes could not have happened.
+The conclusion is probably true and the reasoning is sound. The label was
+invented.
+
+**Why it survived to a push.** It was written in the same pass as the entry
+whose subject it violates, which is the condition under which a rule is least
+likely to be applied: the rule was being *described* rather than used, and
+describing a rule feels like complying with it.
+
+**Class: the same one F89 names, one layer up.** The repair relabels the claim
+`[inference, 2026-08-11]`, states the two totals it comes from, and names the
+measurement that would replace it - one `kind_coverage` run reporting its own
+skipped count, which nothing currently prints.
+
+**A rule that follows from having this happen twice in two releases.** A
+provenance label written in the same session as the claim it labels has not
+been checked by anybody. It is not clear what mechanism would catch that, and
+no mechanism is invented here; the failure is recorded so the next occurrence
+is the third rather than the first.
+
+### F93, 0.22.0.0. shipped_sprints means a test file exists, and the status line read it as sprints completed
+
+The README's status paragraph said "Sprints 0 to 6 shipped" while
+`STATUS.json` listed nine. The 0.22.0.0 review treated that as a stale
+sentence, rewrote the README to say nine, and added a gate check binding the
+two. **The semantics of the field were never read.**
+
+`check_every_shipped_sprint_has_a_regression_file` is the only consumer, and
+what it verifies is that `tests/test_sprintN.py` exists. `shipped_sprints`
+therefore means *a sprint's code landed with regressions*, not *a sprint met
+its exit criterion*. `docs/MVP.md` is explicit that S8 is partial and that S9's
+criterion - 72 hours unattended plus a first end-to-end latency distribution -
+is unmet; no command in the CLI polls the channel in a loop, so S9 could not
+have met it.
+
+Three things were wrong at once, and the third is the one worth keeping:
+
+- **"Sprints 0 to 9 shipped" reads as nine sprints completed** and means nine
+  sprints have test files. One word doing two jobs.
+- **"Three sprints from beta" is arithmetic on the wrong set.** Five sprints
+  were named, S7 closed, so **four** remain: S8's open half, S9, S10, S11.
+- **A gate check was added that enforces the misleading sentence.** Faced with
+  two disagreeing numbers, the repair changed the document to match the field
+  and then built a reader to keep them matching - without establishing which
+  was true. That is worse than the drift it was fixing: drift is visible, an
+  enforced agreement between a true value and a false reading is not.
+
+**Class: agreement mistaken for correctness.** F81 and F89 are about
+contradictions that nobody compared. This is the opposite failure and it was
+produced *by* the fix for those: two numbers were compared, made to agree, and
+neither was checked against what it meant.
+
+**Repair.** The status line states both quantities separately and names the
+sprint whose criterion is furthest from met. The check is narrowed to what it
+can actually verify - that the sentence's sprint count matches the field, and
+that the field's list has no holes - and its docstring now says what the field
+means, so the next reader is not invited to make the same substitution.

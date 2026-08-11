@@ -542,6 +542,53 @@ def check_cited_tests_exist() -> list[str]:
     return problems
 
 
+def check_the_readme_status_agrees_with_the_shipped_sprints(
+    status: dict[str, object],
+) -> list[str]:
+    """The README's status line must count the same sprints STATUS.json does.
+
+    **What ``shipped_sprints`` means, because reading it wrong is F93.** The
+    field's only other consumer checks that ``tests/test_sprintN.py`` exists,
+    so a sprint is in this list when its code landed with regressions. It does
+    **not** mean the sprint met the exit criterion in ``docs/MVP.md``. This
+    check verifies only that the README's "Sprints 0 to N shipped" quotes the
+    same N as the field. It cannot verify the completion claim beside it, and
+    an earlier version of this docstring implied it could.
+
+    The README said "Sprints 0 to 6" while the field listed nine, and nothing
+    compared them for three releases - the F81 and F89 shape, in the first
+    paragraph a reader sees. The repair for that drift then made the document
+    agree with the field without checking what the field meant, which is F93
+    and is the reason this docstring is longer than the check.
+
+    The list must also be contiguous: "0 to N" is a truthful summary only over
+    a list with no holes, and a hole is a sprint whose file was never written.
+    """
+    shipped = status.get("shipped_sprints")
+    if not isinstance(shipped, list) or not shipped:
+        return ["STATUS.json carries no shipped_sprints list"]
+    numbers = sorted(int(value) for value in shipped)
+    problems = []
+    if numbers != list(range(numbers[0], numbers[-1] + 1)):
+        problems.append(
+            f"shipped_sprints has a hole: {numbers}. A gap is a sprint that was "
+            "skipped or rounded up, and the README summary cannot describe it"
+        )
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    claimed = re.search(r"Sprints 0 to (\d+) shipped", readme)
+    if claimed is None:
+        problems.append(
+            "the README status line no longer says 'Sprints 0 to N shipped'; "
+            "this check reads that sentence and cannot verify a rephrasing"
+        )
+    elif int(claimed.group(1)) != numbers[-1]:
+        problems.append(
+            f"the README says sprints 0 to {claimed.group(1)} shipped, "
+            f"STATUS.json lists up to {numbers[-1]}"
+        )
+    return problems
+
+
 def check_the_holdout_boundary_survives_in_the_corpus_block(
     status: dict[str, object],
 ) -> list[str]:
@@ -604,6 +651,7 @@ def main() -> int:
         + check_major_releases_carry_a_review()
         + check_corpus_measurements_carry_an_inventory(status)
         + check_the_holdout_boundary_survives_in_the_corpus_block(status)
+        + check_the_readme_status_agrees_with_the_shipped_sprints(status)
         + check_defect_count_is_pinned(status)
         + check_statistics_match_the_tree(status)
         + check_measured_block_is_recomputed(status)

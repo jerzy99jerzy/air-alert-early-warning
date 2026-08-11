@@ -96,10 +96,14 @@ def test_classify_prefers_the_tag_over_the_oblast_table(table: AreaTable) -> Non
     """
     text = "Львівська область #Харківський_район Повітряна тривога"
     tagged = classify(text, table)
-    untagged = classify(text)
-    assert tagged is not None and untagged is not None
-    assert tagged[0] != untagged[0], "the tag must decide, or sprint 7 changed nothing"
+    assert tagged is not None
     assert tagged[0].startswith("UA")
+    # The tag names a Kharkiv-oblast raion; the prose names Lviv oblast. The
+    # resolved area must belong to the oblast the tag asserts.
+    area = table.by_code(tagged[0])
+    assert area is not None and area.oblast == "Харківська", (
+        "the tag must decide, or sprint 7 changed nothing"
+    )
 
 
 def test_an_unknown_tag_does_not_become_an_outage(table: AreaTable) -> None:
@@ -147,4 +151,10 @@ def test_f60_an_unknown_tag_does_not_fall_back_to_the_oblast_table(table: AreaTa
     """
     text = "Львівська область #Вигаданський_район Повітряна тривога"
     assert classify(text, table) is None
-    assert classify(text) is not None, "the fallback must still work without tags"
+    # Amended at 0.22.0.0 (F90). The second half of this assertion used to read
+    # `classify(text) is not None`, checking that the untabled path still
+    # produced the oblast guess. That path was the pre-sprint-7 implementation
+    # reachable by forgetting an argument, and `probe` forgot it, so the guess
+    # this test was protecting the product from was what the product shipped.
+    # The fallback is gone; an untabled call now resolves the same way.
+    assert classify(text) is None, "no caller may reach the oblast guess"

@@ -65,18 +65,13 @@ _TIME = re.compile(r'<time[^>]*datetime="([^"]+)"')
 _TAG = re.compile(r"<[^>]+>")
 _BR = re.compile(r"<br\s*/?>", re.I)
 
-# Area patterns. Unverified against live traffic; see the module docstring.
-AREAS: dict[str, str] = {
-    "волин": "volyn",
-    "льв": "lviv",
-    "закарпат": "zakarpattia",
-    "рівнен": "rivne",
-    # "тернопіль" is not listed beside "тернопіл": the longer stem is a
-    # superstring of the shorter, so it can never match a text the shorter
-    # missed. A dead row in a measured pattern table is noise (F50 review).
-    "тернопіл": "ternopil",
-    "івано-франків": "ivano-frankivsk",
-}
+# The oblast-stem area table lived here until 0.22.0.0 and is deleted rather
+# than kept beside its replacement. It scored 0 of 20 against real channel
+# content (F23) because the channel names raions and hromadas, and it survived
+# sprint 7 as the `areas=None` default - which `probe`, the whole live path,
+# selected by omission (F90). A superseded implementation left reachable is not
+# a fallback, it is the version that ships to whoever forgets an argument.
+# `AreaTable.from_csv()` is the only area table now.
 
 START_MARKERS = ("повітряна тривога", "оголошено тривогу")
 CLEAR_MARKERS = ("відбій тривоги", "відбій повітряної тривоги")
@@ -300,9 +295,8 @@ def classify_kind_message(
     kind = next(iter(kinds))
     state = KindState.LIFTED if lifting else KindState.DECLARED
 
-    if areas is None:
-        return ()
-    resolved, _unknown = areas.resolve_all(text)
+    # F90, same default. A missing table used to silence the kind stream too.
+    resolved, _unknown = (areas if areas is not None else AreaTable.from_csv()).resolve_all(text)
     return tuple(
         (ref.code, oblast_slug(ref.oblast), kind, state) for ref in resolved
     )
@@ -372,18 +366,16 @@ def classify_message(text: str, areas: AreaTable | None = None) -> tuple[AreaMen
     named = {value for pattern, value in KIND_MARKERS.items() if pattern in lowered}
     kind = next(iter(named)) if len(named) == 1 else ThreatKind.UNKNOWN
 
-    if areas is None:
-        area = next(
-            (code for pattern, code in AREAS.items() if pattern in text.lower()), None
-        )
-        state = classify_state(text)
-        if area is None or state is None:
-            return ()
-        return (AreaMention(area, "", state, kind, AreaRole.SUBJECT),)
-
-    resolved, unknown = areas.resolve_all(text)
+    # F90. `areas=None` used to mean "fall back to the oblast-stem dict", which
+    # made the superseded implementation the default and the shipped register
+    # table the opt-in. Every caller that forgot the argument - `probe`, and the
+    # two tests built to announce F23's closure - got sprint 6 behaviour and no
+    # indication of it. None now means "load the shipped table", so forgetting
+    # the argument is slow rather than wrong.
+    table = areas if areas is not None else AreaTable.from_csv()
+    resolved, unknown = table.resolve_all(text)
     split = CONTINUES.search(text)
-    still_running = areas.resolve_prose(text[split.end() :]) if split else ()
+    still_running = table.resolve_prose(text[split.end() :]) if split else ()
     continuing = {ref.code for ref in still_running}
 
     mentions: list[AreaMention] = []
@@ -449,7 +441,13 @@ class TelegramChannelSource:
     ) -> None:
         self.transport = transport
         self.url = url
-        self.areas = areas
+        # F90. This used to store the argument as given, and `probe` - the whole
+        # live path, the thing `mavo collect` runs - passed nothing, so every
+        # live poll ran the pre-sprint-7 oblast dict while the 127-row register
+        # table sat unreachable. The default is now the shipped table: an
+        # omitted argument costs a CSV read rather than two sprints of
+        # capability.
+        self.areas = areas if areas is not None else AreaTable.from_csv()
         # T16. The kind stream from the most recent poll, beside the alert
         # stream rather than inside it. Empty until the first poll, like report.
         self.kind_events: tuple[KindEvent, ...] = ()
@@ -496,9 +494,8 @@ class TelegramChannelSource:
             time_match = _TIME.search(block)
             text = _strip(text_match.group(1)).strip() if text_match else "(no text div)"
             ts = _parse_timestamp(time_match.group(1)) if time_match else None
-            if self.areas is not None:
-                _resolved, unknown = self.areas.resolve_all(text)
-                unknown_tags.extend(tag for tag in unknown if tag not in unknown_tags)
+            _resolved, unknown = self.areas.resolve_all(text)
+            unknown_tags.extend(tag for tag in unknown if tag not in unknown_tags)
             declarations = classify_kind_message(text, self.areas)
             if ts is not None and declarations:
                 # T16. The second stream. Kept beside `poll`'s return value

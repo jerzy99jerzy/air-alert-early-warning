@@ -36,6 +36,7 @@ from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind
 
 NOW = datetime(2026, 8, 10, 23, 41, tzinfo=UTC)
 SAMBIR = "UA46080000000017237"   # Sambirskyi raion, touches the border
+LVIV_RAION = "UA46060000000042587"  # Lvivskyi raion, same oblast as SAMBIR (F91)
 YAVORIV = "UA46140000000036328"  # Yavorivskyi raion
 KHARKIV = "UA63120270000028556"  # front-line, 850+ km away
 # The pair that separates the two sortings: Sarnenskyi's nearest edge is closer
@@ -940,3 +941,35 @@ def test_an_episode_closed_before_the_window_does_not_count() -> None:
         _event(SAMBIR, AlertState.CLEAR, 60 * 24 * 9),
     ]
     assert trailing_counts(events, as_of=NOW, table=_table()) == ()
+
+
+def test_a_carried_episode_absorbs_an_in_window_one() -> None:
+    """F91. The count moves in both directions, and the F85 entry said one.
+
+    Every F85 regression used a single area per oblast, and with one area a
+    carried episode can never absorb an in-window one, so the fixtures could
+    not express this at all. Two areas of one oblast: the first opens before
+    the window and never clears, the second runs ACTIVE, CLEAR, ACTIVE inside
+    it. The oblast never stops being under alert, so this is one episode.
+
+    The pre-F85 fold answered 2 here, because it dropped the pre-window event
+    and started a fresh episode on each in-window ACTIVE. Verified on the
+    operator's machine against `d988094` in a worktree, 2 against 1.
+
+    This test asserts the current behaviour and pins the direction question
+    rather than settling it: if `alerts_count` should count in-window openings
+    rather than oblast-level episodes, this is the test that has to change, and
+    changing it should be a decision rather than a fix.
+    """
+    from mavo.report import trailing_counts
+
+    events = [
+        _event(SAMBIR, AlertState.ACTIVE, 60 * 24 * 10),
+        _event(LVIV_RAION, AlertState.ACTIVE, 60 * 24 * 5),
+        _event(LVIV_RAION, AlertState.CLEAR, 60 * 24 * 4),
+        _event(LVIV_RAION, AlertState.ACTIVE, 60 * 24 * 3),
+    ]
+    counts = trailing_counts(events, as_of=NOW, table=_table())
+    assert [(c.slug, c.alerts_count) for c in counts] == [("lviv", 1)], (
+        "an oblast under continuous alert across the window edge is one episode"
+    )

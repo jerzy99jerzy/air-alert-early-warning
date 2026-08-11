@@ -220,17 +220,20 @@ def test_a12_the_footer_time_cannot_shift_onto_a_neighbour() -> None:
     txt = '<div class="tgme_widget_message_text js-message_text">'
     page = (
         '<div class="tgme_widget_message" data-post="air_alert_ua/601">'
-        f"{txt}🔴 Львівська область Повітряна тривога</div>"
+        f"{txt}🔴 Повітряна тривога в Львівський район #Львівський_район</div>"
         '<time datetime="2026-09-01T21:04:00+00:00"></time></div>'
         '<div class="tgme_widget_message" data-post="air_alert_ua/602">'
-        f"{txt}🔴 Волинська область Повітряна тривога</div>"
+        f"{txt}🔴 Повітряна тривога в Луцький район #Луцький_район</div>"
         '<time datetime="2026-09-01T21:11:00+00:00"></time></div>'
     )
     source = TelegramChannelSource(StubTransport(page))
     stamped = {event.area_id: event.ts_source.isoformat() for event in source.poll()}
+    # Codes rather than the old `lviv`/`volyn` slugs: this attack's page was
+    # written in oblast prose, a shape the channel does not emit, so it was
+    # exercising the parser against the fixture's own assumption (F90).
     assert stamped == {
-        "lviv": "2026-09-01T21:04:00+00:00",
-        "volyn": "2026-09-01T21:11:00+00:00",
+        "UA46060000000042587": "2026-09-01T21:04:00+00:00",
+        "UA07080000000034745": "2026-09-01T21:11:00+00:00",
     }, "a footer timestamp crossed a message boundary"
 
 
@@ -256,7 +259,11 @@ def test_a13_an_unknown_tag_is_not_replaced_by_a_prose_guess() -> None:
     table = AreaTable.from_csv()
     misleading = "Львівська область #Вигаданський_район Повітряна тривога"
     assert classify(misleading, table) is None, "a prose guess replaced an unknown tag"
-    assert classify(misleading) is not None, "the untagged fallback must still work"
+    # F90 widened this. The oblast fallback the attack targeted was not merely
+    # reachable when a caller opted out of the table: it was what `probe` ran,
+    # so the live path was the attack's own scenario. The fallback is removed
+    # rather than guarded, and no call shape reaches a prose guess.
+    assert classify(misleading) is None, "no call shape may reach the oblast guess"
 
 
 def test_a14_a_still_dangerous_area_is_not_silently_dropped() -> None:

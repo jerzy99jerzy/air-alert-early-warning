@@ -16,6 +16,75 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.22.0.0 - 2026-08-11
+
+**F90: the live path never reached the table that fixed F23, and the assertion
+built to announce that fix was wired to the same wrong path.**
+
+- **Sprint 7 closed F23 in the code and not in the product.** `probe()` is the
+  whole live path - `mavo collect` runs it - and it constructed its source
+  without an area table. The `None` default selected the sprint 6 oblast-stem
+  dict, so the 127-row register map shipped in sprint 7 was opt-in and the
+  superseded table was what every live poll ran, for two sprints.
+- **The tripwire certified the defect's absence.** Two assertions pinned `0 of
+  20` with the message "update this pin and close F23", written so the fix
+  could not be made quietly. Both called `classify(message)` with no table.
+  They were designed to go red when the gazetteer landed; it landed and they
+  stayed green. The README, the limitations list and the licence disclaimer all
+  cited that pin as the reason the number could not drift.
+- **The true numbers, on the same twenty real messages held since sprint 4:**
+  20 of 20 resolve their area to a unique register code, 15 of 20 classify as
+  alerts, and the other 5 carry no alert-state marker because they are threat
+  declarations belonging to the kind stream. 15 and 5 are disjoint, sum to 20,
+  and were both already pinned in `STATUS.json` beside the 0.
+- **Repair removes rather than guards.** `AREAS` is deleted, `None` means "load
+  the shipped table", and the same missing default that silenced the kind
+  stream in `classify_kind_message` is closed with it. A superseded
+  implementation left reachable is not a fallback; it is the version that ships
+  to whoever forgets an argument.
+- **Seven tests went red on the repair, all for one reason.** `PAGE`, the A12
+  attack page and the F50 pairing fixture were written as oblast prose with no
+  hashtag - a shape this channel does not emit, since 99.34% of its messages
+  carry a tag and oblast names appear in 515 of 69,676 occurrences. The
+  fixtures had been written to match the implementation. **Third instance this
+  session** after F85's cutoff fixture and F82's sample, which makes it the
+  dominant failure mode in this repository rather than a recurring accident.
+  All three fixtures are rewritten to the live shape.
+- **F91, F92, F93: three claims this release's own review made and did not
+  measure, two of them already pushed.** F91: the F85 entry, the 0.21.5.0
+  changelog and its commit message all say `recent_7d` counts "can move only
+  upward"; they can move down, measured 2 to 1 on the operator's machine
+  against `d988094` in a worktree, and the regression that would have caught it
+  could not exist because every F85 fixture used one area per oblast. F92: the
+  F89 entry, whose subject is an inference recorded in the position of a
+  measurement, labelled its own inference "measured 2026-08-11" - a run that
+  was impossible, since `data/raw` is in no package. F93: `shipped_sprints`
+  means a test file exists, not that a sprint met its exit criterion; the
+  status paragraph was made to agree with it without that being read, said
+  "three sprints from beta" where four remain, and a gate check was added
+  enforcing the misleading sentence.
+- **One defect entry withdrawn before release rather than shipped.** A draft of
+  this release logged 321,498 as a post id standing in for a count of posts, on
+  the reasoning that Telegram ids include deletions. The corpus contradicts it:
+  61,041 ids span exactly 61,041 posts, no gap across 17% of the sequence. The
+  entry is removed, the original sentence restored, and the real open question -
+  whether the sequence starts at 1, which one `before=20` request settles - is
+  stated with the assumption made visible.
+- **The README status paragraph is rewritten and now has a reader.** It said
+  "Sprints 0 to 6 shipped" while `STATUS.json` listed nine, "five sprints from
+  beta" after S7 closed, and described the corpus as retrievable rather than
+  collected. `docs_audit` gains
+  `check_the_readme_status_agrees_with_the_shipped_sprints`, which also refuses
+  a sprint list with a hole in it, because "0 to N" is only truthful over a
+  contiguous list. Mutation observed red.
+- **The disclaimer's claim is replaced with a stronger true one.** It said the
+  classifier scored 0 of 20; it now says no hand-checked correctness rate
+  exists for the western areas this product is built for, which is the actual
+  reason not to deploy it for someone else's safety.
+- 287 tests, coverage 96.34% (Python 3.12.3, sandbox). `classifier_hit_rate_on_
+  real_messages` is removed from `STATUS.json` and replaced by the two figures
+  that measure the shipped path.
+
 ## 0.21.6.0 - 2026-08-11
 
 **The corpus figure is corrected on measurement, and F89: the discrepancy that

@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.4
+Document:  docs/DECISIONS.md, version 2.5
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -694,3 +694,33 @@ three times running, which would suggest the trigger is wrong rather than the
 practice. Or a move to release trains, where the unit worth reviewing stops
 being the version number.
 
+
+## D-022. A default argument may not select a superseded implementation
+
+Sprint 7 replaced the oblast-stem area table with the register map and left the
+old one behind `areas=None`. `probe()` - the whole live path - passed nothing,
+so the product ran the superseded implementation for two sprints while the
+repair sat one argument away (F90).
+
+**The decision.** When an implementation is replaced, the old one is deleted in
+the same release. A caller that has not been updated fails loudly or does the
+new thing; it never silently gets the old behaviour. A `None` default that
+means "use the version we stopped believing in" is the worst available option,
+because it is invisible at every call site and reads as a convenience.
+
+**Why not a deprecation warning instead.** A warning printed by a library into
+a process nobody is watching is the same class of mechanism as the assertion
+that failed here: it addresses a reader who is not there. Deleting the code
+makes the compiler and the test suite the readers, and both are present.
+
+**What this cost, stated so the cost is not forgotten.** Deleting `AREAS`
+turned seven tests red, and repairing them meant rewriting three fixtures. That
+work was not incidental to the deletion; it *was* the deletion doing its job,
+surfacing the tests that had been written against the old implementation and
+had been quietly passing ever since.
+
+**What would reopen it.** A replacement that genuinely needs a migration window
+- an external consumer on the old behaviour, which this project does not yet
+have. In that case the old implementation stays reachable under a name that
+says what it is (`classify_with_the_pre_sprint7_table`), never under a default,
+and the name carries the release in which it goes.

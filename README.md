@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 286](https://img.shields.io/badge/tests-286-brightgreen)](tests/)
-[![coverage 96.22%](https://img.shields.io/badge/coverage-96.22%25-brightgreen)](Makefile)
+[![tests 288](https://img.shields.io/badge/tests-288-brightgreen)](tests/)
+[![coverage 96.34%](https://img.shields.io/badge/coverage-96.34%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 70](https://img.shields.io/badge/defects%20logged-70-informational)](docs/METHODOLOGY.md)
+[![defects logged 74](https://img.shields.io/badge/defects%20logged-74-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -33,13 +33,24 @@ import namespace is `mavo` because it must be unique rather than descriptive. Th
 codename lives in documentation and conversation. Stated here rather than left
 implicit, because that is where the inconsistency otherwise lives.
 
-Status: pre-alpha, five sprints from beta on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate. Sprints 0 to 6 shipped. A live Telegram adapter is wired;
-measured against real channel content its classifier scored **0 of 20**, and the
-failure is pinned as assertions. The redesign waits for a corpus rather than a
-schedule (D-011), because fitting to the twenty messages in hand would repeat
-the defect it would claim to fix. The corpus is now retrievable rather than
-awaited: `mavo backfill` pages backwards through the channel's history, which
-was 321,498 posts on 2026-08-09.
+Status: pre-alpha, **four sprints from beta** on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate. **Sprints 0 to 9 shipped**, where shipped means the code landed with its regression file - which is what `STATUS.json` records and all it records. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S7.** S8 is half met and declared half met; S9 is further from its criterion than S8, because that criterion needs 72 hours unattended and a first end-to-end latency distribution, and no command in this repository polls the channel in a loop yet. The two counts were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
+
+Area resolution works against real channel content and the number that used to
+sit here was wrong. **20 of 20 real messages resolve their area to a unique code
+in the Ukrainian state register; 15 of those 20 are alerts and all 15 classify;
+the other 5 are threat declarations, which belong to the kind stream rather than
+the alert stream.** This README claimed **0 of 20** until 0.22.0.0. That figure
+was measured on a code path the product does not run: `probe` built its source
+without an area table, the `None` default selected the oblast-stem table
+superseded in sprint 7, and the two tests written to announce F23's closure
+called the same untabled path, so the tripwire stayed green and confirmed the
+wrong thing for two sprints (F90). The table was right and the call was not.
+
+What is still not measured is the part that matters most: **no hand-checked
+correctness rate exists for western areas**, which are the only ones this
+product is for. The sample is drawn and its draw is fingerprinted (T36); it is
+not yet scored, and until it is, every correctness claim here is about
+mechanism rather than about accuracy.
 
 ---
 
@@ -129,8 +140,8 @@ the unit word is explicit, so nothing has to be inferred. There are **127
 distinct tags across 99 nights**, and **126 of them resolve to a unique code in
 the Ukrainian state register** (`data/reference/tag_map.csv`).
 
-This explains F23 rather than merely recording it. The shipped table searched
-for oblast names in message text and scored 0 of 20; the channel emits an oblast
+This explains F23 rather than merely recording it. The table shipped in sprint 6
+searched for oblast names in message text and scored 0 of 20; the channel emits an oblast
 tag in 515 of 69,676 occurrences and names raions the rest of the time. The
 table could not have scored above zero, and the problem was never an incomplete
 vocabulary.
@@ -260,12 +271,13 @@ mavo collect --save-raw data/raw
 mavo backfill --out data/raw/corpus --pages 5 --delay 1.0
 ```
 
-Expect `mavo collect` to report roughly twenty messages and **parse almost none
-of them**. That is not a broken install, it is F23 printing itself: the shipped
-area table keys on oblast names and the channel emits raions and hromadas, so
-classification fails by construction and the redesign is the next sprint. The
-unparsed count is the number to read, and its being visible rather than absent
-is the design. `skipped=unknown` on a single poll is the same discipline: one
+Expect `mavo collect` to report roughly twenty messages and **parse most of
+them**, the misses being threat declarations rather than alerts. Until 0.22.0.0
+this paragraph told you to expect almost nothing to parse and blamed F23: the
+area table keying on oblast names. That was the right symptom and the wrong
+cause. The table had keyed on register codes since sprint 7; `probe` called it
+without one (F90). The unparsed count is still the number to read, and its being
+visible rather than absent is the design. `skipped=unknown` on a single poll is the same discipline: one
 invocation has no previous poll to compare against, and unknown is never
 printed as zero.
 
@@ -375,10 +387,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 17 | 4,090 |
-| Tests | 36 | 4,895 |
-| Tools | 14 | 3,609 |
-| Documentation | 39 | 13,962 |
+| Package `mavo/` | 17 | 4,087 |
+| Tests | 36 | 5,040 |
+| Tools | 14 | 3,657 |
+| Documentation | 40 | 14,410 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -389,12 +401,12 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 286, of which 13 are scripted attacks |
-| Coverage | 96.22% against a floor of 95, a ratchet that is never lowered |
+| Tests | 288, of which 13 are scripted attacks |
+| Coverage | 96.34% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 70, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 22 |
+| Defects logged with their class | 74, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 23 |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
@@ -454,8 +466,13 @@ A number appears in this documentation only when the code produced it.
   `R1-border-active`, with a lift lower bound of 1.69 against a floor of 1.50.
   The margin is thin, one night either way moves it, and synthetic history says
   nothing about the world.
-- The classifier hit rate on real channel content is **0 of 20**, pinned as
-  assertions so it cannot be fixed quietly. See F23 in `docs/METHODOLOGY.md`.
+- Area resolution on real channel content is **20 of 20**, and alert
+  classification **15 of 20**, the five remainders being declarations. Pinned as
+  assertions. The **0 of 20** this bullet carried until 0.22.0.0 measured a call
+  shape the product does not use, and the assertion built to flip when F23 was
+  fixed called that same shape, so it never flipped (F90 in
+  `docs/METHODOLOGY.md`). Pinning a number is not the same as pinning the number
+  the product produces.
 - The harness is mutation-verified as of 0.4.0.0, after slipping twice. Ten
   controls disabled one at a time; the guarding attack must go red. **The first
   run killed 7 of 10**, and the three survivors were defects in the attacks
@@ -489,8 +506,9 @@ waives attribution and that it waives the disclaimer, and it waives neither.
 **What the disclaimer means in this particular case**, since this is warning
 software: the licence's "AS IS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND"
 is not boilerplate to skim past. This tool is pre-alpha, it has never delivered
-a warning to anyone, its classifier scored 0 of 20 against real messages, and
-its threat-kind tables cover roughly one alert in ten (F71). Anyone deploying
+a warning to anyone, **no hand-checked correctness rate exists for the western
+areas it is built for**, and its threat-kind tables cover roughly one alert in
+ten (F71). Anyone deploying
 it for someone else's safety is taking a decision the author has not taken and
 would want to be asked about first.
 

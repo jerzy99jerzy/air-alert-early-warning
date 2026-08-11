@@ -4,9 +4,15 @@ from __future__ import annotations
 
 import pytest
 
+from mavo.areas import AreaTable
 from mavo.errors import SourceUnavailable
 from mavo.schema import AlertState, ThreatKind, ThreatSource
-from mavo.sources.telegram import TelegramChannelSource, classify, probe
+from mavo.sources.telegram import (
+    TelegramChannelSource,
+    classify,
+    classify_state,
+    probe,
+)
 from mavo.transport import FailingTransport, StubTransport
 
 TXT = '<div class="tgme_widget_message_text js-message_text">'
@@ -28,14 +34,31 @@ def _message(post_id: int, when: str, text: str) -> str:
     )
 
 
+# Rewritten at 0.22.0.0, and the rewrite is part of F90. These three messages
+# used to be written as oblast prose - `Львівська область<br/>Повітряна
+# тривога` - with no hashtag, which is the shape the sprint-6 oblast-stem dict
+# could read and **not a shape this channel emits**: 99.34% of messages carry a
+# `#Name_unit` tag and an oblast name appears in 515 of 69,676 occurrences
+# (`docs/CHANNEL.md`). The fixture was written to match the implementation, so
+# the suite measured the parser against its own assumption and went on passing
+# while the live path parsed nothing - the same pattern as F85's cutoff fixture
+# and F82's sample. These are the live shape: subject in prose, area in the tag.
+LVIV = "UA46060000000042587"
+LUTSK = "UA07080000000034745"
+
 PAGE = "".join(
     [
         _message(
             101,
             "2026-09-01T21:04:00+00:00",
-            "🔴 Львівська область<br/>Повітряна тривога. Ракетна небезпека",
+            "🔴 Повітряна тривога в Львівський район. Ракетна небезпека"
+            "<br/>#Львівський_район",
         ),
-        _message(102, "2026-09-01T21:11:00+00:00", "🟢 Волинська область<br/>Відбій тривоги"),
+        _message(
+            102,
+            "2026-09-01T21:11:00+00:00",
+            "🟢 Відбій тривоги в Луцький район<br/>#Луцький_район",
+        ),
         _message(103, "2026-09-01T21:20:00+00:00", "Підтримати проєкт можна тут"),
     ]
 )
@@ -53,13 +76,13 @@ def test_parses_an_active_alert_with_its_means() -> None:
     events = list(_source().poll())
     active = [event for event in events if event.state is AlertState.ACTIVE]
     assert len(active) == 1
-    assert active[0].area_id == "lviv"
+    assert active[0].area_id == LVIV
     assert active[0].kind is ThreatKind.MISSILE
 
 
 def test_parses_an_all_clear_as_clear_not_as_absence() -> None:
     (clear,) = [event for event in _source().poll() if event.state is AlertState.CLEAR]
-    assert clear.area_id == "volyn"
+    assert clear.area_id == LUTSK
 
 
 def test_unclassified_messages_are_counted_not_dropped() -> None:
@@ -133,31 +156,88 @@ def test_state_markers_are_correct_against_real_messages() -> None:
     assert matched == 15
 
 
-def test_area_table_fails_totally_against_real_messages() -> None:
-    # F23, pinned as a measurement rather than described in prose. The channel
-    # names raions and hromadas, never oblasts, so an oblast-keyed table cannot
-    # match by construction. This assertion flips when the gazetteer lands, and
-    # flipping it is the point: it will not be possible to fix F23 quietly.
-    from mavo.sources.telegram import AREAS
+def test_every_real_message_resolves_its_area_against_the_register() -> None:
+    """F23 closed, and F90 is why it stayed open on paper for two sprints.
 
-    matched = sum(
-        any(pattern in message.lower() for pattern in AREAS)
-        for message in _real_messages()
+    The pin this replaces asserted 0 of 20 and carried the message "update this
+    pin and close F23", built to flip the moment the gazetteer landed. The
+    gazetteer landed in sprint 7 and it did not flip, because both this test
+    and `probe` called `classify` without an area table, and the None default
+    selected the superseded oblast-stem dict. The tripwire was wired to the
+    path the repair did not touch.
+
+    Measured against the same twenty real messages that have been in this
+    repository since sprint 4: **20 of 20 carry a tag that resolves to a unique
+    register code.** Mutation: pass `None` instead of the table; this returns
+    to zero, which is the defect.
+    """
+    table = AreaTable.from_csv()
+    resolved = sum(bool(table.resolve_all(message)[0]) for message in _real_messages())
+    assert resolved == 20, "the register table no longer resolves every real tag"
+
+
+def test_the_live_path_classifies_the_alert_messages_it_is_given() -> None:
+    """The number the README quoted as 0 of 20, measured on the shipped table.
+
+    **15 of 20**, and the five that produce no alert mention are not misses:
+    they carry no alert-state marker because they are threat declarations,
+    which belong to the kind stream. 15 alert plus 5 declaration is 20, and the
+    two sets are disjoint - the same 15 and 5 the state-marker and kind-marker
+    pins have carried separately since sprint 4. Mutation: drop the table
+    argument.
+    """
+    table = AreaTable.from_csv()
+    messages = _real_messages()
+    classified = sum(classify(message, table) is not None for message in messages)
+    assert classified == 15
+    declarations = [m for m in messages if classify(m, table) is None]
+    assert len(declarations) == 5
+    assert all(classify_state(message) is None for message in declarations), (
+        "a message with no alert mention must be a declaration, not a lost alert"
     )
-    assert matched == 0, "area table now matches; update this pin and close F23"
 
 
-def test_classifier_hit_rate_against_real_messages_is_zero() -> None:
-    classified = sum(classify(message) is not None for message in _real_messages())
-    assert classified == 0, "classifier now matches; update this pin and close F23"
+def test_probe_uses_the_register_table_and_not_the_superseded_dict() -> None:
+    """F90. `probe` is the whole live path, and it built its source untabled.
+
+    `mavo collect` is the one command that touches the channel, it goes through
+    `probe`, and `probe` constructed `TelegramChannelSource(transport, url)`
+    with no areas - so the 127-row register table shipped in sprint 7 was never
+    reachable from the live path, and every live poll ran the pre-sprint-7
+    oblast dict. The README told readers to expect almost nothing to parse and
+    was right about the symptom for the wrong reason: the table was correct and
+    the call was not.
+
+    Mutation: drop the table from `probe`'s construction; `parsed` returns to 0.
+    """
+    page = "".join(
+        f'<div class="tgme_widget_message" data-post="air_alert_ua/{i}">'
+        f'{TXT}\U0001f534 Повітряна тривога в Самбірський район'
+        f" #Самбірський_район</div>"
+        f'<time datetime="2026-08-11T10:0{i}:00+00:00"></time></div>'
+        for i in range(3)
+    )
+    report, _ = probe(StubTransport(page))
+    assert report.messages == 3
+    assert report.parsed == 3, "the live path must reach the register table"
+    assert report.unparsed_count == 0
 
 
 def test_a_partial_all_clear_is_not_classified_as_clear() -> None:
     # F26. A yellow message says the all-clear and that the alert continues.
     # Reading it as CLEAR would be actively wrong; today it is not read at all,
     # which is wrong but not dangerous. The distinction is the whole point.
+    # Amended at 0.22.0.0. The claim "it is not read at all" was true of the
+    # oblast dict this test was written against and stopped being true in
+    # sprint 7, unnoticed because the assertion called the untabled path (F90).
+    # The area resolves and the contradiction is now stated rather than
+    # dropped: cleared as the subject, listed as still running, so
+    # PARTIAL_CLEAR. That is the F26 outcome the entry asked for - a stated
+    # contradiction rather than a confident wrong reading.
     partial = next(m for m in _real_messages() if "ще триває" in m)
-    assert classify(partial) is None
+    resolved = classify(partial, AreaTable.from_csv())
+    assert resolved is not None
+    assert resolved[1] is AlertState.PARTIAL_CLEAR
 
 
 def test_means_markers_match_five_of_twenty_real_messages() -> None:
@@ -199,12 +279,17 @@ def test_f50_footer_time_pairs_with_its_own_message() -> None:
     The assertion is exact: both events present, each with the timestamp its
     own footer carries, none shifted onto a neighbour.
     """
-    page = _message(301, "2026-09-01T21:04:00+00:00", "🔴 Львівська область Повітряна тривога") \
-        + _message(302, "2026-09-01T21:11:00+00:00", "🔴 Волинська область Повітряна тривога")
+    page = _message(
+        301, "2026-09-01T21:04:00+00:00",
+        "🔴 Повітряна тривога в Львівський район #Львівський_район",
+    ) + _message(
+        302, "2026-09-01T21:11:00+00:00",
+        "🔴 Повітряна тривога в Луцький район #Луцький_район",
+    )
     events = {event.area_id: event.ts_source.isoformat() for event in _source(page).poll()}
     assert events == {
-        "lviv": "2026-09-01T21:04:00+00:00",
-        "volyn": "2026-09-01T21:11:00+00:00",
+        LVIV: "2026-09-01T21:04:00+00:00",
+        LUTSK: "2026-09-01T21:11:00+00:00",
     }
 
 
@@ -214,7 +299,7 @@ def test_f50_pairing_survives_the_inverted_order_too() -> None:
     inverted = (
         '<div class="tgme_widget_message" data-post="air_alert_ua/401">'
         '<time datetime="2026-09-01T21:04:00+00:00"></time>'
-        f"{TXT}🔴 Львівська область Повітряна тривога</div></div>"
+        f"{TXT}🔴 Повітряна тривога в Львівський район #Львівський_район</div></div>"
     )
     (event,) = _source(inverted).poll()
     assert event.ts_source.isoformat() == "2026-09-01T21:04:00+00:00"
