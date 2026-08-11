@@ -17,11 +17,37 @@ mutation and observed red. The rest are ordinary regressions.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from mavo.areas import AreaTable
 from mavo.schema import KindState, ThreatKind
 from mavo.sources.telegram import classify_kind_message
 
 TAG = "#Самбірський_район"
+
+TXT = '<div class="tgme_widget_message_text js-message_text">'
+
+
+def _page() -> str:
+    """One live-shaped page: an alert, an all-clear, and a declaration.
+
+    The declaration is present on purpose - F96's regression is that both
+    streams reach the store, and a page with alerts only could not show it.
+    """
+    rows = [
+        (901, "2026-08-11T20:04:00+00:00",
+         f"\U0001f534 Повітряна тривога в Самбірський район {TAG}"),
+        (902, "2026-08-11T20:11:00+00:00",
+         f"\U0001f7e2 Відбій тривоги в Самбірський район {TAG}"),
+        (903, "2026-08-11T20:12:00+00:00",
+         f"\U0001f7e0 Загроза застосування балістичного озброєння {TAG}"),
+    ]
+    return "".join(
+        f'<div class="tgme_widget_message" data-post="air_alert_ua/{post}">'
+        f"{TXT}{text}</div>"
+        f'<a class="tgme_widget_message_date"><time datetime="{when}"></time></a></div>'
+        for post, when, text in rows
+    )
 
 
 def _kind(text: str) -> tuple[ThreatKind, KindState] | None:
@@ -238,3 +264,65 @@ def test_an_alert_naming_two_kinds_reports_unknown_rather_than_the_first_row() -
         f"Повітряна тривога: балістика, швидкісна ракета {TAG}", table
     )
     assert same_kind and same_kind[0].kind is ThreatKind.MISSILE
+
+
+def test_collect_writes_both_streams_and_is_idempotent(tmp_path: Path) -> None:
+    """F96. The live command polled the channel and dropped what it understood.
+
+    There was no path in the product from the channel into the store:
+    `fixture` writes a synthetic history, `backfill` writes raw pages, `report`
+    reads. Every store had been filled by hand on a laptop, so the gap was
+    invisible until the first real deployment, where `report --watch` rendered
+    `blind` forever over an empty store.
+
+    Both streams, because an alert and a declaration are separate events with
+    separate lifetimes (T16) and storing one is a store whose kind coverage
+    silently reads zero. Idempotent, because a poll every two minutes over a
+    twenty-message window re-sees almost everything it saw last time, and a
+    log that grew on every cycle would be a log of the poll rather than of the
+    channel. Mutation: drop the `--store` branch, or store only `events`.
+    """
+    from mavo.cli import main
+    from mavo.store import EventStore
+
+    page = tmp_path / "page.html"
+    page.write_text(_page(), encoding="utf-8")
+    store = tmp_path / "events.db"
+
+    assert main(["collect", "--stub", str(page), "--store", str(store)]) == 0
+    first = EventStore(store).count()
+    assert first > 0, "the poll understood messages and stored none"
+    assert len(list(EventStore(store).replay_kinds())) > 0, "declarations lost"
+
+    assert main(["collect", "--stub", str(page), "--store", str(store)]) == 0
+    assert EventStore(store).count() == first, (
+        "a repeated poll grew the log; the store's idempotence is not reached"
+    )
+
+
+def test_collect_without_a_store_records_nothing_and_says_so(tmp_path: Path) -> None:
+    """The old behaviour is still available and is now a choice, not the only
+    option. A poll with no store is a diagnostic, and nothing is written."""
+    from mavo.cli import main
+
+    page = tmp_path / "page.html"
+    page.write_text(_page(), encoding="utf-8")
+    assert main(["collect", "--stub", str(page)]) == 0
+    assert list(tmp_path.glob("*.db")) == []
+
+
+def test_a_store_that_cannot_be_written_is_not_a_quiet_poll(tmp_path: Path) -> None:
+    """Its own exit code, for the same reason --save-raw has one.
+
+    A wrapper reading only stdout must not mistake a lost write for an empty
+    sky. The store path is a directory here, which is exactly the failure that
+    stopped the first deployment. Mutation: let the exception propagate, or
+    return 0.
+    """
+    from mavo.cli import main
+
+    page = tmp_path / "page.html"
+    page.write_text(_page(), encoding="utf-8")
+    blocked = tmp_path / "not-a-file"
+    blocked.mkdir()
+    assert main(["collect", "--stub", str(page), "--store", str(blocked)]) == 7

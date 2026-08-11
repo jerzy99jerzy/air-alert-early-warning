@@ -187,29 +187,38 @@ class EventStore:
         descriptors for 100 started-and-retained iterators, of which 102 were
         still held after ``del`` and an explicit ``gc.collect()``.
 
-        Keyset pagination rather than ``LIMIT``/``OFFSET``: the sort key is
-        ``(ts_source, area_id)``, which the schema makes unique per row, so
-        resuming from the last key read cannot skip or repeat a row the way an
-        offset can when a write lands between chunks. What it can do is include
-        a row appended mid-replay, which the single-connection version could do
-        as well - neither took a transaction - so this is not a change in that
-        guarantee, only a change in how long a file handle lives.
+        Keyset pagination rather than ``LIMIT``/``OFFSET``: resuming from the
+        last key read cannot skip or repeat a row the way an offset can when a
+        write lands between chunks. What it can do is include a row appended
+        mid-replay, which the single-connection version could do as well -
+        neither took a transaction - so this is not a change in that guarantee,
+        only a change in how long a file handle lives.
+
+        The key is ``(ts_source, area_id, content_hash)``, and the third
+        column is load-bearing. The schema is unique on ``content_hash``
+        alone; ``(ts_source, area_id)`` legitimately ties, because one message
+        can clear an area and list the same area as still under alert (T37) -
+        two rows, one timestamp. A strict comparison on the tied pair drops
+        whichever row the chunk boundary cuts off, and the dropped row can be
+        the one saying the area is still dangerous. The hash also makes the
+        order within a tie a property of the content rather than of insertion,
+        so two stores rebuilt from the same corpus replay identically.
         """
-        last: tuple[Any, Any] | None = None
+        last: tuple[Any, Any, Any] | None = None
         while True:
             with closing(self._connect()) as conn:
                 if last is None:
                     cursor = conn.execute(
-                        f"SELECT {columns} FROM {table} "  # noqa: S608
-                        "ORDER BY ts_source, area_id LIMIT ?",
+                        f"SELECT {columns}, content_hash FROM {table} "  # noqa: S608
+                        "ORDER BY ts_source, area_id, content_hash LIMIT ?",
                         (self.CHUNK,),
                     )
                 else:
                     cursor = conn.execute(
-                        f"SELECT {columns} FROM {table} "  # noqa: S608
-                        "WHERE (ts_source, area_id) > (?, ?) "
-                        "ORDER BY ts_source, area_id LIMIT ?",
-                        (last[0], last[1], self.CHUNK),
+                        f"SELECT {columns}, content_hash FROM {table} "  # noqa: S608
+                        "WHERE (ts_source, area_id, content_hash) > (?, ?, ?) "
+                        "ORDER BY ts_source, area_id, content_hash LIMIT ?",
+                        (last[0], last[1], last[2], self.CHUNK),
                     )
                 rows = tuple(cursor.fetchall())
             if not rows:
@@ -223,7 +232,10 @@ class EventStore:
                 if table == "kind_events"
                 else (self._TS_SOURCE, self._AREA_ID)
             )
-            last = (tail[ts_at], tail[area_at])
+            # content_hash is appended by `_chunks` itself as the final SELECT
+            # column, so its position is `-1` for either table and the reader's
+            # own column indices are untouched.
+            last = (tail[ts_at], tail[area_at], tail[-1])
 
     # Column positions of the sort key inside the SELECT lists below. Named
     # rather than written as literals at the point of use, because a reordered

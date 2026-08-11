@@ -552,8 +552,17 @@ class TelegramChannelSource:
         return events
 
 
-def probe(transport: Transport, url: str = CHANNEL_URL) -> tuple[ParseReport, float]:
-    """One fetch, reporting what was understood and how long it took.
+def poll_once(
+    transport: Transport, url: str = CHANNEL_URL
+) -> tuple[TelegramChannelSource, Sequence[ThreatEvent], float]:
+    """One fetch, returning the source, its events and how long it took.
+
+    **F96.** This exists because `probe` threw the events away. It returned a
+    count of what was understood and dropped the understanding, so the only
+    live entry point in the product could report on the channel and could not
+    record it. The source is returned rather than just the events because the
+    declaration stream lives beside them on `source.kind_events`, and a caller
+    that stores one and forgets the other has silently halved the record.
 
     Latency is returned rather than logged because it is subtracted directly
     from the warning budget: in the missile regime the whole budget is about six
@@ -561,6 +570,17 @@ def probe(transport: Transport, url: str = CHANNEL_URL) -> tuple[ParseReport, fl
     """
     source = TelegramChannelSource(transport, url)
     started = datetime.now(UTC)
-    source.poll()
+    events = source.poll()
     elapsed = (datetime.now(UTC) - started).total_seconds()
+    return source, events, elapsed
+
+
+def probe(transport: Transport, url: str = CHANNEL_URL) -> tuple[ParseReport, float]:
+    """One fetch, reporting what was understood and how long it took.
+
+    Kept as the counting-only reading for callers that want the report and
+    nothing else. It delegates rather than reimplementing: two functions
+    polling the channel is how the two would eventually disagree.
+    """
+    source, _events, elapsed = poll_once(transport, url)
     return source.report, elapsed

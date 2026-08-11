@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.24
+Document:  docs/METHODOLOGY.md, version 2.25
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -177,6 +177,8 @@ repository has come to the mistake it was built after.
 | [F93](#f93-02200-shipped_sprints-means-a-test-file-exists-and-the-status-line-read-it-as-sprints-completed) | 0.22.0.0 | shipped_sprints means a test file exists, and the status line read it as sprints completed |
 | [F94](#f94-02210-a-streaming-reader-held-its-connection-across-every-yield) | 0.22.1.0 | A streaming reader held its connection across every yield |
 | [F95](#f95-02310-a-task-outlived-its-reason-and-kept-the-reason) | 0.23.1.0 | A task outlived its reason, and kept the reason |
+| [F96](#f96-02400-the-live-command-polled-the-channel-and-dropped-what-it-understood) | 0.24.0.0 | The live command polled the channel and dropped what it understood |
+| [F97](#f97-02420-replay-dropped-a-row-when-a-sort-key-tie-straddled-a-chunk-boundary) | 0.24.2.0 | Replay dropped a row when a sort-key tie straddled a chunk boundary |
 
 ## Defect log
 
@@ -2592,3 +2594,110 @@ task's justification still refers to a live sprint is writable, and it would
 have caught this one and probably nothing else. The count is the useful part:
 one occurrence, found by reading the entry aloud when somebody finally wanted
 to do the task.
+
+### F96, 0.24.0.0. The live command polled the channel and dropped what it understood
+
+`mavo collect` fetched the page, parsed it, printed how many messages it
+understood, and discarded the events. `probe()` returned a `ParseReport` and a
+duration; the `ThreatEvent`s and the declaration stream went out of scope with
+the source that produced them.
+
+**There was no path in this product from the live channel into the store.**
+`fixture` writes a synthetic history, `backfill` writes raw pages, `report`
+reads a store. Nothing wrote one from the channel. The full flag list of the
+only command that touches the network was `--stub` and `--save-raw`.
+
+**How it survived, and it is not the usual answer.** This is not a rule with no
+reader or a test pinning the wrong call shape. Every store this project has
+ever rendered from was filled by hand, on a laptop, by `fixture` or by a
+backfill followed by an import that lived in a session rather than in the
+package. The gap was invisible for as long as nobody tried to run the thing
+unattended - which is the definition of shadow mode, which is S9, which has
+never run.
+
+**It was found within an hour of the first real deployment**, by
+`mavo-report.service` restarting in a loop against a store that did not exist,
+on a machine whose whole purpose was to answer whether the loop can run for 72
+hours. `docs/MVP.md` lists S9's exit criterion as 72 hours unattended with
+every cycle accounted for. **The exit criterion could not have been met by any
+amount of work on a laptop**, and the entry for T25 said as much in a sentence
+about sleeping machines, without anyone noticing it applied to more than power
+management.
+
+**Class: a missing edge between two components that were each complete.** The
+collector parses and the store records, both tested, both correct, and nothing
+joined them. Neither component's tests could have caught it, because the defect
+is the absence of a caller rather than a fault in either. The gate is green at
+310 tests and was green throughout.
+
+**Repair.** `poll_once` returns the source, its events and the elapsed time;
+`probe` keeps its counting-only reading and delegates rather than
+reimplementing. `mavo collect --store` appends **both streams** - alerts and
+declarations - because they are separate events with separate lifetimes (T16)
+and a caller that stored one would produce a store whose kind coverage silently
+read zero. A store that cannot be written exits 7 rather than printing a
+successful poll, for the same reason `--save-raw` has its own code: a wrapper
+reading stdout must not mistake a lost write for an empty sky.
+
+**Idempotence was already there and is now load-bearing.** The store deduplicates
+on content hash, so a poll every two minutes over a twenty-message window
+re-sees almost everything it saw last time and appends only what is new. The
+regression asserts the count does not grow on a repeated poll, because a log
+that grew every cycle would be a record of the polling rather than of the
+channel.
+
+**What this does not fix.** The command is still one-shot; running it on a
+timer is a deployment decision rather than a feature, and `skipped` stays
+`unknown` on every poll because a fresh source has no baseline to compare post
+ids against. Making the skipped count a measurement needs a resident source,
+which is the sprint-6 note in that branch and is still true.
+
+### F97, 0.24.2.0. Replay dropped a row when a sort-key tie straddled a chunk boundary
+
+`EventStore._chunks` paged on `(ts_source, area_id)` with a strict `>`
+comparison, and its docstring asserted that the schema makes that pair unique
+per row. The schema asserts no such thing: the only uniqueness is
+`content_hash PRIMARY KEY`. When two rows share a timestamp and an area and
+the chunk boundary falls between them, the resume key equals the key of the
+row not yet served, the strict comparison excludes it, and the row leaves the
+replay with no counter moving anywhere.
+
+**The tie is not a corner case, it is a documented behaviour of the channel.**
+T37 records the shape: one message clears an area and lists the same area as
+still under alert. Two rows, one `ts_source`, one `area_id`, two content
+hashes. Measured on 2026-08-12 with the tied pair placed at rows 500 and 501
+against `CHUNK = 500`: 501 appended, 500 replayed. The row lost was the one
+saying the area is still under alert. Negative control, the same pair away
+from the boundary: 402 appended, 402 replayed.
+
+`replay_kinds` shares the machinery and is affected identically. A tie there
+is a missile and a drone declaration for one area in the same second, which is
+what a mass alert looks like.
+
+**Class: test data chosen by the implementation, fifth instance.** The
+exactness test for the paging existed, named this exact failure in its
+docstring, and stayed green, because its factory `_many` builds keys that
+never tie. The data could not distinguish a tie-safe keyset from a strict one.
+The second contributor is a false uniqueness claim written into a docstring
+and never checked against the DDL, which everything downstream then read as
+settled.
+
+**Why the harness did not catch it.** MT15 guards "a still dangerous area is
+not silently dropped" and stayed green throughout. It exercises the
+composition layer; the drop happens in pagination, one layer below, before
+composition sees the row. An attack is only as deep as the layer it
+exercises, and this is the second time that has been the answer.
+
+**Repair.** The key is `(ts_source, area_id, content_hash)`. The hash is
+appended by `_chunks` itself as the final SELECT column, so the readers'
+column indices are untouched. A consequence worth stating: order within a tie
+is now a property of content rather than of insertion, so two stores rebuilt
+from the same corpus replay identically, which `consistency_check` had been
+relying on without saying so.
+
+**Mutation observed red:** the tiebreak stripped, restoring the pair keyset.
+
+**What this does not fix.** The chunked reader still takes no transaction, so
+a row appended mid-replay can appear in the replay. That was true of the
+single-connection version as well and is not a regression; it remains
+unmeasured whether any caller depends on it not happening.

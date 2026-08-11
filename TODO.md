@@ -4,12 +4,12 @@
 
 ### Where the backlog stands
 
-**11 of 46 closed, 35 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**11 of 50 closed, 39 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 11 | Finished, with the release that closed it named in the entry |
-| `ready` | 27 | Nothing external blocks it; it needs a session |
+| `ready` | 31 | Nothing external blocks it; it needs a session |
 | `decision` | 3 | Waiting on a judgement rather than on work |
 | `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -25,11 +25,11 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 7 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name)
+**Tier 1, 8 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T50](#t50-an-event-stream-in-the-contract-schema-v3)
 
-**Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both)
+**Tier 2, 20 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both)
 
-**Tier 3, 10 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced)
+**Tier 3, 11 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T53](#t53-full-width-map-fullscreen-theme-switch)
 
 ### By sprint
 
@@ -42,7 +42,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T50](#t50-an-event-stream-in-the-contract-schema-v3), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T53](#t53-full-width-map-fullscreen-theme-switch), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both) |
 
 <!-- index:end -->
 
@@ -1097,6 +1097,101 @@ until it happens.**
 **What would remove this task entirely.** A decision that iOS is out of scope
 (`docs/MOBILE.md` already keeps it off the M1 and M2 critical path), or
 recipients who all use Android, which is knowable only after T11.
+
+## T50. An event stream in the contract, schema v3
+Status: `ready`, **blocks the site's live feed** [tier 1]
+
+`state.json` v2 carries the **current picture** - `areas` - and **seven-day
+counts** - `recent_7d`. It carries no history. A live feed of transitions is
+history, so the consumer cannot build one from what the producer publishes,
+and no amount of work on the site changes that: the contract is owned by the
+producer (D-020).
+
+**What has to be decided rather than implemented, and it is the whole task.**
+How long a window the contract carries. The file is fetched every two minutes
+by every reader, so every event in it is paid for on every poll by everyone.
+An hour of transitions is a panel that is usually empty; a week is a file that
+grows without bound during a mass alert, which is exactly when the reader is on
+one bar of signal. **Neither end of that trade is obviously right and the entry
+must not pretend otherwise.**
+
+**A second thing the volume makes real.** MAVO sees on the order of a dozen
+transitions a day across 23 oblasts. A feed panel modelled on a dashboard that
+shows hundreds of rows a month will look broken most of the night. That is
+information rather than a fault - the sky is usually quiet - but a panel that
+reads as "nothing is working" when it means "nothing is happening" repeats this
+project's oldest failure in a new place, and the design has to refuse it
+explicitly.
+
+**Acceptance:** schema v3 carrying transitions with a timestamp, an area, a
+kind and a state change; a stated window with the reasoning for its length; a
+deprecation policy for v2 with a period, not an intention; `tools/contract_check.py`
+extended to both versions; and a measurement of the file size under a mass
+alert rather than under a quiet night, because the quiet night is not the case
+that breaks it.
+
+## T51. Geographic layers, fetched only when asked for
+Status: `ready`, needs T50 for nothing [tier 2]
+
+Voivodeship borders, Polish and Ukrainian border-region cities, and possibly
+major routes. The value is a reader orienting the alert against a place they
+know rather than against an outline.
+
+**The budget is measured and is the constraint.** First visit is 117.4 KiB
+gzipped, repeat visit 13.7 KiB, of which geometry is 106 KiB and is cached
+after the first load. `deploy/nginx.conf` records what that costs on a slow
+link: the geometry asset is the difference between eight seconds and
+twenty-two at 120 kbit/s, and the audience is a phone at night, sometimes on
+one bar.
+
+**The resolution is lazy loading, not a smaller map.** Detail ships as separate
+assets fetched on zoom or on an explicit toggle. A reader who never asks pays
+nothing; a reader who wants to see where this is relative to Zamość pays
+deliberately.
+
+**Acceptance:** the first visit without layers **does not grow**, each layer
+measured separately in KiB gzipped and recorded, source and licence named per
+layer, and the geometry verification extended to whatever new coordinates
+arrive. Routes are the heaviest and go last, or not at all if the measurement
+says they do not fit.
+
+**What this does not do, and it is a decision.** It does not introduce map
+tiles. Tiles from a third party would send every reader's viewport, address and
+timing to that party, which is precisely what D-016 refused for Google's tiles.
+Self-hosted vector tiles are a real alternative and carry their own cost - a
+WebGL renderer is roughly 200 KiB of JavaScript and would end the site's
+zero-dependency, hashed-CSP posture. That trade belongs in a decision entry
+before any of it is written, not in a commit.
+
+## T52. Polish, English and Ukrainian
+Status: `ready` [tier 2]
+
+**Ukrainian is not symmetry with anybody, and the reason is measured by
+demography rather than by product taste.** Roughly two million Ukrainians live
+in Poland `[reported]`, which makes them the largest single audience this
+project can have. For that reader MAVO is not a situational instrument about a
+neighbour; it is a view of the country their family is in, read from Poland.
+That changes what the page is for, and the entry records it so a later reader
+does not mistake the third language for decoration.
+
+Polish is the stated audience. English is the portfolio surface and the
+language `docs/FEED-SPEC.md` argues in.
+
+**Acceptance:** three complete sets, no string left in Polish under another
+language, the switch working without JavaScript for the basic path, and the
+non-claim in the header - that this is not a state service - translated with
+the same care as everything else, because it is the sentence the legal position
+rests on.
+
+## T53. Full-width map, fullscreen, theme switch
+Status: `ready` [tier 3]
+
+Cheap, no conflicts with anything recorded. The page already honours
+`prefers-color-scheme`; the switch is an override plus a remembered choice.
+Fullscreen is the Fullscreen API. Full width is layout.
+
+**Acceptance:** the reduced-motion refusal and the staleness rendering survive
+all three, verified by the browser harness rather than by looking at it.
 
 ## T49. Two denominators for the western share, and one number quoted for both
 Status: `ready` (own action), **not started** [tier 2]

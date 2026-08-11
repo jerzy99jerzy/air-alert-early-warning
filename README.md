@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 310](https://img.shields.io/badge/tests-310-brightgreen)](tests/)
-[![coverage 96.41%](https://img.shields.io/badge/coverage-96.41%25-brightgreen)](Makefile)
+[![tests 314](https://img.shields.io/badge/tests-314-brightgreen)](tests/)
+[![coverage 96.48%](https://img.shields.io/badge/coverage-96.48%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 76](https://img.shields.io/badge/defects%20logged-76-informational)](docs/METHODOLOGY.md)
+[![defects logged 78](https://img.shields.io/badge/defects%20logged-78-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -92,13 +92,13 @@ one of them has perfect recall, precision equal to the base rate, a lift of
 0.9.0.0; the earlier predictive framing is recorded in D-015 rather than
 overwritten.
 
-**That 57% is somebody else's number, and it is not this project's definition
-of the west.** It is `[reported]`: taken from outside, over a period this
-repository did not observe, using whatever the source meant by "western
-Ukraine" - which may include Kyiv oblast, Vinnytsia, or everything west of the
-Dnipro. This project means something narrower and checkable: the 36 raions of
-the eight western oblasts as the state register lists them. The two are
-compared nowhere, and until they are, the 57% is context rather than evidence.
+**Two different wests are being counted here, and only one of them is this
+project's.** The 57% is `[reported]`: another source's figure, over a period
+this repository did not observe, resting on whatever that source meant by
+"western Ukraine" - possibly including Kyiv oblast, Vinnytsia, or everything
+west of the Dnipro. This project means the 36 raions of the eight western
+oblasts as the state register lists them, which is narrower and checkable.
+Nobody has compared the two, so the 57% is context rather than evidence.
 
 ## Where the information comes from
 
@@ -387,10 +387,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 18 | 4,475 |
-| Tests | 37 | 5,495 |
+| Package `mavo/` | 18 | 4,539 |
+| Tests | 37 | 5,618 |
 | Tools | 15 | 3,820 |
-| Documentation | 41 | 14,837 |
+| Documentation | 42 | 15,221 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -401,11 +401,11 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 310, of which 13 are scripted attacks |
-| Coverage | 96.41% against a floor of 95, a ratchet that is never lowered |
+| Tests | 314, of which 13 are scripted attacks |
+| Coverage | 96.48% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 76, the count pinned against the log itself |
+| Defects logged with their class | 78, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 23 |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |

@@ -16,6 +16,101 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.24.2.0 - 2026-08-12
+
+**F97: replay dropped a row when a sort-key tie straddled a chunk boundary.**
+
+- **The chunked reader assumed a uniqueness the schema does not provide.**
+  Paging resumed on `(ts_source, area_id)` with a strict comparison while the
+  only unique key is `content_hash`. Measured: a tied pair placed at rows 500
+  and 501 with `CHUNK = 500` gives 501 appended and 500 replayed; the same
+  pair away from the boundary gives 402 and 402.
+- **The tie is what T37 describes.** One message clears an area and lists the
+  same area as still under alert. The row the boundary dropped was the second
+  one, which is the one that says the area is still dangerous.
+- **The test that named this failure was green.** Its factory built keys that
+  never tie, so the data could not tell a tie-safe keyset from a strict one.
+  Fifth instance of test data chosen by the implementation.
+- **`replay_kinds` was affected identically**, where a tie is two threat kinds
+  declared for one area in one second.
+- Repair: `(ts_source, area_id, content_hash)`, the hash appended as the final
+  SELECT column so reader column indices are untouched. Mutation observed red.
+
+## 0.24.1.0 - 2026-08-11
+
+**Backlog only. Four tasks for the consumer tier, one of which is a producer
+change and is the reason the other three cannot start with it.**
+
+- **T50, tier 1: an event stream in the contract, schema v3.** `state.json` v2
+  carries the current picture and seven-day counts and no history, so the site
+  cannot build a feed of transitions from it however it is written - the
+  contract belongs to the producer (D-020). The task is mostly a decision: how
+  long a window, given that every reader pays for every event on every two-minute
+  poll, and that a file which grows without bound during a mass alert grows
+  exactly when the reader is on one bar of signal. Recorded with it: MAVO sees
+  about a dozen transitions a day, so a feed panel will read as empty most of
+  the night, and a panel that looks broken when it means "nothing is happening"
+  repeats this project's oldest failure in a new place.
+- **T51, tier 2: geographic layers fetched only when asked for.** Voivodeship
+  borders, border-region cities, possibly routes. The budget is already
+  measured - 117.4 KiB first visit, and `nginx.conf` records that geometry is
+  the difference between eight seconds and twenty-two at 120 kbit/s - so detail
+  ships lazily and a reader who never asks pays nothing. **It explicitly does
+  not introduce map tiles**: a third party's tiles would send every reader's
+  viewport and address to that party, which is what D-016 refused, and
+  self-hosted vector tiles would cost the zero-dependency hashed-CSP posture.
+  Either way that is a decision entry, not a commit.
+- **T52, tier 2: Polish, English and Ukrainian.** Ukrainian is in on
+  demographic grounds rather than symmetry: roughly two million Ukrainians live
+  in Poland, which makes them the largest single audience this project can
+  have, and for them the page is a view of the country their family is in
+  rather than an instrument about a neighbour.
+- **T53, tier 3: full-width map, fullscreen, theme switch.** Cheap and
+  conflict-free; the acceptance is that the reduced-motion refusal and the
+  staleness rendering survive, checked by the browser harness rather than by
+  looking at it.
+- 50 tasks in the backlog. No code changed.
+
+## 0.24.0.0 - 2026-08-11
+
+**F96: the live command polled the channel and dropped what it understood.
+There was no path in this product from the channel into the store.**
+
+- **`mavo collect` fetched, parsed, printed a count and discarded the events.**
+  `probe()` returned a report and a duration; the events and the declaration
+  stream went out of scope with the source. The full flag list of the only
+  command that touches the network was `--stub` and `--save-raw`.
+- **How it survived is not the usual answer.** Not a rule with no reader, not a
+  test pinning the wrong call shape. Every store this project has rendered from
+  was filled by hand on a laptop, by `fixture` or by an import that lived in a
+  session rather than in the package. The gap was invisible for exactly as long
+  as nobody ran the thing unattended - which is shadow mode, which is S9, which
+  has never run.
+- **Found within an hour of the first real deployment**, by the report writer
+  restarting in a loop against a store that did not exist, on a machine whose
+  whole purpose was to answer whether that loop can run for 72 hours. The gate
+  was green at 310 tests throughout and could not have caught it: the defect is
+  a missing edge between two components that are each complete and each tested.
+- **`poll_once` returns the source, its events and the elapsed time**; `probe`
+  keeps the counting-only reading and delegates rather than reimplementing.
+- **`mavo collect --store` appends both streams**, alerts and declarations,
+  because they are separate events with separate lifetimes (T16) and storing
+  one would produce a store whose kind coverage silently read zero.
+- **A store that cannot be written exits 7**, not 0, for the same reason
+  `--save-raw` has its own code: a wrapper reading stdout must not mistake a
+  lost write for an empty sky. That failure - the store path being a directory -
+  is exactly what stopped the first deployment.
+- **Idempotence was already there and is now load-bearing.** The store
+  deduplicates on content hash, so a poll every two minutes over a twenty-message
+  window appends only what is new; the regression asserts the count does not
+  grow on a repeated poll, because a log that grew every cycle would record the
+  polling rather than the channel.
+- **Still one-shot.** Running it on a timer is a deployment decision, and
+  `skipped` stays `unknown` on every poll because a fresh source has no baseline
+  for post ids. A resident source is what turns that into a measurement.
+- 313 tests, coverage 96.48% (Python 3.12.3, sandbox). Mutation observed red:
+  storing only the alert stream.
+
 ## 0.23.1.0 - 2026-08-11
 
 **F95: a task outlived its reason and kept the reason. T8 is replaced by a

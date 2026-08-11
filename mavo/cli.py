@@ -36,7 +36,7 @@ from mavo.report import (
 )
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
 from mavo.sources.fixture import FixtureSource, generate_history
-from mavo.sources.telegram import CHANNEL_URL, probe
+from mavo.sources.telegram import CHANNEL_URL, poll_once
 from mavo.store import EventStore
 from mavo.transport import StubTransport, Transport, UrllibTransport
 
@@ -167,10 +167,36 @@ def _cmd_collect(args: argparse.Namespace) -> int:
             print(f"[SNAPSHOT-FAILED] {failure}")
             return 4
         print(f"snapshot={snapshot}")
-    report, _ = probe(StubTransport(body))
+    source, events, _ = poll_once(StubTransport(body))
+    report = source.report
     print(f"messages={report.messages} parsed={report.parsed} "
           f"unparsed={report.unparsed_count} {report.window_line()} "
           f"latency={fetch_s:.3f}s")
+    if args.store:
+        # F96. Until 0.24.0.0 this command polled the channel, printed what it
+        # understood, and dropped the events. There was no path in the product
+        # from the live channel into the store: `fixture` writes a synthetic
+        # history, `backfill` writes raw pages, `report` reads. The gap was
+        # invisible for as long as every store was filled by hand on a laptop,
+        # and it surfaced within an hour of the first real deployment.
+        #
+        # Both streams or neither. The alert stream and the declaration stream
+        # are separate events with separate lifetimes (T16), and a caller that
+        # stored one and forgot the other would produce a store whose kind
+        # coverage silently read zero.
+        try:
+            store = EventStore(Path(args.store))
+            appended = store.append(events)
+            kinds = store.append_kinds(source.kind_events)
+        except Exception as failure:  # noqa: BLE001
+            # A store that cannot be written is not a quiet poll. Its own exit
+            # code, for the same reason --save-raw has one: a wrapper reading
+            # only stdout must not mistake a lost write for an empty sky.
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+        print(f"stored={appended} new events, {kinds} new declarations "
+              f"(seen={len(events)}/{len(source.kind_events)}; the difference is "
+              "idempotence, not loss)")
     if not report.gap_is_known:
         # One-shot by construction: this command builds a fresh source, so there
         # is no previous poll to compare ids against. Continuous collection holds
@@ -273,6 +299,12 @@ def build_parser() -> argparse.ArgumentParser:
         "collect", help="poll the public channel once and report what was understood"
     )
     collect.add_argument("--stub", help="read a saved page instead of the network")
+    collect.add_argument(
+        "--store",
+        help="append the parsed events and declarations to this store. Without "
+             "it the poll reports and records nothing, which is what it did "
+             "until 0.24.0.0 (F96)",
+    )
     collect.add_argument(
         "--save-raw",
         help="write the fetched page verbatim into this directory before parsing "

@@ -205,6 +205,41 @@ def test_replay_crosses_chunk_boundaries_without_losing_or_repeating_a_row(
     assert replayed == sorted(replayed), "chunking lost the source-time order"
 
 
+def test_a_sort_key_tie_on_a_chunk_boundary_loses_no_row(
+    store_path: Path, event: ThreatEvent
+) -> None:
+    """Two rows may legitimately share `(ts_source, area_id)`, and paging must survive it.
+
+    The schema is unique on `content_hash`, not on the sort key: T37's own
+    example is one message that clears an area and lists the same area as still
+    under alert, two rows with one timestamp. Strict keyset comparison on the
+    tied pair drops whichever row the boundary cuts off, and the row it drops
+    can be the one saying the area is still dangerous. The exactness test above
+    could not see this because `_many` builds keys that never tie - the data
+    was chosen by the implementation. Mutation: page on `(ts_source, area_id)`
+    without the hash tiebreak.
+    """
+    from mavo.schema import AlertState, AreaRole
+
+    store = EventStore(store_path)
+    filler = _many(event, EventStore.CHUNK - 1)
+    tied_ts = event.ts_source + timedelta(days=365)
+    cleared = replace(event, area_id="UAZZZ", ts_source=tied_ts,
+                      state=AlertState.CLEAR, role=AreaRole.SUBJECT)
+    still_active = replace(event, area_id="UAZZZ", ts_source=tied_ts,
+                           state=AlertState.ACTIVE, role=AreaRole.CONTINUATION)
+    appended = store.append([*filler, cleared, still_active])
+    assert appended == EventStore.CHUNK + 1, "the tied pair must be two rows"
+    replayed = list(store.replay())
+    assert len(replayed) == EventStore.CHUNK + 1, (
+        "a chunk boundary inside a sort-key tie dropped a row"
+    )
+    states = {(item.area_id, item.state, item.role) for item in replayed}
+    assert (cleared.area_id, AlertState.ACTIVE, AreaRole.CONTINUATION) in states, (
+        "the row silently lost was the one saying the area is still under alert"
+    )
+
+
 def test_a_store_of_exactly_one_chunk_terminates(
     store_path: Path, event: ThreatEvent
 ) -> None:
