@@ -16,6 +16,41 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.22.1.0 - 2026-08-11
+
+**F94: a streaming reader held its database connection across every yield, and
+the first account of it was wrong.**
+
+- **Found from a terminal, not the suite.** `make verify` on Python 3.14
+  printed `ResourceWarning: unclosed database`. `replay` and `replay_kinds`
+  yielded from inside `with closing(self._connect())`, so the handle lived as
+  long as the generator, and an abandoned iterator kept it.
+- **Measured before being repaired, because the first account was a guess.**
+  Consumed to exhaustion, 200 times: **0 descriptors held**. Started and
+  retained, 100 iterators: **201 held**, of which **102 survived `del` and an
+  explicit `gc.collect()`**. So the production path never leaked - `publish`
+  and `compose` both consume to exhaustion - and the claim that a 72-hour
+  `--watch` would accumulate handles is **retracted**. It was read off the
+  shape of the code.
+- **Garbage collection is not the backstop.** Half the handles survived a
+  forced collection. The mechanism is not asserted; the unreliability is.
+- **Repair: chunks of 500 with a connection per chunk**, keyset paged on
+  `(ts_source, area_id)` rather than `LIMIT`/`OFFSET`, so a write landing
+  between chunks cannot skip or repeat a row. Abandoning a replay now costs one
+  chunk of tuples and no handle. Latent when found, in the F62 and F88 family:
+  nothing in the tree abandons a replay.
+- **Given up, and stated rather than left to be discovered:** a replay is now
+  several statements, so a row appended mid-replay can land in a later chunk.
+  The single-connection version took no transaction either, so it is not a
+  weaker guarantee - only one neither version ever made explicit.
+- **The `sys.path` trap, third occurrence in one session.** Two attempts to
+  measure the repair reported it ineffective; both ran the probe from outside
+  the tree, so the installed package answered. Same failure as the F91
+  verification. A probe that does not print `module.__file__` is not a
+  measurement of the tree in front of you.
+- 291 tests, coverage 96.40% (Python 3.12.3, sandbox). Two mutations observed
+  red: the inclusive keyset comparison, and the restored long-lived connection.
+
 ## 0.22.0.0 - 2026-08-11
 
 **F90: the live path never reached the table that fixed F23, and the assertion

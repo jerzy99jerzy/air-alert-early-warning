@@ -13,6 +13,7 @@ from collections.abc import Iterable, Iterator
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from mavo.errors import NaiveTimestamp, SchemaMismatch
 from mavo.schema import (
@@ -168,18 +169,83 @@ class EventStore:
             conn.commit()
             return conn.total_changes - before
 
-    def replay(self) -> Iterator[ThreatEvent]:
-        """Yield every stored event in source-time order."""
-        with closing(self._connect()) as conn:
-            cursor = conn.execute(
-                "SELECT area_id, state, ts_source, ts_ingest, source_id, kind, "
-                "provenance, raw_fields, oblast, role "
-                "FROM events ORDER BY ts_source, area_id"
+    #: Rows read per connection by the streaming readers. Large enough that a
+    #: replay of any store this project has produced is one or two round trips,
+    #: small enough that a chunk is never a materialisation of the whole log.
+    CHUNK = 500
+
+    def _chunks(
+        self, columns: str, table: str
+    ) -> Iterator[tuple[tuple[Any, ...], ...]]:
+        """Rows in ``(ts_source, area_id)`` order, a connection per chunk.
+
+        **F94.** The readers below used to hold one connection open across
+        every ``yield``. A caller that started the iterator and did not finish
+        it - ``next()`` once, an early ``break``, storing it for later - left
+        the connection open for as long as it held the generator, and garbage
+        collection did not reliably take it back: measured 2026-08-11, 201
+        descriptors for 100 started-and-retained iterators, of which 102 were
+        still held after ``del`` and an explicit ``gc.collect()``.
+
+        Keyset pagination rather than ``LIMIT``/``OFFSET``: the sort key is
+        ``(ts_source, area_id)``, which the schema makes unique per row, so
+        resuming from the last key read cannot skip or repeat a row the way an
+        offset can when a write lands between chunks. What it can do is include
+        a row appended mid-replay, which the single-connection version could do
+        as well - neither took a transaction - so this is not a change in that
+        guarantee, only a change in how long a file handle lives.
+        """
+        last: tuple[Any, Any] | None = None
+        while True:
+            with closing(self._connect()) as conn:
+                if last is None:
+                    cursor = conn.execute(
+                        f"SELECT {columns} FROM {table} "  # noqa: S608
+                        "ORDER BY ts_source, area_id LIMIT ?",
+                        (self.CHUNK,),
+                    )
+                else:
+                    cursor = conn.execute(
+                        f"SELECT {columns} FROM {table} "  # noqa: S608
+                        "WHERE (ts_source, area_id) > (?, ?) "
+                        "ORDER BY ts_source, area_id LIMIT ?",
+                        (last[0], last[1], self.CHUNK),
+                    )
+                rows = tuple(cursor.fetchall())
+            if not rows:
+                return
+            yield rows
+            if len(rows) < self.CHUNK:
+                return
+            tail = rows[-1]
+            ts_at, area_at = (
+                (self._KIND_TS_SOURCE, self._KIND_AREA_ID)
+                if table == "kind_events"
+                else (self._TS_SOURCE, self._AREA_ID)
             )
-            # Iterated, not fetchall(): the docstring promises an iterator
-            # and materializing the whole log first would quietly break that
-            # promise on the first store big enough for it to matter.
-            for row in cursor:
+            last = (tail[ts_at], tail[area_at])
+
+    # Column positions of the sort key inside the SELECT lists below. Named
+    # rather than written as literals at the point of use, because a reordered
+    # SELECT would otherwise page from the wrong column and lose rows silently.
+    _AREA_ID = 0
+    _TS_SOURCE = 2
+    _KIND_AREA_ID = 0
+    _KIND_TS_SOURCE = 4
+
+    def replay(self) -> Iterator[ThreatEvent]:
+        """Yield every stored event in source-time order.
+
+        Still an iterator, and still not a materialisation of the whole log:
+        rows are read a chunk at a time (see ``_chunks``), so an abandoned
+        replay costs one chunk of tuples and no open connection.
+        """
+        for rows in self._chunks(
+            "area_id, state, ts_source, ts_ingest, source_id, kind, "
+            "provenance, raw_fields, oblast, role",
+            "events",
+        ):
+            for row in rows:
                 yield ThreatEvent(
                     area_id=row[0],
                     state=AlertState(row[1]),
@@ -230,13 +296,17 @@ class EventStore:
         return int(after - before)
 
     def replay_kinds(self) -> Iterator[KindEvent]:
-        """Every declaration in source order, for building a `KindIndex`."""
-        with closing(self._connect()) as conn:
-            cursor = conn.execute(
-                "SELECT area_id, oblast, kind, state, ts_source, ts_ingest, "
-                "source_id, raw_fields FROM kind_events ORDER BY ts_source, area_id"
-            )
-            for row in cursor:
+        """Every declaration in source order, for building a `KindIndex`.
+
+        Chunked for the same reason as ``replay`` (F94); the sort key sits at a
+        different column here, which is why the positions are named constants.
+        """
+        for rows in self._chunks(
+            "area_id, oblast, kind, state, ts_source, ts_ingest, "
+            "source_id, raw_fields",
+            "kind_events",
+        ):
+            for row in rows:
                 yield KindEvent(
                     area_id=row[0],
                     oblast=row[1],

@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.22
+Document:  docs/METHODOLOGY.md, version 2.23
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -175,6 +175,7 @@ repository has come to the mistake it was built after.
 | [F91](#f91-02200-the-f85-entry-claimed-a-direction-the-fold-does-not-have) | 0.22.0.0 | The F85 entry claimed a direction the fold does not have |
 | [F92](#f92-02200-an-inference-labelled-measured-in-the-entry-about-inferences-labelled-measured) | 0.22.0.0 | An inference labelled measured, in the entry about inferences labelled measured |
 | [F93](#f93-02200-shipped_sprints-means-a-test-file-exists-and-the-status-line-read-it-as-sprints-completed) | 0.22.0.0 | shipped_sprints means a test file exists, and the status line read it as sprints completed |
+| [F94](#f94-02210-a-streaming-reader-held-its-connection-across-every-yield) | 0.22.1.0 | A streaming reader held its connection across every yield |
 
 ## Defect log
 
@@ -2467,3 +2468,61 @@ sprint whose criterion is furthest from met. The check is narrowed to what it
 can actually verify - that the sentence's sprint count matches the field, and
 that the field's list has no holes - and its docstring now says what the field
 means, so the next reader is not invited to make the same substitution.
+
+### F94, 0.22.1.0. A streaming reader held its connection across every yield
+
+`EventStore.replay` and `replay_kinds` opened a connection, executed one
+`SELECT`, and yielded rows from inside the `with closing(...)` block. The
+connection therefore lived exactly as long as the generator, and a caller that
+started a replay without finishing it - `next()` once, an early `break`,
+storing the iterator to consume later - held a database handle open for as long
+as it held the generator.
+
+**Found from an operator's terminal, not from the suite.** `make verify` on
+Python 3.14 printed `ResourceWarning: unclosed database`. The suite is green on
+3.12 without it, and the warning is attributed to `areas.py`, which is only
+where the collector happened to run.
+
+**What was actually measured, 2026-08-11**, because the first account of this
+was a guess and the guess was wrong:
+
+| Caller shape | Descriptors held, before the repair | After |
+| --- | --- | --- |
+| replay consumed to exhaustion, 200 times | **0** | 0 |
+| started, reference dropped immediately, 200 times | 3 | 0 |
+| started and retained, 100 iterators | **201** | 0 |
+| the same 100, after `del` and `gc.collect()` | **102** | 0 |
+
+Two things follow, and the first retracts a claim made when this was first
+raised. **The production path never leaked.** `publish` does `list(load())` and
+`compose` does `list(events)`, so every caller in the tree consumes to
+exhaustion, and the row above says that costs nothing. The suggestion that a
+72-hour `--watch` run would accumulate descriptors was wrong, and was made from
+the shape of the code rather than from a measurement.
+
+**And garbage collection is not the backstop it looks like.** Half the handles
+survived an explicit collection. Why exactly is not established here and the
+mechanism is not asserted; what is established is that "the generator will be
+collected eventually" is not a property this store can rely on.
+
+**Class: a resource whose lifetime is the caller's attention span.** Latent, in
+the family of F62 and F88 - nothing in the tree abandons a replay, and the
+defect is closed rather than left for the first caller who does. The repair
+reads in chunks of 500 with a connection per chunk, using keyset pagination on
+`(ts_source, area_id)` rather than `LIMIT`/`OFFSET`, so a write landing between
+chunks cannot make the reader skip or repeat a row. The iterator promise is
+kept: an abandoned replay now costs one chunk of tuples and no open handle.
+
+**What the repair gives up, stated rather than discovered later.** A replay is
+now several statements instead of one, so a row appended mid-replay can appear
+in a later chunk. The single-connection version took no transaction either, so
+this is not a weaker guarantee than before - but it is a guarantee neither
+version ever had, and writing it down here is cheaper than someone inferring it
+from the old code's shape.
+
+**The trap that nearly hid this, for the third time in one session.** The first
+two attempts to measure the repair reported it as ineffective. Both ran a probe
+script from a directory outside the tree, so `sys.path[0]` was the script's
+directory and the installed package answered instead. Same failure as the F91
+verification. A probe that does not print `module.__file__` is not a
+measurement of the tree in front of you.

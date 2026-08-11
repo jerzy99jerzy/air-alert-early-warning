@@ -6,6 +6,8 @@ from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
 
+import pytest
+
 from mavo.schema import ThreatEvent
 from mavo.store import EventStore
 
@@ -136,3 +138,82 @@ def test_f52_two_spellings_of_one_instant_are_one_transition(store_path: Path) -
     assert same_instant_local.content_hash() == utc.content_hash()
     store = EventStore(store_path)
     assert store.append([utc, same_instant_local]) == 1
+
+
+def _many(event: ThreatEvent, count: int) -> list[ThreatEvent]:
+    """`count` distinct events, ordered and unique on `(ts_source, area_id)`."""
+    return [
+        replace(
+            event,
+            area_id=f"UA{index:017d}",
+            ts_source=event.ts_source + timedelta(minutes=index),
+        )
+        for index in range(count)
+    ]
+
+
+def test_an_abandoned_replay_does_not_hold_a_connection(
+    store_path: Path, event: ThreatEvent
+) -> None:
+    """F94. The reader used to keep a connection open across every yield.
+
+    A caller that started a replay and kept the iterator without finishing it
+    held the connection for as long as it held the generator, and garbage
+    collection did not reliably take it back. Measured on the pre-repair store,
+    2026-08-11: 100 started-and-retained iterators held 201 descriptors, and
+    102 were still held after `del` and an explicit `gc.collect()`.
+
+    The assertion is on descriptors rather than on structure, because the
+    structure is not the promise - the promise is that abandoning a replay
+    costs nothing that has to be reclaimed. Mutation: restore the single
+    `with closing(self._connect())` around the yield loop.
+    """
+    import os
+
+    if not Path("/proc/self/fd").is_dir():  # pragma: no cover - platform guard
+        pytest.skip("descriptor count needs /proc; the store itself is portable")
+
+    store = EventStore(store_path)
+    store.append(_many(event, 40))
+    baseline = len(os.listdir("/proc/self/fd"))
+    started = []
+    for _ in range(50):
+        iterator = store.replay()
+        next(iterator)  # start it, then never finish it
+        started.append(iterator)
+    assert len(os.listdir("/proc/self/fd")) == baseline, (
+        "an abandoned replay is holding an open connection"
+    )
+
+
+def test_replay_crosses_chunk_boundaries_without_losing_or_repeating_a_row(
+    store_path: Path, event: ThreatEvent
+) -> None:
+    """The keyset paging must be exact, not approximately exact.
+
+    Chunking is the F94 repair, and it introduces the one failure the single
+    connection could not have: a boundary that skips a row or serves it twice.
+    The store holds more than two chunks, and the replay must be the whole log,
+    in order, once each. Mutation: page with LIMIT/OFFSET, or compare with `>=`.
+    """
+    store = EventStore(store_path)
+    total = EventStore.CHUNK * 2 + 7
+    store.append(_many(event, total))
+    replayed = [item.area_id for item in store.replay()]
+    assert len(replayed) == total
+    assert len(set(replayed)) == total, "a row was served twice across a boundary"
+    assert replayed == sorted(replayed), "chunking lost the source-time order"
+
+
+def test_a_store_of_exactly_one_chunk_terminates(
+    store_path: Path, event: ThreatEvent
+) -> None:
+    """The off-by-one that would loop forever, or query forever.
+
+    A full final chunk cannot be distinguished from a chunk with more behind it
+    without asking again, and asking again must terminate on the empty answer.
+    Mutation: drop the `if not rows: return` guard.
+    """
+    store = EventStore(store_path)
+    store.append(_many(event, EventStore.CHUNK))
+    assert len(list(store.replay())) == EventStore.CHUNK
