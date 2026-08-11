@@ -212,13 +212,6 @@ The section a competent reader reads first. Each bullet is registered in
   named rule fired at a named time, and what that rule has historically been
   worth. There is no probability of impact, because nothing here can compute one.
   (lint: no_probability_claim)
-- It will not reintroduce a covariate that a measured null result has excluded.
-  Exclusions here are earned by measurement, not by taste: the candidate that
-  established this rule was tested against the full attack-density series, 738
-  attack nights and 87,093 munitions, and returned a null (Rayleigh R = 0.013,
-  p = 0.95). The excluded terms are enumerated in the lint rather than in prose,
-  so re-introduction takes a deliberate test change. See D-002 in
-  `docs/DECISIONS.md`. (lint: no_excluded_covariate)
 - It will not read a silent feed as an all-clear, and will not read a partial
   all-clear as a whole one. An area whose status is unknown stays `UNKNOWN`; a
   message that announces an all-clear while saying the alert continues is
@@ -388,9 +381,9 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | | Files | Lines |
 | --- | --- | --- |
 | Package `mavo/` | 18 | 4,818 |
-| Tests | 38 | 5,861 |
+| Tests | 38 | 5,840 |
 | Tools | 15 | 3,909 |
-| Documentation | 43 | 15,455 |
+| Documentation | 43 | 15,447 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
