@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.5 / 2026-08-12
+Version: 2.6 / 2026-08-12
 Status: **built, in a separate repository, and under version control since
 2026-08-12.** `mavo-site` 4.1.0.0 runs and carries its own gate (seven checks,
 19 mutants, a jsdom browser harness), its own defect log and its own audit.
@@ -26,7 +26,38 @@ history, not on every cycle.
 **The consequence for deployment, and it is measured rather than assumed:**
 because the consumer refuses v2, producer 0.25.0.0 and site 4.0.0.0 must be
 deployed in one window. Shipping the producer alone turns the public page
-blind, correctly and uselessly.
+blind, correctly and uselessly. **This was carried out on 2026-08-12** and
+took five steps that no gate on either side can check: the package, the
+`--feed` flag in the report unit, the push unit carrying two files, the forced
+command on the site host replaced with the version-controlled one, and the
+site package. Each is recorded in `docs/DEPLOYMENT.md`.
+
+## What the consumer taught the contract
+
+Three requirements that were not obvious until something read this feed in
+production. They are in `docs/FEED-SPEC.md` section 4a as properties six to
+eight, argued for a feed this project does not control; here they are stated
+as obligations this producer has to its own consumer.
+
+**A cap needs a flag, and the consumer needs its own cap.** The window is
+capped at 5,000 with `truncated` published beside it. That is necessary and
+not sufficient: the site delegated the bound to this side and rendered
+whatever it was given, which measured 5.6 MiB from 20,000 events. The site now
+caps independently at 200 rows. A bound that lives only on the publishing side
+holds until the day the two versions differ, and they are deployed separately
+by hand.
+
+**`window_start` is published because the consumer cannot derive it.** A
+device asleep for longer than the window cannot tell a gap from a quiet
+stretch, and deriving the edge from `generated_at` works only while two clocks
+agree. One field on this side; on the other side it is the difference between
+"nothing happened" and "you did not see what happened".
+
+**The version policy is the unfinished half.** v3 is a strict superset of v2
+and the consumer still refused it, correctly. With one consumer under the same
+authorship that costs a deployment window. A public contract does not have
+that luxury, which is why the deprecation policy is named in T50 as missing
+rather than treated as done.
 
 Companion documents: [`MOBILE.md`](MOBILE.md) is the same kind of document for
 the notification channel, [`FEED-SPEC.md`](FEED-SPEC.md) is the specification

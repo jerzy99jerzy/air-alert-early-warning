@@ -16,6 +16,39 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.25.5.0 - 2026-08-12
+
+**The documentation catches up with a week that ended in production.
+Documentation only; no code changed.**
+
+- **`docs/FEED-SPEC.md` gains three properties, numbered separately because
+  they are weaker claims: each rests on one deployment rather than on a
+  corpus.** A cap needs a published flag *and* an independent bound on the
+  consumer, because a limit that lives only on the publishing side holds until
+  the two versions differ. A window needs its left edge published rather than
+  derived, because a device that slept cannot otherwise tell a gap from a
+  quiet stretch. A version number needs a stated overlap period, because v3
+  was a strict superset of v2 and the consumer still refused it, correctly,
+  and the two had to be deployed inside one window.
+- **Section 4 gains the measurement that strengthens its own argument.**
+  Eleven unreachable polls in ninety-five. The number that matters is not the
+  failure rate but that the consumer could tell on every one of them, because
+  the channel publishes continuously enough that absence is legible. A feed
+  publishing only on transitions would have made all eleven look like a quiet
+  sky, and no amount of consumer instrumentation could have recovered the
+  difference from outside.
+- **README gains the commands an unattended host actually runs** - `collect
+  --store`, `report --json --feed --watch` - and a section on what the first
+  unsupervised night measured, including the two explanations that were tested
+  and closed and the one that stays open.
+- **`docs/WEBAPP.md` records what the consumer taught the contract** and that
+  the coordinated deployment happened, in five steps no gate on either side
+  can check.
+- The unfinished half of T50 is named in three documents rather than one: the
+  deprecation policy is survivable with one consumer under the same
+  authorship, and that is exactly the circumstance a public contract does not
+  have.
+
 ## 0.25.4.0 - 2026-08-12
 
 **Three tasks recorded from the consumer's wish list, one of them as a

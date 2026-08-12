@@ -262,6 +262,17 @@ mavo collect --save-raw data/raw
 
 # five pages of channel history, verbatim, one request per second
 mavo backfill --out data/raw/corpus --pages 5 --delay 1.0
+
+# collect into a store, which is what an unattended host runs
+mavo collect --store /var/lib/mavo/events
+
+# write both contract files: the current picture and the day of history
+mavo report --store /var/lib/mavo/events \
+    --json state.json --feed feed.json
+
+# the same, continuously, which is what the deployed unit runs
+mavo report --store /var/lib/mavo/events \
+    --json state.json --feed feed.json --watch --interval 120
 ```
 
 Expect `mavo collect` to report roughly twenty messages and **parse most of
@@ -296,6 +307,35 @@ one is decisive.
 
 Alarm rate is a hard control rather than a quality metric. That is the design
 decision this repository exists to enforce.
+
+## Running unattended, and what a night of it measured
+
+Since 2026-08-11 a collector has run on a host without supervision, feeding a
+public page. Three numbers came out of the first night that no amount of
+reading the code would have produced.
+
+**Roughly one poll in eight fails.** Eleven unreachable out of ninety-five in
+a twelve-hour journal; nine of sixty in the window measured most closely.
+Consecutive failures happen: the longest run was two and the longest gap
+between successful reads was seven minutes, against a ten-minute staleness
+threshold. Two explanations were tested and closed - rate limiting by the
+source, ruled out by ten requests in fifty seconds all returning 200, and the
+administrative tunnel, ruled out because the collector does not use it. One
+remains open with a mechanism and is T39.
+
+**The margin is smaller than an independence assumption suggests.** Failures
+cluster, so the interval between successful reads is not the poll interval
+divided by the success rate. Three minutes of margin against the staleness
+threshold, not eight.
+
+**A refusal that does not say how long it waited answers no question.**
+`[UNREACHABLE]` carries no elapsed time, so a stall at the ten-second ceiling
+and a rejection that bounced in twenty milliseconds are indistinguishable in
+the journal. Eleven refusals were logged before anyone noticed. That is F44 in
+the diagnostics rather than in the schedule, and it is T55.
+
+The consumer's own release notes carry the other half of this: what a page has
+to do when the instrument feeding it is blind one time in eight.
 
 ## Current finding
 
@@ -383,7 +423,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 18 | 4,818 |
 | Tests | 38 | 5,911 |
 | Tools | 15 | 3,909 |
-| Documentation | 43 | 15,801 |
+| Documentation | 43 | 15,979 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,

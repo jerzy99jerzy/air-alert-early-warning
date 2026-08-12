@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 1.3 / 2026-08-09
+Version: 1.4 / 2026-08-12
 A specification, written from the position of someone who tried to build against
 one and found there was nothing to build against. The Ukrainian equivalent was
 consumed and measured over a corpus of 118 days; the work of building against it
@@ -191,6 +191,24 @@ stated interval knows it is blind, and can say so, instead of displaying calm.
 
 An alerting feed without a heartbeat is a system that fails silently by design.
 
+**Measured, and it is worse than the argument above assumed.** This project
+ran its own collector against the Ukrainian channel unattended for a night and
+counted: **eleven of ninety-five polls failed** in a twelve-hour journal, and
+nine of sixty in the two-hour window measured most closely. Consecutive
+failures happen; the longest run was two and the longest gap between
+successful reads was seven minutes, against a ten-minute staleness threshold.
+
+The number that matters is not the failure rate. It is that **the consumer
+could tell**, on every one of those eleven occasions, because the channel
+publishes continuously enough that absence is legible. A feed that publishes
+only on transitions would have made all eleven indistinguishable from a quiet
+sky, and the consumer's own instrumentation could not have recovered the
+difference from the outside at any cost.
+
+The heartbeat is therefore not a courtesy to consumers who want a liveness
+signal. It is the only thing that makes a consumer's error rate measurable at
+all.
+
 **Why the standard does not cover this, and why that is not a criticism of it.**
 The technical standard describes how a dataset is formatted, described and
 licensed. A dataset is a thing that sits still; a stream is a thing that must be
@@ -200,6 +218,62 @@ in the metadata, which tells a consumer what to expect and nothing about what is
 happening now. For most public data that gap costs nothing. For alerting it is
 the difference between a quiet night and a dead system, and a consumer cannot
 tell them apart from the outside.
+
+## 4a. Three properties learned by shipping, not by specifying
+
+Sections 1 to 4 were written before this project had a consumer in production.
+It has had one since 2026-08-11, and three requirements emerged that the
+original five did not cover. They are numbered separately because they are
+weaker claims: each rests on one deployment rather than on a corpus.
+
+**Six. A cap, published, and a flag saying when it bound.** [measured]
+
+The producer here caps its event window at 5,000 and publishes a `truncated`
+flag. Building the consumer showed why both halves are necessary. Without the
+cap, a window that grows for any reason - a clock skew, a backfill, a schema
+change - is unbounded work for every reader at once; measured on the site, an
+unbounded window rendered a 5.6 MiB page from 20,000 events. Without the flag,
+a bounded list and a quiet window look identical, which is section 4's failure
+wearing a different hat.
+
+**The consumer must also bound it independently**, which is the part that is
+easy to get wrong. This project's own site delegated the bound to the producer
+and did not check it, and the two are deployed separately by hand. A limit
+that lives only on the publishing side is a limit that holds until the day the
+two versions differ.
+
+**Seven. The window's left edge, published rather than derived.** [measured]
+
+A feed carrying "here are the transitions in the last twenty minutes" is not
+enough. The consumer needs the timestamp the window starts at, because a
+device that was asleep for twenty-five minutes cannot otherwise tell a gap
+from a quiet stretch, and neither can the person holding it. Deriving the edge
+from the publication time works only while the consumer's clock and the
+producer's agree, and the case that matters is exactly the one where the
+consumer has been away.
+
+Cost to the producer: one field. Value to the consumer: the difference between
+"nothing happened" and "you did not see what happened", which is section 4's
+invariant applied to the reader rather than to the system.
+
+**Eight. A version policy that says what happens during the changeover.**
+[measured, and it cost a deployment window]
+
+The fourth property asks for a versioned schema. That is necessary and not
+sufficient. When this project moved its own contract from v2 to v3 the payload
+was a strict superset - every field a v2 consumer required was still there -
+and the consumer still refused it, correctly, because it refuses versions it
+does not recognise. The two had to be deployed inside one window with the
+producer first by minutes, and the page was blind in between.
+
+A version number without a stated overlap period pushes that coordination onto
+every consumer, and a public feed has consumers it has never met. What the
+policy has to state: how long the previous version keeps being served, what
+ends that period, and whether a consumer may treat an unknown minor version as
+readable. This project has not written its own policy yet, which is recorded
+in its backlog as the unfinished half of the task that introduced v3. The
+omission is survivable here because there is one consumer and the same author
+controls it. That is exactly the circumstance a public feed does not have.
 
 ## 5. The objection, and the answer
 
