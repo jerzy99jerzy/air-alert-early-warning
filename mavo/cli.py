@@ -150,7 +150,16 @@ def _cmd_collect(args: argparse.Namespace) -> int:
     except SourceUnavailable as unreachable:
         # Unreachable is not quiet. The exit code distinguishes them so a cron
         # wrapper cannot read an outage as an empty sky.
-        print(f"[UNREACHABLE] {unreachable}")
+        #
+        # T55. The elapsed time is measured here as well as inside the
+        # transport, because a stub or a future transport that refuses without
+        # timing itself would otherwise produce a line with no duration at all,
+        # and a diagnostic that is present for one implementation and absent
+        # for another teaches a reader to stop trusting it. The transport's own
+        # figure is the more precise one and appears inside the message; this
+        # one bounds the whole attempt.
+        waited = (datetime.now(UTC) - started).total_seconds()
+        print(f"[UNREACHABLE] {unreachable} (attempt {waited:.2f}s)")
         return 3
     fetch_s = (datetime.now(UTC) - started).total_seconds()
     if args.save_raw:

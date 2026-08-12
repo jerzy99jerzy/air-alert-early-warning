@@ -311,3 +311,96 @@ def test_the_loop_without_a_feed_path_writes_only_the_contract(
     )
     assert state.exists()
     assert list(tmp_path.iterdir()) == [state], "the loop wrote an unasked-for file"
+
+
+def test_a_refusal_says_how_long_it_waited_and_what_was_raised() -> None:
+    """T55. The line that eleven refusals were logged through before anybody
+    noticed it answers no question.
+
+    A stall that hit the ten-second ceiling and a rejection that bounced in
+    twenty milliseconds produced the same journal entry, so the field
+    measurement in T39 could rule out a rate limiter and the tunnel but could
+    not choose between what was left. The elapsed time and the exception class
+    are what separate those hypotheses.
+
+    Mutation: drop either half.
+    """
+    import urllib.error
+    from unittest import mock
+
+    from mavo.errors import SourceUnavailable
+    from mavo.transport import UrllibTransport
+
+    transport = UrllibTransport(timeout_s=5.0)
+    with mock.patch("urllib.request.urlopen",
+                    side_effect=urllib.error.URLError("timed out")):
+        try:
+            transport.fetch("https://example.invalid/x")
+        except SourceUnavailable as refusal:
+            message = str(refusal)
+        else:  # pragma: no cover - the mock always raises
+            raise AssertionError("the transport did not refuse")
+
+    assert "after " in message and "s," in message, message
+    assert "URLError" in message, message
+
+
+def test_the_elapsed_figure_distinguishes_a_fast_failure_from_a_slow_one() -> None:
+    """The data has to be able to tell the two apart, or the check is prose.
+
+    A refusal that bounces immediately and one that waits are given different
+    durations here, and the assertion is on the difference rather than on the
+    presence of a number. Without this, a build that printed a constant would
+    pass.
+    """
+    import urllib.error
+    from unittest import mock
+
+    from mavo.errors import SourceUnavailable
+    from mavo.transport import UrllibTransport
+
+    def refuse_after(seconds: float) -> str:
+        clock = iter([0.0, seconds])
+        with mock.patch("urllib.request.urlopen",
+                        side_effect=urllib.error.URLError("no route")), \
+             mock.patch("time.monotonic", side_effect=lambda: next(clock)):
+            try:
+                UrllibTransport(timeout_s=10.0).fetch("https://example.invalid/x")
+            except SourceUnavailable as refusal:
+                return str(refusal)
+        raise AssertionError("the transport did not refuse")
+
+    assert "after 0.02s" in refuse_after(0.02), refuse_after(0.02)
+    assert "after 9.98s" in refuse_after(9.98), refuse_after(9.98)
+
+
+def test_the_collect_line_bounds_the_whole_attempt(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Measured in the command as well as in the transport.
+
+    A transport that refuses without timing itself would otherwise produce a
+    line with no duration at all, and a diagnostic present for one
+    implementation and absent for another teaches a reader to stop trusting
+    it. Checked by running the command against a transport that refuses,
+    rather than by reading the command's source: the first version of this
+    test asserted on a string in `cli.py`, which would have passed against a
+    build that printed the substring in a comment.
+
+    Mutation: print the transport's message alone.
+    """
+    from unittest import mock
+
+    from mavo.cli import main
+    from mavo.errors import SourceUnavailable
+
+    with mock.patch("mavo.cli.UrllibTransport") as transport:
+        transport.return_value.fetch.side_effect = SourceUnavailable(
+            "https://t.me/s/x: <urlopen error timed out> [after 9.99s, URLError]"
+        )
+        assert main(["collect"]) == 3
+
+    line = capsys.readouterr().out
+    assert "[UNREACHABLE]" in line
+    assert "attempt " in line and "s)" in line, line
+    assert "after 9.99s" in line, "the transport's own figure was dropped"

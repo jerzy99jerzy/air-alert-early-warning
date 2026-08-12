@@ -10,6 +10,7 @@ live service returns what the tests assume is **not** tested here.
 
 from __future__ import annotations
 
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -61,11 +62,27 @@ class UrllibTransport:
                 f"{url}: scheme {scheme!r} refused; this transport speaks http(s)"
             )
         request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        started = time.monotonic()
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
                 raw = response.read(MAX_BYTES + 1)
         except (urllib.error.URLError, OSError, ValueError) as failure:
-            raise SourceUnavailable(f"{url}: {failure}") from failure
+            # T55. The refusal carries how long it waited and what was raised,
+            # because without them a stall that hit the ten-second ceiling and
+            # a rejection that bounced in twenty milliseconds are the same line
+            # in a journal. Eleven refusals were logged over one night before
+            # anybody noticed the line answers no question - F44 in the
+            # diagnostics rather than in the schedule.
+            #
+            # Monotonic rather than wall clock: an NTP step during a ten-second
+            # wait would otherwise produce a negative duration or a wild one,
+            # and a diagnostic that reports nonsense under load is worse than
+            # one that reports nothing.
+            waited = time.monotonic() - started
+            raise SourceUnavailable(
+                f"{url}: {failure} "
+                f"[after {waited:.2f}s, {type(failure).__name__}]"
+            ) from failure
         if len(raw) > MAX_BYTES:
             raise SourceUnavailable(f"{url}: response exceeds {MAX_BYTES} bytes")
         body: str = bytes(raw).decode("utf-8", errors="replace")

@@ -16,6 +16,34 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.26.0.0 - 2026-08-13
+
+**T55: the refusal now answers the question it is asked.**
+
+- **`[UNREACHABLE]` carries the elapsed seconds and the exception class.** A
+  stall that hit the ten-second ceiling and a rejection that bounced in twenty
+  milliseconds were the same line in a journal, so the field measurement in
+  T39 could close two hypotheses and not choose between what was left. Eleven
+  refusals were logged over one night before anybody noticed the line answers
+  no question, which is F44 in the diagnostics rather than in the schedule.
+- **Monotonic clock, not wall clock.** An NTP step during a ten-second wait
+  would otherwise report a negative duration or a wild one, and a diagnostic
+  that produces nonsense under load is worse than one that produces nothing.
+- **Measured in the command as well as in the transport.** A transport that
+  refuses without timing itself would produce a line with no duration, and a
+  diagnostic present for one implementation and absent for another teaches a
+  reader to stop trusting it.
+- Four mutations verified red, including a constant elapsed figure: the
+  regression asserts on two different durations rather than on the presence of
+  a number, so a build that printed the same value every time fails.
+- **One test was rewritten before it shipped.** The first version asserted on
+  a string in `cli.py` and would have passed against a build that printed the
+  substring in a comment. It runs the command against a refusing transport
+  instead.
+- **What this does not do.** It does not explain the 11% unreachable rate. It
+  makes one night of journal able to explain it, which is a different thing
+  and is the measurement T39 still needs.
+
 ## 0.25.6.0 - 2026-08-12
 
 **The status paragraph stops making two claims it could no longer support, and
