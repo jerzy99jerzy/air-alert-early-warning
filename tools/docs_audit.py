@@ -575,16 +575,46 @@ def check_the_readme_status_agrees_with_the_shipped_sprints(
             "skipped or rounded up, and the README summary cannot describe it"
         )
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    claimed = re.search(r"Sprints 0 to (\d+) shipped", readme)
+    # The README counts sprint *files*, which is the same definition the field
+    # uses, and states the count rather than a range. It moved from "Sprints 0
+    # to N shipped" at 0.25.6.0 because the field is known to be behind the
+    # tree and is left behind deliberately: raising it would assert that three
+    # more sprints met their exit criteria. So the check compares the README
+    # against the tree, and separately requires the README to say so when the
+    # field disagrees, rather than forcing two numbers to match by editing
+    # whichever is easier.
+    files = sorted(
+        int(match.group(1))
+        for path in (ROOT / "tests").glob("test_sprint*.py")
+        if (match := re.fullmatch(r"test_sprint(\d+)\.py", path.name))
+    )
+    claimed = re.search(r"\*\*(\w+) sprints have landed with their regression files\*\*",
+                        readme)
     if claimed is None:
         problems.append(
-            "the README status line no longer says 'Sprints 0 to N shipped'; "
-            "this check reads that sentence and cannot verify a rephrasing"
+            "the README status line no longer states how many sprints landed "
+            "with their regression files; this check reads that sentence and "
+            "cannot verify a rephrasing"
         )
-    elif int(claimed.group(1)) != numbers[-1]:
+    else:
+        words = {"nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
+                 "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16}
+        said = words.get(claimed.group(1).lower())
+        if said is None:
+            problems.append(
+                f"the README says {claimed.group(1)!r} sprints landed and this "
+                "check does not know that number word"
+            )
+        elif said != len(files):
+            problems.append(
+                f"the README says {said} sprint files landed, the tree has "
+                f"{len(files)}"
+            )
+    if len(files) != len(numbers) and "left wrong deliberately" not in readme:
         problems.append(
-            f"the README says sprints 0 to {claimed.group(1)} shipped, "
-            f"STATUS.json lists up to {numbers[-1]}"
+            f"shipped_sprints lists {len(numbers)} sprints and the tree has "
+            f"{len(files)} sprint files, and the README does not say the field "
+            "is behind on purpose"
         )
     return problems
 

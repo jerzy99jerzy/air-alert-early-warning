@@ -16,6 +16,35 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.25.6.0 - 2026-08-12
+
+**The status paragraph stops making two claims it could no longer support, and
+the check that reads it is rebuilt around what it can actually verify.**
+
+- **"Sprints 0 to 9 shipped" was false by the definition in its own sentence.**
+  Shipped means the code landed with its regression file; the tree has thirteen
+  such files and `STATUS.json` records nine. The field stays wrong on purpose,
+  because raising it would assert that three more sprints met their exit
+  criteria, which is a larger claim than a test file can carry. The README now
+  states the count from the tree and says the field is behind deliberately.
+- **"No command polls the channel in a loop yet" was literally true and carried
+  a conclusion that had stopped being true.** A collector has run unattended
+  against the live channel since 2026-08-11, so S9's seventy-two-hour clause is
+  a clock that has started rather than an untouched criterion. The comparison
+  "S9 is further from its criterion than S8" was a judgement stated as a fact
+  and has not been recomputed since; it is gone rather than reversed.
+- **Deployment is stated as its own axis.** The site is public, which meets one
+  of beta's three clauses and the cheapest: the instrument is live. Nobody has
+  asked for it (T11) and correctness is unmeasured where it counts, because no
+  western area has ever been hand-checked and western areas are the only kind
+  this product is for (T36). The maturity label stays at pre-alpha: moving it
+  because something runs is the confusion between running and measured that
+  this repository's defect log largely records.
+- **`docs_audit` compares the README against the tree rather than against the
+  field.** It also fails when the two disagree and the README does not say the
+  field is behind on purpose, which keeps the deliberate wrongness from
+  decaying into ordinary drift. Two mutations verified red.
+
 ## 0.25.5.0 - 2026-08-12
 
 **The documentation catches up with a week that ended in production.
