@@ -131,7 +131,36 @@ CONTINUES_MARKERS = ("тривога ще триває", "тривога три�
 # near-miss pile showed three other phrasings. Widened to `відбій` at
 # 0.19.4.0, which is what makes the ordering below load-bearing rather than
 # incidental.
-KIND_DECLARE_MARKERS = ("загроза", "атака дрон")
+KIND_DECLARE_MARKERS = ("загроза", "атака дрон", "напрямок")
+#
+# `напрямок` added at 0.27.0.0, from live evidence rather than from the corpus.
+#
+# **What was measured.** On the production host, every poll between 2026-08-11
+# and 2026-08-12 reported two unparsed messages out of twenty, and both were
+# the same shape: `🟠 22:05 КАБ напрямок Краматорськ #Донецька_область`. The
+# channel names a munition and a direction and no declaration word, so the
+# message carried a kind marker, failed the declare test, carried no alert
+# state either, and was counted as unparsed on every single poll for a day.
+#
+# **Why this marker rather than the one T46 proposed.** T46 offers treating
+# the name of a munition as a declaration in its own right, and warns that
+# doing so would classify summaries and after-action reports. `напрямок`
+# is narrower: it is a word about a thing in flight *now*, not a word that
+# appears in a retrospective count. The broader claim stays refused.
+#
+# **The ordering T46 requires re-checking rather than assuming.** Checked by
+# reading `classify_kind_message`: `lifting` is evaluated first and the declare
+# test runs only under `not lifting`, so a lift message containing `напрямок`
+# reads as a lift. The inversion this file has warned about twice cannot fire
+# through this entry.
+#
+# **Status: [assumption, unmeasured].** The prevalence of this shape across the
+# corpus is unknown, and so is its false-positive rate. Two messages per
+# twenty-message window over one day is evidence that the shape exists and
+# recurs, and evidence for nothing about its frequency across 118 nights. The
+# measurement that replaces this label is a `kind_coverage` run before and
+# after on the same corpus, with near-misses reviewed by hand: the acceptance
+# T45 already states, applied to one more marker.
 # 0.19.4.0. `відбій` alone, because the channel lifts a threat in at least
 # four phrasings and only one of them was listed: `відбій загрози`,
 # `відбій атаки дронів-камікадзе`, `відбій атак дронів`, `відбій по КАБам`,

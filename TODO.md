@@ -9,11 +9,12 @@
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 13 | Finished, with the release that closed it named in the entry |
-| `ready` | 33 | Nothing external blocks it; it needs a session |
+| `ready` | 32 | Nothing external blocks it; it needs a session |
 | `decision` | 4 | Waiting on a judgement rather than on work |
 | `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
+| `unstated` | 1 | **No state in the entry. This is a defect in the entry.** |
 
 ### Priority tiers
 
@@ -1001,8 +1002,34 @@ the fitting-to-noise failure this project was founded on refusing.
 
 
 ## T46. Declarations phrased without a declaration word
-Status: `ready`, and **blocked on nothing except its own measurement**. Do not [tier 1]
-start it without reading the inversion note first.
+Status: **partial at 0.27.0.0.** The second pattern is caught by a narrower
+marker than the entry proposed; the first is not started, and the prevalence of
+both is still unmeasured. [tier 1]
+
+**Shipped:** `напрямок` joins `KIND_DECLARE_MARKERS`. It catches
+`КАБ напрямок Краматорськ`, which the production host counted as unparsed on
+every poll for a day - two messages in every twenty-message window, roughly
+seven hundred times, before anybody read the journal.
+
+**Why not the broader claim.** This entry proposes treating a munition's name
+as a declaration in its own right and warns that doing so would classify
+summaries and after-action reports. `напрямок` is a word about a thing in
+flight now rather than a word that appears in a retrospective count, so it is
+narrower and the broad version stays refused.
+
+**The ordering was re-checked rather than assumed**, as this entry demands:
+`lifting` is evaluated first and the declare test runs only under
+`not lifting`, verified by reading and by a regression that puts the new
+marker inside a lift.
+
+**Still open:** `атак` for `Атака ударних БПЛА над містом`, whose inversion
+risk this entry describes and which needs the lift table re-measured first.
+And the measurement for what shipped: a `kind_coverage` run before and after
+on the corpus, near-misses by hand, which is T45's acceptance applied to one
+more marker. Until then the entry carries [assumption, unmeasured] and says
+what would replace it.
+
+*Original entry below.*
 
 Two patterns remain in the near-miss pile after 0.19.4.0, both measured:
 

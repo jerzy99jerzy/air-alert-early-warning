@@ -404,3 +404,84 @@ def test_the_collect_line_bounds_the_whole_attempt(
     assert "[UNREACHABLE]" in line
     assert "attempt " in line and "s)" in line, line
     assert "after 9.99s" in line, "the transport's own figure was dropped"
+
+
+#: Verbatim from the production journal, 2026-08-11, including the line break
+#: mid-word that the channel's own markup produces. Copied rather than
+#: composed: a fixture written from the parser's expectations is the failure
+#: class this repository has logged five times, and this message is the reason
+#: the marker exists.
+REAL_KAB = (
+    "\U0001f7e0   22:05 \u041a\u0410\u0411 "
+    "\u043d\u0430\u043f\u0440\u044f\u043c\u043e\u043a "
+    "\u041a\u0440\u0430\u043c\u0430\u0442\u043e\u0440\u0441\u044c\u043a\n"
+    "\u043a\n"
+    " #\u0414\u043e\u043d\u0435\u0446\u044c\u043a\u0430_\u043e\u0431\u043b\u0430\u0441\u0442\u044c"
+)
+
+
+def test_a_direction_announcement_is_a_declaration() -> None:
+    """The message that went unparsed on every poll for a day.
+
+    The channel names a munition and a direction and no declaration word, so
+    it carried a kind marker, failed the declare test, carried no alert state,
+    and was counted as unparsed roughly seven hundred times before anybody
+    read the journal. Mutation: remove the marker.
+    """
+    from mavo.schema import KindState, ThreatKind
+    from mavo.sources.telegram import classify_kind_message
+
+    declarations = classify_kind_message(REAL_KAB)
+    assert len(declarations) == 1, declarations
+    _area, oblast, kind, state = declarations[0]
+    assert oblast == "donetsk"
+    assert kind is ThreatKind.GLIDE_BOMB
+    assert state is KindState.DECLARED
+
+
+def test_a_lift_containing_the_new_marker_still_reads_as_a_lift() -> None:
+    """The ordering T46 requires re-checking rather than assuming.
+
+    `lifting` is evaluated first and the declare test runs only under
+    `not lifting`, so widening the declare table cannot turn a lift into a
+    fresh declaration. That inversion is the risk this file has warned about
+    twice, and this is the check that keeps the warning honest.
+    Mutation: evaluate the declare test before the lift test.
+    """
+    from mavo.schema import KindState
+    from mavo.sources.telegram import classify_kind_message
+
+    lift = ("\u0412\u0456\u0434\u0431\u0456\u0439 \u0437\u0430\u0433\u0440\u043e\u0437\u0438 "
+            "\u041a\u0410\u0411 \u043d\u0430\u043f\u0440\u044f\u043c\u043e\u043a "
+            "\u041a\u0440\u0430\u043c\u0430\u0442\u043e\u0440\u0441\u044c\u043a "
+            "#\u0414\u043e\u043d\u0435\u0446\u044c\u043a\u0430_\u043e\u0431\u043b\u0430\u0441\u0442\u044c")
+    declarations = classify_kind_message(lift)
+    assert declarations, "the lift resolved to nothing at all"
+    assert declarations[0][3] is KindState.LIFTED
+
+
+def test_the_marker_alone_declares_nothing() -> None:
+    """Breadth is bounded on the other side: a declaration needs a declare
+    marker **and** exactly one kind marker. A direction with no munition named
+    is a message this cannot act on, and guessing would be the collapse the
+    whole file refuses. Mutation: drop the one-kind requirement."""
+    from mavo.sources.telegram import classify_kind_message
+
+    vague = ("\u041d\u0430\u043f\u0440\u044f\u043c\u043e\u043a "
+             "\u041a\u0440\u0430\u043c\u0430\u0442\u043e\u0440\u0441\u044c\u043a "
+             "#\u0414\u043e\u043d\u0435\u0446\u044c\u043a\u0430_\u043e\u0431\u043b\u0430\u0441\u0442\u044c")
+    assert classify_kind_message(vague) == ()
+
+
+def test_a_message_with_an_alert_state_is_still_an_alert() -> None:
+    """A message carrying an alert state is an alert, whatever else it
+    mentions. The new marker must not steal one. Mutation: move the state
+    check after the declare test."""
+    from mavo.sources.telegram import classify_kind_message
+
+    both = ("\u041f\u043e\u0432\u0456\u0442\u0440\u044f\u043d\u0430 "
+            "\u0442\u0440\u0438\u0432\u043e\u0433\u0430 \u041a\u0410\u0411 "
+            "\u043d\u0430\u043f\u0440\u044f\u043c\u043e\u043a "
+            "\u041a\u0440\u0430\u043c\u0430\u0442\u043e\u0440\u0441\u044c\u043a "
+            "#\u0414\u043e\u043d\u0435\u0446\u044c\u043a\u0430_\u043e\u0431\u043b\u0430\u0441\u0442\u044c")
+    assert classify_kind_message(both) == ()

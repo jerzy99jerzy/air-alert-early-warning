@@ -16,6 +16,35 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.27.0.0 - 2026-08-13
+
+**T46, partial: a message shape the parser had been failing on every poll for a
+day.**
+
+- **`КАБ напрямок Краматорськ` was unparsed roughly seven hundred times.** Two
+  in every twenty-message window, on the production host, from 2026-08-11
+  until somebody read the journal. It carries a kind marker, no declaration
+  word and no alert state, so it failed the declare test and was counted
+  rather than resolved - honest and lossy at once, which is what the unparsed
+  counter exists to make visible.
+- **`напрямок` joins the declare markers**, which is narrower than what T46
+  proposed. That entry offers treating a munition's name as a declaration in
+  its own right and warns it would classify summaries and after-action
+  reports; a direction is a word about something in flight now.
+- **The inversion ordering was re-checked rather than assumed**, as T46
+  demands: lifts are evaluated first, verified by reading and by a regression
+  that puts the new marker inside a lift message.
+- **The fixture is verbatim from the production journal**, line break
+  mid-word included. A fixture written from the parser's expectations is the
+  failure class this repository has logged five times, and this message is the
+  reason the marker exists.
+- **Status of the marker: [assumption, unmeasured].** One day of live evidence
+  says the shape exists and recurs; it says nothing about prevalence across
+  118 nights or about false positives. T45's acceptance applies.
+- Four mutations verified red: the marker removed, the declare test moved
+  ahead of the lift test, the one-kind requirement dropped, and the alert-state
+  check moved after the declare test.
+
 ## 0.26.0.0 - 2026-08-13
 
 **T55: the refusal now answers the question it is asked.**
