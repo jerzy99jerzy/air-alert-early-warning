@@ -383,7 +383,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 18 | 4,818 |
 | Tests | 38 | 5,911 |
 | Tools | 15 | 3,909 |
-| Documentation | 43 | 15,632 |
+| Documentation | 43 | 15,801 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,

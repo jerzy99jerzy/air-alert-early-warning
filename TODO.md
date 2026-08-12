@@ -4,13 +4,13 @@
 
 ### Where the backlog stands
 
-**12 of 50 closed, 38 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**12 of 55 closed, 43 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 12 | Finished, with the release that closed it named in the entry |
-| `ready` | 30 | Nothing external blocks it; it needs a session |
-| `decision` | 3 | Waiting on a judgement rather than on work |
+| `ready` | 34 | Nothing external blocks it; it needs a session |
+| `decision` | 4 | Waiting on a judgement rather than on work |
 | `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
@@ -25,11 +25,11 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 8 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name)
+**Tier 1, 10 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T55](#t55-the-refusal-does-not-say-how-long-it-waited)
 
 **Tier 2, 19 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both)
 
-**Tier 3, 11 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T53](#t53-full-width-map-fullscreen-theme-switch)
+**Tier 3, 14 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T53](#t53-full-width-map-fullscreen-theme-switch), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed)
 
 ### By sprint
 
@@ -42,7 +42,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T53](#t53-full-width-map-fullscreen-theme-switch), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T53](#t53-full-width-map-fullscreen-theme-switch), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T55](#t55-the-refusal-does-not-say-how-long-it-waited), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed) |
 
 <!-- index:end -->
 
@@ -1320,3 +1320,134 @@ positives is part of the task rather than assumed.
 either figure; both appear in prose describing the shape of the traffic. The
 cost is a reader's misunderstanding, not a wrong result. That is exactly the
 class F80 came from, which is why it is logged rather than left in a session.
+
+## T54. Observe the staleness machine crossing, once, on a real host
+Status: `ready` [tier 1], **before the public link**
+
+The page moves fresh to stale to blind on the browser's own clock, because a
+server that has stopped cannot tell anyone it has stopped. **Nobody has ever
+watched it happen.** The drill was started on 2026-08-11 at 18:13 and abandoned
+after two minutes against a 600-second threshold; on 2026-08-12 an IAP failure
+brought `observation_age_s` to 594.3 and the collector came back six seconds
+short of demonstrating it by accident.
+
+**Why this is tier 1 rather than housekeeping.** T39 measured the collector
+missing roughly one poll in eight, with runs of two and a longest gap of seven
+minutes. At that rate the degraded state is not hypothetical: it will be
+reached, and the first person to see it should not be a stranger who was sent
+the link.
+
+**Method.** Stop three units on the producer host - `mavo-collect.timer`,
+`mavo-report.service`, `mavo-push.timer` - and leave them stopped for thirty
+minutes with the page open. The three matter: stopping only the collector
+leaves the report loop rewriting `state.json` with a fresh `generated_at` over
+an unchanging store, which is a different failure and would show the wrong
+thing.
+
+**Acceptance:** an entry in the site's `docs/DRILL-LOG.md` with the times, the
+`observation_age_s` at each transition, and **what was actually seen** rather
+than what was supposed to happen. Including, if it comes to that, that a
+transition did not occur - which would be a defect found by the only method
+that can find it.
+
+## T55. The refusal does not say how long it waited
+Status: `ready` [tier 1], blocks the diagnosis in T39
+
+`[UNREACHABLE] <urlopen error timed out>` carries no elapsed time, so a stall
+that hit the 10-second ceiling and a refusal that bounced in twenty
+milliseconds are indistinguishable in the journal. Those are different
+failures with different causes - a hung connection against a rejection or a
+name-resolution error - and the journal cannot tell them apart.
+
+**This is F44 in the diagnostics rather than in the schedule.** A probe whose
+outcomes do not separate its hypotheses is not a probe, and eleven refusals
+were logged before anyone noticed that the line answers no question.
+
+**Acceptance:** the refusal line carries the elapsed seconds and the exception
+class, a regression whose data distinguishes a fast failure from a slow one,
+and a named mutation verified red. Then one night of journal, and T39's open
+hypothesis is settled by reading rather than by argument.
+
+**Deliberately not in scope:** a retry, a longer timeout, or a different poll
+interval. Each would mask the symptom before its cause is known, and the
+component in question is the one that decides whether the sky is being
+watched.
+
+## T56. Is there an alert feed for the Romanian border and the Baltics
+Status: `ready` (own action, nobody's permission needed) [tier 3]
+
+The Ukrainian channel this project reads is one country's civil defence
+publishing in one place. **Whether anything comparable exists for the
+Romanian border or for the Baltic states is unmeasured**, and the question is
+worth an afternoon before it is worth an architecture.
+
+**Why it is tier 3 rather than higher.** The product's thesis is distance to
+the Polish border, and Romania and the Baltics are not on it. What they would
+buy is a second observation of the same war from another angle, which is a
+research question rather than a product one until the first is answered.
+
+**What to look for, in the FEED-SPEC vocabulary** (section 3, the five
+properties): a public endpoint, a stable schema, a stated update rate, a
+version policy, and a failure that is distinguishable from silence. A
+Telegram channel of a national service counts if it is public and
+machine-readable in the same sense the Ukrainian one turned out to be.
+
+**Named candidates to check rather than assume**: Romania's RO-ALERT and DSU
+publications, and the Baltic states' national alerting arrangements, each of
+which may be push-only to phones and therefore not readable at all. **A
+negative result closes this task and is worth as much as a positive one**, in
+which case it is recorded in `docs/FEED-SPEC.md` beside the Polish finding
+rather than left as an open possibility somebody rediscovers.
+
+**Acceptance:** each candidate measured against the five properties with the
+date and the method, and the outcome written down either way.
+
+## T57. A week of the picture: statistics a reader can open
+Status: `ready`, needs T42 for its second half [tier 3]
+
+A panel showing the last seven days: alerts per day, the split between west
+and the rest, the distribution of threat kinds, and how much of the week the
+collector was actually watching. That last number is the one nobody else
+would publish and the one that makes the rest honest.
+
+**The Jasionka half needs data this project does not yet have.** T42 is the
+ADS-B measurement of the hub's operating intensity, and it follows T20's
+OpenSky registration. A density chart of landings by hour, from military
+transponder traffic, is a good rendering of it and D-019 already settled what
+may be published: the aggregate, never the positions.
+
+**A trap to avoid, and it is the reason this entry is not larger.** A
+statistics panel is where a reporting instrument starts to look like an
+analysis product. Counts of alerts are counts of *announcements*, not of
+attacks, and a reader shown a bar chart will read attack intensity into it
+unless every axis says otherwise. The panel is worth building only with the
+collector's own uptime beside it.
+
+**Acceptance:** counts computed from the contract rather than recomputed on
+the consumer side, the collector's observed uptime for the same window shown
+beside them, and each axis labelled with what it counts. The Jasionka chart
+ships separately and only after T42.
+
+## T58. Traffic and road conditions near the border: refused as posed
+Status: `decision` recorded, no work planned [tier 3]
+
+Requested 2026-08-12: road disruptions in the border area from Google Maps.
+**Refused in that form**, and the reason is recorded so the request is not
+rediscovered as an oversight.
+
+The useful shape of that data is a live overlay, and a live overlay is either
+the reader's browser talking to Google, which is exactly what the site's
+D-S16 keeps refusing, or a server proxying a product whose terms do not allow
+it to be redrawn on somebody else's map. Neither is a licensing detail that
+could be worked around; both are the arrangement itself.
+
+**What is available instead**, and it is a data question rather than a
+privacy one: roads and railways drawn from vendored public-domain geometry,
+which is T51 and carries a measured budget. Static roads answer "where would
+somebody drive" and do not answer "is it blocked now", and the second question
+is the one that was asked. So T51 is not a substitute, and this entry says so
+rather than quietly delivering the cheaper thing.
+
+**What would reopen it.** A public, non-tracking source of Polish road
+incidents in the border voivodeships, which is the same shape of question as
+T8a and would be measured the same way.

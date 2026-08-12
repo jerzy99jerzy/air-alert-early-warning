@@ -16,6 +16,44 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.25.4.0 - 2026-08-12
+
+**Three tasks recorded from the consumer's wish list, one of them as a
+refusal. Backlog only.**
+
+- **T56: is there an alert feed for the Romanian border or the Baltics.**
+  Unmeasured, worth an afternoon before it is worth an architecture, and
+  measured against FEED-SPEC's five properties like T8a. A negative result
+  closes it and goes into `docs/FEED-SPEC.md` beside the Polish finding.
+- **T57: a week of the picture, openable.** Counts per day, west against the
+  rest, kinds, and the collector's own uptime for the same window, because a
+  bar chart of announcements will be read as attack intensity unless the
+  instrument's blindness is shown beside it. The Jasionka density chart is its
+  second half and waits on T42.
+- **T58: road conditions near the border, refused as posed.** A live traffic
+  overlay is either the reader's browser talking to Google, which the site's
+  D-S16 refuses, or a server redrawing a product whose terms do not allow it.
+  Recorded as a refusal with the reason, so it is not rediscovered as an
+  oversight, and with the measurement that would reopen it.
+- 53 tasks in the backlog. No code changed.
+
+## 0.25.3.0 - 2026-08-12
+
+**Two tier-1 tasks recorded before the deployment window opens. Backlog only.**
+
+- **T54: the staleness machine has never been watched crossing.** Started once
+  and abandoned after two minutes against a 600-second threshold; on 2026-08-12
+  an IAP failure came six seconds short of demonstrating it by accident. At the
+  unreachable rate T39 measured, the degraded state will be reached, and the
+  first person to see it should not be a stranger who was sent the link.
+- **T55: the refusal does not say how long it waited.** A stall at the timeout
+  ceiling and a rejection that bounced in twenty milliseconds look identical in
+  the journal. Eleven refusals were logged before anyone noticed the line
+  answers no question, which is F44 in the diagnostics rather than in the
+  schedule. Explicitly not in scope: a retry, a longer timeout or a different
+  interval, each of which would mask the symptom before its cause is known.
+- 52 tasks in the backlog, 9 at tier 1. No code changed.
+
 ## 0.25.2.0 - 2026-08-12
 
 **T39 gets its first field measurement, and the entry is rewritten around it.
