@@ -44,7 +44,7 @@ def check_every_sprint_has_a_regression_file() -> list[str]:
     status = ROOT / "STATUS.json"
     if not status.exists():
         return ["STATUS.json is missing"]
-    sprints = {str(number) for number in json.loads(status.read_text())["shipped_sprints"]}
+    sprints = {str(number) for number in json.loads(status.read_text())["sprint_test_files"]}
     missing = [
         number
         for number in sorted(sprints)

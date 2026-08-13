@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.6
+Document:  docs/DECISIONS.md, version 2.7
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -859,3 +859,30 @@ would reopen this entry, and it is available without any new work.
 the ten-second timeout. Both would mask the symptom T39 is still chasing, and
 the interval change is defensible on its own terms while a retry would confuse
 two questions.
+
+**Correction, 0.28.1.0 (F98). The arithmetic above understates the cost of a
+failure, and the decision survives the correction with a smaller margin than it
+claimed.** Two errors, one in this repository and one on the host.
+
+The ten-second timeout was ten seconds *per socket operation and per resolved
+address*, not per attempt: a failed collection was measured twice at 20 seconds
+on 2026-08-13. F98 makes the number a deadline for the whole fetch, so from
+this release the figure the paragraph above uses is the figure the code
+enforces. It was not, when the paragraph was written.
+
+The second error is in the unit file rather than here, and it is
+[reported, from the production host, not reproduced in this repository]:
+`OnUnitActiveSec` measures from activation, so a failed run displaces the
+following cycle by its own duration, and `AccuracySec` defaults to one minute,
+which systemd may spend coalescing wakeups. Start-to-start intervals were
+60, 37, 53, 33, 37, 37 and 33 seconds against a nominal 30 plus 5 of jitter.
+At a 120-second interval this was invisible; at 30 it is the dominant term.
+
+**Consequence for the decision.** A run of two failures costs more than the 90
+seconds stated above, and the margin against the 600-second staleness threshold
+is correspondingly smaller. The decision still holds - 90 or its corrected
+value are both far below 390 - but the number in it was derived rather than
+measured, and this entry should carry a measured cadence once the host has run
+one uninterrupted hour with `AccuracySec=1s` in place. **That measurement is
+the outstanding item on this decision**, and until it exists the margin here is
+an estimate, not a bound.

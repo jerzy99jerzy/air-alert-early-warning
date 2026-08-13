@@ -16,6 +16,81 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.29.0.0 - 2026-08-13
+
+**A documentation pass, and the README learns to speak to two readers.**
+
+- **The README opens for a reader who is not an engineer.** Five new sections
+  before the thesis: what the system does in a minute, one alert followed from
+  the channel to a line on a map, what it will not do, a glossary of the terms
+  the rest of the document uses without introduction, and the questions people
+  actually ask. Nothing below them changed and nothing in them softens a claim:
+  the status line, the unmeasured western correctness rate and the defect log
+  are stated in plain words as plainly as they are stated in technical ones. A
+  reader who stops after the glossary has an accurate picture rather than a
+  flattering one.
+- **`docs/WEBAPP.md` catches up with the consumer, and says it fell behind
+  twice.** It described `mavo-site` 4.1.0.0 while the site had shipped through
+  4.12.0.0 and been publicly reachable since 2026-08-12. Its "what gates
+  publication" section listed three blockers as open; two of them are not, and
+  publication went ahead with the third open under D-025. The section now
+  records what happened rather than what was planned.
+- **`docs/DEPLOYMENT.md` records what actually runs.** Thirty seconds plus
+  jitter under D-027, the timer measuring from activation with an `AccuracySec`
+  default larger than the interval it paces, and the measured consequence that
+  a failed fetch costs its own wall clock rather than one interval.
+- **The check that does not exist is named in the file that needs it.** Nothing
+  fails when `docs/WEBAPP.md` falls behind the consumer, and it has now done so
+  twice. A weaker but honest check is proposed there; it is not built, and
+  saying so in the document is the minimum a rule without a gate check earns.
+
+## 0.28.2.0 - 2026-08-13
+
+**Sprint status stops being three documents' opinion.** Review R-4 of the
+0.23.1.0 archive found `STATUS.json` counting nine sprints shipped, `TODO.md`
+declaring S8 partial and open, and `docs/MANUAL.md` speaking of sprint 6 in
+the future tense.
+
+- **`shipped_sprints` is now `sprint_test_files`.** F93 established six
+  releases ago that the field means "a regression file exists" and not "the
+  sprint met its exit criterion". The reconciliation stayed in the defect log
+  while the misleading name stayed in the file a reader opens first.
+- **`todo_index --check` fails when the plan and the backlog disagree.** The
+  sprint TODO declares open cannot be one `docs/MVP.md` gives a closing
+  window, and a sprint the plan closes cannot still carry open tasks.
+- **One real disagreement is named rather than resolved by this release.**
+  MVP.md closes S7 while T31, T33 and T34 still carry it. Whether the row is
+  amended or the tasks are reassigned is a decision, and the frozen list that
+  holds it carries the reason and is itself checked: an entry that stops being
+  a disagreement fails the gate rather than aging into an exemption.
+- **The sentence the check reads is load bearing**, so rephrasing it fails the
+  gate instead of quietly disabling the check.
+
+## 0.28.1.0 - 2026-08-13
+
+**The ten-second timeout took twenty seconds, twice, on the production host.**
+
+- **F98: `timeout_s` bounded each socket operation, not the fetch.** `urlopen`
+  hands the value to the socket, where the connect, the TLS handshake and the
+  read are each allowed the full amount, and `socket.create_connection` applies
+  it again to every resolved address. The collector host is IPv6-only, so the
+  address that cannot work is tried at full price first. The number now names a
+  deadline for the whole fetch: `connect_within` spends one budget across the
+  addresses, and the connection hands the read whatever the connect left.
+- **The diagnostic that would have caught it had been correct for two
+  releases.** T55 put the elapsed time in every refusal at 0.26.0.0. The
+  evidence was in the journal; the question "does the bound hold" was not being
+  asked of it.
+- **D-027 carries a correction rather than a rewrite.** Its deciding
+  arithmetic - two failures costing 90 seconds against a 600-second staleness
+  threshold - assumed a failure costs one interval. It costs its own wall
+  clock too, and that wall clock was double the constant. The decision survives
+  with a smaller margin, and the entry now says that the margin is an estimate
+  until the host reports a measured cadence.
+- **What is still unbounded, stated rather than discovered later:**
+  `getaddrinfo`. Bounding a resolver needs a thread inside the network seam,
+  which is a larger change than this defect justifies.
+
 ## 0.28.0.0 - 2026-08-13
 
 **A second view of the same alerts, built as a measuring instrument and unable

@@ -50,9 +50,16 @@ def check_version_pins(status: dict[str, object]) -> list[str]:
     return problems
 
 
-def check_every_shipped_sprint_has_a_regression_file(status: dict[str, object]) -> list[str]:
-    """A sprint declared shipped has the regression file that proves it."""
-    sprints = status["shipped_sprints"]
+def check_every_sprint_file_is_named(status: dict[str, object]) -> list[str]:
+    """Every sprint the field lists has the regression file the field means.
+
+    The field was called ``shipped_sprints`` until 0.28.2.0, which is the name
+    F93 was logged against: it means "a test file exists", it was read as
+    "the sprint met its exit criterion", and the reconciliation lived in the
+    defect log while the misleading name stayed in the artefact a reader opens
+    first. A defect entry is not a repair.
+    """
+    sprints = status["sprint_test_files"]
     assert isinstance(sprints, list)
     return [
         f"sprint {number} declared shipped but tests/test_sprint{number}.py is missing"
@@ -542,12 +549,12 @@ def check_cited_tests_exist() -> list[str]:
     return problems
 
 
-def check_the_readme_status_agrees_with_the_shipped_sprints(
+def check_the_readme_status_agrees_with_the_sprint_files(
     status: dict[str, object],
 ) -> list[str]:
     """The README's status line must count the same sprints STATUS.json does.
 
-    **What ``shipped_sprints`` means, because reading it wrong is F93.** The
+    **What ``sprint_test_files`` means, because reading it wrong is F93.** The
     field's only other consumer checks that ``tests/test_sprintN.py`` exists,
     so a sprint is in this list when its code landed with regressions. It does
     **not** mean the sprint met the exit criterion in ``docs/MVP.md``. This
@@ -564,14 +571,14 @@ def check_the_readme_status_agrees_with_the_shipped_sprints(
     The list must also be contiguous: "0 to N" is a truthful summary only over
     a list with no holes, and a hole is a sprint whose file was never written.
     """
-    shipped = status.get("shipped_sprints")
+    shipped = status.get("sprint_test_files")
     if not isinstance(shipped, list) or not shipped:
-        return ["STATUS.json carries no shipped_sprints list"]
+        return ["STATUS.json carries no sprint_test_files list"]
     numbers = sorted(int(value) for value in shipped)
     problems = []
     if numbers != list(range(numbers[0], numbers[-1] + 1)):
         problems.append(
-            f"shipped_sprints has a hole: {numbers}. A gap is a sprint that was "
+            f"sprint_test_files has a hole: {numbers}. A gap is a sprint that was "
             "skipped or rounded up, and the README summary cannot describe it"
         )
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -612,7 +619,7 @@ def check_the_readme_status_agrees_with_the_shipped_sprints(
             )
     if len(files) != len(numbers) and "left wrong deliberately" not in readme:
         problems.append(
-            f"shipped_sprints lists {len(numbers)} sprints and the tree has "
+            f"sprint_test_files lists {len(numbers)} sprints and the tree has "
             f"{len(files)} sprint files, and the README does not say the field "
             "is behind on purpose"
         )
@@ -670,7 +677,7 @@ def main() -> int:
     status = _status()
     problems = (
         check_version_pins(status)
-        + check_every_shipped_sprint_has_a_regression_file(status)
+        + check_every_sprint_file_is_named(status)
         + check_threat_model_numbering(status)
         + check_harness_catalogue(status)
         + check_cited_tests_exist()
@@ -681,7 +688,7 @@ def main() -> int:
         + check_major_releases_carry_a_review()
         + check_corpus_measurements_carry_an_inventory(status)
         + check_the_holdout_boundary_survives_in_the_corpus_block(status)
-        + check_the_readme_status_agrees_with_the_shipped_sprints(status)
+        + check_the_readme_status_agrees_with_the_sprint_files(status)
         + check_defect_count_is_pinned(status)
         + check_statistics_match_the_tree(status)
         + check_measured_block_is_recomputed(status)

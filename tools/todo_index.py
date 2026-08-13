@@ -35,6 +35,25 @@ END = "<!-- index:end -->"
 STATES = ("done", "ready", "decision", "blocked-external", "deferred", "debt")
 SPRINTS = ("S7", "S8", "S9", "S10", "S11")
 
+MVP = ROOT / "docs" / "MVP.md"
+OPEN_SPRINT = re.compile(r"\*\*Sprint (S\d+), declared[^*]*open\.\*\*")
+MVP_ROW = re.compile(r"^\| \*\*(S\d+)\*\* \| ([^|]*)\|", re.M)
+
+# Sprints whose MVP row says closed while tasks in TODO still carry them.
+# A frozen list with a written reason rather than a tolerance rule, for the
+# reason the unreviewed-release set in `docs_audit.py` gives: a rule that
+# tolerates a shape absorbs the next instance silently, and a named entry is a
+# visible act. `check_sprint_agreement` removes an entry that stops being a
+# real disagreement, so this cannot rot into a permanent exemption.
+TOLERATED_OPEN_IN_A_CLOSED_SPRINT = {
+    "S7": (
+        "MVP.md records S7 as met on an amended criterion, and T31, T33 and "
+        "T34 are work that amended criterion did not require. Whether the row "
+        "is amended or the three tasks are reassigned is a decision, not a "
+        "bookkeeping repair, and it is not made by this list"
+    ),
+}
+
 
 def state_of(status: str) -> str:
     """The first state word the status line carries.
@@ -142,6 +161,74 @@ def _anchor(task_id: str, title: str) -> str:
     return re.sub(r"[^a-z0-9 -]", "", heading.lower()).replace(" ", "-")
 
 
+
+def closed_in_the_plan() -> set[str]:
+    """Sprints whose ``docs/MVP.md`` row declares a closing date."""
+    return {
+        sprint
+        for sprint, window in MVP_ROW.findall(MVP.read_text(encoding="utf-8"))
+        if window.strip().lower().startswith("closed")
+    }
+
+
+def check_sprint_agreement(rows: list[tuple[str, str, str, str, str]]) -> list[str]:
+    """TODO's prose, the entries beneath it, and the plan must say one thing.
+
+    Review R-4 of 0.23.1.0 found three artefacts disagreeing about which sprint
+    was open: ``STATUS.json`` counted nine sprints shipped, ``TODO.md`` said S8
+    was partial and open, and ``docs/MANUAL.md`` referred to sprint 6 in the
+    future tense. The first was repaired by renaming the field to what it
+    measures. This is the other half, and it is the half that matters: a wrong
+    status is worse than a wrong priority, because status ends arguments.
+
+    Two things are checked, and neither is a matter of judgement. The sprint
+    TODO declares open cannot be one the plan calls closed. And a sprint the
+    plan calls closed cannot still carry open tasks, unless it is named in
+    ``TOLERATED_OPEN_IN_A_CLOSED_SPRINT`` with a reason, in which case it must
+    still be a real disagreement - an entry that has been resolved is reported
+    so the list shrinks by the gate rather than by memory.
+    """
+    text = TODO.read_text(encoding="utf-8")
+    closed = closed_in_the_plan()
+    problems: list[str] = []
+    if not closed:
+        problems.append(
+            "no sprint row in docs/MVP.md declares a closing window; this check "
+            "reads that column and cannot verify a rephrasing"
+        )
+    declared = OPEN_SPRINT.search(text)
+    if declared is None:
+        problems.append(
+            "TODO.md no longer declares which sprint is open in the sentence "
+            "this check reads; a plan whose current sprint is implicit is the "
+            "state R-4 found"
+        )
+    elif declared.group(1) in closed:
+        problems.append(
+            f"TODO.md declares {declared.group(1)} open and docs/MVP.md gives it "
+            "a closing window"
+        )
+    still_open: dict[str, list[str]] = {}
+    for task_id, _title, state, _tier, sprint in rows:
+        if sprint in closed and state != "done":
+            still_open.setdefault(sprint, []).append(task_id)
+    for sprint, tasks in sorted(still_open.items()):
+        if sprint not in TOLERATED_OPEN_IN_A_CLOSED_SPRINT:
+            problems.append(
+                f"docs/MVP.md closes {sprint} and {', '.join(tasks)} are still "
+                f"open under it; amend the row, move the tasks, or name {sprint} "
+                "in TOLERATED_OPEN_IN_A_CLOSED_SPRINT with a reason"
+            )
+    for sprint in sorted(TOLERATED_OPEN_IN_A_CLOSED_SPRINT):
+        if sprint not in still_open:
+            problems.append(
+                f"{sprint} is named as tolerating open tasks in a closed sprint "
+                "and no longer has any; remove it from "
+                "TOLERATED_OPEN_IN_A_CLOSED_SPRINT"
+            )
+    return problems
+
+
 def main() -> int:
     """Regenerate or check the index. Returns a process exit code."""
     parser = argparse.ArgumentParser()
@@ -176,7 +263,12 @@ def main() -> int:
             print(f"todo-index: open tasks with no tier: {', '.join(unstated)}",
                   file=sys.stderr)
             return 1
-        print(f"todo-index: {len(rows)} tasks, index holds")
+        disagreements = check_sprint_agreement(rows)
+        if disagreements:
+            for problem in disagreements:
+                print(f"todo-index: {problem}", file=sys.stderr)
+            return 1
+        print(f"todo-index: {len(rows)} tasks, index holds, sprint status agrees")
         return 0
 
     TODO.write_text(text.replace(current, fresh), encoding="utf-8")

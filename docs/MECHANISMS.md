@@ -4,7 +4,7 @@ Every mechanism in MAVO: what it is, where it lives, the alternative that was
 rejected, the failure it prevents, and the test that keeps it honest.
 
 ```
-Document:  docs/MECHANISMS.md, version 2.0
+Document:  docs/MECHANISMS.md, version 2.1
 Audience:  a contributor about to change how something works, and anyone asking
            "why is it done this way rather than the obvious way"
 Companion: ARCHITECTURE (what talks to what), DATA-FLOW (what happens to a
@@ -577,6 +577,14 @@ protocol exists to prevent.
 **Bounds:** `DEFAULT_TIMEOUT_S = 10.0`, `MAX_BYTES = 4_000_000`. Decoding is
 UTF-8 with `errors="replace"`, because a parser that raises on a malformed byte
 turns hostile content into an outage (MT7).
+
+**The time bound is a deadline for the whole fetch, not a timeout per socket
+operation (F98).** Handed to `urlopen`, the same number bounds the connect, the
+handshake and the read separately, and `socket.create_connection` re-applies it
+to every resolved address; a host with two records cost two timeouts before the
+read began. `connect_within` spends one budget across the addresses and the
+connection hands the read what is left. `getaddrinfo` remains outside the
+bound, which is stated in the defect entry rather than implied here.
 
 **The User-Agent derives from `__version__`** rather than being typed, after
 shipping a hardcoded `mavo/0.3.0.0` at 0.3.1.0 (F36).

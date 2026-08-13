@@ -1,10 +1,18 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.6 / 2026-08-12
-Status: **built, in a separate repository, and under version control since
-2026-08-12.** `mavo-site` 4.1.0.0 runs and carries its own gate (seven checks,
-19 mutants, a jsdom browser harness), its own defect log and its own audit.
+Version: 2.7 / 2026-08-13
+Status: **built, deployed, and publicly reachable.** `mavo-site` 4.12.0.0 runs
+at `https://34.116.232.215.sslip.io/` and carries its own gate (seven checks,
+24 mutants, a jsdom browser harness), its own defect log and its own audit.
 Everything described here was read out of that package rather than remembered.
+
+**The document has been behind the consumer twice**, at 2.5 and again here: it
+said 4.1.0.0 while the site had shipped through 4.12.0.0, including the release
+that made the map the page and the one that made a switched-off layer stay off.
+Recorded rather than quietly corrected, because a document that keeps reading
+plausibly while the thing it describes moves is the failure class this file has
+now demonstrated twice. The gate check that would stop a third is named at the
+end of this section and does not exist yet.
 
 **This document was four releases behind the consumer until 2.5.** The version
 recorded here said 1.2.0.0 while the site had reached 4.1.0.0, which is the
@@ -80,7 +88,7 @@ than assembled there.
 - [Freshness is the browser's job](#freshness-is-the-browsers-job)
 - [What the page must never say](#what-the-page-must-never-say)
 - [Deployment shape](#deployment-shape)
-- [What gates publication](#what-gates-publication)
+- [What gated publication, and what actually happened](#what-gated-publication-and-what-actually-happened)
 - [Open questions](#open-questions)
 
 ## Framing: a surface, not the product
@@ -396,16 +404,42 @@ Its only input is a file. That is also what makes the failure mode benign: if
 the exporter dies, the file stops moving, and the page says `blind` on the
 browser's clock without anyone noticing anything.
 
-## What gates publication
+## What gated publication, and what actually happened
 
-Carried rather than resolved here. All three are open.
+This section listed three blockers and said all three were open. Then the site
+was published on 2026-08-12 with one of them still open. The honest record:
 
-- **T6**, the legal position covering readers who are strangers. Now gating the
-  site as well as the notification channel, and dated early September.
-- **T11**, two conversations with recipients. A blocker under D-015 revision 1
-  rather than a formality.
-- **The privacy page and the first-screen non-claim.** The second is built and
-  tested; the first is not written.
+- **The privacy page and the first-screen non-claim: both shipped.** The
+  non-claim sits above the map and a regression asserts it stays there; the
+  privacy page exists at `/privacy` and the footer carries a short version of
+  it. The footer also now states that the reader's theme and layer choices are
+  kept in their own browser, because a paragraph listing what a site does not
+  keep may not be silent about what it does (site D-S26).
+- **T11**, two conversations with recipients: **still open.** It gates the
+  notification channel, which is the thing that wakes somebody up. It does not
+  gate a page a reader chooses to open, and D-026 revised the beta definition
+  accordingly.
+- **T6**, the legal position: **open, and publication went ahead without it**
+  under D-025. That is a decision with a reason, not an oversight, and the
+  reason is in the decision entry. Anybody reading this file to learn whether
+  the project waits for its own blockers should read it as: not always, and
+  when it does not, the decision is written down with its date.
+
+**What the deployed site is, as of 2026-08-13.** Version 4.12.0.0. A tiled base
+map with the self-hosted SVG announced as the fallback rather than hidden as
+one; the map running the width of the page; a panel of state transitions over
+the last day; weather fetched server-side; a visit counter that stores two
+numbers a day from a daily-rotated hash. No cookie, no third-party request, no
+analytics script.
+
+**The check this file still lacks.** Nothing fails when this document falls
+behind the consumer, which it has now done twice. The consumer pins its own
+version in its `STATUS.json`; the two repositories do not read each other, and
+under D-020 they must not. A weaker check is available and honest: this file
+records the consumer version it was written against, and the producer's gate
+fails when that string is older than the one in the last `state.json` served,
+which the producer does see. Not built. Named here so that the next person to
+notice the drift finds a proposal rather than a complaint.
 
 ## Open questions
 

@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.1 / 2026-08-12
+Version: 1.2 / 2026-08-13
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -91,6 +91,33 @@ has passed through a middlebox, and the `reported` provenance label on every
 event is doing more work than usual.
 
 ## 3. Jitter is not cosmetic
+
+**What actually runs, as of 0.28.2.0** [measured on the host, 2026-08-13].
+Thirty seconds plus jitter, under D-027, not the sixty this section was written
+against. Three things learned by running it that the design note did not
+anticipate, all of them worth carrying here rather than only in the decision
+log:
+
+- **A systemd timer measures `OnUnitActiveSec` from activation, and coalesces.**
+  Start-to-start gaps measured 60, 37, 53, 33, 37, 37, 33 s against a nominal 30
+  plus 5 of jitter: mean 41. `AccuracySec` defaults to a minute, which is larger
+  than the interval it is pacing. A drop-in setting it to `1s` was issued and
+  its effect is the outstanding measurement.
+- **A failed fetch costs its own wall clock, not one interval.** `timeout_s`
+  bounded each socket operation rather than the fetch, so a connect and a read
+  each got the full value and an IPv6-only host trying an unusable address
+  first paid twice. Measured at 20 s against a constant of 10.0. F98 made it a
+  deadline for the whole fetch.
+- **Therefore D-027's arithmetic was optimistic.** It assumed a failure costs
+  one interval; a failure costs its wall clock *plus* an interval restarting
+  from activation *plus* the accuracy slack. The decision survives with a
+  smaller margin and the entry now says the margin is an estimate until the
+  host reports a measured cadence.
+
+The design reasoning below is unchanged and is why the interval is jittered at
+all.
+
+
 
 A fixed 60-second interval is the worst available choice for two independent
 reasons that happen to have the same fix.

@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 347](https://img.shields.io/badge/tests-347-brightgreen)](tests/)
-[![coverage 96.48%](https://img.shields.io/badge/coverage-96.48%25-brightgreen)](Makefile)
+[![tests 362](https://img.shields.io/badge/tests-362-brightgreen)](tests/)
+[![coverage 96.17%](https://img.shields.io/badge/coverage-96.17%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 78](https://img.shields.io/badge/defects%20logged-78-informational)](docs/METHODOLOGY.md)
+[![defects logged 79](https://img.shields.io/badge/defects%20logged-79-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -55,6 +55,215 @@ correctness rate exists for western areas**, which are the only ones this
 product is for. The sample is drawn and its draw is fingerprinted (T36); it is
 not yet scored, and until it is, every correctness claim here is about
 mechanism rather than about accuracy.
+
+---
+
+---
+
+## Read this first, whoever you are
+
+This document serves two readers and says so rather than pretending one of them
+away.
+
+If you want to know **what this thing does and whether it is any use to you**,
+read the next four sections. They contain no code, no jargon that is not
+explained where it appears, and no numbers you are asked to take on trust. They
+end at *Words used here*, and that is a fine place to stop.
+
+If you are here to **read the source, run the gate or judge the method**, the
+engineering document begins at [The thesis](#the-thesis) and runs to the end.
+Nothing in the plain-language part contradicts it; the plain part is the same
+claims with the machinery left out.
+
+**Table of contents.** [In one minute](#in-one-minute) ·
+[One alert, from a phone in Lviv to a line on a map](#one-alert-from-a-phone-in-lviv-to-a-line-on-a-map) ·
+[What it will not do](#what-it-will-not-do-plainly) ·
+[Words used here](#words-used-here) ·
+[Questions people actually ask](#questions-people-actually-ask) ·
+[The thesis](#the-thesis) and everything after it: the engineering document.
+
+---
+
+## In one minute
+
+Ukraine publishes air-raid alerts. When a region's alert is switched on, that
+fact reaches a public channel within seconds, along with thousands of other
+posts a day about the whole country.
+
+This program reads that channel, works out **which region** each alert belongs
+to, and looks up **how far that region's nearest edge is from the Polish
+border**. It then reports what is on right now, and how old its own information
+is.
+
+That is the whole of it. It is a **reporting instrument**: it tells you what has
+been announced, in a form a person near the border can act on. It does not
+predict, it does not decide, and it does not know where anything is flying.
+
+The reason it exists is a filter. Roughly **96.5% of the alert activity in that
+channel concerns the east and the front line**, hundreds of kilometres from
+Poland and of no practical relevance to somebody in Przemyśl. The remaining
+**3.5%** concerns the western regions, which is the part worth a person's
+attention. Sorting one from the other by hand, at three in the morning, in a
+language you may not read, is not a thing anybody does. That sorting is the
+product.
+
+Two rules run through every part of this, and they are worth stating before
+anything else because they explain a lot of the odd-looking decisions further
+down.
+
+**Silence is never shown as calm.** If the program cannot see the channel, or
+the information it has is old, it says so, loudly, and stops answering the
+question. An empty screen means "nothing is known", never "nothing is
+happening". Those two are different and the difference can matter.
+
+**Nothing unknown is ever rounded to zero.** A region whose state cannot be
+established is printed as *unknown*. It is not printed as quiet, not left blank,
+and not quietly dropped from the list.
+
+There is a public page that renders all of this on a map. It is a separate
+program in a separate repository, and it reads one file this one writes. It
+imports no code from here and needs no access to anything: if it were breached
+tomorrow, it would have nothing to give away.
+
+---
+
+## One alert, from a phone in Lviv to a line on a map
+
+The clearest way to explain the system is to follow a single alert through it.
+
+**1. Something is announced.** An air-raid alert goes on in Lviv oblast.
+Seconds later a post appears in the public channel, in Ukrainian, carrying a
+hashtag that names the area and a line of prose saying an alert has begun.
+
+**2. The program reads the page.** Once every thirty seconds it fetches the
+channel's public web view. No account, no key, no private interface: exactly
+what a browser would get. It stores the page as served, so any later argument
+about what was said can be settled against the original rather than against a
+memory of it.
+
+**3. It works out which place is meant.** This is the part with the traps. Place
+names in the region repeat, decline in six grammatical cases, and appear in both
+Ukrainian and Russian spellings. So the program does not guess from prose: it
+reads the hashtag and looks the area up in **KATOTTG**, Ukraine's official
+register of administrative units, which gives every district a unique code. A
+name is ambiguous. A code is not. When a message names an area the register does
+not contain, that message is reported as unresolved rather than assigned to the
+nearest plausible match.
+
+**4. It measures the distance.** Every area in the register carries a
+precomputed distance from its nearest edge to the Polish border. Nearest edge,
+not centre: a region can be four hundred kilometres across, and the centre of a
+large oblast would be a comforting number rather than a true one.
+
+**5. It writes down what is true right now.** Two files. One is the current
+picture: which areas are under alert, how far each is, and when the reading was
+taken. The other is a rolling day of history: what started, what ended, what
+became unknown, and at what time.
+
+**6. The page draws it.** The public site reads those two files and nothing
+else. It puts a marker in the middle of each area that has declared an alert,
+draws a ring showing how large that area is, and prints the distance. The ring
+is there to stop you reading the marker as an object: the icon is not a missile
+and not a position, it is a district that made an announcement.
+
+**7. And it keeps saying how old it is.** Every screen carries the age of the
+reading. When that age passes the threshold, the page changes state and tells
+you it has stopped knowing, rather than continuing to display a picture that
+looks current and is not.
+
+What is *not* in this chain: any inference about direction, speed, target or
+crossing. Nothing in the source data supports such an inference, so nothing in
+the output makes one.
+
+---
+
+## What it will not do, plainly
+
+- **It will not warn you that something is coming towards Poland.** It reports
+  announcements made inside Ukraine. Distance to the border is context, not a
+  trajectory.
+- **It is not an official warning service.** In Poland the authoritative
+  channels are the sirens and the RCB alerts, and those stay authoritative. This
+  is a private project run under a private company.
+- **It is not faster than the source.** It reads a public channel on a cycle. If
+  the channel is late, this is late.
+- **It cannot see anything the channel does not publish.** No radar, no sensors,
+  no intelligence. When the channel goes quiet, this project's honest answer is
+  "I do not know", and that is the answer it gives.
+- **It is not finished.** The status line above is not modesty: the accuracy of
+  the western-area classification, which is the only part that matters for the
+  audience this is built for, has not yet been scored by hand.
+
+---
+
+## Words used here
+
+**Oblast.** A Ukrainian region, comparable to a Polish województwo. Lviv oblast
+borders Poland; Kharkiv oblast is over seven hundred kilometres away.
+
+**Raion.** A district inside an oblast. Alerts are often announced at this
+finer level, which is why the distance figure is sometimes an interval rather
+than a single number.
+
+**KATOTTG.** Ukraine's official register of administrative units. Every entry
+has a unique code. This project resolves places to codes and not to names,
+because names repeat and codes do not.
+
+**Base rate.** How often a thing happens anyway. If a rule fires on eighty
+nights out of a hundred and something crosses the border on one, the rule is
+mostly telling you it is night. Every candidate rule in this repository is
+measured against this before it is allowed to wake anybody.
+
+**Staleness.** The age of the information being shown. Treated here as a
+first-class fact, printed on every screen, and past a threshold it replaces the
+answer instead of decorating it.
+
+**Provenance labels.** In this repository's documents, load-bearing statements
+carry a tag: `[measured]` for something counted, `[reported]` for something a
+source said, `[inference]` for a conclusion drawn, `[speculation]` for a
+hypothesis. This is not decoration. It is so that a reader, including the author
+six months later, can tell which sentences are evidence and which are argument.
+
+**The gate.** A single command, `make verify`, that has to pass before anything
+is released. It runs the tests, the type checks, the audits of the documents
+against the code, and a mutation run that deliberately breaks the program in
+registered ways to confirm the tests notice. If it fails, nothing ships.
+
+---
+
+## Questions people actually ask
+
+**Will it tell me to go to a shelter?** No. It reports what has been announced
+across the border. Decisions about your own safety come from the official
+Polish channels.
+
+**Is it live?** Yes, and the page is public. It is also early: read the status
+line above before you rely on any number in it.
+
+**Does it track me?** The public page keeps no logs of addresses, sets no
+cookies, and makes no third-party requests. Visits are counted as two numbers a
+day, from an address hashed with a key that is regenerated daily and never
+written down. Your theme and map-layer choices stay in your own browser.
+
+**Why Telegram?** Because that is where the source publishes, and it publishes
+there publicly, without an account or a key. The project reads the public web
+view rather than any private interface, and stores what it read.
+
+**Why not just use an official API?** Two exist and are discussed in
+`docs/FEED-SPEC.md`. Both draw from the same upstream, so using one instead of
+the channel would swap a public source for a permissioned one without gaining
+an independent observation. One of them is used as a *measuring* adapter, to
+check this project against, and is structurally prevented from becoming a
+source.
+
+**Who is behind it?** One person, in Warsaw, under HBCC. The code is open, the
+method is documented, and the defect log is public and unflattering on purpose.
+
+**Can I use the data?** Yes. Two files are served as a stable contract, and
+their schema and change policy are documented in `docs/FEED-SPEC.md`. If you
+build on them, read the part about how the files behave when the source stops:
+handling that case is the difference between a useful tool and one that lies
+quietly.
 
 ---
 
@@ -424,10 +633,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 19 | 5,140 |
-| Tests | 39 | 6,267 |
-| Tools | 15 | 3,939 |
-| Documentation | 46 | 16,524 |
+| Package `mavo/` | 19 | 5,310 |
+| Tests | 40 | 6,670 |
+| Tools | 15 | 4,038 |
+| Documentation | 47 | 17,086 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -438,11 +647,11 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 347, of which 13 are scripted attacks |
-| Coverage | 96.48% against a floor of 95, a ratchet that is never lowered |
+| Tests | 362, of which 13 are scripted attacks |
+| Coverage | 96.17% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 78, the count pinned against the log itself |
+| Defects logged with their class | 79, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 27 |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |

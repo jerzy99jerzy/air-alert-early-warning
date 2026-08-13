@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.25
+Document:  docs/METHODOLOGY.md, version 2.27
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -179,6 +179,7 @@ repository has come to the mistake it was built after.
 | [F95](#f95-02310-a-task-outlived-its-reason-and-kept-the-reason) | 0.23.1.0 | A task outlived its reason, and kept the reason |
 | [F96](#f96-02400-the-live-command-polled-the-channel-and-dropped-what-it-understood) | 0.24.0.0 | The live command polled the channel and dropped what it understood |
 | [F97](#f97-02420-replay-dropped-a-row-when-a-sort-key-tie-straddled-a-chunk-boundary) | 0.24.2.0 | Replay dropped a row when a sort-key tie straddled a chunk boundary |
+| [F98](#f98-02810-the-ten-second-timeout-was-a-ten-second-timeout-per-socket-operation) | 0.28.1.0 | The ten-second timeout was a ten-second timeout per socket operation |
 
 ## Defect log
 
@@ -2472,6 +2473,13 @@ can actually verify - that the sentence's sprint count matches the field, and
 that the field's list has no holes - and its docstring now says what the field
 means, so the next reader is not invited to make the same substitution.
 
+**Repaired at 0.28.2.0, and the delay is the lesson.** The field is now
+`sprint_test_files`, which is what it measures. For six releases the
+reconciliation lived here, in the defect log, while the misleading name stayed
+in the artefact a reader opens first, and review R-4 of 0.23.1.0 found three
+documents disagreeing about which sprint was open partly because of it. A
+defect entry records a repair; it is not one.
+
 ### F94, 0.22.1.0. A streaming reader held its connection across every yield
 
 `EventStore.replay` and `replay_kinds` opened a connection, executed one
@@ -2701,3 +2709,65 @@ relying on without saying so.
 a row appended mid-replay can appear in the replay. That was true of the
 single-connection version as well and is not a regression; it remains
 unmeasured whether any caller depends on it not happening.
+
+### F98, 0.28.1.0. The ten-second timeout was a ten-second timeout per socket operation
+
+`UrllibTransport.fetch` passed `timeout_s` to `urlopen`, and every caller,
+every document and one shipped decision read that number as the cost of a
+failed attempt. It is not. `urlopen` hands the value to the socket, where it
+bounds **each blocking operation separately**, and `socket.create_connection`
+re-applies it to **each resolved address**:
+
+```
+for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+    ...
+    sock.settimeout(timeout)
+    sock.connect(sa)
+```
+
+[measured, from the standard library source on 3.12.3]. A host with an A and
+an AAAA record therefore costs two timeouts before the read has started, and a
+connect that stalls followed by a read that stalls costs two more. The
+production host is IPv6-only, so the address that cannot work is attempted
+anyway.
+
+**What was observed.** A failed collection took 20 seconds against a
+`DEFAULT_TIMEOUT_S` of 10.0, measured twice on the production host on
+2026-08-13. Which of the two amplifications produced it is not established:
+both are present, and one experiment on that host distinguishes them. The
+repair bounds both, so the distinction is now diagnostic rather than load
+bearing.
+
+**Class: a constant that names a guarantee the code does not make.** Third
+instance, after the docstring uniqueness claim in F97 and the `shipped_sprints`
+field that means "a test file exists" in F93. The pattern is a name read as a
+promise by everything downstream, with nothing checking the name against the
+behaviour. A number with no test that would fail if it were wrong is a label.
+
+**Why it survived.** The refusal message added by T55 carries the elapsed time,
+and that elapsed time is the evidence. It was logged correctly for two
+releases and read by nobody, because the diagnostic was built to answer "is the
+source throttling" and the number it reports also answers "does the bound hold",
+which nobody was asking.
+
+**What it falsified.** D-027's deciding argument is arithmetic: a run of two
+failures costs 90 seconds against a 600-second staleness threshold. That figure
+assumes a failure costs one interval. It costs its own wall clock as well, and
+the wall clock was twice the number the decision used. The entry now carries
+the correction.
+
+**Repair.** `timeout_s` becomes a deadline for the whole fetch. `connect_within`
+spends one budget across every resolved address rather than repeating it, and
+the connection hands the read whatever the connect and the TLS handshake left.
+The fetch goes through a deadline-carrying opener instead of `urlopen`, which
+has no argument for this.
+
+**Mutations observed red:** the budget computed once before the address loop
+rather than inside it; the floor dropped from `remaining_budget`; the remaining
+budget computed and never applied to the socket.
+
+**What this does not fix.** `getaddrinfo` itself is not bounded by any of this,
+so a stalled resolver still costs what it costs. Nothing in this repository can
+bound it without a thread, and a thread in the network seam is a larger change
+than the defect justifies. Stated rather than left to be discovered.
+
