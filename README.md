@@ -35,7 +35,7 @@ implicit, because that is where the inconsistency otherwise lives.
 
 Status: pre-alpha, **four sprints from beta** on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate.
 
-**Deployed and publicly reachable since 2026-08-12**, which meets one of beta's three clauses and the cheapest of them: the instrument is live. The other two are not met and neither is close. **Nobody has asked for it** - T11, the two conversations with intended recipients, has not happened, and the link is the author's alone. **Correctness is unmeasured where it counts**: no western area has ever been hand-checked, and western areas are the only kind this product is for (T36). Latency exists as fetch time per poll and not yet as an end-to-end distribution from channel publication to rendered report (T40). Running is not the same as measured, and this repository's defect log is largely a record of what happens when the two are read as one thing.
+**Deployed and publicly reachable since 2026-08-12.** That is one of beta's two clauses, and the cheaper of them: the instrument is live. The other is not met. **Correctness is unmeasured where it counts**: no western area has ever been hand-checked, and western areas are the only kind this product is for (T36). Latency exists as fetch time per poll and not yet as an end-to-end distribution from channel publication to rendered report (T40). Running is not the same as measured, and this repository's defect log is largely a record of what happens when the two are read as one thing.
 
 **Thirteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `STATUS.json` still records nine; that field is wrong by its own definition and is left wrong deliberately, because raising the number would assert that three more sprints met their exit criteria, which is a larger claim than a test file can carry. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S7.** S8 is half met and declared half met: the distance column is verified three ways, the hand-checked sample is twenty eastern messages from one afternoon. S9 is under way rather than untouched, and that distinction is new - a collector has run unattended against the live channel since 2026-08-11, so the seventy-two-hour half of its criterion is a clock that has started, while the latency half has not. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
 
@@ -427,7 +427,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 18 | 4,873 |
 | Tests | 38 | 6,085 |
 | Tools | 15 | 3,939 |
-| Documentation | 45 | 16,302 |
+| Documentation | 45 | 16,368 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -443,7 +443,7 @@ confidence interval attached.
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 78, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 24 |
+| Decisions recorded with reopen conditions | 26 |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 

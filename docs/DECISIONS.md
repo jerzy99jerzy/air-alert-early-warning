@@ -785,3 +785,36 @@ safety net into a design parameter and means the window needs re-thinking
 rather than raising. Or a measurement showing consumers fetch `feed.json` far
 more often than the design assumes, which would collapse the cost argument for
 the split.
+
+## D-026. Beta stops depending on anyone asking for it
+
+**Decision.** The beta definition in `docs/MVP.md` loses its middle clause.
+Beta is the reporting instrument, live, with its correctness and latency
+measured and published. Whether anyone has asked for it no longer bears on the
+version number, and the blocker row for it is gone from the readiness table.
+
+**Reasoning.** The clause was written when the only imagined delivery was a
+push to two named phones, and in that world it was the same thing as consent.
+It is not the same thing now. The site has been publicly reachable since
+2026-08-12; who visits it is not a property of the instrument, is not
+controlled by this repository, and does not shrink by writing code. Asking
+permission to exist and being correct are different questions, and only the
+second is what a version number should turn on.
+
+**What did not change, and this is the part worth reading twice.** T11 still
+gates **push delivery**. Waking somebody's phone at three in the morning
+requires that they asked; a page they chose to open does not. The two were one
+clause because the project once had one delivery path, and separating them is
+the whole content of this decision. `docs/MVP.md` section 3 keeps the
+requirement where it belongs, and the README keeps saying that recipients are
+gated by T6 and T11.
+
+**What stays in the way of beta.** Correctness measured on western areas
+(T36), and end-to-end latency as a distribution rather than as fetch time per
+poll (T40). Both are properties of the thing rather than of its audience, and
+neither is close.
+
+**What would reopen it.** A delivery path that pushes rather than waits,
+at which point the consent question returns to the definition, because it is
+then a property of what the instrument does rather than of who happens to read
+it.

@@ -16,6 +16,28 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.27.1.0 - 2026-08-13
+
+**D-026: beta stops depending on anyone asking for it, and the status
+paragraph stops describing the operator's private correspondence.**
+
+- **The beta definition loses its middle clause.** It read "delivering to
+  people who asked", written when the only imagined delivery was a push to two
+  named phones. The site has been publicly reachable since 2026-08-12; who
+  visits it is not a property of the instrument and does not shrink by writing
+  code. Beta is now the reporting instrument, live, with its correctness and
+  latency measured and published.
+- **T11 still gates push delivery**, and `docs/MVP.md` section 3 keeps it
+  there. Waking somebody's phone at three in the morning requires that they
+  asked; a page they chose to open does not. The two were one clause because
+  the project once had one delivery path.
+- **The README status paragraph no longer mentions who has or has not been
+  contacted.** That was the operator's correspondence, not a property of the
+  code, and a public repository is the wrong place for it.
+- What still blocks beta is unchanged and is stated in the same paragraph:
+  correctness measured on western areas (T36) and end-to-end latency as a
+  distribution (T40).
+
 ## 0.27.0.0 - 2026-08-13
 
 **T46, partial: a message shape the parser had been failing on every poll for a

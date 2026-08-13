@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 3.5
+Document:  docs/MVP.md, version 3.6
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -79,7 +79,6 @@ it can be mistaken for a prediction.
 | Blocker | Type |
 | --- | --- |
 | Delivery path | engineering (S10, phase M1) |
-| Two people asked | **access** (T11). Nobody has been asked, and this does not shrink by writing code |
 | Legal position on sending warnings to people other than the operator | **decision** (T6). Needs counsel; runs in parallel from now |
 
 ## 4. Audience C: public repository as a portfolio artefact
@@ -142,8 +141,20 @@ who are strangers.
 ## 6. What beta means
 
 One sentence, so it cannot drift: **beta is the reporting instrument, live,
-delivering to people who asked, with its correctness and latency measured and
-published.**
+with its correctness and latency measured and published.**
+
+**The third clause was removed on 2026-08-13, and the removal is a decision
+rather than a simplification (D-026).** It read "delivering to people who
+asked", and it was written when the only imagined delivery was a push to two
+named phones. The site has been publicly reachable since 2026-08-12; whether
+anyone comes to it is not something this repository controls, does not shrink
+by writing code, and is not a property of the instrument. Asking permission to
+exist is a different question from being correct, and only the second is what
+a version number should turn on.
+
+**What did not change:** correctness and latency still have to be measured and
+published. Those are properties of the thing, and beta remains out of reach
+until they exist.
 
 What beta is not: no alarm class, no probability of anything, no ADS-B tier, no
 app store, no claim about what will cross the border. A beta that quietly
