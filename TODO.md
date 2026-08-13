@@ -9,12 +9,12 @@
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 13 | Finished, with the release that closed it named in the entry |
-| `ready` | 32 | Nothing external blocks it; it needs a session |
+| `ready` | 31 | Nothing external blocks it; it needs a session |
 | `decision` | 4 | Waiting on a judgement rather than on work |
 | `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
-| `unstated` | 1 | **No state in the entry. This is a defect in the entry.** |
+| `unstated` | 2 | **No state in the entry. This is a defect in the entry.** |
 
 ### Priority tiers
 
@@ -240,7 +240,20 @@ moving.
 
 
 ## T40. How late is the channel, measured
-Status: `ready`, blocks T41 and any latency claim [tier 1], **S9**
+Status: `instrument built at 0.30.0.0, measurement outstanding`, blocks T41 and
+any latency claim [tier 1], **S9**
+
+**What is done.** `tools/latency.py` reads the store and reports the
+distribution: median, p90, p99, max, the count, the window in days, negative
+lags separately, and the poll interval beside them. It refuses a window shorter
+than seven days without `--allow-short`, and it reports an upper bound on the
+upstream rather than a channel latency, because the lag it measures contains
+our own interval. Eleven regressions.
+
+**What remains, and it is a host and a week, not an afternoon of typing.** Run
+it against the live store once the collector has a week of continuous
+operation, and paste the row into `docs/CHANNEL.md` section 8a with the
+collection dates. The acceptance below is unchanged.
 
 **Where this came from.** The observation that during a strike the unit that
 matters is seconds, not minutes. That is correct, and it reframes the polling

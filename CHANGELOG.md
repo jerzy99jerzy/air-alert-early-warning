@@ -16,6 +16,38 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.30.0.0 - 2026-08-13
+
+**T40's instrument: how late the channel is, measurable at last.**
+
+- **`tools/latency.py`.** Reads `ts_source` against `ts_ingest` across both
+  streams in the store and reports the distribution T40's acceptance names:
+  median, p90, p99, max, count, window, with the poll interval printed beside
+  them.
+- **It refuses a window under seven days.** The acceptance asks for a week, and
+  a distribution over one afternoon is an anecdote with percentiles on it. This
+  repository already owns one of those and the defect log says what it cost.
+  `--allow-short` prints anyway, marked `NOT A T40 MEASUREMENT`.
+- **It never calls the lag the channel's latency.** What is measured is the
+  source's delay plus the web view's plus our own poll interval, and only the
+  third is known. The upstream figure is reported as an upper bound and carries
+  an `[inference]` label.
+- **Negative lags are reported rather than clamped**, because a post received
+  before its own timestamp is two clocks disagreeing, which is a finding about
+  the instrument and not an outlier to be tidied away.
+- **Percentiles are nearest-rank**, so every printed figure is an observation
+  that happened rather than an interpolation between two that did.
+- **A naive timestamp is dropped, not assumed to be UTC** (F61's class), and a
+  store where every row is naive is a refusal rather than an empty report.
+- `docs/CHANNEL.md` gains section 8a: the instrument, the three properties that
+  decide what the number will mean, and the empty table waiting for the row.
+  Until that row is filled, the argument that thirty seconds is a defensible
+  poll interval rests on an unmeasured assumption about the term it is compared
+  against, and the section says so.
+- Eleven regressions. **The measurement is not in this release**: it needs a
+  week of a live collector, which is a host and a calendar rather than an
+  afternoon of typing.
+
 ## 0.29.0.0 - 2026-08-13
 
 **A documentation pass, and the README learns to speak to two readers.**

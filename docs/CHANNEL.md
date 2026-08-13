@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.3 / 2026-08-10
+Version: 1.4 / 2026-08-13
 What the source emits, measured on 48,540 real messages, and what that changes.
 Companion: `docs/DATA-FLOW.md` (how a message becomes an event),
 `docs/METHODOLOGY.md` (F23 and F59), `docs/DECISIONS.md` (D-016, geocoding).
@@ -274,6 +274,40 @@ countable things: **every one of the 127 tags resolves or is explicitly marked
 unresolved**, and a hand-labelled sample of messages agrees with the resolved
 area. Presence is already measured at 99.34%; what remains to be checked is
 correctness on the message the tag sits in, which no automated probe can assert.
+
+## 8a. How late the channel is: the instrument, and the empty table
+
+T40 asks for the median, p90 and maximum of post timestamp to receipt, over at
+least a week, with the collection dates and the poll interval used. **The
+instrument shipped at 0.30.0.0 and the table below is empty on purpose.**
+
+`tools/latency.py --store <store>` reads `ts_source` and `ts_ingest` from both
+the `events` and the `kinds` tables and reports the distribution. Three
+properties are worth stating here rather than only in its docstring, because
+they decide what the eventual number means.
+
+**It refuses a window shorter than seven days.** A distribution over one
+afternoon is an anecdote with percentiles on it, and this repository already
+has one of those: the twenty-message hand sample that reads as a correctness
+figure and is not.
+
+**The lag is not the channel's latency and the tool never calls it that.** It
+is the sum of the source's publishing delay, the web view's, and our own poll
+interval, and only the third is known. The tool prints the interval beside the
+figures and reports the difference as an upper bound on everything upstream,
+labelled `[inference]`.
+
+**Negative lags are reported, not clamped.** A post received before its own
+timestamp means the two clocks disagree, which is a finding about the
+measurement rather than an outlier to be tidied away.
+
+| Collected | Interval | n | Median | p90 | p99 | Max |
+| --- | --- | --- | --- | --- | --- | --- |
+| *not yet run* | | | | | | |
+
+Until that row is filled, every latency claim in this repository, including the
+argument that thirty seconds is a defensible poll interval, rests on an
+unmeasured assumption about the term it is being compared against.
 
 ## 9. What is still unknown
 
