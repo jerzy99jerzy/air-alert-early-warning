@@ -32,12 +32,21 @@ MAX_BYTES = 4_000_000
 class Transport(Protocol):
     """Fetches a document. The one seam between this package and the internet."""
 
-    def fetch(self, url: str) -> str:
+    def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
         """Return the document body as text.
 
         Raises ``SourceUnavailable`` and nothing else. A transport that leaks a
         library-specific exception forces every caller to know which library is
         underneath, which is the coupling this protocol exists to prevent.
+
+        `headers` was added at 0.28.0.0 for the measurement adapter, which has
+        to send an API key. It goes through this seam rather than around it:
+        the alternative was a second module opening its own connections, which
+        the architecture check caught immediately and which would have put
+        network behaviour in two files instead of one.
+
+        **A key belongs in a header and never in a URL**, where it would reach
+        every proxy log between here and the other end.
         """
         ...
 
@@ -48,7 +57,7 @@ class UrllibTransport:
     def __init__(self, timeout_s: float = DEFAULT_TIMEOUT_S) -> None:
         self.timeout_s = timeout_s
 
-    def fetch(self, url: str) -> str:
+    def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
         """Fetch ``url``, capped in size and time. Refuses any non-http(s) scheme.
 
         F62. ``urlopen`` also speaks ``file://`` and would return local file
@@ -61,7 +70,13 @@ class UrllibTransport:
             raise SourceUnavailable(
                 f"{url}: scheme {scheme!r} refused; this transport speaks http(s)"
             )
-        request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        sent = {"User-Agent": USER_AGENT}
+        if headers:
+            # Caller headers second, so a caller cannot silently replace the
+            # user agent this package identifies itself with. Anything else it
+            # sends is its own business and is visible at the call site.
+            sent = {**sent, **headers}
+        request = urllib.request.Request(url, headers=sent)
         started = time.monotonic()
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_s) as response:
@@ -95,16 +110,23 @@ class StubTransport:
     def __init__(self, body: str) -> None:
         self.body = body
         self.calls = 0
+        self.last_headers: dict[str, str] = {}
 
-    def fetch(self, url: str) -> str:
-        """Return the canned body, counting calls."""
+    def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
+        """Return the canned body, counting calls.
+
+        Headers are accepted and ignored, and the last call's are kept so a
+        test can assert on what a caller sent without the stub pretending to
+        be a network.
+        """
         self.calls += 1
+        self.last_headers = dict(headers or {})
         return self.body
 
 
 class FailingTransport:
     """Always refuses. Models an unreachable source, distinct from a quiet one."""
 
-    def fetch(self, url: str) -> str:
+    def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
         """Always raise ``SourceUnavailable``."""
         raise SourceUnavailable(f"{url}: injected failure")

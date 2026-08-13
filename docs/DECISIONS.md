@@ -818,3 +818,44 @@ neither is close.
 at which point the consent question returns to the definition, because it is
 then a property of what the instrument does rather than of who happens to read
 it.
+
+
+## D-027. The poll interval goes to thirty seconds
+
+**Decision.** The channel is polled every 30 seconds rather than every 120,
+and the report loop follows at the same cadence. `--interval` defaults to 30.
+
+**What the change buys.** Two things, and the second matters more.
+
+The obvious one is freshness: the floor on channel-to-render latency was half
+the poll interval on average, so it falls from about 60 seconds to about 15.
+On a page whose subject is announced in seconds, that is not a rounding error.
+
+The one that decided it is **the cost of a missed poll**. The collector fails
+on roughly one attempt in eight, measured, and consecutive failures happen: the
+longest observed gap between successful reads was 7.0 minutes against a
+600-second staleness threshold, leaving three minutes of margin rather than the
+eight an independence assumption predicted. At 30 seconds the same run of two
+failures costs 90 seconds instead of 390, and the margin stops being the thing
+standing between this page and a degraded state nobody has ever watched it
+enter.
+
+**Why this is not rude to the source.** Measured on 2026-08-12: ten requests
+in fifty seconds all returned 200 with a median of 0.24 s, a rate twenty-six
+times more aggressive than the interval this decision replaces and five times
+more aggressive than the one it introduces. That is evidence about a burst
+rather than about a sustained rate, and the difference is stated rather than
+glossed: a limiter that tolerates a burst can still act on a sustained
+quadrupling.
+
+**How we will know if it is.** T55 shipped at 0.26.0.0, so every refusal now
+carries its elapsed time and exception class. A source that starts throttling
+produces fast refusals with a recognisable shape, and the journal will say so
+within a night. **The unreachable rate is the number to watch: if it rises
+after this change, this decision caused it.** That is the measurement that
+would reopen this entry, and it is available without any new work.
+
+**What was deliberately not done.** No retry inside a poll, and no change to
+the ten-second timeout. Both would mask the symptom T39 is still chasing, and
+the interval change is defensible on its own terms while a retry would confuse
+two questions.

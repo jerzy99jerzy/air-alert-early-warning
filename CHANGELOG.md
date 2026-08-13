@@ -16,6 +16,48 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.28.0.0 - 2026-08-13
+
+**A second view of the same alerts, built as a measuring instrument and unable
+to become a source. And the poll interval drops to thirty seconds.**
+
+- **`mavo/sources/ukrainealarm.py` reads `api.ukrainealarm.com`.** It has no
+  `poll`, does not implement `ThreatSource`, and its reading has no
+  `content_hash`: the only way it reaches `state.json` is if somebody writes
+  that adapter deliberately, and the module docstring argues with them first.
+  **The API and the channel share an upstream**, so two of them agreeing says
+  the views agree and nothing about whether the origin is right. Any sentence
+  reading "two sources confirm" would be false.
+- **What it is for, and neither number exists today.** End-to-end latency from
+  a state change at the source to a rendered report, which is T40 and one of
+  two things between here and beta. And coverage: how many alerts the API
+  reports that the parser did not, and the reverse, which no amount of
+  hand-labelling produces because a labeller reads the same messages.
+- **The region vocabulary had to be reconciled.** The API appends a word the
+  channel's hashtags do not; joining without stripping it produced an empty
+  slug for every region, which would have reported the parser missing
+  everything - the most flattering possible error for the API and the most
+  damning for the thing being measured.
+- **Kyiv city gets no oblast, on purpose.** Inventing an administrative
+  mapping here is what F90 and T44 exist to prevent.
+- **A record the adapter cannot read is kept and marked**, never skipped: a
+  coverage measurement whose denominator quietly shrinks flatters whichever
+  side it was built to test. A missing timestamp is `None` and never `now`,
+  for the same reason.
+- **The architecture check earned its place.** The first version opened its
+  own urllib connection and `test_the_network_seam_is_one_file` failed in the
+  same run. `Transport.fetch` gained an optional `headers` argument instead,
+  so the API key goes through the one seam and travels in a header rather than
+  in a URL, where it would reach every proxy log on the way.
+- **D-027: the poll interval goes to thirty seconds.** The floor on
+  channel-to-render latency halves from about sixty seconds to fifteen, and
+  more importantly a run of two failures now costs 90 seconds of blindness
+  instead of 390 against a 600-second staleness threshold. Ten requests in
+  fifty seconds all returned 200 when measured, which is evidence about a
+  burst rather than a sustained rate, and the entry says so. **The unreachable
+  rate is the number that would reopen it**, and T55 made that readable a
+  release ago.
+
 ## 0.27.1.0 - 2026-08-13
 
 **D-026: beta stops depending on anyone asking for it, and the status

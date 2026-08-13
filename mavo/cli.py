@@ -356,7 +356,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="publish the contract on a fixed interval until stopped (needs --json)",
     )
     report_cmd.add_argument(
-        "--interval", type=float, default=60.0,
+        "--interval", type=float, default=30.0,
         help="seconds between cycles under --watch (default %(default)s)",
     )
     report_cmd.add_argument(
