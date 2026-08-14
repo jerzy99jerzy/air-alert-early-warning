@@ -16,6 +16,30 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.1.0 - 2026-08-14
+
+**Two items that were living in a handover file outside version control.**
+
+- **T57: production runs older code than `main`, and nothing here said so.**
+  The collector on `vm-mavo` was last installed before 0.28.1.0, so F98 is not
+  deployed and its fetch timeout means 20 s per resolved address rather than
+  10 s for the whole fetch - measured at 20.12 s in the journal on 2026-08-13.
+  `docs/DEPLOYMENT.md` described F98 as a repair and nothing recorded that the
+  repair was not on the host. Measurements are being read off that host and
+  written into this repository, which is why this is tier 1 despite changing no
+  code.
+- **`docs/DEPLOYMENT.md` 1.4 gains a state, not just a shape.** A table of what
+  is installed against what `main` holds, and the rule the handover paid an
+  hour for: the version string is not evidence of an install, because a
+  reissued archive under an already-built version number makes `pip` report
+  success against a host running different code. Grep the installed module for
+  a string the release added.
+- **T58: S7 against T31, T33 and T34.** The tolerance in `todo_index.py` is
+  visible, reasoned and self-removing, and it is not a decision. Either the
+  `MVP.md` row is amended again or the three tasks are reassigned; whichever,
+  it gets a `DECISIONS.md` entry. The third outcome, tolerating it
+  indefinitely, is what the task exists to prevent.
+
 ## 0.32.0.0 - 2026-08-14
 
 **Two instruments for the question the map keeps answering with "unknown", and

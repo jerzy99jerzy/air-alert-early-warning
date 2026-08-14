@@ -4,13 +4,13 @@
 
 ### Where the backlog stands
 
-**13 of 56 closed, 43 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**13 of 58 closed, 45 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 13 | Finished, with the release that closed it named in the entry |
-| `ready` | 31 | Nothing external blocks it; it needs a session |
-| `decision` | 4 | Waiting on a judgement rather than on work |
+| `ready` | 32 | Nothing external blocks it; it needs a session |
+| `decision` | 5 | Waiting on a judgement rather than on work |
 | `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
@@ -26,9 +26,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 9 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host)
+**Tier 1, 10 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T57](#t57-production-runs-older-code-than-main-and-nothing-here-says-so), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host)
 
-**Tier 2, 20 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T56](#t56-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both)
+**Tier 2, 21 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T56](#t56-tags-the-channel-emits-that-the-register-map-does-not-hold), [T58](#t58-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both)
 
 **Tier 3, 14 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T53](#t53-full-width-map-fullscreen-theme-switch), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed)
 
@@ -38,12 +38,12 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 
 | Sprint | Open tasks |
 | --- | --- |
-| **S7** | [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag) |
+| **S7** | [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T58](#t58-s7-against-t31-t33-and-t34-decide-then-record) |
 | **S8** | [T36](#t36-the-hand-labelled-sample-retargeted), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T47](#t47-two-threat-kinds-the-consumer-cannot-name) |
 | **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T56](#t56-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T53](#t53-full-width-map-fullscreen-theme-switch), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T56](#t56-tags-the-channel-emits-that-the-register-map-does-not-hold), [T57](#t57-production-runs-older-code-than-main-and-nothing-here-says-so), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T53](#t53-full-width-map-fullscreen-theme-switch), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed) |
 
 <!-- index:end -->
 
@@ -978,6 +978,63 @@ declaration the join never sees, and the join currently reaches 17% of alerts.
 **Out of scope.** Resolving anything against KATOTTG, or estimating what
 coverage would become. Both need item 1's numbers first, and item 1 may say the
 work is not worth taking.
+
+## T57. Production runs older code than `main`, and nothing here says so
+Status: `ready`, **blocks any measurement taken from the host**. [tier 1]
+
+`main` is at 0.32.0.0. The collector on `vm-mavo` was last installed before
+0.28.1.0, so it runs pre-F98 code. `docs/DEPLOYMENT.md` describes F98 as a
+repair; **no document in this repository records that the repair is not
+deployed**, and the deployment profile describes a shape rather than a state.
+
+**What it costs, measured.** The ten-second timeout is pre-F98 ten seconds per
+socket operation per resolved address, so a failed collection took 20.12 s on
+2026-08-13, read from the journal. Every staleness margin computed against a
+ten-second constant is therefore wrong on the host by up to a factor of two,
+including the one D-027 states.
+
+**Why this is tier 1 despite changing no code.** Measurements are being taken
+from this host and written into this repository. A measurement from an
+instrument two releases behind the instrument described here is a measurement
+of something else, and nothing currently makes that visible to whoever reads
+the number.
+
+**Acceptance:**
+1. 0.32.0.0 installed on `vm-mavo`, verified by grepping the installed module
+   for a string the release added rather than by reading the version string.
+   The version string alone has already reported success against a host
+   running different code once, and it cost an hour.
+2. A line in `docs/DEPLOYMENT.md` stating what is installed, with its date,
+   distinct from what this repository describes.
+3. D-027's post-change interval distribution re-read after the deploy, since
+   the one recorded at 0.31.0.0 was taken on pre-F98 code and the timeout
+   change plausibly moves the tail.
+
+**Reopen condition for the general shape:** any release that is tagged and not
+deployed leaves this task open by definition. The repair is the line in item 2,
+which makes the gap visible instead of requiring somebody to remember it.
+
+
+## T58. S7 against T31, T33 and T34: decide, then record
+Status: `ready`, **S7**, and it is a decision rather than work. [tier 2]
+
+`docs/MVP.md` closes S7 on an amended criterion. T31, T33 and T34 still carry
+S7 and are open. `tools/todo_index.py` names this in
+`TOLERATED_OPEN_IN_A_CLOSED_SPRINT` with a reason and a check that removes the
+entry when the disagreement stops being real, so the state is visible and
+cannot rot. What it is not is decided.
+
+**The two answers, both defensible.** Either the S7 row in `docs/MVP.md` is
+amended again to say the sprint closed without these three, which is what
+happened; or the three are reassigned to a later sprint, which is what the
+backlog implies. The first is honest about history and leaves three tasks
+belonging to nothing. The second is tidier and rewrites what the sprint was.
+
+**Acceptance:** whichever is chosen, a `docs/DECISIONS.md` entry with a reopen
+condition, and the tolerance entry removed by the check that watches it. **A
+third outcome - leaving it tolerated indefinitely - is the one this task
+exists to prevent**, because a named tolerance that never resolves is an
+exemption with better manners.
 
 ## T43. Raion centroids in the contract
 Status: `ready`, follows F74. Small, and it changes what the map can say. [tier 2]

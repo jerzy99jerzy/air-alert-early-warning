@@ -1,12 +1,37 @@
 # Deployment profile
 
-Version: 1.3 / 2026-08-14
+Version: 1.4 / 2026-08-14
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
 comes next. What follows describes the endpoint the daemon will present. What
 is running today is described in the section immediately below, which was
 written after the fact rather than before, and says so.
+
+## What is installed on the hosts, and how far behind it is
+
+[measured where a command output is quoted, otherwise reported]
+
+**This section exists because the rest of this document describes a shape and
+not a state, and the two diverged without anything saying so.** Added at
+0.32.1.0, carried in from a handover written outside version control, which is
+where it had been living.
+
+| Host | Installed | `main` | Consequence |
+| --- | --- | --- | --- |
+| `vm-mavo` | pre-0.28.1.0 [reported, from a 20.12 s timeout observed in the journal on 2026-08-13] | 0.32.0.0 | F98 is not deployed: the fetch timeout means 20 s per resolved address, not 10 s for the whole fetch. Every margin computed against the constant is wrong on this host |
+| `vm-site` | see the consumer repository | | |
+
+Tracked as **T57**, which is tier 1 not because it changes code but because
+measurements are being read off a host two releases behind the instrument this
+repository documents.
+
+**Installing is not verifying, and the version string is not evidence.** A
+repaired archive reissued under an already-built version number makes `pip`
+report success while the host runs different code; that has happened here and
+cost an hour. The deploy step is therefore: build, copy, `pip install --no-deps
+--force-reinstall`, restart, **and then grep the installed module for a string
+the release added**. Only the last of those is a check.
 
 ## What is actually deployed, as of 2026-08-12
 
