@@ -492,6 +492,66 @@ def check_defect_count_is_pinned(status: dict[str, object]) -> list[str]:
     return problems
 
 
+#: Decision numbers cited elsewhere in the tree that have no entry in the log.
+#: Each one is a document resting its authority on a record that is not there.
+#: The check below fails if a number here has gained an entry, so a resolved
+#: item cannot sit in this list pretending to still be open.
+#:
+#: D-025 is cited by ``docs/WEBAPP.md`` as the reason publication went ahead
+#: without T6, the legal position, and the sentence doing the citing says the
+#: reason "is in the decision entry". Whether the entry was drafted and never
+#: committed, renumbered, or never written, only the operator knows. Until it
+#: is resolved the citation is the strongest claim in this repository resting
+#: on the weakest evidence, which is why it is named here rather than deleted.
+CITED_WITHOUT_AN_ENTRY = ("D-025",)
+
+
+def check_decision_count_is_derived_from_the_log(status: dict[str, object]) -> list[str]:
+    """The decision count comes from the log, and citations resolve to entries.
+
+    Added at 0.31.0.0. ``defects_logged`` has been counted from METHODOLOGY and
+    checked against the README badge since 0.6.0.0; ``decisions_recorded`` was
+    compared only against a README row, so two hand-typed numbers agreed with
+    each other and with nothing. They were both 27 against a log holding 25
+    entries, and the drift hid a second thing: D-023 and D-025 are absent, and
+    D-025 is cited by another document as settled.
+
+    Same lesson as F31 one level up. A count that is not derived from the thing
+    it counts is a claim, and a claim that agrees with a copy of itself is not
+    corroborated.
+    """
+    text = (ROOT / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
+    entries = sorted(set(re.findall(r"^## (D-\d+)", text, re.M)))
+    problems: list[str] = []
+
+    pinned = status.get("decisions_recorded")
+    if pinned != len(entries):
+        problems.append(
+            f"DECISIONS.md holds {len(entries)} entries, STATUS.json pins {pinned}")
+
+    documents = sorted((ROOT / "docs").glob("*.md")) + [ROOT / "README.md", ROOT / "TODO.md"]
+    cited: set[str] = set()
+    for path in documents:
+        if path.name == "DECISIONS.md":
+            continue
+        cited |= set(re.findall(r"\bD-\d{3}\b", path.read_text(encoding="utf-8")))
+
+    dangling = sorted(cited - set(entries))
+    for number in dangling:
+        if number not in CITED_WITHOUT_AN_ENTRY:
+            problems.append(
+                f"{number} is cited in the tree and has no entry in docs/DECISIONS.md")
+    for number in CITED_WITHOUT_AN_ENTRY:
+        if number in entries:
+            problems.append(
+                f"{number} now has an entry; remove it from CITED_WITHOUT_AN_ENTRY")
+        elif number not in cited:
+            problems.append(
+                f"{number} is no longer cited anywhere; remove it from "
+                "CITED_WITHOUT_AN_ENTRY rather than leaving a tolerance for nothing")
+    return problems
+
+
 def check_badges_match_the_pins(status: dict[str, object]) -> list[str]:
     """Static badge values agree with STATUS.json.
 
@@ -690,6 +750,7 @@ def main() -> int:
         + check_the_holdout_boundary_survives_in_the_corpus_block(status)
         + check_the_readme_status_agrees_with_the_sprint_files(status)
         + check_defect_count_is_pinned(status)
+        + check_decision_count_is_derived_from_the_log(status)
         + check_statistics_match_the_tree(status)
         + check_measured_block_is_recomputed(status)
         + check_badges_match_the_pins(status)

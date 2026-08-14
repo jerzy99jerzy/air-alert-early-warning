@@ -16,6 +16,48 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.31.0.0 - 2026-08-14
+
+**A gate whose scope had stopped covering what it promised, and a count that
+agreed only with a copy of itself.**
+
+- **The egress lint scanned half the tree.** `docs/DEPLOYMENT.md` section 2
+  states the egress inventory "completely" and says a lint fails the build if a
+  second module acquires reach, "which is what makes the table above checkable
+  rather than aspirational". `network_reach_is_one_file` scanned `mavo/` only,
+  so `tools/` - which the `Makefile` calls "inside the net", and where half of
+  STATUS.json's measured numbers are produced - was outside it. Nothing had
+  slipped through; the scope was narrower than the claim. Widened, and verified
+  red against a planted import on both sides.
+- **`decisions_recorded` was not counted from the decision log.**
+  `defects_logged` has been derived from METHODOLOGY and cross-checked against
+  the README badge since 0.6.0.0. Its sibling was compared against a README row
+  and nothing else, so two hand-typed numbers agreed with each other. Both said
+  27 against a log holding 25 entries.
+- **`D-025` is cited and does not exist.** `docs/WEBAPP.md` gives it as the
+  reason publication went ahead without T6, the legal position, and says the
+  reason "is in the decision entry". There is no such entry, and none for
+  D-023 either. The new check names D-025 in `CITED_WITHOUT_AN_ENTRY` rather
+  than deleting the citation, and fails if the entry appears or if the citation
+  goes away, so the finding cannot rot in either direction. **Resolving it is
+  the operator's, and it is the strongest claim in this repository resting on
+  the weakest evidence.**
+- **D-027's outstanding measurement is taken.** One uninterrupted hour after
+  `AccuracySec=1s`: 107 intervals, all 31 to 36 s, mean 33.06 against a nominal
+  30 plus 5 of jitter, against 33 to 60 s before. The drop-in's stated
+  mechanism holds and the margin in that entry is a bound rather than an
+  estimate.
+- **D-028, the ADS-B sampler.** Sixty seconds, raw state vectors rather than
+  derived landings, eight days of retention, and a row per poll attempt beside
+  the observations so a dead sampler and a quiet sky are not the same empty
+  set. Collection only; D-019 still governs publication and is unchanged.
+- **`docs/FEED-SPEC.md` 1.5.** Two properties from the same week, both learned
+  by building rather than by specifying: nine, that a consumer facing a feed
+  with no heartbeat owes itself an attempt log, with the rule that a failed
+  poll records null and an empty one records zero; and ten, that a metered feed
+  must state its meter, because otherwise the consumer's own coverage is
+  unknown to the consumer.
+
 ## 0.30.0.0 - 2026-08-13
 
 **T40's instrument: how late the channel is, measurable at last.**

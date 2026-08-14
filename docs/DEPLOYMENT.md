@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.2 / 2026-08-13
+Version: 1.3 / 2026-08-14
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -76,11 +76,30 @@ undocumented cannot be reasoned about by whoever runs it.
 | --- | --- | --- | --- |
 | `t.me` (channel preview) | the only signal source | none. The channel is public | one request per cycle, and the cycle interval is the whole schedule |
 | ntfy host (operator-controlled) | notification delivery, phase M1 onward | token, write-side only | on decision and on degradation, bounded by the alarm budget |
-| OpenSky (planned, T20) | ADS-B, prerequisite for the drone tier | account, registration self-service | not yet designed |
+| `opensky-network.org` | ADS-B state vectors over the Jasionka box, T42's sampler | OAuth2 client credentials, held on the host in `/etc/mavo-adsb/env` | one request per 60 s from 2026-08-14, 1,440 per day against a 4,000/day allowance |
+| `auth.opensky-network.org` | the token endpoint for the row above | the same credentials | once per token lifetime, roughly every 30 minutes |
 
-Nothing else. All reach lives in `mavo/transport.py`, and a domain lint fails
-the build if a second module acquires it, which is what makes the table above
-checkable rather than aspirational.
+Nothing else. All reach lives in `mavo/transport.py`, and
+`network_reach_is_one_file` in `tests/lint_limitations.py` fails the build if a
+second module acquires it, which is what makes the table above checkable rather
+than aspirational.
+
+**Correction, 0.31.0.0.** Until this release that check scanned `mavo/` only,
+so `tools/` - which the `Makefile` calls "inside the net", and where half of
+`STATUS.json`'s measured numbers are produced - was outside the check this
+paragraph rested on. Nothing had slipped through; the scope was narrower than
+the claim, which is a failure that only becomes visible on the day something
+does slip. The scope now covers both. Found while adding the first tool whose
+purpose is to reach a second destination, which is the circumstance that would
+have exercised it.
+
+**The ADS-B sampler is deliberately not in this tree.** It runs from
+`/opt/mavo-adsb` on `vm-mavo` as its own systemd unit, its own user and its own
+store, so a fault in it cannot reach the collector this repository is
+responsible for. T42 acceptance already requires its snapshots to live outside
+the tree; the sampler follows them. When it moves in, it either routes through
+`mavo/transport.py` or the lint above stops it, and that is the intended
+outcome rather than an obstacle to work around.
 
 **TLS interception.** Under an intercepting proxy the transport sees the
 proxy's certificate. The stdlib default verifies against the system trust store,

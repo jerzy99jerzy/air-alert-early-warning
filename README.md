@@ -634,9 +634,9 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | | Files | Lines |
 | --- | --- | --- |
 | Package `mavo/` | 19 | 5,310 |
-| Tests | 41 | 6,810 |
-| Tools | 16 | 4,252 |
-| Documentation | 48 | 17,209 |
+| Tests | 41 | 6,830 |
+| Tools | 16 | 4,313 |
+| Documentation | 49 | 17,619 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -652,7 +652,7 @@ confidence interval attached.
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 79, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 27 |
+| Decisions recorded with reopen conditions | 26, counted from the log itself |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 

@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 1.4 / 2026-08-12
+Version: 1.5 / 2026-08-14
 A specification, written from the position of someone who tried to build against
 one and found there was nothing to build against. The Ukrainian equivalent was
 consumed and measured over a corpus of 118 days; the work of building against it
@@ -219,12 +219,14 @@ happening now. For most public data that gap costs nothing. For alerting it is
 the difference between a quiet night and a dead system, and a consumer cannot
 tell them apart from the outside.
 
-## 4a. Three properties learned by shipping, not by specifying
+## 4a. Five properties learned by shipping, not by specifying
 
 Sections 1 to 4 were written before this project had a consumer in production.
-It has had one since 2026-08-11, and three requirements emerged that the
+It has had one since 2026-08-11, and five requirements emerged that the
 original five did not cover. They are numbered separately because they are
-weaker claims: each rests on one deployment rather than on a corpus.
+weaker claims: each rests on one deployment rather than on a corpus. Nine and
+ten were added at 1.5, from consuming two further interfaces: one reached under
+a revocable agreement, one metered.
 
 **Six. A cap, published, and a flag saying when it bound.** [measured]
 
@@ -274,6 +276,66 @@ readable. This project has not written its own policy yet, which is recorded
 in its backlog as the unfinished half of the task that introduced v3. The
 omission is survivable here because there is one consumer and the same author
 controls it. That is exactly the circumstance a public feed does not have.
+
+**Nine. If there is no heartbeat, the consumer owes one to itself.**
+[measured, and the repair was built before this was written down]
+
+The fifth property is the publisher's. A consumer facing a feed that does not
+have it is not excused from section 4's invariant, and the consumer-side
+equivalent is an **attempt log**: a durable record of every poll made,
+successful or not, kept beside the record of what those polls returned.
+
+Without it, an hour in which nothing was reported and an hour in which the
+consumer's own process was dead are the same empty set in storage. No care at
+rendering time recovers that distinction, because the information was never
+written. With it, three states are distinguishable rather than two:
+
+| Attempt log | Observation record | What the consumer may say |
+| --- | --- | --- |
+| Polls present | Observations present | What was observed |
+| Polls present | None | Nothing was reported, and the consumer was watching |
+| No polls | None | The consumer was not watching. Unknown |
+
+**A failed poll is recorded as an attempt with no result, not as an attempt
+that returned zero.** The schema has to make those two representable
+differently or the distinction collapses back at the first timeout: in this
+project's ADS-B sampler the result count is null for a failure and zero for an
+empty response, and a regression exists whose data can tell them apart. That
+sampler is where this property was learned, which is why it arrives at 1.5 and
+not earlier.
+
+This one generalises furthest of the ten. It costs one table and it is owed by
+any consumer of any feed without a heartbeat, including this project's own.
+
+**Ten. A stated access budget, if there is one, and a statement if there is
+not.** [measured]
+
+A feed that meters access makes the consumer's **coverage** a function of the
+consumer's quota. A consumer polling on a schedule against a daily allowance
+either knows how much of it remains, in which case it can say honestly what its
+sampling density was and where it lapsed, or it does not, in which case its own
+completeness is unknown to it and any gap in the record is unattributable: the
+publisher, the network, or an allowance that ran out at four in the afternoon
+are three different findings and they look identical.
+
+Publishing the limit, and returning the remaining allowance in a response
+header, costs a header and turns an unattributable gap into a diagnosable one.
+
+The property is equally satisfied by having no meter and saying so. "No limit,
+no throttling, poll as often as you find useful" is a complete answer, and it
+is what the Ukrainian channel provides by having no gate at all. What fails the
+property is a limit that exists and is not stated, because a consumer then
+discovers it by being cut off.
+
+**Note on the first property, from the same experience.** Section 3 argues that
+an application process is a permission regime with an RSS icon. This project
+has since consumed the other kind under terms revocable without cause, and the
+cost is sharper than the original wording suggests: **reproducibility becomes a
+property of the interface rather than of the consumer's diligence.** A second
+reader cannot re-run a measurement that rests on an agreement they were not
+party to and may not be granted. The Ukrainian channel's measurements in
+section 1 are checkable by anyone. The ones resting on a keyed interface are
+checkable by whoever holds the key.
 
 ## 5. The objection, and the answer
 

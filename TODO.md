@@ -9,12 +9,12 @@
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 13 | Finished, with the release that closed it named in the entry |
-| `ready` | 31 | Nothing external blocks it; it needs a session |
+| `ready` | 30 | Nothing external blocks it; it needs a session |
 | `decision` | 4 | Waiting on a judgement rather than on work |
 | `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
-| `unstated` | 2 | **No state in the entry. This is a defect in the entry.** |
+| `unstated` | 3 | **No state in the entry. This is a defect in the entry.** |
 
 ### Priority tiers
 
@@ -874,8 +874,21 @@ than one event.
 
 
 ## T42. Operating intensity of the Jasionka hub, measured from ADS-B
-Status: `ready`, follows T20. Not on the beta critical path, and not in any [tier 2]
+Status: `in progress`, follows T20. Not on the beta critical path, and not in any [tier 2]
 score.
+
+**Progress, 2026-08-14.** Acceptance item 1 is under way rather than done. The
+sampler is deployed on `vm-mavo` as its own unit, user and store, polling once
+every 60 seconds and retaining 8 days; D-028 records the cadence, the box, and
+why raw state vectors are stored rather than derived landings. It is
+deliberately outside this tree (`docs/DEPLOYMENT.md` section 2). Items 2, 3 and
+4 are untouched and cannot start before the sampler has run its three nights,
+one of them with a western-Ukraine alert.
+
+**Not yet measured, and the arithmetic in D-028 rests on it:** whether
+`x-rate-limit-remaining` is returned on this endpoint, and therefore what a
+call actually costs. Until a response has been read, the credit budget is
+[inference].
 
 **What this is.** Rzeszow-Jasionka is the logistics hub through which support
 for Ukraine moves. During a war, how hard that hub is working is part of the

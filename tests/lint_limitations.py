@@ -16,12 +16,32 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "mavo"
+TOOLS = ROOT / "tools"
 
 NETWORK_MODULES = ("requests", "httpx", "urllib.request", "http.client", "aiohttp", "socket")
 
 
 def _package_sources() -> list[Path]:
     return sorted(PACKAGE.rglob("*.py"))
+
+
+def _reachable_sources() -> list[Path]:
+    """Everything the egress inventory speaks for: the package and `tools/`.
+
+    Widened at 0.31.0.0. `docs/DEPLOYMENT.md` section 2 states the egress
+    inventory "completely" and says a lint fails the build if a second module
+    acquires reach, "which is what makes the table above checkable rather than
+    aspirational". That lint scanned `mavo/` alone, so the half of the tree the
+    Makefile calls "inside the net" - where half of STATUS.json's measured
+    numbers are produced - was outside the check that the table's completeness
+    rested on.
+
+    Nothing had slipped through; the scope was simply narrower than the claim,
+    which is the failure that only shows up on the day something does. The
+    trigger was T42's ADS-B sampler, a tool whose whole job is to reach a
+    second destination.
+    """
+    return _package_sources() + sorted(TOOLS.rglob("*.py"))
 
 
 def _source_text() -> str:
@@ -81,11 +101,11 @@ def check_network_reach_is_one_file() -> str | None:
     mechanically checkable.
     """
     offenders: list[str] = []
-    for path in _package_sources():
+    for path in _reachable_sources():
         if path.name == "transport.py":
             continue
         text = path.read_text(encoding="utf-8")
-        offenders += [f"{path.name}:{module}" for module in NETWORK_MODULES
+        offenders += [f"{path.relative_to(ROOT)}:{module}" for module in NETWORK_MODULES
                       if f"import {module}" in text]
     return f"network client imported outside transport.py: {offenders}" if offenders else None
 

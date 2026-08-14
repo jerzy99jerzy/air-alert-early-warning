@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.7
+Document:  docs/DECISIONS.md, version 2.8
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -886,3 +886,126 @@ measured, and this entry should carry a measured cadence once the host has run
 one uninterrupted hour with `AccuracySec=1s` in place. **That measurement is
 the outstanding item on this decision**, and until it exists the margin here is
 an estimate, not a bound.
+
+**The outstanding measurement, taken 2026-08-14. This entry no longer rests on
+an estimate.** [measured, on the production host, one uninterrupted hour]
+
+`AccuracySec=1s` was applied to `mavo-collect.timer` and confirmed in place
+(`systemctl show` reports `AccuracyUSec=1s`). One hour of the journal, read
+after the change:
+
+| | Start-to-start interval, nominal 30 s + 5 s jitter | n |
+| --- | --- | --- |
+| Before | 33, 37, 37, 37, 53, 60 s | 7 intervals, 2026-08-13 08:53-08:58 |
+| After | 31 s ×20, 32 ×21, 33 ×24, 34 ×18, 35 ×23, 36 ×1 | 107 intervals, 2026-08-14 09:00-10:00 UTC |
+
+Mean after: 33.06 s. Spread fell from 27 s to 5 s. The distribution is flat
+across 31-35 with a single value at 36, which is the shape `RandomizedDelaySec=5`
+predicts, and its theoretical mean is 32.5 s; the +0.56 s residual is
+[inference] attributable to process spawn, against poll latencies of 0.29 to
+0.60 s measured the previous day.
+
+**What this settles.** The hypothesis written into the drop-in was that
+`AccuracySec`, rather than the duration of the run itself, dominated the
+jitter. It did. Had the after-distribution still carried a tail near 50 s, the
+mechanism in the paragraph above would have been wrong and this entry would
+have needed rewriting rather than closing.
+
+**Two facts that came free with the same reading.** 3600 / 33.06 = 108.9 and
+108 polls were recorded, so the hour has no missing cycle [measured]. No
+interval exceeded 36 s, so no poll in that hour hit a timeout, unlike the
+window the day before which contained a 20.12-second failure and the 60-second
+gap that followed it [inference from the interval distribution].
+
+**The margin is now a bound rather than an estimate**, for this cadence on this
+host. It stops being one if the interval changes, if `RandomizedDelaySec` is
+removed, or if an hour appears with intervals above 40 s that no long-running
+poll explains. The unreachable rate named earlier in this entry remains the
+measurement that would reopen the decision itself.
+
+**Provenance note.** The before-distribution was not instrumented for this
+purpose. It was recovered from a journal excerpt pasted while checking
+something else, which is why it has n=7 and the after-distribution has n=107.
+An old behaviour already sitting in a log is cheaper than instrumenting for it
+and cannot be contaminated by knowing what the change was meant to do; worth
+looking for one before changing any timing in this project again.
+
+## D-028. The ADS-B sampler: sixty seconds, raw vectors, and a record of every attempt
+Date: 2026-08-14. Status: adopted
+
+**Decision.** T42's sampler polls OpenSky `/states/all` over a box around
+Rzeszow-Jasionka once every 60 seconds, stores **raw state vectors and never
+derived landings**, keeps 8 days, and writes one row per poll attempt beside
+the observations. It runs on `vm-mavo` as a separate unit, user and store, and
+is not in this tree (`docs/DEPLOYMENT.md` section 2 says why).
+
+This decision is about **collection**. D-019 governs publication and is
+unchanged by it: the aggregate-only rule, the lower-bound semantics and the
+preconditions all still hold, and nothing here brings a field closer to the
+page than D-019 already allows.
+
+**The box is not D-019's box.** D-019 samples the western box, latitude 48-52
+and longitude 22-27, for transmitting aircraft over western Ukraine. This one
+is latitude 49.75-50.47, longitude 21.35-22.69, roughly one square degree
+around the airport, and it extends west of longitude 22 where D-019's does not.
+Two boxes for two questions, stated here so a later reader does not merge them
+into one dataset.
+
+**Why raw vectors rather than landings.** Deriving a touchdown from ADS-B is a
+guess that will be rewritten after the first week of real data, and an
+interpretation can be recomputed over stored vectors any number of times while
+an hour that was never polled does not come back. Writing the interpretation
+first would have fixed a guess into the only record that exists.
+
+**Why 60 seconds and not 300.** Credits are not the binding constraint: 1,440
+of a 4,000-per-day allowance, and unused credits do not carry over, so a longer
+interval saves nothing that can be spent later. The binding constraint is that
+an approach through the box lasts roughly five minutes, so a 300-second
+interval samples the phenomenon at its own period and yields one point per
+approach or none. Aircraft that transmit intermittently would then be dropped
+**selectively rather than randomly**, and that subset is the one with
+diagnostic value. Over-sampling can be thinned at read time; under-sampling
+cannot be undone. [inference, from approach speed and box size; the first week
+either supports it or does not]
+
+**Why 30 seconds was not chosen either.** 2,880 of 4,000 leaves 28% for retries
+and restarts. Exhausting the allowance mid-afternoon would produce a hole whose
+shape is indistinguishable from an outage, which is the failure this project is
+built against.
+
+**The attempt log, which is the load-bearing part.** A `polls` table records
+every attempt, its HTTP status, its result count and whatever the server said
+about remaining credits. Without it, an hour in which nothing was observed and
+an hour in which the sampler was dead are the same empty set in storage, and no
+care at rendering time recovers a distinction that was never written. The count
+of results is **null for a failed poll and zero for an empty one**, and a
+regression exists whose data can tell those apart, because a schema that cannot
+represent the difference collapses it back at the first timeout. This is
+`docs/FEED-SPEC.md` section 4 applied to this project's own consumption rather
+than asked of somebody else, and it is written up there as property nine.
+
+**Interval is a coverage parameter, not a setting.** Changing it mid-window
+makes that window's sampling density non-uniform, and any chart drawn across
+the seam has to say so rather than average over it. The `polls` table records
+real timestamps, so achieved cadence is measurable rather than asserted; D-027
+is the precedent for why that matters.
+
+**What this does not become.** Not a drone-tier source. The premise that it
+might be is recorded as false: Shahed-type munitions and cruise missiles carry
+no transponder, and no sampling rate changes that. What is observable is the
+operating intensity of a logistics hub, reported and never scored (D-019, T42).
+
+**Cost per call is unmeasured at the time of writing.** The published allowance
+is 4,000 per day and a small box is the cheapest bracket, but whether
+`x-rate-limit-remaining` is returned on this endpoint has not been read from a
+response yet. Until it is, the budget arithmetic above is [inference] and the
+60-second choice is defended by resolution alone.
+
+**What would reopen this.** The first week showing that adjacent samples add
+nothing, in which case 120 or 300 seconds is right and the seam is documented.
+A measured cost above one credit per call, which changes the arithmetic. The
+deliverable narrowing to hourly density with no aircraft-level classification,
+which removes the resolution argument entirely. Or the free-trial expiry, which
+is a harder date for this collector than for anything else in the project: the
+alert store is reconstructible from `data/raw` and from the channel, and a
+rolling window of observation is reconstructible from nothing.
