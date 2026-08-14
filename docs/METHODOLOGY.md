@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.27
+Document:  docs/METHODOLOGY.md, version 2.28
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -1821,7 +1821,16 @@ figure.** Three patterns, all measured rather than guessed:
 3. **The artillery near misses are not a kind-table problem.** `Загроза
    артобстрілу` over `Покровська територіальна громада` carries both a
    declare marker and a kind; it fails because that tag is not in the 127-row
-   map. That is T34, the untagged remainder, and it measures something else.
+   map.
+
+   **Correction, 0.32.0.0.** This paragraph filed that under T34 and T34 is a
+   different population: the 321 design-window messages carrying **no tag at
+   all**. These carry a tag the map does not hold, which has a different cause
+   - the map is built from the design window while the corpus runs 19 days
+   longer - and a different repair. No task covered it, so the work read as
+   scheduled for five sprints while nothing was pointed at it. T56 now does,
+   and `tools/unmapped_tags.py` measures the size of it before anything is
+   decided.
 
 **The inversion that a coverage improvement would have bought.** The obvious
 next step is adding `атак` so `Атака ударних БПЛА` resolves. Measured against

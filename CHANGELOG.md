@@ -16,6 +16,38 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.0.0 - 2026-08-14
+
+**Two instruments for the question the map keeps answering with "unknown", and
+a correction to where that question was filed.**
+
+- **`tools/unmapped_tags.py`, P1.** `tag_map.csv` holds 127 rows built from the
+  design window, 48,540 messages over 99 nights. The corpus is 61,041 over 118
+  days, so tags appearing only outside the window are absent from the map **by
+  construction**. This reads `AreaTable.resolve_all`'s second element across
+  the corpus and reports what those tags cost: how many distinct ones, how many
+  messages, and how many of those messages carry a kind marker that the join
+  therefore never sees.
+- **`docs/METHODOLOGY.md` filed the artillery near-misses under T34, and T34 is
+  a different population.** T34 is the 321 design-window messages carrying **no
+  tag**. `Загроза артобстрілу` over `Покровська територіальна громада` carries
+  a tag the map does not hold. No task covered that, so the work looked
+  scheduled and was not. Corrected, and T56 opened.
+- **`tools/api_kind_compare.py`, P4.** Compares the API's `alert_type` against
+  the join's `kind` over the same oblasts. It refuses the framing that would
+  make it valuable and wrong: the API, `alerts.in.ua` and the channel share one
+  upstream, so this is two parsers over one text. Agreement is not
+  corroboration; disagreement is the finding, because at least one reader is
+  then wrong about a message that can be read.
+- **The corpus reader moved into the package.** `read_snapshot_messages` was
+  local to `kind_coverage`; a second tool needed it and `tools/` cannot become
+  an importable package without failing `check_single_namespace`. Copying it
+  would have made two readers that can disagree about what the corpus contains
+  while both report confidently. Seven regressions pin it, five mutants
+  verified red - one of which survived the first attempt because the fixture
+  reached the wrong guard, which is this repository's recurring shape and is
+  recorded as such.
+
 ## 0.31.0.0 - 2026-08-14
 
 **A gate whose scope had stopped covering what it promised, and a count that

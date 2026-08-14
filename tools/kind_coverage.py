@@ -39,25 +39,20 @@ from __future__ import annotations
 
 import argparse
 import random
-import re
 import statistics
 from collections import Counter
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from mavo.areas import AreaTable  # noqa: E402
-from mavo.backfill import SNAPSHOT_NAME  # noqa: E402
+from mavo.backfill import read_snapshot_messages  # noqa: E402
 from mavo.kinds import KindIndex, apply_kinds  # noqa: E402
 from mavo.schema import KindEvent, KindState, ThreatKind  # noqa: E402
 from mavo.sources.telegram import (  # noqa: E402
-    _BLOCK,
-    _TEXT,
-    _TIME,
     KIND_DECLARE_MARKERS,
     KIND_LIFT_MARKERS,
     KIND_MARKERS,
     AreaMention,
-    _parse_timestamp,
     classify_kind_message,
     classify_message,
 )
@@ -69,27 +64,6 @@ CANDIDATE_TTLS = (
     timedelta(hours=12),
     timedelta(hours=24),
 )
-
-
-def read_messages(directory: Path) -> list[tuple[datetime, str]]:
-    """Every message in every snapshot, deduplicated by post id."""
-    seen: dict[str, tuple[datetime, str]] = {}
-    for snapshot in sorted(directory.glob("page-*.html")):
-        if SNAPSHOT_NAME.search(snapshot.name) is None:
-            continue
-        body = snapshot.read_text(encoding="utf-8", errors="replace")
-        for block in _BLOCK.finditer(body):
-            chunk = block.group(0)
-            post = re.search(r'data-post="[^/]+/(\d+)"', chunk)
-            text_match = _TEXT.search(chunk)
-            time_match = _TIME.search(chunk)
-            if post is None or text_match is None or time_match is None:
-                continue
-            ts = _parse_timestamp(time_match.group(1))
-            if ts is None:
-                continue
-            seen[post.group(1)] = (ts, re.sub(r"<[^>]+>", " ", text_match.group(1)))
-    return sorted(seen.values())
 
 
 def main() -> int:
@@ -115,7 +89,7 @@ def main() -> int:
         return 1
 
     areas = AreaTable.from_csv()
-    messages = read_messages(arguments.raw)
+    messages = read_snapshot_messages(arguments.raw)
     print(f"kind-coverage: {len(messages)} messages read from {arguments.raw}")
     if not messages:
         return 1

@@ -23,10 +23,11 @@ import re
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 from mavo.errors import SourceUnavailable
-from mavo.sources.telegram import CHANNEL_URL, POST_ID
+from mavo.sources.telegram import _BLOCK, _TEXT, _TIME, CHANNEL_URL, POST_ID, _parse_timestamp
 from mavo.transport import Transport
 
 # Measured, not assumed: the preview served exactly 20 posts per page on
@@ -360,3 +361,38 @@ def contiguity_gaps(directory: Path) -> Iterator[tuple[int, int]]:
     for (_, previous_last), (next_first, _) in zip(ranges, ranges[1:], strict=False):
         if next_first > previous_last + 1:
             yield previous_last + 1, next_first - 1
+
+
+def read_snapshot_messages(directory: Path) -> list[tuple[datetime, str]]:
+    """Every message in every snapshot under `directory`, deduplicated by post id.
+
+    Moved into the package at 0.31.0.0 from `tools/kind_coverage.py`, where it
+    was the only reader of the corpus. A second tool needed it, `tools/` cannot
+    become an importable package without breaking `check_single_namespace`, and
+    a copied reader is two readers that can disagree about what the corpus
+    contains while both report confidently. One reader, one answer.
+
+    The body is unchanged by the move. The measurements already published from
+    `kind_coverage` were taken with this code and are not invalidated by its
+    address, but that is an argument and not a re-run: the corpus is tier 1 and
+    not in the tree, so no gate here can confirm it. `test_backfill_reader`
+    pins the behaviour against a synthetic snapshot so a future edit cannot
+    change it silently, which is the part that is checkable.
+    """
+    seen: dict[str, tuple[datetime, str]] = {}
+    for snapshot in sorted(directory.glob("page-*.html")):
+        if SNAPSHOT_NAME.search(snapshot.name) is None:
+            continue
+        body = snapshot.read_text(encoding="utf-8", errors="replace")
+        for block in _BLOCK.finditer(body):
+            chunk = block.group(0)
+            post = re.search(r'data-post="[^/]+/(\d+)"', chunk)
+            text_match = _TEXT.search(chunk)
+            time_match = _TIME.search(chunk)
+            if post is None or text_match is None or time_match is None:
+                continue
+            ts = _parse_timestamp(time_match.group(1))
+            if ts is None:
+                continue
+            seen[post.group(1)] = (ts, re.sub(r"<[^>]+>", " ", text_match.group(1)))
+    return sorted(seen.values())
