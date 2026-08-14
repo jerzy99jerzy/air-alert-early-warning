@@ -16,6 +16,43 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.2.0 - 2026-08-14
+
+**A category is not a kind, written down before the assumption gets made a
+third time.**
+
+- **D-029.** `api.ukrainealarm.com`'s `type` is a category of alert: air,
+  artillery, street fighting, chemical, radiological. `AIR` covers a drone, a
+  glide bomb, a cruise missile, a ballistic missile, a MiG-31K takeoff and a
+  threat from the sea under one value, so the one question a reader has - what
+  is coming - is exactly the one it does not answer. It will not resolve
+  `ThreatKind` and no enum member is added because that API has a matching
+  category.
+- **The assumption was made twice** before anybody read what the values mean,
+  because a category and a kind are the same shape: a short enum on an alert.
+  The fixtures made it worse: all five in `tests/test_sprint13.py` carry
+  `"type": "AIR"`, invented by their author. Being right by coincidence looks
+  identical to being right by measurement.
+- **`TYPE_TO_KIND` is complete and honest.** Four of five values map to
+  `unknown` and that is the answer, not a gap. Provenance is `[reported]` from
+  three independent descriptions, and `tools/api_kind_compare.py` prints the
+  returned vocabulary so the entry can be upgraded to `[measured]` or reopened.
+- **`docs/FEED-SPEC.md` 1.6, property eleven: a category must say what it does
+  not distinguish.** One sentence per category from the publisher costs
+  nothing and removes a consumer error no care on the consumer's side
+  prevents. The consumer's half is harder and is stated with it: **a category
+  must never be rendered as a closed set of the kinds it might contain.** This
+  project came close to drawing three icons beside an alert whose kind was
+  never declared; three icons assert "one of these three", which the source did
+  not say. Prediction in the form of iconography, the same failure as a bearing
+  arrow.
+- **CHEMICAL, NUCLEAR and URBAN_FIGHTS get no member**, and the reason cuts
+  both ways. A `ThreatKind` member exists when the channel names the thing and
+  the schema cannot hold it - the criterion `ARTILLERY` states about itself
+  after F71. Whether this channel names them is unmeasured: if it does not, the
+  members are unreachable; if it does, those messages are being discarded now
+  and it is a defect rather than a request. A corpus count decides it.
+
 ## 0.32.1.0 - 2026-08-14
 
 **Two items that were living in a handover file outside version control.**

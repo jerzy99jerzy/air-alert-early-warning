@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 1.5 / 2026-08-14
+Version: 1.6 / 2026-08-14
 A specification, written from the position of someone who tried to build against
 one and found there was nothing to build against. The Ukrainian equivalent was
 consumed and measured over a corpus of 118 days; the work of building against it
@@ -219,14 +219,16 @@ happening now. For most public data that gap costs nothing. For alerting it is
 the difference between a quiet night and a dead system, and a consumer cannot
 tell them apart from the outside.
 
-## 4a. Five properties learned by shipping, not by specifying
+## 4a. Six properties learned by shipping, not by specifying
 
 Sections 1 to 4 were written before this project had a consumer in production.
 It has had one since 2026-08-11, and five requirements emerged that the
 original five did not cover. They are numbered separately because they are
 weaker claims: each rests on one deployment rather than on a corpus. Nine and
 ten were added at 1.5, from consuming two further interfaces: one reached under
-a revocable agreement, one metered.
+a revocable agreement, one metered. Eleven was added at 1.6, after a category
+field was mistaken for a description of the threat - by this project, in
+writing, twice.
 
 **Six. A cap, published, and a flag saying when it bound.** [measured]
 
@@ -336,6 +338,51 @@ reader cannot re-run a measurement that rests on an agreement they were not
 party to and may not be granted. The Ukrainian channel's measurements in
 section 1 are checkable by anyone. The ones resting on a keyed interface are
 checkable by whoever holds the key.
+
+**Eleven. A category must say what it does not distinguish.** [measured, by
+getting it wrong]
+
+A feed that labels an alert with a category invites every consumer to treat
+the category as a description of the threat. It usually is not one, and the
+gap is invisible from the field alone.
+
+The concrete case. The upstream behind the Ukrainian alerting apps publishes
+five categories: air alert, artillery, street fighting, chemical, radiological.
+A consumer reading `AIR` learns that something airborne was declared. It does
+**not** learn whether that something is a drone, a glide bomb, a cruise
+missile, a ballistic missile, a MiG-31K takeoff, or a threat from the sea. All
+of those are `AIR`. The single most asked question about an alert - what is
+coming - is precisely the question the category does not answer, and nothing
+in the field, its name, or its documentation says so.
+
+This project spent effort twice on the assumption that it did: once planning to
+fill a gap in its own classification from that field, and once again in a
+written recommendation before anybody read what the values mean. Both times the
+field looked like an answer because a category and a kind are the same shape -
+a short enum on an alert - and nothing distinguished them.
+
+**What a publisher owes here is one sentence per category, not a taxonomy.**
+"Air alert: any airborne threat, including means this feed does not
+distinguish." That sentence costs nothing to write and removes a class of
+consumer error that no amount of care on the consumer's side prevents, because
+the consumer cannot see what the category collapses.
+
+**And what a consumer owes, which is the harder half.** A category must never
+be rendered as a closed set of the kinds it might contain. The temptation is
+strong and looks like generosity: this project came close to drawing three
+icons - drone, glide bomb, missile - beside an alert whose kind was never
+declared, so a reader could see what it might be. Three icons assert **"one of
+these three"**. The source said no such thing, and `AIR` does not mean it.
+Drawing them would have been prediction in the form of iconography, which is
+the same failure as an arrow showing a bearing the feed never published.
+
+Text can hold an open set because it has the words "or something else". A row
+of symbols cannot, and no arrangement of symbols supplies one. Where a consumer
+does want a visual for an undeclared kind, the honest form is **one symbol that
+reads as a key rather than an enumeration**, with the open end stated in words
+beside it. That is what this project shipped, and the reasoning is in its
+consumer's defect log rather than here because the decision is the consumer's;
+what belongs in a specification is the property that made it necessary.
 
 ## 5. The objection, and the answer
 

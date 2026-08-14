@@ -60,21 +60,40 @@ from typing import Any
 from mavo.errors import SourceUnavailable
 from mavo.sources.ukrainealarm import KEY_ENV, UkrainealarmProbe, read_key
 
-#: The API's vocabulary against `ThreatKind`, as far as it can be read from the
-#: field name alone. Deliberately incomplete: a string not in here is printed
-#: as itself and counted separately, because guessing that `URBAN_FIGHTS` means
-#: ARTILLERY would be this tool inventing the agreement it exists to measure.
+#: The API's five categories against `ThreatKind`. **Four of the five map to
+#: `unknown`, and that is the correct answer rather than a gap to be filled.**
 #:
-#: [assumption, unverified] Every row here is an inference from the string, not
-#: from documentation. The API's own meaning for each value has not been read.
+#: [reported, 2026-08-14, three independent descriptions: Ajax Systems' own
+#: account of the Air Alert app it built, the Home Assistant integration's
+#: sensor list, and the alerts.in.ua client library's typed accessors. Not yet
+#: [measured]: no response from this key has been read.]
+#:
+#: The field is a **category of alert**, not a description of the means of
+#: attack. `AIR` covers a drone, a glide bomb, a cruise missile, a ballistic
+#: missile, a MiG-31K takeoff and a threat from the sea, all under one value.
+#: The question this project wants answered - what is coming - is exactly the
+#: question the field does not answer, and its shape gives no hint of that: a
+#: category and a kind are both short enums hanging off an alert.
+#:
+#: `ARTILLERY` is the only value that lands on a real kind, and the channel
+#: join already produces that kind from its own declarations. So the coverage
+#: this field could add to `ThreatKind` is, at most, alerts the join missed in
+#: the one category it already reads.
+#:
+#: `CHEMICAL`, `NUCLEAR` and `URBAN_FIGHTS` have no member here and are not
+#: given one. A `ThreatKind` member exists when **the channel names the thing
+#: and the schema cannot hold it** - that is why ARTILLERY was added at
+#: 0.19.3.0, after F71 measured messages being rejected whole. Whether the
+#: channel names chemical, radiological or street-fighting threats is
+#: unmeasured. Adding members because another interface has them would be
+#: letting an API that must never reach `state.json` decide the shape of the
+#: contract.
 TYPE_TO_KIND: dict[str, str] = {
     "AIR": "unknown",
     "ARTILLERY": "artillery",
     "URBAN_FIGHTS": "unknown",
     "CHEMICAL": "unknown",
     "NUCLEAR": "unknown",
-    "INFO": "unknown",
-    "UNKNOWN": "unknown",
 }
 
 

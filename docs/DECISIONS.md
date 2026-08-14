@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.8
+Document:  docs/DECISIONS.md, version 2.9
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1009,3 +1009,58 @@ which removes the resolution argument entirely. Or the free-trial expiry, which
 is a harder date for this collector than for anything else in the project: the
 alert store is reconstructible from `data/raw` and from the channel, and a
 rolling window of observation is reconstructible from nothing.
+
+## D-029. The API's `type` is a category of alert, not a means of attack
+Date: 2026-08-14. Status: adopted
+
+**Decision.** `api.ukrainealarm.com`'s `type` field will not be used to resolve
+`ThreatKind`, and no `ThreatKind` member will be added because that API has a
+corresponding category. The field is recorded, mapped and reported by
+`tools/api_kind_compare.py`; it reaches nothing else.
+
+**What the field is.** Five categories: air alert, artillery, street fighting,
+chemical, radiological. [reported, 2026-08-14, from three independent
+descriptions: Ajax Systems' account of the Air Alert app it built and which
+feeds this API, the Home Assistant integration's sensor list, and the
+alerts.in.ua client library's typed accessors. Not [measured]: no response from
+this project's key has been read, and `tools/api_kind_compare.py` prints the
+returned vocabulary precisely so that this entry can be upgraded or reopened.]
+
+**Why it cannot answer the question.** `AIR` covers a drone, a glide bomb, a
+cruise missile, a ballistic missile, a MiG-31K takeoff and a threat from the
+sea, under one value. **The single question a reader has - what is coming - is
+exactly the one the category does not answer.** `ThreatKind` comes from a
+different stream entirely: the channel's own declaration messages, which the
+API does not model in any field.
+
+**How the mistake was made twice, which is the part worth recording.** A
+category and a kind have the same shape - a short enum hanging off an alert -
+so the field reads as an answer. This project planned work on that assumption
+and then wrote a recommendation on it, both before anybody read what the values
+mean. Neither error was caught by reasoning; both were ended by reading a
+description of the vocabulary. **The fixtures made it worse rather than better:**
+all five in `tests/test_sprint13.py` use `"type": "AIR"`, a value invented by
+whoever wrote them. That they happen to be right is coincidence, not
+verification, and a suite full of one invented value looks exactly like a suite
+full of measured ones.
+
+**On the members that were asked for.** CHEMICAL, NUCLEAR and URBAN_FIGHTS get
+no `ThreatKind` member here. The criterion is the one `ThreatKind.ARTILLERY`
+states about itself: a member exists when **the channel names the thing and the
+schema cannot hold it**, which is what F71 measured before 0.19.3.0 - messages
+rejected whole for want of a member. Whether this channel names chemical,
+radiological or street-fighting threats is **unmeasured**, and it cuts both
+ways: if it does not, the members would be unreachable and the site would carry
+legend entries for categories it can never draw; if it does, those messages are
+being discarded today and this is a live defect rather than a feature request.
+A corpus count decides it and has not been run.
+
+**What must not follow from this entry.** That the API is useless. Its two
+purposes stand and are why the adapter exists: end-to-end latency for T40, and
+area coverage against the pattern table. Neither needs the `type` field.
+
+**Reopen if:** the returned vocabulary contains a value outside the five;
+the provider documents a sub-type or a free-text description beside the
+category; or a corpus count shows the channel naming a threat this schema
+cannot hold, which reopens the enum question on its own terms rather than on
+this API's.
