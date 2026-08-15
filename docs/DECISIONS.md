@@ -1064,3 +1064,35 @@ the provider documents a sub-type or a free-text description beside the
 category; or a corpus count shows the channel naming a threat this schema
 cannot hold, which reopens the enum question on its own terms rather than on
 this API's.
+
+## D-030. A task identifier is issued by reading the file, never from memory
+Date: 2026-08-14. Status: adopted
+
+**Decision.** The next `T<n>` is `1 +` the highest number present in `TODO.md`,
+read from the file in the same session that writes the entry. Precedence
+resolves a collision: the entry that held a number first keeps it, and the
+later entry is renumbered together with every reference to it.
+
+**Class.** The same mechanism as a version typed at tag time: a value issued
+from memory rather than derived from the artefact it must be unique within.
+Three identifiers were each issued twice, one holder months old and one opened
+in 0.32.x.
+
+**Why it survived.** The index check counted entries and compared totals, and a
+count is blind to identity. Completeness and uniqueness are different questions
+and only the first had a check. The cost was realised before it was noticed:
+`docs/DEPLOYMENT.md` tracked one `T57` while the changelog closed a different
+one, so a sentence naming a task named two.
+
+**Enforcement.** `check_identifiers_are_unique` in `tools/todo_index.py`, wired
+into `--check` before the index comparison, because a colliding identifier
+makes every later message ambiguous. Verified red against the collision as it
+stood and green after the rename.
+
+**What this enforcement does not cover.** The entry regex is `^## (T\d+)\.`,
+so a suffixed identifier is invisible to it and a collision between two `T8a`
+entries would pass. Named here rather than left implicit, and tracked as T62.
+
+**Reopen if:** an identifier is issued by any means other than reading the
+highest number from the file; or a collision is found that the check did not
+stop, which means the check's parser and the file's headings have diverged.

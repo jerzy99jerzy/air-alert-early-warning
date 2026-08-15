@@ -2780,3 +2780,43 @@ so a stalled resolver still costs what it costs. Nothing in this repository can
 bound it without a thread, and a thread in the network seam is a larger change
 than the defect justifies. Stated rather than left to be discovered.
 
+### F80, 0.32.3.1. A tag was created over a gate that had already refused
+
+`make verify` stopped at `lint-hygiene: CHANGELOG top entry 0.32.2.0 !=
+pyproject 0.32.3.1` and returned a non-zero status. The commit, the assertion,
+the tag and the push were run afterwards as four separate commands, and
+`v0.32.3.0` now names a tree that fails its own gate. CI said so within twenty
+seconds, on a badge the README carries on the front page.
+
+**What the assertion asserted.** `git status --porcelain` empty, and
+`git show HEAD:STATUS.json` reporting the expected version. Both were true.
+Neither can observe a gate result: one measures the worktree against the index
+and the other reads a string out of a file the operator had edited by hand.
+The step named itself an assertion before the tag and checked two properties
+that a red gate leaves untouched.
+
+**Class: a check whose success is indistinguishable from its failure**, which
+is the same class as offering a five-occurrence string as proof that a
+one-occurrence change was deployed. Fourth instance of the wider family, after
+F90, F96 and F97: a state read from an artefact rather than from the thing that
+produces it, and stated with confidence.
+
+**Why it survived.** The gate and the commit were separate commands in the
+release procedure, deliberately, because a different defect had taught that
+chaining `commit && tag && push` silently skips the tag when the commit is a
+no-op. That lesson was applied one step too far. `verify && commit` is a
+chain that must hold, because the gate's entire purpose is to have the power
+to stop the commit; `commit && tag` is a chain that must not, because a no-op
+commit is not a reason to skip a tag. The two cases were treated as one rule.
+
+**Repair.** Two, and both are needed. The gate is chained to the commit, so a
+refusal prevents the commit rather than being read and passed over. And before
+a tag is created, the gate is run against a worktree of `HEAD` in a fresh
+virtual environment, because the run that matters is the one against the commit
+the tag will name, not against the tree the operator has been editing. Until
+that lives in the Makefile it is a preference rather than a rule, which is this
+repository's own standing test for whether something is enforced.
+
+**Reopen if:** a tag is created without a green gate measured on the commit it
+names.
+

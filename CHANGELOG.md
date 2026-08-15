@@ -16,6 +16,44 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.3.1 - 2026-08-15
+
+**Three task identifiers had been issued twice, the index could not see it,
+and the release that fixed it was tagged over a red gate.**
+
+- **A count is blind to identity.** `TODO.md` carried fifty-eight entries
+  under fifty-five distinct names: `T56`, `T57` and `T58` each named two
+  tasks, one opened in 0.32.0.0 or 0.32.1.0 and one that had held the number
+  for months. Every number in the generated index stayed correct throughout,
+  because fifty-eight entries with fifty-five names still total fifty-eight.
+  Completeness and uniqueness are different questions and only the first had
+  a check.
+- **What it cost is not tidiness.** `docs/DEPLOYMENT.md` says a thing is
+  tracked as `T57` while the changelog closes a different `T57` four hundred
+  lines away, so a sentence naming a task named two. The number was issued
+  from memory rather than derived from the file, which is the mechanism of a
+  version typed at tag time.
+- **Resolved by precedence, recorded as D-030.** The entry that held a number
+  first keeps it; the three opened in 0.32.x become `T59`, `T60` and `T61`,
+  and the references in `CHANGELOG.md`, `docs/DEPLOYMENT.md`,
+  `docs/METHODOLOGY.md` and `docs/reviews/0.32.0.0.md` move with them.
+- **`check_identifiers_are_unique` runs before the index comparison**, because
+  a colliding identifier makes every later message ambiguous. Verified red on
+  the tree as it stood and green once the three were renamed.
+- **The fifty-eight is the parser's count, not the file's.** `TODO.md` holds
+  sixty headings; the entry regex is `^## (T\d+)\.` and does not match `T8a`
+  or `T8b`, so two open tier-2 tasks are outside the index, outside the new
+  uniqueness check and outside the tier and sprint checks. A check for
+  uniqueness that cannot see a suffixed collision is the same shape one level
+  down. Recorded as T62 rather than repaired here, because widening the regex
+  renumbers nothing but does change every count this release quotes.
+- **0.32.3.0 was tagged over a red gate.** That commit carries the rename and
+  the check and does not carry this record. `make verify` had already stopped
+  at `lint-hygiene: CHANGELOG top entry 0.32.2.0 != pyproject 0.32.3.0`, and
+  the assertion before the tag read a clean worktree and a version string,
+  neither of which can see a failing gate. The tag stands: deleting it would
+  remove the evidence rather than the defect. Logged as F80.
+
 ## 0.32.2.0 - 2026-08-14
 
 **A category is not a kind, written down before the assumption gets made a
