@@ -133,9 +133,9 @@
   "package_files": 19,
   "test_lines": 6929,
   "test_files": 42,
-  "tool_lines": 4804,
+  "tool_lines": 4834,
   "tool_files": 18,
-  "documentation_lines": 18233,
+  "documentation_lines": 18249,
   "documentation_files": 50,
   "runtime_dependencies": 0
  },

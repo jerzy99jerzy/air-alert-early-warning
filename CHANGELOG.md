@@ -52,7 +52,14 @@ and the release that fixed it was tagged over a red gate.**
   at `lint-hygiene: CHANGELOG top entry 0.32.2.0 != pyproject 0.32.3.0`, and
   the assertion before the tag read a clean worktree and a version string,
   neither of which can see a failing gate. The tag stands: deleting it would
-  remove the evidence rather than the defect. Logged as F80.
+  remove the evidence rather than the defect. Logged as F99.
+- **And that defect entry was first numbered F80**, over an entry that had
+  held the number since 0.21.2.0, in the release whose subject is an
+  identifier issued from memory rather than read from the file. The pin
+  agreed throughout, because eighty entries under seventy-nine names still
+  total eighty. `check_defect_identifiers_are_unique` in
+  `tools/docs_audit.py` now runs before the count it was hiding behind,
+  verified red against the collision and green after the rename to F99.
 
 ## 0.32.2.0 - 2026-08-14
 

@@ -180,6 +180,7 @@ repository has come to the mistake it was built after.
 | [F96](#f96-02400-the-live-command-polled-the-channel-and-dropped-what-it-understood) | 0.24.0.0 | The live command polled the channel and dropped what it understood |
 | [F97](#f97-02420-replay-dropped-a-row-when-a-sort-key-tie-straddled-a-chunk-boundary) | 0.24.2.0 | Replay dropped a row when a sort-key tie straddled a chunk boundary |
 | [F98](#f98-02810-the-ten-second-timeout-was-a-ten-second-timeout-per-socket-operation) | 0.28.1.0 | The ten-second timeout was a ten-second timeout per socket operation |
+| [F99](#f99-03231-a-tag-was-created-over-a-gate-that-had-already-refused) | 0.32.3.1 | A tag was created over a gate that had already refused |
 
 ## Defect log
 
@@ -2780,7 +2781,7 @@ so a stalled resolver still costs what it costs. Nothing in this repository can
 bound it without a thread, and a thread in the network seam is a larger change
 than the defect justifies. Stated rather than left to be discovered.
 
-### F80, 0.32.3.1. A tag was created over a gate that had already refused
+### F99, 0.32.3.1. A tag was created over a gate that had already refused
 
 `make verify` stopped at `lint-hygiene: CHANGELOG top entry 0.32.2.0 !=
 pyproject 0.32.3.1` and returned a non-zero status. The commit, the assertion,
@@ -2817,6 +2818,14 @@ the tag will name, not against the tree the operator has been editing. Until
 that lives in the Makefile it is a preference rather than a rule, which is this
 repository's own standing test for whether something is enforced.
 
+**And this entry was first written as F80**, over an entry that had held the
+number since 0.21.2.0, in the release whose subject is an identifier issued
+from memory rather than read from the file. The count agreed with the pin
+throughout, because eighty entries under seventy-nine names still total
+eighty. `check_defect_identifiers_are_unique` now runs before that count,
+verified red against the collision and green after the rename.
+
 **Reopen if:** a tag is created without a green gate measured on the commit it
-names.
+names; or an `F<n>` is issued by any means other than reading the highest
+number from the log.
 

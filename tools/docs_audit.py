@@ -506,6 +506,35 @@ def check_defect_count_is_pinned(status: dict[str, object]) -> list[str]:
 CITED_WITHOUT_AN_ENTRY = ("D-025",)
 
 
+def check_defect_identifiers_are_unique(status: dict[str, object]) -> list[str]:
+    """Two entries in the defect log may not carry the same `F<n>`.
+
+    Added at 0.32.3.1, and the reason is the release it was added in. That
+    release renamed three colliding task identifiers, wrote D-030 saying an
+    identifier is read from the file rather than issued from memory, and then
+    issued `F80` from memory over an entry that had held the number since
+    0.21.2.0. The count agreed with the pin throughout, because eighty entries
+    under seventy-nine distinct names still total eighty: the same sentence
+    the same release had just written about `TODO.md`, one document away and
+    unchecked.
+
+    A collision here is worse than in the backlog. The defect log is cited by
+    class across the repository, and `F80` in a later document now names two
+    defects, one of which is about a fabricated detail in a document written
+    to be believed.
+    """
+    text = (ROOT / "docs" / "METHODOLOGY.md").read_text(encoding="utf-8")
+    seen: dict[str, list[str]] = {}
+    for number, title in re.findall(r"^### (F\d+), (.+)$", text, re.M):
+        seen.setdefault(number, []).append(title)
+    return [
+        f"{number} is used by {len(titles)} entries: "
+        + "; ".join(f"\u201c{t}\u201d" for t in titles)
+        for number, titles in sorted(seen.items())
+        if len(titles) > 1
+    ]
+
+
 def check_decision_count_is_derived_from_the_log(status: dict[str, object]) -> list[str]:
     """The decision count comes from the log, and citations resolve to entries.
 
@@ -749,6 +778,7 @@ def main() -> int:
         + check_corpus_measurements_carry_an_inventory(status)
         + check_the_holdout_boundary_survives_in_the_corpus_block(status)
         + check_the_readme_status_agrees_with_the_sprint_files(status)
+        + check_defect_identifiers_are_unique(status)
         + check_defect_count_is_pinned(status)
         + check_decision_count_is_derived_from_the_log(status)
         + check_statistics_match_the_tree(status)
