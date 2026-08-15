@@ -57,7 +57,7 @@ third time.**
 
 **Two items that were living in a handover file outside version control.**
 
-- **T57: production runs older code than `main`, and nothing here said so.**
+- **T60: production runs older code than `main`, and nothing here said so.**
   The collector on `vm-mavo` was last installed before 0.28.1.0, so F98 is not
   deployed and its fetch timeout means 20 s per resolved address rather than
   10 s for the whole fetch - measured at 20.12 s in the journal on 2026-08-13.
@@ -71,7 +71,7 @@ third time.**
   reissued archive under an already-built version number makes `pip` report
   success against a host running different code. Grep the installed module for
   a string the release added.
-- **T58: S7 against T31, T33 and T34.** The tolerance in `todo_index.py` is
+- **T61: S7 against T31, T33 and T34.** The tolerance in `todo_index.py` is
   visible, reasoned and self-removing, and it is not a decision. Either the
   `MVP.md` row is amended again or the three tasks are reassigned; whichever,
   it gets a `DECISIONS.md` entry. The third outcome, tolerating it
@@ -93,7 +93,7 @@ a correction to where that question was filed.**
   a different population.** T34 is the 321 design-window messages carrying **no
   tag**. `Загроза артобстрілу` over `Покровська територіальна громада` carries
   a tag the map does not hold. No task covered that, so the work looked
-  scheduled and was not. Corrected, and T56 opened.
+  scheduled and was not. Corrected, and T59 opened.
 - **`tools/api_kind_compare.py`, P4.** Compares the API's `alert_type` against
   the join's `kind` over the same oblasts. It refuses the framing that would
   make it valuable and wrong: the API, `alerts.in.ua` and the channel share one

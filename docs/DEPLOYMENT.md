@@ -22,7 +22,7 @@ where it had been living.
 | `vm-mavo` | pre-0.28.1.0 [reported, from a 20.12 s timeout observed in the journal on 2026-08-13] | 0.32.0.0 | F98 is not deployed: the fetch timeout means 20 s per resolved address, not 10 s for the whole fetch. Every margin computed against the constant is wrong on this host |
 | `vm-site` | see the consumer repository | | |
 
-Tracked as **T57**, which is tier 1 not because it changes code but because
+Tracked as **T60**, which is tier 1 not because it changes code but because
 measurements are being read off a host two releases behind the instrument this
 repository documents.
 

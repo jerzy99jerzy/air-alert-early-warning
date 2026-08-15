@@ -1828,7 +1828,7 @@ figure.** Three patterns, all measured rather than guessed:
    all**. These carry a tag the map does not hold, which has a different cause
    - the map is built from the design window while the corpus runs 19 days
    longer - and a different repair. No task covered it, so the work read as
-   scheduled for five sprints while nothing was pointed at it. T56 now does,
+   scheduled for five sprints while nothing was pointed at it. T59 now does,
    and `tools/unmapped_tags.py` measures the size of it before anything is
    decided.
 

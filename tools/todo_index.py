@@ -171,6 +171,35 @@ def closed_in_the_plan() -> set[str]:
     }
 
 
+def check_identifiers_are_unique(
+    rows: list[tuple[str, str, str, str, str]],
+) -> list[str]:
+    """Two entries may not carry the same `T<n>`.
+
+    The index above counts entries, and a count is blind to identity: three
+    identifiers were issued twice while every number in the table stayed
+    correct, because fifty-eight entries with fifty-five distinct names still
+    total fifty-eight. Completeness and uniqueness are different questions and
+    only the first had a check, which is D-S34's shape in the consumer and
+    F31's in this repository.
+
+    What a collision costs is not tidiness. `docs/DEPLOYMENT.md` says "tracked
+    as T57" and the CHANGELOG closes a different T57 four hundred lines apart;
+    a sentence naming a task no longer names one task. The number is issued
+    from memory rather than derived from the file, which is the same mechanism
+    as a version typed at tag time.
+    """
+    seen: dict[str, list[str]] = {}
+    for task_id, title, _state, _tier, _sprint in rows:
+        seen.setdefault(task_id, []).append(title)
+    return [
+        f"{task_id} is used by {len(titles)} entries: "
+        + "; ".join(f"\u201c{t}\u201d" for t in titles)
+        for task_id, titles in sorted(seen.items())
+        if len(titles) > 1
+    ]
+
+
 def check_sprint_agreement(rows: list[tuple[str, str, str, str, str]]) -> list[str]:
     """TODO's prose, the entries beneath it, and the plan must say one thing.
 
@@ -254,6 +283,13 @@ def main() -> int:
 
     current = text[text.index(BEGIN):text.index(END) + len(END)]
     if args.check:
+        # First, because a colliding identifier makes every later message
+        # ambiguous: "T57 is open under S9" names two tasks, not one.
+        collisions = check_identifiers_are_unique(rows)
+        if collisions:
+            for problem in collisions:
+                print(f"todo-index: {problem}", file=sys.stderr)
+            return 1
         if current.strip() != fresh.strip():
             print("todo-index: the index disagrees with the entries below it; "
                   "run `python3 tools/todo_index.py`", file=sys.stderr)
