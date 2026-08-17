@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.29
+Document:  docs/METHODOLOGY.md, version 2.30
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -2888,4 +2888,48 @@ preference, by this repository's own standing test.
 **Reopen if:** any document here states a property of `mavo-site` without the
 version it was measured against; or T44's closure is found to rest on the
 consumer's code having been read once rather than tested.
+
+### F101, 0.32.6.0. A control that produced the behaviour it forbade
+
+`tools/check_manifest.py` shipped at 0.32.5.0 with both of its questions in one
+check, and that check second in `verify`. Within a day the first edit to
+`TODO.md` made the gate unrunnable: the digest of an edited file disagrees with
+its entry, which is what an edited file is. The only way past a red gate was
+`make manifest-write`, and **that tool's own error message says to run it as
+part of the release chain and never as a way of making this check green.** The
+placement made the forbidden act the only available one.
+
+Class: **a control whose scope was right and whose placement was wrong**, and
+the placement turned it into a generator of the behaviour it existed to
+prevent. Not the same as a check that is too strict; a strict check refuses
+work, this one prescribed a shortcut.
+
+**What was actually conflated.** Two questions with different subjects.
+*Completeness* - every tracked file listed, nothing listed untracked - is a
+property of the tree at any moment and survives an edit. *Digests* are a
+property of a **commit**, and a working tree under edit is supposed to differ
+from one. One is a gate question and the other is a release question, and they
+were run by one command because they read the same file.
+
+**Why it survived.** The control was verified red on five cases before it
+shipped, and every one of them was a release-shaped case: a file added, a file
+removed, content changed on a clean tree, the manifest absent, no repository.
+**None was the pattern the operator is in most of the time**, which is an
+edited tree with the gate being run to find out whether the edit is sound. The
+test suite reproduced the author's workflow, which was one regeneration
+followed by one gate run, and the author's workflow was the unrepresentative
+one. Coverage of a control's *inputs* is not coverage of its *placement*.
+
+**Repair.** `manifest-completeness` is in `verify` and is edit-insensitive.
+`make manifest` runs both halves and is not in `verify`: it is for the release
+chain, for the gate on the detached worktree where the tree is clean by
+construction, and for CI after the push, which is where a release that skipped
+regeneration becomes visible to somebody other than whoever forgot. **The
+placement is held by a test that reads the `verify` line of the Makefile**,
+because a test of the functions alone would stay green if the digest target
+came back to the gate, which is precisely the regression this entry is about.
+
+**Reopen if:** the digest target reappears in `verify`; or any check in the
+gate is answered by an operator running a command the check's own message tells
+them not to run.
 

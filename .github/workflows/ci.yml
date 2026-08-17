@@ -23,3 +23,10 @@ jobs:
       # ENGINEERING.md section 2 happens: a check added in one place and mirrored
       # in another, until the two disagree and the weaker one is what runs.
       - run: make verify
+      # Digests are deliberately outside `verify` (F101): they describe a
+      # commit, and a working tree under edit is supposed to differ from one.
+      # Here the tree is a checkout of a pushed commit, so the question is both
+      # answerable and worth asking - this is where a release that skipped
+      # `make manifest-write` becomes visible to somebody other than whoever
+      # forgot.
+      - run: make manifest

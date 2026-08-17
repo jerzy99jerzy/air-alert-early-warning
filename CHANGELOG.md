@@ -16,6 +16,44 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.6.0 - 2026-08-17
+
+**F101. A control shipped one release ago produced the behaviour it forbade.**
+
+- **The manifest check is split, and the split is the point.**
+  `tools/check_manifest.py` asked two questions in one command, second in
+  `verify`. The first edit to any tracked file after 0.32.5.0 made the gate
+  unrunnable, because the digest of an edited file disagrees with its entry,
+  which is what an edited file is. The only way past was `make manifest-write`,
+  and that tool's own error message forbids running it for that reason.
+  **Completeness** - every tracked file listed, nothing listed untracked -
+  survives an edit and stays in `verify` as `manifest-completeness`.
+  **Digests** describe a commit, so `make manifest` leaves the gate: it runs in
+  the release chain, on the detached worktree where the tree is clean by
+  construction, and in CI after the push, which is where a release that skipped
+  regeneration becomes visible to somebody other than whoever forgot.
+- **The placement is held by a test that reads the `verify` line of the
+  Makefile.** A test of the functions alone stays green if the digest target
+  comes back to the gate, which is the regression this is about. Verified red
+  by putting it back.
+- **Why five red cases were not enough**, recorded rather than glossed: every
+  one was release-shaped - file added, file removed, content changed on a clean
+  tree, manifest absent, no repository. None was an edited tree with the gate
+  being run to find out whether the edit is sound, which is the state the
+  operator is in most of the time. The suite reproduced the author's workflow
+  and the author's workflow was the unrepresentative one. **Coverage of a
+  control's inputs is not coverage of its placement.**
+
+- **T63. Tags are annotated and unsigned, and a document said otherwise.**
+  Measured across five tags spanning the project: none carries a signature, no
+  key exists on the operator's machine. The 0.32.5.0 release attempted `git tag
+  -s` on the belief that signing was the practice here and failed loudly, which
+  is the only reason the belief was checked. The belief came from a document
+  about this repository rather than from the repository, which is F100's class
+  turned inward. Filed as a decision: signing is cheap to start and expensive
+  to start badly, and a signed tag in the middle of an unsigned series is a
+  question rather than an assurance.
+
 ## 0.32.5.0 - 2026-08-17
 
 **Backlog truth. Three numbers in this repository were wrong while the gate

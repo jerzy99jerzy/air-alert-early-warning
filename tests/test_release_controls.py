@@ -134,14 +134,50 @@ def test_a_tracked_file_the_manifest_never_listed_is_reported(
 ) -> None:
     """The dimension `shasum -c` is silent about, and the one nobody counted.
 
-    Thirteen tracked files were in this state at 0.32.4.0.
+    Thirteen tracked files were in this state at 0.32.4.0. Asserted against
+    `completeness` rather than `check`, because this is the half that has to
+    hold on a tree under edit: it is what `verify` runs.
     """
     root = _repository(tmp_path, {"a.txt": "one"})
     _point_at(monkeypatch, root)
     check_manifest.write()
     (root / "new.txt").write_text("added", encoding="utf-8")
     subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
+    assert check_manifest.completeness() == 1
     assert check_manifest.check() == 1
+
+
+def test_an_edited_file_does_not_fail_the_half_the_gate_runs(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """F101, and the reason the control was split.
+
+    At 0.32.5.0 both questions lived in one check inside `verify`, so editing
+    any tracked file made the gate unrunnable until the manifest was
+    regenerated - which is the act the tool's own error message forbids. The
+    hash question is about a commit; a working tree under edit is supposed to
+    differ from one. Red against the unsplit control.
+    """
+    root = _repository(tmp_path, {"a.txt": "one"})
+    _point_at(monkeypatch, root)
+    check_manifest.write()
+    (root / "a.txt").write_text("edited while working", encoding="utf-8")
+    assert check_manifest.completeness() == 0
+    assert check_manifest.digests() == 1
+
+
+def test_the_gate_does_not_run_the_digest_half(tmp_path: Path) -> None:
+    """The placement is the repair, so the placement is what is held.
+
+    A test of the functions alone would stay green if `verify` grew the digest
+    target back, which is exactly the regression F101 is about.
+    """
+    makefile = (Path(check_manifest.__file__).resolve().parent.parent
+                / "Makefile").read_text(encoding="utf-8")
+    verify = next(line for line in makefile.splitlines()
+                  if line.startswith("verify:"))
+    assert "manifest-completeness" in verify
+    assert " manifest " not in verify
 
 
 def test_changed_content_is_reported(

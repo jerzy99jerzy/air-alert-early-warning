@@ -2,9 +2,9 @@
 PY := python3
 PKG := mavo
 
-.PHONY: verify private-artifacts manifest manifest-write coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
+.PHONY: verify private-artifacts manifest-completeness manifest manifest-write coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
 
-verify: private-artifacts manifest coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation
+verify: private-artifacts manifest-completeness coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation
 	@echo "verify: OK"
 
 # pytest exits 5 when nothing is collected. That exit code is NOT swallowed:
@@ -79,15 +79,24 @@ harness-mutation:
 clean:
 	rm -rf dist build *.egg-info .pytest_cache .coverage htmlcov .gate
 
-# The manifest answers two questions and `shasum -c` answers one of them: it is
-# silent about a file that was never listed. Measured at 0.32.4.0, that silence
-# was hiding thirteen tracked files, against twenty-three changed hashes that a
-# plain `shasum -c` would have reported. Both are checked here.
+# The manifest answers two questions and they belong in different places, which
+# is F101. Completeness - every tracked file listed, nothing listed untracked -
+# survives an edit and is in `verify`. It is also the question `shasum -c` never
+# had: that command cannot report a line the manifest does not contain, and
+# thirteen tracked files were in exactly that state at 0.32.4.0.
+manifest-completeness:
+	$(PY) tools/check_manifest.py --completeness
+
+# Digests answer whether the manifest describes *this commit*, so this is NOT in
+# `verify`. It was, for one release, and it made the gate unrunnable after any
+# edit: the only way past was to regenerate, which is the act the tool's own
+# error message forbids. Run before a tag, on the detached worktree, and in CI
+# after the push. Both halves run here.
 manifest:
 	$(PY) tools/check_manifest.py
 
-# Regeneration is a release step, not a repair step. Running it to make the
-# gate green is the same act as moving a tag.
+# Regeneration is a release step, not a repair step. Running it to make a check
+# green is the same act as moving a tag.
 manifest-write:
 	$(PY) tools/check_manifest.py --write
 
