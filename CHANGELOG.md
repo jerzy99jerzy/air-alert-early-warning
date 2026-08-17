@@ -16,6 +16,51 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.9.0 - 2026-08-17
+
+**S8 closes, a sixth sprint is added after beta, and the accuracy claim this
+project rests on is stated as unverified in one place a reader cannot miss.**
+
+- **S8 closed on an amended criterion, recorded as amended**, the way S7 did.
+  The report composes, `mavo report` runs, the `state.json` contract ships and
+  the distance column is verified three ways at 0.04 km between simplifications
+  and 1.1 km against an independent geometry.
+- **The hand-checked accuracy sample is withdrawn from S8, not met.** It was
+  carried there as an engineering blocker and it is not one: `docs/MVP.md`
+  types its blockers and says access and decision blockers do not shrink when
+  code is written, and **this one shrinks for nobody.** The sample is drawn
+  from western areas under alert, roughly 3.5% of what the channel carries,
+  and it cannot be drawn from a population that has not appeared. T36 is
+  retyped `blocked-external` and moved to S12. **A classification error, not a
+  standard lowered.**
+- **S12, and it ships no code.** The verification sprint: a hand-labelled
+  sample from western rows with its Wilson bound, the whole chain observed once
+  end to end during a real western episode with the latency measured rather
+  than modelled, the distance column checked against areas that actually
+  declared, and the staleness machine observed crossing on a real host under
+  real load. **Beta means the thing is built. Finished means it has been shown
+  to work on the case it exists for, and this project can reach beta by working
+  and cannot reach finished by working.**
+- **The western asterisk**, in `docs/MVP.md` section 7 and anchored so it can
+  be linked. Every accuracy figure in this repository was measured on eastern
+  areas. The sample behind them is twenty messages from twenty-six minutes of
+  one afternoon, 0 errors with a Wilson upper bound of **16%**, and that bound
+  is what "0 errors" is worth at n=20. **Nothing in the paragraph is a wish for
+  the event**: the honest position is that the central accuracy claim is
+  unverified, will stay unverified while western Ukraine is not attacked, and
+  that this is the best of the available states.
+- **Two mermaid diagrams in section 7a**, the second a progress bar. Read as
+  **two of five met**, not as a percentage: sprints are ordered by dependency
+  and not sized by effort, and a percentage would be a number nobody measured.
+  S9's block is amber and it is one hour into seventy-two.
+- **T37 and T47 move to S9**, because a closed sprint holding open tasks
+  misreports both. `tools/todo_index.py` refused the release until they moved,
+  which is the check doing the job the S7 tolerance entry exists to avoid
+  needing.
+- **The index knows S12.** Without it a task assigned there falls into
+  `unassigned` and the tier and sprint guarantees stop covering it, which is
+  T62's shape one row down.
+
 ## 0.32.8.0 - 2026-08-17
 
 **Three corrections and one amendment. No code changes and no host contact:

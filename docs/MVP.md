@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 3.7
+Document:  docs/MVP.md, version 3.8
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -19,7 +19,8 @@ Note:      blockers are typed. Engineering blockers shrink when code is written;
 4. [Audience C: public repository as a portfolio artefact](#4-audience-c-public-repository-as-a-portfolio-artefact)
 5. [Audience D: a publicly available reporting instrument](#5-audience-d-a-publicly-available-reporting-instrument)
 6. [What beta means](#6-what-beta-means)
-7. [Five sprints to beta](#7-five-sprints-to-beta)
+7. [Five sprints to beta, and one after it](#7-five-sprints-to-beta-and-one-after-it)
+7a. [Where the project is, as a picture](#7a-where-the-project-is-as-a-picture)
 8. [What is deliberately not in the plan](#8-what-is-deliberately-not-in-the-plan)
 9. [Where this plan will bend](#9-where-this-plan-will-bend)
 10. [Amending these criteria](#10-amending-these-criteria)
@@ -160,7 +161,7 @@ What beta is not: no alarm class, no probability of anything, no ADS-B tier, no
 app store, no claim about what will cross the border. A beta that quietly
 acquires any of those has become a different product and needs a different plan.
 
-## 7. Five sprints to beta
+## 7. Five sprints to beta, and one after it
 
 Five, and the number is a commitment. **The dates are not**, and the column that
 used to hold them says so.
@@ -184,13 +185,112 @@ than absorbed into the next one.
 | Sprint | Window | What ships | Exit criterion, checkable |
 | --- | --- | --- | --- |
 | **S7** | closed 9 Aug | Area resolution: the tag parse, the 127-row map, the alias table (T33) and the untagged remainder (T34). Smaller than planned, because the channel tags 99.34% of messages with the area and unit type (`docs/CHANNEL.md`) | Met on an amended criterion, recorded as amended. Every tag resolves or is explicitly unresolved, and tag and prose agree on 38,520 of 38,521 comparable messages. The hand sample is retargeted at the population that check cannot see (T36) |
-| **S8** | **N/A** | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | **Still partial at 0.20.0.0, and the remaining gap is named rather than rounded off.** Shipped and held by regressions: the composition, `mavo report`, the `state.json` contract, the publishing loop. Half the exit criterion is met: the distance column is verified three ways, worst divergence 0.04 km between simplifications and 1.1 km against an independent geometry and method (`docs/METHODOLOGY.md`). The other half is not: the hand-checked sample is twenty messages, all eastern, from twenty-six minutes of one afternoon, 0 errors with a Wilson bound of 16%. **No western area has been checked, which is the only kind this product is for.** Closed by `tools/label_sample.py draw` against the design window with western rows in it (T36) |
+| **S8** | closed 17 Aug | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | **Met on an amended criterion, recorded as amended, the way S7 was.** Shipped and held by regressions: the composition, `mavo report`, the `state.json` contract, the publishing loop. The distance column is verified three ways, worst divergence 0.04 km between simplifications and 1.1 km against an independent geometry and method (`docs/METHODOLOGY.md`). **The hand-checked accuracy sample is withdrawn from this sprint** and moves to S12: it cannot be drawn against the population this product exists for until that population appears in the data, and no engineering week brings that forward. See the note below the table |
 | **S9** | **N/A** | Real time. The run log attached to the publishing loop (T23, T24), interval jitter (T27), the host decision (T25, D-031). `mavo watch` is **not** shipping: `mavo report --watch` was already the loop | **Amended 2026-08-17, mid-window, and the amendment is D-032.** 72 hours of uninterrupted **collection**, every cycle accounted for and every pause named with its cause; **at most two planned restarts of the report loop**, each reported as its own segment; the first end-to-end latency measurement as a distribution rather than a best case. The original clause said only "72 hours unattended", which was declared before any figure in this plan existed |
 | **S10** | **N/A** | Delivery. Self-hosted ntfy, the three message classes, blindness reporting, per-recipient topics (M1) | A synthetic report reaches a phone through Do-Not-Disturb within a measured time; killing the feed produces a blindness message within one interval; the delivery ledger and the phone agree over a week |
 | **S11** | **N/A** | Hardening to beta. Threat-model rows for the delivery path with tests, the clean-clone probe (T7), the identifier lint (T22), the disengagement instrument (T29) | `make verify` green from a clean clone on a machine with nothing installed, every new threat row carrying a test, and T6 recorded |
+| **S12** | **cannot be scheduled** | Nothing. **This sprint ships no code.** It is the verification that the instrument works on the case it was built for, performed on real data when that data exists | **The project is not finished until this is met, and this is the only sprint whose window depends on an event outside the project.** Four checks, all against a real alert episode over western Ukraine: (1) a hand-labelled sample drawn from western rows with a stated error rate and its Wilson bound (T36); (2) the whole chain observed once end to end during that episode, channel to rendered page, with the latency measured rather than modelled; (3) the distance column checked against the areas that actually declared, not only against geometry; (4) the staleness machine observed crossing on a real host during real load (T54) |
 
 **Beta: no date.** It is reached when S11's exit criterion is met, and stating
 when that will be would be restating the assumption this amendment removed.
+
+**Finished is not beta, and S12 is the difference.** Beta means the thing is
+built, hardened and delivered. Finished means it has been shown to work on the
+case it exists for, and *that case is an attack on western Ukraine.* This
+project can reach beta by working. It cannot reach finished by working.
+
+<a id="the-western-asterisk"></a>
+
+> **\* The asterisk on every accuracy figure in this document.**
+>
+> Every number about how well this instrument reads the channel was measured on
+> **eastern** areas, because that is what the channel has been carrying. The
+> hand-checked sample behind S8 is twenty messages, all eastern, from
+> twenty-six minutes of one afternoon: 0 errors with a Wilson upper bound of
+> **16%**. That bound is what "0 errors" is worth at n=20, and it is stated
+> rather than rounded to "accurate".
+>
+> **The population this product is for is western areas under alert, and it is
+> not in the data yet.** Roughly 96.5% of the channel's alerts cover frontline
+> regions; the ~3.5% this instrument filters for is what it exists to report,
+> and a sample cannot be drawn from a population that has not appeared. This
+> was carried as an engineering blocker on S8 until 0.32.9.0, which was a
+> **classification error**: `docs/MVP.md` types its blockers and says that
+> access and decision blockers do not shrink when code is written. This one
+> shrinks for nobody. It is now S12 and typed as external.
+>
+> **Nothing here is a wish for the event.** The honest position is that this
+> instrument's central accuracy claim is unverified, will stay unverified
+> while western Ukraine is not attacked, and that this is the best of the
+> available states. A reader weighing whether to rely on the page should read
+> this paragraph as the limit on every other number in the repository.
+
+## 7a. Where the project is, as a picture
+
+Generated by hand and kept short on purpose: a diagram that needs maintenance
+is a diagram that goes stale, and this one carries five words per node.
+
+```mermaid
+flowchart LR
+    S7["S7 area resolution<br/>closed 9 Aug, amended"]
+    S8["S8 the report<br/>closed 17 Aug, amended"]
+    S9["S9 real time<br/>window running"]
+    S10["S10 delivery<br/>not started"]
+    S11["S11 hardening<br/>not started"]
+    BETA{{"BETA<br/>built and delivered"}}
+    S12["S12 verification<br/>waits on an event"]
+    DONE{{"FINISHED<br/>shown to work"}}
+
+    S7 --> S8 --> S9 --> S10 --> S11 --> BETA --> S12 --> DONE
+
+    classDef met fill:#1f6f43,stroke:#0d3b24,color:#ffffff
+    classDef running fill:#8a6d1f,stroke:#4a3a10,color:#ffffff
+    classDef todo fill:#2b3138,stroke:#161a1f,color:#cdd6de
+    classDef blocked fill:#6f2b2b,stroke:#3b1616,color:#ffffff
+    classDef gate fill:#22303c,stroke:#0f1720,color:#cdd6de
+
+    class S7,S8 met
+    class S9 running
+    class S10,S11 todo
+    class S12 blocked
+    class BETA,DONE gate
+```
+
+```mermaid
+flowchart LR
+    subgraph P["five sprints to beta: 2 of 5 met"]
+        direction LR
+        A["S7 met"]
+        B["S8 met"]
+        C["S9 running"]
+        D["S10"]
+        E["S11"]
+    end
+    subgraph Q["beyond beta"]
+        direction LR
+        F["S12 external"]
+    end
+    P --> Q
+
+    classDef met fill:#1f6f43,stroke:#0d3b24,color:#ffffff
+    classDef running fill:#8a6d1f,stroke:#4a3a10,color:#ffffff
+    classDef todo fill:#2b3138,stroke:#161a1f,color:#cdd6de
+    classDef blocked fill:#6f2b2b,stroke:#3b1616,color:#ffffff
+
+    class A,B met
+    class C running
+    class D,E todo
+    class F blocked
+```
+
+**Read the second bar as two of five, not as 40% of the work.** Sprints are
+ordered by dependency, not sized by effort, and S10 carries a delivery path
+that does not exist yet. A percentage here would be a number nobody measured,
+which is the kind this document removes rather than adds.
+
+**S9's block is amber and not green, and it is one hour into seventy-two.** The
+window opened 2026-08-17 11:02:06 UTC and closes 2026-08-20 11:02:06 UTC
+(D-032). Nothing about it can be reported until it does.
 
 **The one date that stays, and it is not an estimate of effort.** T6, the legal
 position, is due **at the beginning of September**. It is a decision blocker:
@@ -205,6 +305,11 @@ to work at all; S9 needs S8's report to have something to render; S10 needs S9's
 latency measurement to know what it is promising; S11 needs S10's delivery path
 to have threats to model. Beyond the legal track there is no parallelism to
 exploit, and pretending otherwise is how five sprints becomes eight.
+
+**S12 depends on none of them and they do not depend on it.** It is the only
+sprint that can be worked on out of order, because it cannot be worked on at
+all: it waits. Everything before it can reach beta while S12 stays open, and
+that is the arrangement rather than a slip.
 
 ## 8. What is deliberately not in the plan
 

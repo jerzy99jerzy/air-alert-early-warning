@@ -52,7 +52,11 @@ STATES = ("done", "moved", "ready", "decision", "blocked-external", "deferred",
 # site tasks sat in the producer's tier-2 list while nothing on the side that
 # would do them was tracking them at all.
 CLOSED_HERE = ("done", "moved")
-SPRINTS = ("S7", "S8", "S9", "S10", "S11")
+# S12 is the verification sprint added at 0.32.9.0. It is in this tuple so a
+# task assigned to it appears in the index rather than falling into
+# `unassigned`, and its window in `docs/MVP.md` is "cannot be scheduled"
+# rather than a date, which `closed_in_the_plan()` reads as open.
+SPRINTS = ("S7", "S8", "S9", "S10", "S11", "S12")
 
 MVP = ROOT / "docs" / "MVP.md"
 OPEN_SPRINT = re.compile(r"\*\*Sprint (S\d+), declared[^*]*open\.\*\*")

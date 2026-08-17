@@ -4,15 +4,15 @@
 
 ### Where the backlog stands
 
-**24 of 64 closed, 40 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**26 of 64 closed, 38 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 19 | Finished, with the release that closed it named in the entry |
-| `moved` | 5 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 26 | Nothing external blocks it; it needs a session |
+| `moved` | 7 | Owned by another repository; the entry here is a pointer, not a copy |
+| `ready` | 23 | Nothing external blocks it; it needs a session |
 | `decision` | 6 | Waiting on a judgement rather than on work |
-| `blocked-external` | 2 | Waiting on somebody outside this project |
+| `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
 | `unstated` | 3 | **No state in the entry. This is a defect in the entry.** |
@@ -27,9 +27,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 10 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as)
+**Tier 1, 9 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as)
 
-**Tier 2, 17 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit)
+**Tier 2, 16 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit)
 
 **Tier 3, 13 open:** [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise)
 
@@ -40,10 +40,10 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | Sprint | Open tasks |
 | --- | --- |
 | **S7** | [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record) |
-| **S8** | [T36](#t36-the-hand-labelled-sample-retargeted), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T47](#t47-two-threat-kinds-the-consumer-cannot-name) |
 | **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks) |
+| **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
 | **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as) |
 
 <!-- index:end -->
@@ -65,14 +65,19 @@ did, and it is the part a reader reaches first. Anyone editing here restates
 the version they wrote it at, so the next drift is visible rather than
 inferred.
 
-**Sprint S8, declared partial and still open.** `docs/MVP.md` records it that
-way: the report composes, the command runs and the contract ships, and the
-exit criterion, a hand-checked sample of real messages with a stated error
-rate (T36), is not met. Nothing is closed by having been worked on.
+**Sprint S9, declared partial and still open.** Its window runs to
+2026-08-20 11:02:06 UTC (D-032).
 
-**What closes S8:** T36 plus the by-hand distance spot check. Both need the
-corpus, so both happen on the operator's machine, and neither is absorbed into
-anything else.
+**S8 closed on 2026-08-17, on an amended criterion and recorded as amended**,
+the way S7 did. The report composes, the command runs, the contract ships and
+the distance column is verified three ways. **The hand-checked accuracy sample
+was withdrawn from it**, not met: it is drawn from western areas under alert,
+that population has not appeared, and no engineering week brings it forward.
+It is T36, retyped `blocked-external` and moved to **S12**, the sprint that
+decides whether this project is finished rather than merely built. The full
+statement of what that costs every accuracy figure here is the western
+asterisk in `docs/MVP.md` section 7, and anyone quoting a number from this
+repository should read it first.
 
 **Releases since S8 have been repairs and instruments, not sprint work**, and
 counting them as progress towards beta would be the mistake the paragraph above
@@ -857,7 +862,17 @@ missed incursion on any of them is a more interesting one.
 
 
 ## T36. The hand-labelled sample, retargeted
-Status: `ready`, **no longer blocking S7**. The sprint closed on an exhaustive [tier 1], **S8**
+Status: `blocked-external` (the population has not appeared), **S12** [tier 1]
+
+*Retyped and moved at 0.32.9.0.* This was carried as an engineering blocker on
+S8 and it is not one. `docs/MVP.md` types its blockers and says access and
+decision blockers do not shrink when code is written; **this one shrinks for
+nobody.** The sample the product needs is drawn from western areas under
+alert, roughly 3.5% of what the channel carries, and it cannot be drawn from a
+population that has not appeared. The instrument is built and waiting. See the
+western asterisk in `docs/MVP.md` section 7.
+
+The sprint closed on an exhaustive
 consistency check instead (`docs/METHODOLOGY.md`, sprint 7 closed): 38,520 of
 38,521 comparable messages agree between tag and prose, 99.997%. What that check
 cannot see is the 9,701 messages carrying a tag and no prose area, 20% of the
@@ -932,7 +947,10 @@ map, and it is recorded either way. Until this exists S7 stays open and
 
 
 ## T37. The pipeline discards areas it was told about
-Status: `ready`, **S8** [tier 2]
+Status: `ready`, **S9** [tier 2]
+*Moved from S8 at 0.32.9.0, when S8 closed. It is a store and schema repair
+rather than a report one, and holding a closed sprint open for it would have
+misreported both.*
 Two losses, both currently invisible, found by the sprint 7 consistency check.
 A message naming several areas yields one event, because `ThreatEvent` carries
 one area: 13.3% of comparable messages name two to eight. And an all-clear can
@@ -1263,7 +1281,8 @@ same run: two changes, one measurement, no attribution.
 
 
 ## T47. Two threat kinds the consumer cannot name
-Status: `ready`, **S8** [tier 1]
+Status: `ready`, **S9** [tier 1]
+*Moved from S8 at 0.32.9.0, when S8 closed.*
 
 MAVO classifies four kinds. The consumer knows three strings and maps
 everything else onto one label:
