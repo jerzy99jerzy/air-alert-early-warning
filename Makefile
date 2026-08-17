@@ -2,15 +2,24 @@
 PY := python3
 PKG := mavo
 
-.PHONY: verify private-artifacts coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
+.PHONY: verify private-artifacts manifest manifest-write coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
 
-verify: private-artifacts coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation
+verify: private-artifacts manifest coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation
 	@echo "verify: OK"
 
 # pytest exits 5 when nothing is collected. That exit code is NOT swallowed:
 # an empty suite must fail the gate, not pass it.
+#
+# The two machine-readable reports are not extra output, they are the reason
+# `docs-audit` can enforce `tests_passing` and `coverage_percent` instead of
+# trusting them. They land in `.gate/`, which is ignored: they describe this
+# run on this machine and committing them would create a third place where the
+# same numbers can disagree. `coverage` runs before `docs-audit` in `verify`
+# above, which is what makes the artefacts present when the audit reads them;
+# `docs-audit` fails rather than skips when they are not.
 coverage:
-	$(PY) -m pytest tests -q --cov=$(PKG) --cov-branch --cov-report=term-missing
+	@mkdir -p .gate
+	$(PY) -m pytest tests -q --cov=$(PKG) --cov-branch --cov-report=term-missing --cov-report=json:.gate/coverage.json --junitxml=.gate/tests.xml
 
 # `tools/` is inside the net. Half the measured numbers in STATUS.json are
 # produced there, and `harness_mutation.py` is itself part of this gate; a
@@ -68,7 +77,19 @@ harness-mutation:
 	$(PY) tools/harness_mutation.py
 
 clean:
-	rm -rf dist build *.egg-info .pytest_cache .coverage htmlcov
+	rm -rf dist build *.egg-info .pytest_cache .coverage htmlcov .gate
+
+# The manifest answers two questions and `shasum -c` answers one of them: it is
+# silent about a file that was never listed. Measured at 0.32.4.0, that silence
+# was hiding thirteen tracked files, against twenty-three changed hashes that a
+# plain `shasum -c` would have reported. Both are checked here.
+manifest:
+	$(PY) tools/check_manifest.py
+
+# Regeneration is a release step, not a repair step. Running it to make the
+# gate green is the same act as moving a tag.
+manifest-write:
+	$(PY) tools/check_manifest.py --write
 
 # OUTREACH.md and the pitch drafts live one directory from this tree and
 # describe people rather than software: names, a ministry address, dates and

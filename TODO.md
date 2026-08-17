@@ -4,13 +4,14 @@
 
 ### Where the backlog stands
 
-**13 of 59 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**19 of 61 closed, 42 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
-| `done` | 13 | Finished, with the release that closed it named in the entry |
-| `ready` | 33 | Nothing external blocks it; it needs a session |
-| `decision` | 5 | Waiting on a judgement rather than on work |
+| `done` | 14 | Finished, with the release that closed it named in the entry |
+| `moved` | 5 | Owned by another repository; the entry here is a pointer, not a copy |
+| `ready` | 28 | Nothing external blocks it; it needs a session |
+| `decision` | 6 | Waiting on a judgement rather than on work |
 | `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
@@ -28,9 +29,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 
 **Tier 1, 10 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T60](#t60-production-runs-older-code-than-main-and-nothing-here-says-so), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host)
 
-**Tier 2, 22 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier)
+**Tier 2, 20 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier)
 
-**Tier 3, 14 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T53](#t53-full-width-map-fullscreen-theme-switch), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed)
+**Tier 3, 12 open:** [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed)
 
 ### By sprint
 
@@ -42,8 +43,8 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S8** | [T36](#t36-the-hand-labelled-sample-retargeted), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T47](#t47-two-threat-kinds-the-consumer-cannot-name) |
 | **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
-| **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T60](#t60-production-runs-older-code-than-main-and-nothing-here-says-so), [T43](#t43-raion-centroids-in-the-contract), [T44](#t44-the-consumer-has-no-kyiv-and-seven-raions-draw-no-marker), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T51](#t51-geographic-layers-fetched-only-when-asked-for), [T52](#t52-polish-english-and-ukrainian), [T53](#t53-full-width-map-fullscreen-theme-switch), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier) |
+| **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T60](#t60-production-runs-older-code-than-main-and-nothing-here-says-so), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier) |
 
 <!-- index:end -->
 
@@ -51,24 +52,41 @@ Every item carries a status, a tier, a blocker type where one exists, and an
 acceptance test, so that "done" is not a matter of opinion and neither is
 "next".
 
-Status: `ready` | `blocked-external` | `decision` | `debt` | `deferred` | `done`
+Status: `ready` | `blocked-external` | `decision` | `debt` | `deferred` | `done` | `moved`
 Tier: `[tier 1]` | `[tier 2]` | `[tier 3]`, meaning below.
 
 ### Where the project is
+
+*Rewritten at 0.32.5.0, and the version is in this sentence on purpose.* The
+paragraph this replaces described 0.19.0.0 to 0.19.4.0 as "the last four
+releases" and was still saying so at 0.32.4.0, thirteen minor versions later.
+The generated block above it cannot drift, by construction. This part can, it
+did, and it is the part a reader reaches first. Anyone editing here restates
+the version they wrote it at, so the next drift is visible rather than
+inferred.
 
 **Sprint S8, declared partial and still open.** `docs/MVP.md` records it that
 way: the report composes, the command runs and the contract ships, and the
 exit criterion, a hand-checked sample of real messages with a stated error
 rate (T36), is not met. Nothing is closed by having been worked on.
 
-The last four releases were **not** sprint work and should not be counted as
-progress towards beta. 0.19.0.0 to 0.19.4.0 were an audit and its
-consequences: a contract joined on the wrong field, a counter measuring the
-wrong unit, a test file claiming a verification it had not had, and the
-threat-kind repair with its measurement. Useful, and orthogonal to S8.
-
 **What closes S8:** T36 plus the by-hand distance spot check. Both need the
-corpus, so both happen on the operator's machine.
+corpus, so both happen on the operator's machine, and neither is absorbed into
+anything else.
+
+**Releases since S8 have been repairs and instruments, not sprint work**, and
+counting them as progress towards beta would be the mistake the paragraph above
+was written to prevent. 0.19.x was an audit and its consequences; 0.2x and 0.3x
+added the event stream, the threat-kind measurement, the latency instrument
+(T40, built and unread), the corpus census, the privacy gate and the tooling
+that keeps this file honest. Useful, and orthogonal to the sprint plan.
+
+**The next sprint is S9, and T60 opens it rather than sitting beside it.** S9's
+exit criterion is 72 unattended hours and the first end-to-end latency
+distribution. `vm-mavo` runs pre-0.28.1.0 code, so F98 is not deployed and the
+fetch timeout on that host is ten seconds per socket operation per resolved
+address. A latency distribution measured there is a distribution of a different
+instrument, which is T60's argument applied to the sprint that depends on it.
 
 ## T1. Request the alerts.in.ua API token
 Status: `blocked-external` (access) [tier 3]
@@ -439,6 +457,12 @@ Status: `ready` [tier 2]
 The contract changes unilaterally by being reposted, with no notification
 obligation. The only defence is our own check.
 **Acceptance:** the collector hashes `contract.pdf` on each run and logs a change.
+
+**Not `tools/contract_check.py`, and the collision is one word.** That tool is
+in the gate and exercises the `state.json` schema this repository owns under
+D-020. This task is about the ukrainealarm *offer*, a PDF on somebody else's
+server. Different artefact, different upstream, different failure. Written down
+because an entry that can be closed against the wrong evidence will be, once.
 
 ## T13. Record the revocability of both Ukrainian feeds
 Status: `done` (0.3.2.0) [tier 3]
@@ -1061,29 +1085,34 @@ with the anchor rather than disappear.
 
 
 ## T44. The consumer has no `kyiv`, and seven raions draw no marker
-Status: `ready`, small, and it belongs to the site rather than here. [tier 2]
+Status: `done` (0.32.5.0, against measured evidence on both sides) [tier 2]
 
 MAVO's register carries one `kyiv`. The consumer's geometry splits `kyiv-city`
 from `kyiv-oblast`, a real administrative distinction this project does not
-make. Measured against `mavo-site` 1.2.0.0: no `kyiv` in the geometry and no
-mapping anywhere in the package, so the seven Kyiv-oblast raions in
-`data/reference/tag_map.csv` land in `unplaceable` and draw nothing.
+make. Measured against `mavo-site` 1.2.0.0 on 2026-08-10: no `kyiv` in the
+geometry and no mapping anywhere in the package, so the seven Kyiv-oblast
+raions in `data/reference/tag_map.csv` landed in `unplaceable` and drew
+nothing.
 
-**Where the fix belongs.** The consumer, because it is the consumer's
+**Where the fix belonged.** The consumer, because it is the consumer's
 geometry that makes the distinction. A producer that starts emitting
 `kyiv-oblast` has learned its consumer's vocabulary and taken back the
 decoupling D-020 bought.
 
-**Acceptance:** one line in the consumer mapping `kyiv` onto `kyiv-oblast`,
-with a test, and a note in this repository's contract documentation naming the
-slug pair. Until then, the gap is real and is stated in `docs/WEBAPP.md`
-rather than left for a reader to discover from an empty patch of map.
+**Acceptance met, both halves, and the halves were met eleven releases apart.**
+`mavo-site` carries `SLUG_ALIASES = {"kyiv": "kyiv-oblast"}` in
+`src/mavosite/contract.py`, resolved in `canonical_slug`, held by a test named
+`test_the_kyiv_alias_is_the_only_divergence` in that repository's contract
+suite [measured against 4.27.1.1 on 2026-08-17]. The slug pair is named in
+`docs/WEBAPP.md` in this release.
 
-**Why it is here at all.** Because the entry recording F74 originally asserted
-that the consumer already did this, in the present tense, without anybody
-having looked. That sentence is corrected in the log; this task is what
-replaces it.
-
+**Why it is here at all, and why the closure is written this way.** The entry
+recording F74 originally asserted that the consumer already did this, in the
+present tense, without anybody having looked. This task replaced that sentence.
+The replacement then went stale for eleven of the consumer's releases while
+stating **It does not** in bold, which is **F81**. A task that exists because a
+claim was made without measurement does not get closed by another one. The
+staleness is logged as **F100**.
 
 ## T45. Measure the kind tables again, against the same corpus
 Status: **done, 2026-08-10.** Result recorded in `docs/METHODOLOGY.md` under [tier 3]
@@ -1379,67 +1408,37 @@ alert rather than under a quiet night, because the quiet night is not the case
 that breaks it.
 
 ## T51. Geographic layers, fetched only when asked for
-Status: `ready`, needs T50 for nothing [tier 2]
+Status: `moved` to the consumer, 0.32.5.0 [tier 2]
 
-Voivodeship borders, Polish and Ukrainian border-region cities, and possibly
-major routes. The value is a reader orienting the alert against a place they
-know rather than against an outline.
+Site work: the layers, the byte budget and the lazy loading all live in
+`mavo-site`. The full entry travels to that repository's `docs/ROADMAP.md`; no
+copy stays here. **A mirrored entry is F81's shape** - two descriptions of one
+thing, one of them updated and the other going quiet - and the repository that
+would do the work is the one that should carry the text.
 
-**The budget is measured and is the constraint.** First visit is 117.4 KiB
-gzipped, repeat visit 13.7 KiB, of which geometry is 106 KiB and is cached
-after the first load. `deploy/nginx.conf` records what that costs on a slow
-link: the geometry asset is the difference between eight seconds and
-twenty-two at 120 kbit/s, and the audience is a phone at night, sometimes on
-one bar.
-
-**The resolution is lazy loading, not a smaller map.** Detail ships as separate
-assets fetched on zoom or on an explicit toggle. A reader who never asks pays
-nothing; a reader who wants to see where this is relative to Zamość pays
-deliberately.
-
-**Acceptance:** the first visit without layers **does not grow**, each layer
-measured separately in KiB gzipped and recorded, source and licence named per
-layer, and the geometry verification extended to whatever new coordinates
-arrive. Routes are the heaviest and go last, or not at all if the measurement
-says they do not fit.
-
-**What this does not do, and it is a decision.** It does not introduce map
-tiles. Tiles from a third party would send every reader's viewport, address and
-timing to that party, which is precisely what D-016 refused for Google's tiles.
-Self-hosted vector tiles are a real alternative and carry their own cost - a
-WebGL renderer is roughly 200 KiB of JavaScript and would end the site's
-zero-dependency, hashed-CSP posture. That trade belongs in a decision entry
-before any of it is written, not in a commit.
+What stays here is the one line this repository is answerable for: the producer
+publishes no geometry and no layer, and D-016 governs any layer fetched from a
+third party.
 
 ## T52. Polish, English and Ukrainian
-Status: `ready` [tier 2]
+Status: `moved` to the consumer, 0.32.5.0 [tier 2]
 
-**Ukrainian is not symmetry with anybody, and the reason is measured by
-demography rather than by product taste.** Roughly two million Ukrainians live
-in Poland `[reported]`, which makes them the largest single audience this
-project can have. For that reader MAVO is not a situational instrument about a
-neighbour; it is a view of the country their family is in, read from Poland.
-That changes what the page is for, and the entry records it so a later reader
-does not mistake the third language for decoration.
+Site work: every string, the switch and the non-claim in the header are the
+consumer's. The full entry, including the demographic argument for Ukrainian
+being the largest audience this project can have, travels to `mavo-site`'s
+`docs/ROADMAP.md`.
 
-Polish is the stated audience. English is the portfolio surface and the
-language `docs/FEED-SPEC.md` argues in.
-
-**Acceptance:** three complete sets, no string left in Polish under another
-language, the switch working without JavaScript for the basic path, and the
-non-claim in the header - that this is not a state service - translated with
-the same care as everything else, because it is the sentence the legal position
-rests on.
+What stays here: this repository emits register names and slugs, not reader
+text, and `tests/lint_domain.py` is what keeps it that way.
 
 ## T53. Full-width map, fullscreen, theme switch
-Status: `ready` [tier 3]
+Status: `moved` to the consumer, 0.32.5.0 [tier 3]
 
-Cheap, no conflicts with anything recorded. The page already honours
-`prefers-color-scheme`; the switch is an override plus a remembered choice.
-Fullscreen is the Fullscreen API. Full width is layout.
-
-**Acceptance:** the reduced-motion refusal and the staleness rendering survive
-all three, verified by the browser harness rather than by looking at it.
+Site work, entirely: layout, the Fullscreen API and an override over
+`prefers-color-scheme`. The acceptance that matters - the reduced-motion
+refusal and the staleness rendering surviving all three, verified by the
+browser harness rather than by looking at it - is a consumer gate clause and
+cannot be checked from here. Travels to `mavo-site`'s `docs/ROADMAP.md`.
 
 ## T49. Two denominators for the western share, and one number quoted for both
 Status: `ready` (own action), **not started** [tier 2]

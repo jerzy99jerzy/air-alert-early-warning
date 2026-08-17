@@ -28,11 +28,30 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TODO = ROOT / "TODO.md"
 
-ENTRY = re.compile(r"^## (T\d+)\. (.+?)$\n(Status:.*?)(?=\n\n|\n##|\Z)", re.M | re.S)
+# T62. The identifier admits an optional letter suffix, and the widening is the
+# whole point of the release that made it. Before 0.32.5.0 this pattern was
+# `^## (T\d+)\.`, so `T8a` and `T8b` were not entries as far as this repository's
+# tooling was concerned: the file held sixty-one headings and every number this
+# tool printed described fifty-nine of them. Neither task was listed in the
+# index, neither could be reported as untiered, and
+# `check_identifiers_are_unique` would have passed a file holding two `## T8a.`
+# entries. A check that cannot see an entry reports the file it can see, which
+# is the failure mode this tool exists to remove one level up.
+ENTRY = re.compile(r"^## (T\d+[a-z]?)\. (.+?)$\n(Status:.*?)(?=\n\n|\n##|\Z)", re.M | re.S)
 BEGIN = "<!-- index:begin -->"
 END = "<!-- index:end -->"
 
-STATES = ("done", "ready", "decision", "blocked-external", "deferred", "debt")
+STATES = ("done", "moved", "ready", "decision", "blocked-external", "deferred",
+          "debt")
+
+# States that take a task out of this repository's open count. `done` is the
+# work being finished; `moved` is the work belonging to another repository, and
+# it is a distinct state rather than a flavour of `done` because nothing here
+# can say whether it was finished. Counting a moved task as open would keep it
+# in this backlog for as long as the other repository takes, which is how three
+# site tasks sat in the producer's tier-2 list while nothing on the side that
+# would do them was tracking them at all.
+CLOSED_HERE = ("done", "moved")
 SPRINTS = ("S7", "S8", "S9", "S10", "S11")
 
 MVP = ROOT / "docs" / "MVP.md"
@@ -65,6 +84,8 @@ def state_of(status: str) -> str:
     lowered = status.lower()
     if "done" in lowered or "largely met" in lowered:
         return "done"
+    if "moved" in lowered:
+        return "moved"
     for state in ("blocked-external", "deferred", "debt", "decision"):
         if state in lowered:
             return state
@@ -102,16 +123,18 @@ def render_index(rows: list[tuple[str, str, str, str, str]]) -> str:
     for _id, _title, state, _tier, _sprint in rows:
         by_state[state] = by_state.get(state, 0) + 1
     total = len(rows)
-    done = by_state.get("done", 0)
-    open_now = total - done
+    closed = sum(by_state.get(state, 0) for state in CLOSED_HERE)
+    open_now = total - closed
 
     lines = [BEGIN, "", "### Where the backlog stands", "",
-             f"**{done} of {total} closed, {open_now} open.** Counted from the entries "
+             f"**{closed} of {total} closed, {open_now} open.** Counted from the entries "
              f"below by `tools/todo_index.py`, which the gate re-runs, so this "
              f"table cannot drift from the list it summarises.", "",
              "| State | Count | What it means |", "| --- | --- | --- |"]
     meanings = {
         "done": "Finished, with the release that closed it named in the entry",
+        "moved": "Owned by another repository; the entry here is a pointer, "
+                 "not a copy",
         "ready": "Nothing external blocks it; it needs a session",
         "decision": "Waiting on a judgement rather than on work",
         "blocked-external": "Waiting on somebody outside this project",
@@ -134,7 +157,7 @@ def render_index(rows: list[tuple[str, str, str, str, str]]) -> str:
               "| **2** | Real work that nothing is waiting on today |",
               "| **3** | Worth doing, worth dropping if the project turns |", ""]
     for tier in ("1", "2", "3", "unstated"):
-        chosen = [r for r in rows if r[3] == tier and r[2] != "done"]
+        chosen = [r for r in rows if r[3] == tier and r[2] not in CLOSED_HERE]
         if not chosen:
             continue
         label = f"Tier {tier}" if tier != "unstated" else "**Tier not declared**"
@@ -147,7 +170,7 @@ def render_index(rows: list[tuple[str, str, str, str, str]]) -> str:
               "either outside the beta path or not yet placed on it.", "",
               "| Sprint | Open tasks |", "| --- | --- |"]
     for sprint in (*SPRINTS, "unassigned"):
-        chosen = [r for r in rows if r[4] == sprint and r[2] != "done"]
+        chosen = [r for r in rows if r[4] == sprint and r[2] not in CLOSED_HERE]
         if chosen:
             listed = ", ".join(f"[{r[0]}](#{_anchor(r[0], r[1])})" for r in chosen)
             lines.append(f"| **{sprint}** | {listed} |")
@@ -239,7 +262,7 @@ def check_sprint_agreement(rows: list[tuple[str, str, str, str, str]]) -> list[s
         )
     still_open: dict[str, list[str]] = {}
     for task_id, _title, state, _tier, sprint in rows:
-        if sprint in closed and state != "done":
+        if sprint in closed and state not in CLOSED_HERE:
             still_open.setdefault(sprint, []).append(task_id)
     for sprint, tasks in sorted(still_open.items()):
         if sprint not in TOLERATED_OPEN_IN_A_CLOSED_SPRINT:
@@ -294,7 +317,8 @@ def main() -> int:
             print("todo-index: the index disagrees with the entries below it; "
                   "run `python3 tools/todo_index.py`", file=sys.stderr)
             return 1
-        unstated = [r[0] for r in rows if r[3] == "unstated" and r[2] != "done"]
+        unstated = [r[0] for r in rows if r[3] == "unstated"
+                    and r[2] not in CLOSED_HERE]
         if unstated:
             print(f"todo-index: open tasks with no tier: {', '.join(unstated)}",
                   file=sys.stderr)

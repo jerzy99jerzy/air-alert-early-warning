@@ -15,6 +15,7 @@ import re
 import sys
 import tomllib
 from pathlib import Path
+from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -164,6 +165,75 @@ def check_measured_block_is_recomputed(status: dict[str, object]) -> list[str]:
             f"policy_combined_alarms_per_week recomputes to {rate:.2f}, "
             f"STATUS.json states {measured.get('policy_combined_alarms_per_week')}"
         )
+    return problems
+
+
+GATE = ROOT / ".gate"
+GATE_COVERAGE = GATE / "coverage.json"
+GATE_TESTS = GATE / "tests.xml"
+
+
+def check_the_pins_match_the_gate_run(status: dict[str, object]) -> list[str]:
+    """`tests_passing` and `coverage_percent` are read from the run, not typed.
+
+    `check_measured_block_is_recomputed` re-derives the two fields that are
+    outcomes and says, in its own docstring, that the rest of the block stays a
+    typed claim so that the guarantee is not read as wider than it is. That was
+    honest and the uncovered fields drifted anyway: at 0.32.4.0 the pin said
+    96.17 and the gate's own coverage step reported 96.22, while `docs-audit`
+    printed `pins hold` and the README badge repeated the stale figure. Two
+    hand-typed numbers agreeing with each other, which is the shape this file
+    already names twice.
+
+    The argument in that docstring was *cheaply and deterministically
+    recomputable*, and both fields qualify: `make coverage` computes them one
+    target earlier in the same `verify` chain. So they are not recomputed here,
+    which would run the suite twice. They are **read from the artefacts that
+    run writes**, and a missing artefact is a failure rather than a skip: a
+    check that quietly passes when its input is absent is worse than no check.
+
+    `tests_passing` is compared against the collected count rather than the
+    passed count, and the distinction is not pedantry. One test skips where
+    `/proc` is absent, so the passed count is 380 on Linux and 379 on macOS
+    while the collected count is 380 on both. A pin that changes with the
+    operator's laptop cannot be enforced in CI. The suite failing or erroring
+    is caught separately here, because a collected count alone would let a red
+    suite satisfy a green pin.
+    """
+    measured = status.get("measured")
+    if not isinstance(measured, dict):
+        return ["STATUS.json is missing the measured block"]
+    missing = [p for p in (GATE_COVERAGE, GATE_TESTS) if not p.exists()]
+    if missing:
+        return [
+            f"{p.relative_to(ROOT)} is absent; run `make coverage` before "
+            "`make docs-audit`, or run `make verify`, which orders them"
+            for p in missing
+        ]
+
+    problems: list[str] = []
+    totals = json.loads(GATE_COVERAGE.read_text(encoding="utf-8"))["totals"]
+    measured_coverage = round(float(totals["percent_covered"]), 2)
+    if float(measured.get("coverage_percent", -1)) != measured_coverage:
+        problems.append(
+            f"the gate's coverage run reports {measured_coverage:.2f}%, "
+            f"STATUS.json pins {measured.get('coverage_percent')}")
+
+    suite = ElementTree.parse(GATE_TESTS).getroot().find("testsuite")
+    if suite is None:
+        problems.append(".gate/tests.xml carries no testsuite element")
+        return problems
+    collected = int(suite.get("tests", "0"))
+    if measured.get("tests_passing") != collected:
+        problems.append(
+            f"the gate collected {collected} tests, STATUS.json pins "
+            f"{measured.get('tests_passing')}")
+    for attribute in ("failures", "errors"):
+        count = int(suite.get(attribute, "0"))
+        if count:
+            problems.append(
+                f"the gate's own run reports {count} {attribute}; the pin "
+                "cannot be read as a measurement of a green suite")
     return problems
 
 
@@ -535,6 +605,30 @@ def check_defect_identifiers_are_unique(status: dict[str, object]) -> list[str]:
     ]
 
 
+def decision_entries(text: str) -> list[str]:
+    """Every decision heading in the log, suffixes included.
+
+    T62, widened at 0.32.5.0. The pattern was `^## (D-\\d+)`, which collapsed
+    `D-012a` into `D-012` inside a set, so `decisions_recorded` held at 28 over
+    a file carrying 29 headings and the count that was supposed to be derived
+    from the log agreed with a copy of itself. Measured, not argued: the
+    headings were counted by hand to find it.
+    """
+    return sorted(set(re.findall(r"^## (D-\d+[a-z]?)", text, re.M)))
+
+
+def cited_decisions(text: str) -> set[str]:
+    """Every decision identifier a document cites, suffixes included.
+
+    The other half of the same defect and the quieter one. The resolver was
+    `\\bD-\\d{3}\\b`, which cannot match a suffixed number at all, so a
+    dangling citation of `D-012a` was not reported as dangling: it was not
+    seen. A check that is wrong announces itself eventually; a check that is
+    blind does not.
+    """
+    return set(re.findall(r"\bD-\d{3}[a-z]?\b", text))
+
+
 def check_decision_count_is_derived_from_the_log(status: dict[str, object]) -> list[str]:
     """The decision count comes from the log, and citations resolve to entries.
 
@@ -550,7 +644,7 @@ def check_decision_count_is_derived_from_the_log(status: dict[str, object]) -> l
     corroborated.
     """
     text = (ROOT / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
-    entries = sorted(set(re.findall(r"^## (D-\d+)", text, re.M)))
+    entries = decision_entries(text)
     problems: list[str] = []
 
     pinned = status.get("decisions_recorded")
@@ -563,7 +657,7 @@ def check_decision_count_is_derived_from_the_log(status: dict[str, object]) -> l
     for path in documents:
         if path.name == "DECISIONS.md":
             continue
-        cited |= set(re.findall(r"\bD-\d{3}\b", path.read_text(encoding="utf-8")))
+        cited |= cited_decisions(path.read_text(encoding="utf-8"))
 
     dangling = sorted(cited - set(entries))
     for number in dangling:
@@ -783,6 +877,7 @@ def main() -> int:
         + check_decision_count_is_derived_from_the_log(status)
         + check_statistics_match_the_tree(status)
         + check_measured_block_is_recomputed(status)
+        + check_the_pins_match_the_gate_run(status)
         + check_badges_match_the_pins(status)
         + check_contents_anchors_resolve()
     )

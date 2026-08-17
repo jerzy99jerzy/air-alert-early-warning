@@ -16,6 +16,107 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.5.0 - 2026-08-17
+
+**Backlog truth. Three numbers in this repository were wrong while the gate
+reported that pins held, and the reason was the same each time: a check that
+could not see the thing it counted.**
+
+- **T62. The identifier parsers admit a letter suffix.** `TODO.md` held 61
+  `## T` headings and `tools/todo_index.py` reported 59, because `T8a` and
+  `T8b` did not match `^## (T\d+)\.`; `docs/DECISIONS.md` held 29 `## D-`
+  headings and `STATUS.json` pinned 28, because `D-012a` collapsed into
+  `D-012` inside a set. The citation resolver was `\bD-\d{3}\b` and could not
+  match a suffixed number at all, so a dangling citation of `D-012a` was not
+  reported wrong, it was not seen. Both patterns widened, the index
+  regenerated, `decisions_recorded` re-derived. Five tests, each verified red
+  against the narrow pattern. **Both figures had to be counted by hand to be
+  found**, which is what a generated index exists to make unnecessary, and it
+  is why this is the first item in the release rather than merely in it: every
+  other count here is produced by a tool that could not see the whole file
+  until this landed.
+
+- **`tests_passing` and `coverage_percent` are read from the gate's own run.**
+  `check_measured_block_is_recomputed` re-derives the two fields that are
+  outcomes and says in its docstring that the rest stay typed claims. That was
+  honest and the uncovered fields drifted anyway: the pin said 96.17 while the
+  gate's coverage step reported 96.22, and the README badge repeated the stale
+  figure. `make coverage` now writes `.gate/coverage.json` and `.gate/tests.xml`
+  and `docs-audit` reads them, so the numbers come from the run rather than
+  from a second computation or a keyboard. **A missing artefact fails rather
+  than skips.** The test count is compared against the *collected* count, not
+  the passed count: one test skips where `/proc` is absent, so passing is 397
+  on macOS and 398 on Linux while collected is 398 on both, and a pin that
+  changes with the operator's laptop cannot be enforced in CI. Failures and
+  errors are checked separately, because a collected count alone would let a
+  red suite satisfy a green pin.
+
+- **`MANIFEST.sha256` is checked, and `shasum -c` was not enough.** That
+  command answers one of the two questions and is silent about a file the
+  manifest never listed. Measured before the repair: **23 of 137 listed hashes
+  disagreed with the tree and 13 tracked files were absent from the manifest
+  entirely**, among them `tools/check_no_private_artifacts.py` and
+  `tools/vocab_gaps.py`. The second figure had never been counted, and it is
+  the weaker failure precisely because nothing reported it.
+  `tools/check_manifest.py` reads `git ls-files` as truth, covers both
+  directions, and is in `verify`. Regeneration is `make manifest-write`, a
+  release step; running it to make the gate green is the same act as moving a
+  tag. **`docs/ARCHITECTURE.md` no longer implies tamper evidence**: the
+  manifest sits in the repository beside the files it lists, so whoever can
+  change a file can change its line. What it detects is accident, and the
+  entry now says which accidents.
+
+- **F100. A correction about another repository, in the present tense, stale
+  for eleven of its releases.** The F74 entry recorded a sentence asserting
+  without measurement that the consumer mapped `kyiv`; the repair was to check,
+  find it false, and say so. Correct on 2026-08-10, false from the consumer's
+  next release, and still standing in bold at 0.32.4.0 in the paragraph that
+  exists to explain why a claim about another repository must be measured.
+  Read against `mavo-site` 4.27.1.1 on 2026-08-17: the alias is present with a
+  test. The passage is restated with both measurements, both dates and their
+  version anchors. **The convention this makes explicit: a statement about
+  another repository carries the version it was read against, or it is not
+  written.** No check enforces it, and that is stated in the entry rather than
+  implied.
+
+- **T44 closes against evidence on both sides.** The consumer carries
+  `SLUG_ALIASES`; `docs/WEBAPP.md` now names the slug pair, which was the half
+  owed here. A task that exists because a claim was made without measurement
+  does not get closed by another one.
+
+- **T51, T52 and T53 leave this backlog.** Site work: layers and their byte
+  budget, three languages, layout and theme. They sat in the producer's tier-2
+  list while nothing on the side that would do them was tracking them at all.
+  A new `moved` state takes a task out of this repository's open count without
+  claiming it is finished, because nothing here can observe that. **The text
+  travels to `mavo-site`'s `docs/ROADMAP.md` and no copy stays**: a mirrored
+  entry is F100's shape, two descriptions of one thing with one of them going
+  quiet. **The cost is named rather than hidden**: between this release and the
+  consumer's next, the full text of those three entries lives in neither
+  repository. It is delivered alongside this release as a transfer artefact and
+  the gap closes when `mavo-site` ships it.
+
+- **T12 says what it is not.** Its acceptance is hashing the ukrainealarm offer
+  PDF; `tools/contract_check.py` exercises the `state.json` schema. One word in
+  common, and an entry that can be closed against the wrong evidence will be.
+
+- **The prose under the generated index is rewritten, with its version in the
+  sentence.** It described 0.19.0.0 to 0.19.4.0 as "the last four releases" and
+  was still saying so thirteen minor versions later. The block above it cannot
+  drift by construction; this part can, did, and is what a reader reaches
+  first.
+
+- **The README gives the address it has been claiming.** It has said "deployed
+  and publicly reachable" since 0.28.x and "the page is public" in the FAQ,
+  without a link, which asks a reader to take on trust the one claim they could
+  check in a second. The link carries the fact that it is an IP-derived
+  hostname on one small VM and dies with the address.
+
+**Not in this release, and named rather than folded in.** A `claim_lint` rule
+enforcing the F100 convention: a lint written in the same hour as the defect it
+targets encodes the instance rather than the class. Until it exists the
+convention is a preference, by this repository's own standing test.
+
 ## 0.32.4.0 - 2026-08-17
 
 **The vocabulary gap was assumed, then measured, and the assumption was

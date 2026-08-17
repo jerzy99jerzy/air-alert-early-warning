@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.28
+Document:  docs/METHODOLOGY.md, version 2.29
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -1635,16 +1635,26 @@ publishing the display name again.
 MAVO's register has one `kyiv`; the consumer's geometry splits `kyiv-city`
 from `kyiv-oblast`, a real administrative distinction this project does not
 make. The entry as first written said "the consumer maps it", in the present
-tense. **It does not.** Checked afterwards against `mavo-site` 1.2.0.0: the
-geometry carries `kyiv-oblast` and `kyiv-city`, there is no `kyiv`, and no
-mapping exists anywhere in that package. Seven Kyiv-oblast raions therefore
-land in `unplaceable` and draw no marker.
+tense, without anyone having looked. **Measured against `mavo-site` 1.2.0.0 on
+2026-08-10**: the geometry carried `kyiv-oblast` and `kyiv-city`, there was no
+`kyiv`, and no mapping existed anywhere in that package, so seven Kyiv-oblast
+raions landed in `unplaceable` and drew no marker.
 
-The correct side for the mapping is still the consumer, for the reason the
+The correct side for the mapping was always the consumer, for the reason the
 original sentence gave. What was wrong was the tense: a statement about
 somebody else's code, written without reading it, in the entry recording a
-defect caused by exactly that. Corrected at 0.19.2.0 and carried as a task
-(T44) rather than as a settled fact.
+defect caused by exactly that. Corrected at 0.19.2.0 and carried as T44.
+
+**Measured against `mavo-site` 4.27.1.1 on 2026-08-17: it maps.**
+`src/mavosite/contract.py` carries `SLUG_ALIASES = {"kyiv": "kyiv-oblast"}`,
+resolved in `canonical_slug`, held by a test named
+`test_the_kyiv_alias_is_the_only_divergence` in that repository's contract
+suite, green. Named without the `file::test` form on purpose: the gate's
+citation resolver looks for cited tests **in this tree**, and a citation it
+would try and fail to resolve is worse than a prose name, because the failure
+would be read as a missing test rather than as a test in another repository. T44's first half is met and the correction above had itself gone stale
+by eleven of the consumer's releases before anybody read it again, which is
+**F100**.
 
 **What this release did not fix.** MAVO publishes no raion centroids, so every
 marker is drawn at oblast scale with an uncertainty ellipse the size of the
@@ -2828,4 +2838,54 @@ verified red against the collision and green after the rename.
 **Reopen if:** a tag is created without a green gate measured on the commit it
 names; or an `F<n>` is issued by any means other than reading the highest
 number from the log.
+
+### F100, 0.32.5.0. A correction about another repository, in the present tense, stale for eleven of its releases
+
+The F74 entry above records a sentence that asserted, in the present tense and
+without anybody having read the code, that the consumer mapped `kyiv`. The
+repair was to check, find it false, state it, and carry the gap as T44. That
+repair was correct on 2026-08-10.
+
+**It stopped being correct on the consumer's next release and stayed in the
+tree for eleven more.** `mavo-site` shipped `SLUG_ALIASES = {"kyiv":
+"kyiv-oblast"}` with a named test; this repository went on stating **It does
+not** in bold, in the register of settled fact, in the paragraph that exists to
+explain why a claim about another repository must be measured. Read on
+2026-08-17 against `mavo-site` 4.27.1.1: the alias is present, resolved in
+`canonical_slug`, and held by a test in a green suite.
+
+Class: **a claim about a system this repository does not control, written
+without an anchor to the version it was true of.** The same family as F66 and
+F74, and the second time this exact sentence has been the instance.
+
+**Why it survived.** Three reasons, and the third is the one worth keeping.
+
+1. Nothing in the gate reads the other repository, and nothing should: D-020
+   removed that coupling deliberately and re-adding it to make a documentation
+   check possible would be paying for a sentence with an architecture.
+2. The correction read as finished. A paragraph that says "checked afterwards"
+   looks measured, and it was, once. **A measurement without the version it was
+   taken against is a claim with a timestamp missing**, and this file has a
+   convention for exactly that which the paragraph did not use.
+3. T44 existed and was correctly filed, so the gap was tracked. What was not
+   tracked was the *documentation of the gap*, which is a different artefact
+   with a different failure mode: the task can close and the prose can stay.
+
+**Repair.** The passage is restated with both measurements and both dates, the
+first in the past tense with its version anchor. T44's remaining half, the slug
+pair named in `docs/WEBAPP.md`, ships in this release, and the task closes
+against evidence on both sides rather than against an assertion. The convention
+this makes explicit: **a statement about another repository carries the version
+it was read against, or it is not written.**
+
+**Not repaired, and named rather than implied.** No check enforces the
+convention. A `claim_lint` rule reporting a present-tense sentence naming
+`mavo-site` without an adjacent version string is buildable and is not in this
+release, because a lint written in the same hour as the defect it targets tends
+to encode the one instance rather than the class. Until it exists this is a
+preference, by this repository's own standing test.
+
+**Reopen if:** any document here states a property of `mavo-site` without the
+version it was measured against; or T44's closure is found to rest on the
+consumer's code having been read once rather than tested.
 

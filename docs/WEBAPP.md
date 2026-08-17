@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.7 / 2026-08-13
+Version: 2.8 / 2026-08-17
 Status: **built, deployed, and publicly reachable.** `mavo-site` 4.12.0.0 runs
 at `https://34.116.232.215.sslip.io/` and carries its own gate (seven checks,
 24 mutants, a jsdom browser harness), its own defect log and its own audit.
@@ -135,7 +135,7 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `observation_age_s` | Age of the newest observation, or `null` | `null` is unknown and must never render as fresh or as `0` |
 | `areas[]` | One entry per area not affirmatively cleared | An area missing from the list has been cleared; an area present with `alert: unknown` has not |
 | `katottg` | Register code, may be `""` | Empty means the map could not resolve it. Render as unknown, do not drop |
-| `oblast` | **ASCII slug** (`lviv`), or `""` | The join field. It carried the register's Cyrillic name until 0.19.0.0, and every area landed in the consumer's `unplaceable` bucket: measured at four of four (F74) |
+| `oblast` | **ASCII slug** (`lviv`), or `""` | The join field. It carried the register's Cyrillic name until 0.19.0.0, and every area landed in the consumer's `unplaceable` bucket: measured at four of four (F74). **One pair does not join on equality**: this register holds a single `kyiv`, the consumer's geometry splits `kyiv-city` from `kyiv-oblast`, and the consumer resolves `kyiv` onto `kyiv-oblast` in `SLUG_ALIASES`. Named here because the divergence is a property of the contract and not of either implementation; the mapping belongs on the consumer's side, where the distinction is made [measured against `mavo-site` 4.27.1.1, 2026-08-17] |
 | `oblast_name` | Register name (`Львівська`) | For display. Never join on it |
 | `source_last_message_at` | When the source last spoke, may be `null` | Distinct from `generated_at`. A page showing only the latter tells a reader it is fresh while the feed behind it is hours old |
 | `window_days` | The trailing window behind `recent_7d` | A count without its window is a number the reader has to guess about |

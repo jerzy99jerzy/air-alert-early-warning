@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 373](https://img.shields.io/badge/tests-380-brightgreen)](tests/)
-[![coverage 96.17%](https://img.shields.io/badge/coverage-96.17%25-brightgreen)](Makefile)
+[![tests 398](https://img.shields.io/badge/tests-398-brightgreen)](tests/)
+[![coverage 96.22%](https://img.shields.io/badge/coverage-96.22%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 80](https://img.shields.io/badge/defects%20logged-80-informational)](docs/METHODOLOGY.md)
+[![defects logged 81](https://img.shields.io/badge/defects%20logged-81-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -35,7 +35,7 @@ implicit, because that is where the inconsistency otherwise lives.
 
 Status: pre-alpha, **four sprints from beta** on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate.
 
-**Deployed and publicly reachable since 2026-08-12.** That is one of beta's two clauses, and the cheaper of them: the instrument is live. The other is not met. **Correctness is unmeasured where it counts**: no western area has ever been hand-checked, and western areas are the only kind this product is for (T36). Latency exists as fetch time per poll and not yet as an end-to-end distribution from channel publication to rendered report (T40). Running is not the same as measured, and this repository's defect log is largely a record of what happens when the two are read as one thing.
+**Deployed and publicly reachable since 2026-08-12 at [34.116.232.215.sslip.io/en](https://34.116.232.215.sslip.io/en)** (Polish: [/pl](https://34.116.232.215.sslip.io/pl)). **That address is where the instrument is today, not a name it owns**: the host is a single small VM and the hostname is derived from its IP, so the link dies with the address rather than surviving it. Stated here because a README that said "publicly reachable" for five releases without giving the address was asking to be taken on trust for the one claim a reader can check in a second. That is one of beta's two clauses, and the cheaper of them: the instrument is live. The other is not met. **Correctness is unmeasured where it counts**: no western area has ever been hand-checked, and western areas are the only kind this product is for (T36). Latency exists as fetch time per poll and not yet as an end-to-end distribution from channel publication to rendered report (T40). Running is not the same as measured, and this repository's defect log is largely a record of what happens when the two are read as one thing.
 
 **Fourteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `STATUS.json` still records nine; that field is wrong by its own definition and is left wrong deliberately, because raising the number would assert that three more sprints met their exit criteria, which is a larger claim than a test file can carry. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S7.** S8 is half met and declared half met: the distance column is verified three ways, the hand-checked sample is twenty eastern messages from one afternoon. S9 is under way rather than untouched, and that distinction is new - a collector has run unattended against the live channel since 2026-08-11, so the seventy-two-hour half of its criterion is a clock that has started, while the latency half has not. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
 
@@ -308,8 +308,11 @@ registered ways to confirm the tests notice. If it fails, nothing ships.
 across the border. Decisions about your own safety come from the official
 Polish channels.
 
-**Is it live?** Yes, and the page is public. It is also early: read the status
-line above before you rely on any number in it.
+**Is it live?** Yes, and the page is public:
+[34.116.232.215.sslip.io/en](https://34.116.232.215.sslip.io/en). It is also
+early: read the status line above before you rely on any number in it. If the
+link does not resolve, the address has moved rather than the project having
+stopped; the repository is the durable artefact and the deployment is not.
 
 **Does it track me?** The public page keeps no logs of addresses, sets no
 cookies, and makes no third-party requests. Visits are counted as two numbers a
@@ -705,9 +708,9 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | | Files | Lines |
 | --- | --- | --- |
 | Package `mavo/` | 19 | 5,346 |
-| Tests | 42 | 6,929 |
-| Tools | 20 | 5,207 |
-| Documentation | 50 | 18,448 |
+| Tests | 44 | 7,267 |
+| Tools | 21 | 5,463 |
+| Documentation | 50 | 18,611 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -718,12 +721,12 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 380, of which 13 are scripted attacks |
-| Coverage | 96.17% against a floor of 95, a ratchet that is never lowered |
+| Tests | 398, of which 13 are scripted attacks |
+| Coverage | 96.22% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 80, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 28, counted from the log itself |
+| Defects logged with their class | 81, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 29, counted from the log itself |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 

@@ -20,6 +20,12 @@ build/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+
+# Machine-readable output of `make coverage`, read by `tools/docs_audit.py` so
+# that `tests_passing` and `coverage_percent` are enforced rather than typed.
+# Ignored on purpose: it describes one run on one machine, and a committed copy
+# would be a third place the same numbers could disagree.
+.gate/
 *.patch
 *.diff
 .env

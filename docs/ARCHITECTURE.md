@@ -6,7 +6,7 @@ break. `DATA-FLOW.md` is the companion and answers the other question, what
 happens to a message as it travels.
 
 ```
-Document:  docs/ARCHITECTURE.md, version 2.1
+Document:  docs/ARCHITECTURE.md, version 2.2
 Audience:  a contributor about to add a module, a dependency, or a process
 Companion: DATA-FLOW (what happens to the data), MECHANISMS (why each mechanism
            is built the way it is), METHODOLOGY (what may be claimed)
@@ -346,7 +346,7 @@ argument sits with the addition.
 | `data/aggregates/` | Tier 2. Committed | |
 | `data/reference/` | Tier 2. Committed. Derived lookup tables with their provenance and licence, never raw messages. Currently `tag_map.csv` (`docs/CHANNEL.md`) | |
 | `STATUS.json` | Machine-readable pins and measurements, including the repository size block | `docs_audit`: recounted from the tree at every run |
-| `MANIFEST.sha256` | Transfer integrity for hand-assembled archives | `shasum -c` |
+| `MANIFEST.sha256` | Every tracked file with its digest. Detects an incomplete transfer, an archive that disagrees with the tree it claims to be, a file added without an entry, and an edit that reached the tree without reaching the release chain. **Not tamper evidence**: the manifest sits in the repository beside the files it lists, so whoever can change a file can change its line | `manifest`, in `verify`. Regenerated only by `make manifest-write` as a release step |
 
 
 ## What is not here
