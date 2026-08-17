@@ -1,0 +1,53 @@
+# Proposed kind stems, to be costed by tools/vocab_gaps.py before any of them
+# reaches KIND_MARKERS. Nothing here is a recommendation: this is a list of
+# hypotheses about the corpus, and the tool's `recovers` and `collides`
+# columns are what turns any line into a decision.
+#
+# Stems are lowered and matched as substrings, exactly as KIND_MARKERS is.
+# Keep them short enough to catch inflection and long enough not to catch
+# unrelated words; `каб` in the existing table is the standing example of
+# that tension, kept short deliberately with its false-hit rate called a
+# question for the corpus.
+
+# --- specific missiles. Today all of these either fall into `ракет` or into
+# nothing, and the panel says "missile alert" for a Kalibr and for an
+# Iskander alike, which are different amounts of warning time.
+калібр
+іскандер
+кинжал
+цирко
+онікс
+х-101
+х-59
+х-22
+х-32
+
+# --- carrier aircraft and launch events. A separate signal from the alert
+# itself and earlier than it. Note these may need their own ThreatKind rather
+# than being folded into MISSILE: the schema has no member for "a launch was
+# observed", and forcing one in would be a claim the channel did not make.
+ту-95
+ту-160
+ту-22
+міг-31
+зліт
+злет
+
+# --- naval launch platforms, same caveat as above
+носі
+акваторі
+
+# --- drone specifics beyond the three stems already held
+герань
+ланцет
+мопед
+
+# --- these are NOT means of attack and must not enter KIND_MARKERS. They are
+# listed so the tool can size them: if they are frequent, they argue for a
+# separate field in the contract (direction, count), not for a wider kind
+# table. Sizing them is how that argument gets made with a number.
+курс на
+рухається
+у напрямку
+група
+декілька

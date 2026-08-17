@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 1.6 / 2026-08-14
+Version: 1.8 / 2026-08-17
 A specification, written from the position of someone who tried to build against
 one and found there was nothing to build against. The Ukrainian equivalent was
 consumed and measured over a corpus of 118 days; the work of building against it
@@ -228,7 +228,12 @@ weaker claims: each rests on one deployment rather than on a corpus. Nine and
 ten were added at 1.5, from consuming two further interfaces: one reached under
 a revocable agreement, one metered. Eleven was added at 1.6, after a category
 field was mistaken for a description of the threat - by this project, in
-writing, twice.
+writing, twice. Twelve was added at 1.7, after measuring how often the source
+names a means of attack at all: the answer bounds what any consumer of such a
+feed can display, and it is not a number a parser can improve. Thirteen and
+fourteen were added at 1.8, from two defects found in this project's own
+contract on one day, both of the same shape: a fact the publisher held and the
+consumer could not use.
 
 **Six. A cap, published, and a flag saying when it bound.** [measured]
 
@@ -383,6 +388,93 @@ reads as a key rather than an enumeration**, with the open end stated in words
 beside it. That is what this project shipped, and the reasoning is in its
 consumer's defect log rather than here because the decision is the consumer's;
 what belongs in a specification is the property that made it necessary.
+
+**Twelve. A classification ceiling belongs in the specification, because it is
+a property of the source and not of the reader.** [measured]
+
+Over 61,041 messages across 118 days, this channel carried an alert state in
+52,589 of them and a means-of-attack marker in 7,428. Eight stems resolve
+98.3% of the marked messages; the residue is 122 messages, 0.2% of the corpus,
+and reading them shows they are all-clears carrying continuation lists, which
+name no means because there is none to name. Join coverage across the whole
+corpus is **0.187**, and it does not move with the join window: 1 hour and 24
+hours both give 0.187, so the parameter that was assumed to govern it governs
+nothing.
+
+The number that matters is what it bounds. **Roughly four alerts in five will
+carry no declared kind, and no parser can change that**, because the source
+does not say. This project reached that conclusion the expensive way: a list
+of plausible additional vocabulary was proposed from general knowledge of the
+war - specific missile designations, carrier aircraft, launch phrasing,
+direction and count - and measured against the corpus. Every one of them
+occurred zero times. Two of twenty-five candidates occurred at all, eight
+times between them. The list was not partly right; it was a description of how
+this war is reported elsewhere, mistaken for how this channel writes.
+
+Two consequences for a specification.
+
+**For a publisher.** If a feed can express a kind, it should publish how often
+it actually does, as a measured share rather than as a promise. A field that
+is populated one time in five is not a broken field, but a consumer that
+discovers this from its own traffic has already built an interface around the
+wrong expectation. Publishing the share costs one line and is the difference
+between a nullable field and a field that is usually null.
+
+**For a consumer.** The undeclared case is the *normal* case and has to be
+designed for as such, not handled as an exception. That means the words for
+"the source did not say" are load-bearing interface text seen more often than
+any kind name, not a fallback. It also means that wanting richer detail is a
+question about **sources**, not about parsing: when the ceiling is set by what
+the channel writes, the only way through it is another channel, with whatever
+that costs in dependencies, terms, and privacy posture. Better parsing of the
+same feed cannot buy what the feed does not contain.
+
+
+**Thirteen. One null, one meaning - and where absence is a second fact, it
+needs a second field.** [measured]
+
+This project's feed carries `last_alert_ended_at` per oblast inside a trailing
+window. Null there means *no episode closed inside the window*, which is not
+the same as *this oblast was not counted at all*, and the two are not
+distinguishable from that field alone. The consumer needs both facts to write
+an honest sentence: it renders "no alert closed inside this window" for the
+first and stays silent for the second, and it can only tell them apart by
+reading the count field beside it. That works, and it works by accident: the
+schema never said so, and a consumer that reasoned from the timestamp alone
+would have printed the wrong sentence with no way to notice.
+
+Specify a null's meaning per field, in words, and where a field's absence
+encodes a different fact from its null, say which other field carries it. The
+alternative is what happened here: a correct implementation that could just as
+easily have been an incorrect one, with nothing in the contract to decide.
+
+**A corollary worth its own line: a field nobody reads is untested contract
+surface.** `last_alert_ended_at` shipped in every payload from the day
+trailing counts existed and no line of the consumer ever read it - not a bug
+in either side, just a capability sitting on disk while the interface it was
+meant for said nothing. The contract check verified that the fields the
+consumer *needs* are present, which says nothing about fields the publisher
+sends and nobody consumes. Both directions are worth checking, and the second
+one costs a script: walk the payload, and require every key to be either read
+or explicitly listed as tolerated with a reason.
+
+**Fourteen. A number publishes its denominator as a field, beside it.**
+[measured]
+
+The same feed publishes a count of alerts over a trailing window, and the
+window length as `window_days`. That is right, and the reason is visible in
+what happened when the consumer needed both: for two releases the count
+existed on the page only inside a sentence of prose, so the first interface
+that wanted the number would have had to parse the sentence to get it - and
+the sentence also contains the window length, so the obvious parse returns the
+wrong number.
+
+The rule generalises past this feed. Any aggregate - a count, a rate, a
+maximum - is meaningless without the interval it was taken over, and the
+interval belongs in the data as a field rather than in the label. Prose is for
+readers; a consumer that has to read prose to recover a number is a consumer
+that will eventually recover the wrong one.
+
 
 ## 5. The objection, and the answer
 

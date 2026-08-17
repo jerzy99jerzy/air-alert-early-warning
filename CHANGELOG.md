@@ -16,6 +16,42 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.4.0 - 2026-08-17
+
+**The vocabulary gap was assumed, then measured, and the assumption was
+wrong.** The kind table holds eight stems, and a list of twenty-five plausible
+additions was proposed from general knowledge of the war: specific missile
+designations, carrier aircraft, launch phrasing, direction, count. Measured
+against the corpus, every one of them recovers zero messages, and only two
+occur in 61,041 messages at all, eight times between them. The real residue is
+122 messages, 0.2% of the corpus, and reading them shows they are all-clears
+carrying continuation lists, which name no means because there is none to
+name.
+
+- **`tools/vocab_gaps.py`.** Sizes the gap, ranks candidate stems from the
+  corpus rather than from memory, and costs a proposed stem in three columns:
+  what it recovers, what it collides with, and what it touches outside the
+  population it was proposed for. It isolates the kind layer from the area
+  layer deliberately: `classify_kind_message` also resolves an area, so a
+  message naming a clear means over an unmapped tag would otherwise be
+  counted as a vocabulary gap when it is an area gap with a different repair.
+- **The ceiling is now measured, not assumed.** Join coverage is 0.187 over
+  the whole corpus and does not move with the join window - 1 hour and 24
+  hours both give 0.187 - so `DEFAULT_KIND_TTL` governs nothing that was
+  attributed to it. 52,589 messages carry an alert state and 7,428 carry a
+  kind marker: roughly four alerts in five will never have a declared kind,
+  whatever the parser does. `docs/METHODOLOGY.md` labelled the regime split as
+  speculation pending this measurement, and this is the measurement.
+- **`docs/FEED-SPEC.md` 1.6 -> 1.8.** Property twelve, the classification
+  ceiling, which is a property of a source and belongs in a specification for
+  one. Thirteen, a null's meaning stated per field, and a second field where
+  absence encodes a second fact - with the corollary that a field nobody
+  reads is untested contract surface. Fourteen, an aggregate publishes its
+  denominator as a field beside it, not in prose.
+- **README.** The alert path as a mermaid diagram, and a section naming the
+  second purpose of the project: the specification is written from having
+  built against the data, not from having read about it.
+
 ## 0.32.3.1 - 2026-08-15
 
 **Three task identifiers had been issued twice, the index could not see it,

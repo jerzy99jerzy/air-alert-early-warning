@@ -171,9 +171,80 @@ reading. When that age passes the threshold, the page changes state and tells
 you it has stopped knowing, rather than continuing to display a picture that
 looks current and is not.
 
+The same chain as a diagram. Every edge is a file or an HTTP request, and
+nothing crosses between them that is not drawn here.
+
+```mermaid
+flowchart LR
+    CH["Public Telegram channel<br/>web view, no account"]
+    KAT[("KATOTTG register<br/>vendored, CC BY 4.0")]
+
+    subgraph PROD["air-alert-early-warning (this repository)"]
+        FETCH["fetch<br/>every 30 s"]
+        SNAP[("page snapshots<br/>stored as served")]
+        PARSE["parse<br/>state, area, kind"]
+        STORE[("event store<br/>SQLite, append only")]
+        REPORT["report<br/>fold to current state"]
+    end
+
+    STATE[("state.json<br/>the contract")]
+
+    subgraph SITE["mavo-site (separate repository)"]
+        SERVE["render<br/>one file read, no imports"]
+        PAGE["public page"]
+    end
+
+    READER(["reader"])
+
+    CH --> FETCH
+    FETCH --> SNAP
+    SNAP --> PARSE
+    KAT --> PARSE
+    PARSE --> STORE
+    STORE --> REPORT
+    REPORT --> STATE
+    STATE --> SERVE
+    SERVE --> PAGE
+    PAGE --> READER
+```
+
+Two properties the diagram is meant to make obvious. **The store is append
+only and the fold is one-way**: nothing downstream writes back, so a rendering
+mistake cannot corrupt the record. And **the consumer reads a file, not this
+program**: `state.json` is the entire interface, which is why the specification
+for it is a document rather than an import.
+
 What is *not* in this chain: any inference about direction, speed, target or
 crossing. Nothing in the source data supports such an inference, so nothing in
 the output makes one.
+
+---
+
+## The second purpose: a specification, written from use
+
+Reading the Ukrainian feed is half of what this project is for. The other half
+is what reading it taught, written down as a specification for the equivalent
+Poland does not have - and, unchanged, for any state that wants one.
+
+The distinction that matters is the vantage point.
+[`docs/FEED-SPEC.md`](docs/FEED-SPEC.md) is not a survey of what such a feed
+might contain. It is a list of properties that were **missed, and cost
+something, while building against real data**: a cap without a flag saying
+when it bound, a window whose left edge had to be guessed, a version bump that
+needed both sides deployed inside one window, a category field mistaken twice
+for a description of the threat, a classification ceiling that no parser can
+raise because the source simply does not say, a null with two meanings and one
+field, and a number whose denominator lived in prose. Each one is labelled
+with how it was learned, and several are labelled `[measured]` against a
+corpus of 61,041 messages over 118 days.
+
+None of it is expensive. Ukraine's channel is a public web page with hashtags
+carrying register codes, and the parser at the centre of this project took two
+afternoons. That is the argument the specification rests on: what a convention
+like this enables is cheap to build against, and the reason nobody has built
+it here is that the convention does not exist yet, not that it is hard.
+
+The document is written to be disagreed with, and section 7 says how.
 
 ---
 
@@ -635,8 +706,8 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | --- | --- | --- |
 | Package `mavo/` | 19 | 5,346 |
 | Tests | 42 | 6,929 |
-| Tools | 18 | 4,834 |
-| Documentation | 50 | 18,249 |
+| Tools | 20 | 5,207 |
+| Documentation | 50 | 18,448 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,

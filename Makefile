@@ -2,9 +2,9 @@
 PY := python3
 PKG := mavo
 
-.PHONY: verify coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
+.PHONY: verify private-artifacts coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
 
-verify: coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation
+verify: private-artifacts coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation
 	@echo "verify: OK"
 
 # pytest exits 5 when nothing is collected. That exit code is NOT swallowed:
@@ -69,3 +69,14 @@ harness-mutation:
 
 clean:
 	rm -rf dist build *.egg-info .pytest_cache .coverage htmlcov
+
+# OUTREACH.md and the pitch drafts live one directory from this tree and
+# describe people rather than software: names, a ministry address, dates and
+# contents of letters, and a log of a rule broken on purpose. One stray
+# 'git add .' in the wrong directory publishes all of it, and a 404 on the
+# public URL is a measurement of today, not a property of the repository.
+# Path-based by design: a content pattern list would have to carry the very
+# names it protects. Placed first in 'verify' because it is the cheapest
+# check here and the only one whose failure a later commit cannot undo.
+private-artifacts:
+	$(PY) tools/check_no_private_artifacts.py

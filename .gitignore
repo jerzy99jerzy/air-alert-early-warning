@@ -24,3 +24,12 @@ htmlcov/
 *.diff
 .env
 *.log
+
+# materialy nietechniczne: gate tools/check_no_private_artifacts.py
+OUTREACH.md
+LINKEDIN-POST.md
+LINKEDIN-*.md
+CONTACTS.md
+HANDOVER-*.md
+*-PITCH.md
+outreach/*
