@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.31
+Document:  docs/METHODOLOGY.md, version 2.32
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -3177,4 +3177,94 @@ entry is read as needing a citation.
 
 **Reopen if:** any entry in `docs/DECISIONS.md` asserts a property of this
 package's code without naming where it was read.
+
+### F106, 0.32.8.0. The same inference, the third time, inside the release that documents it
+
+`docs/DEPLOYMENT.md`, F103 and the 0.32.7.0 changelog entry all state that
+`MAVO_LOG_FILE` sits on `mavo-collect.service` and belongs on
+`mavo-report.service`, with a deploy step to move it. **It was already on both.**
+Read on 2026-08-17 at deploy time: `mavo-report.service` has carried
+`Environment=MAVO_LOG_FILE=/var/lib/mavo/run.jsonl` since it was written.
+
+The claim came from reading the collector's unit, not finding the loop there,
+and concluding the variable was misplaced - without opening the unit that runs
+the loop. F104 records the same mechanism about the CLI four hours earlier, and
+F102 records it about the host that morning. **Three instances in one session,
+each in a document whose subject is the previous one.**
+
+Class: F104's exactly. What is new is only the count, and the count is the
+finding: the mechanism does not yield to having been named. Writing "proximity
+of evidence decided the conclusion" into a defect entry did not stop the next
+conclusion being decided by proximity of evidence.
+
+**Why it survived to a tag.** Every check that could have caught it is on the
+far side of the boundary the drift section describes. The gate reads this tree;
+the claim is about a file on a machine. The release procedure verifies the
+content under the tag, which is exactly the wrong artefact: the content was
+faithfully tagged and the content was wrong. **The only control that applies is
+reading the unit, and reading the unit is what produced the correct answer
+thirty minutes later, during the deploy the false claim had scheduled.**
+
+**Repair.** `docs/DEPLOYMENT.md` corrected: the deploy is an install and a
+restart, no unit edit. F103's second fault withdrawn - the variable was on the
+right unit and unread, which is one fault rather than two. The tag stands;
+deleting it would remove the record rather than the error.
+
+**What is not repaired.** No check exists and none is proposed here. A rule
+that a claim about a systemd unit must quote `systemctl cat` output is
+writable and would have caught all three; it is not written in the same release
+that found the third instance, for the reason F100 gives about lints written in
+the hour of the defect. It is **T64**.
+
+**Reopen if:** a fourth instance occurs, at which point the pattern is not a
+defect but a property of how this work is done, and the repair is procedural
+rather than documentary.
+
+### F107, 0.32.8.0. A measured quiet is rendered as a degraded instrument
+
+`Report.feed_state` is decided by `staleness_s`, which is
+`as_of - newest_observation`, and `newest_observation` is
+`max(e.ts_source for e in latest.values())`: the source timestamp of the newest
+**event**. `DEFAULT_VALID_FOR_S` is 600. So ten minutes without a change of
+alert state anywhere the collector tracks produces `feed=degraded`, and the
+page tells its reader to treat the picture as stale.
+
+**The pipeline is demonstrably healthy while this happens.** Observed on the
+production host on 2026-08-17: `mavo-collect` polling every ~33 s, exit status
+0, `messages=20 parsed=19 stored=0 new events (seen=13)`. The channel was
+asked, it answered, thirteen events were recognised and all were already known.
+**A successful poll that yields no state change is a measured quiet, not an
+absent observation**, and the report cannot see the difference because the
+store holds alert events and not poll outcomes.
+
+Class: **the project's central rule inverted.** Not silence rendered as calm,
+which the design refuses everywhere: measured calm rendered as a broken
+instrument. The direction is the safer of the two and it is still a conflation,
+and a reader told to distrust a picture that is accurate learns to distrust the
+next one too.
+
+**Frequency is not yet known and the figure here is an anecdote, labelled as
+one.** Eight minutes of `run.jsonl` on 2026-08-17 carried 13 `degraded` cycles
+against 5 `ok`, and the state oscillated across the threshold rather than
+sticking. **The measurement that settles it is the S9 window**: 72 hours of
+`publish.cycle` records carry `feed_state` per cycle, which gives the duty
+cycle with between-day variance. Recorded now, quantified then, and this entry
+is not closed until it carries the number.
+
+**Why it survived.** It has always behaved this way and nothing was watching.
+The state is visible only in a journal line and on the page itself, and neither
+is read continuously; the run log that makes it countable was attached four
+hours before this entry was written, by T23. **The first thing the new
+instrument was used for was a defect nobody had noticed in the thing it
+instruments**, which is the argument for T23 that T23's own entry did not make.
+
+**Not repaired here, and the shape of the repair is a decision rather than a
+fix.** Options are visible and none is obviously right: a fourth feed state for
+"polled successfully, nothing changed"; recording poll outcomes in the store so
+freshness can be computed from observation rather than from events; or leaving
+the behaviour and changing what the page says about it. Each changes the
+contract or the schema. **T65**, with the S9 figure as its input.
+
+**Reopen condition, stated because this entry ships open:** it closes when the
+duty cycle is measured and a decision entry names the chosen repair.
 

@@ -16,6 +16,63 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.8.0 - 2026-08-17
+
+**Three corrections and one amendment. No code changes and no host contact:
+everything here is a claim that was wrong, or a rule settled while it was still
+free to settle.**
+
+- **D-032 amends S9's exit criterion inside its own window**, which is a shape
+  this project treats as a defect elsewhere, so the reasons are argued rather
+  than assumed. 72 hours of **uninterrupted collection**, every cycle accounted
+  for and every pause named, plus at most **two planned restarts of the report
+  loop**, each reported as its own segment. `mavo-collect.timer` is untouched
+  for the duration because its continuity *is* the measurement. The original
+  clause said only "72 hours unattended" and **was written before the collector
+  had run at all**; it survives on a reading found afterwards - three nights is
+  the minimum at which time-of-day separates from night-to-night variance, and
+  ~8,640 cycles bound the unexplained-gap rate at 3.5e-4 by the rule of three -
+  and neither was the reason it was written. **Settled while nothing needs a
+  restart**, because a rule decided at the moment it becomes expensive is
+  shaped by what its author wanted then. The entry records that the amendment
+  is convenient for the author, since convenience is a reason to distrust it.
+- **F106. `MAVO_LOG_FILE` was on `mavo-report.service` all along.** 0.32.7.0
+  stated here that it sat on the collector and belonged on the loop, and
+  scheduled a `systemctl edit` to move it. Drawn from reading one unit and not
+  the other. **Third instance of one mechanism in one session** - F102 about
+  the host, F104 about the CLI, this about a unit file - each in a document
+  whose subject is the previous one. The count is the finding: **naming the
+  mechanism did not stop the next conclusion being decided by proximity of
+  evidence.** F103 loses its second fault: the variable was on the right unit
+  and unread, which is one fault, not two. The tag stands. **T64** proposes the
+  check that generalises from three instances rather than one: a claim about a
+  unit quotes `systemctl cat`.
+- **F107. A measured quiet renders as a degraded instrument.** `feed_state`
+  comes from the age of the newest **event**, so ten minutes without a change
+  of alert state gives `feed=degraded` while the collector polls successfully
+  every 33 seconds and the channel answers. **A successful poll with no state
+  change is a measured quiet, not an absent observation**, and the report
+  cannot see the difference because the store holds events and not poll
+  outcomes. The project's central rule inverted: not silence rendered as calm,
+  but calm rendered as a broken instrument. **Frequency is an anecdote and is
+  labelled as one** - 13 `degraded` against 5 `ok` over eight minutes - and the
+  S9 window is what settles it. **T65** carries the decision and three options,
+  each with its cost. F107 ships open and closes when it holds the number.
+- **The first thing the new run log was used for was a defect nobody had
+  noticed in the thing it instruments.** That is the argument for T23 that
+  T23's own entry never made.
+- **`staleness_s` was a false alarm and the fault was in the query.** The
+  contract carries `observation_age_s` and `source_last_message_at`; a
+  `dict.get()` on a key that does not exist returns `None`, indistinguishable
+  from a null, in a project whose whole subject is that distinction. No defect
+  in the product. Recorded because the reading was published as an open
+  ambiguity and closing it silently would leave the open one standing.
+- **`docs/DEPLOYMENT.md` records the 0.32.7.0 deploy with its evidence**, the
+  measured run-log growth (443 bytes per cycle, 1.28 MB/day, first rotation at
+  ~6.6 days, ceiling 48 MiB), and the S9 window with its start and end. The
+  window **ends before the first rotation**, stated as a thing it does not
+  test.
+
 ## 0.32.7.0 - 2026-08-17
 
 **S9 was described as five open tasks. Three of them were already running in

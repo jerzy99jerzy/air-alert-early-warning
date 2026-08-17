@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 3.6
+Document:  docs/MVP.md, version 3.7
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -185,7 +185,7 @@ than absorbed into the next one.
 | --- | --- | --- | --- |
 | **S7** | closed 9 Aug | Area resolution: the tag parse, the 127-row map, the alias table (T33) and the untagged remainder (T34). Smaller than planned, because the channel tags 99.34% of messages with the area and unit type (`docs/CHANNEL.md`) | Met on an amended criterion, recorded as amended. Every tag resolves or is explicitly unresolved, and tag and prose agree on 38,520 of 38,521 comparable messages. The hand sample is retargeted at the population that check cannot see (T36) |
 | **S8** | **N/A** | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | **Still partial at 0.20.0.0, and the remaining gap is named rather than rounded off.** Shipped and held by regressions: the composition, `mavo report`, the `state.json` contract, the publishing loop. Half the exit criterion is met: the distance column is verified three ways, worst divergence 0.04 km between simplifications and 1.1 km against an independent geometry and method (`docs/METHODOLOGY.md`). The other half is not: the hand-checked sample is twenty messages, all eastern, from twenty-six minutes of one afternoon, 0 errors with a Wilson bound of 16%. **No western area has been checked, which is the only kind this product is for.** Closed by `tools/label_sample.py draw` against the design window with western rows in it (T36) |
-| **S9** | **N/A** | Real time. `mavo watch` (M0), the run log and its reader (T23, T24), interval jitter from the first commit (T27), the host decision (T25) | 72 hours unattended with every cycle accounted for, and the first end-to-end latency measurement: channel publication to rendered report, reported as a distribution rather than a best case |
+| **S9** | **N/A** | Real time. The run log attached to the publishing loop (T23, T24), interval jitter (T27), the host decision (T25, D-031). `mavo watch` is **not** shipping: `mavo report --watch` was already the loop | **Amended 2026-08-17, mid-window, and the amendment is D-032.** 72 hours of uninterrupted **collection**, every cycle accounted for and every pause named with its cause; **at most two planned restarts of the report loop**, each reported as its own segment; the first end-to-end latency measurement as a distribution rather than a best case. The original clause said only "72 hours unattended", which was declared before any figure in this plan existed |
 | **S10** | **N/A** | Delivery. Self-hosted ntfy, the three message classes, blindness reporting, per-recipient topics (M1) | A synthetic report reaches a phone through Do-Not-Disturb within a measured time; killing the feed produces a blindness message within one interval; the delivery ledger and the phone agree over a week |
 | **S11** | **N/A** | Hardening to beta. Threat-model rows for the delivery path with tests, the clean-clone probe (T7), the identifier lint (T22), the disengagement instrument (T29) | `make verify` green from a clean clone on a machine with nothing installed, every new threat row carrying a test, and T6 recorded |
 

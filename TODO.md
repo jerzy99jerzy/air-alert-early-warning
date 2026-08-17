@@ -4,14 +4,14 @@
 
 ### Where the backlog stands
 
-**24 of 62 closed, 38 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**24 of 64 closed, 40 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 19 | Finished, with the release that closed it named in the entry |
 | `moved` | 5 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 25 | Nothing external blocks it; it needs a session |
-| `decision` | 5 | Waiting on a judgement rather than on work |
+| `ready` | 26 | Nothing external blocks it; it needs a session |
+| `decision` | 6 | Waiting on a judgement rather than on work |
 | `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
@@ -27,9 +27,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 9 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host)
+**Tier 1, 10 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as)
 
-**Tier 2, 16 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier)
+**Tier 2, 17 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit)
 
 **Tier 3, 13 open:** [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise)
 
@@ -44,7 +44,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as) |
 
 <!-- index:end -->
 
@@ -1721,3 +1721,56 @@ deliberately out of scope with a reopen condition, or names the first version
 from which tags are signed and states explicitly that every earlier tag is
 not. Either answer closes this. What does not close it is a signed tag with no
 entry.
+
+## T64. A claim about a systemd unit quotes the unit
+Status: `ready`, follows F106 [tier 2]
+
+Three defects in one session share one mechanism: a conclusion about a file
+that was not opened, drawn from a file that was (F102, F104, F106). The third
+reached a tag and scheduled a deploy step that turned out to be unnecessary.
+
+**What is checkable and what is not.** Nothing in this tree can read
+`/etc/systemd/system`. What a check can do is refuse an *unsourced* claim, the
+way `check_the_host_claim_is_no_older_than_the_release` refuses an undated one:
+a sentence in `docs/DEPLOYMENT.md` naming a unit file, a directive or an
+environment variable must sit within a block quoting `systemctl cat` or
+`systemctl show` output, or it is a finding.
+
+**Acceptance:** the check exists, is in `verify`, and is verified red against
+the 0.32.7.0 text, which asserted `MAVO_LOG_FILE` was on one unit and not the
+other with nothing quoted. An allow-list is permitted for prose that discusses
+units in general rather than asserting their contents, and every entry on it
+carries a reason.
+
+**Why not in 0.32.8.0.** A lint written in the same hour as the defect it
+targets encodes the instance rather than the class, which is F100's note. This
+one has three instances to generalise from, which is an argument for writing it
+soon rather than for writing it immediately.
+
+## T65. Decide what a successful poll with no state change should render as
+Status: `decision`, blocked by the S9 measurement (F107) [tier 1]
+
+Ten minutes without a change of alert state produces `feed=degraded` while the
+collector polls successfully every 33 seconds. A measured quiet is rendered as
+a broken instrument. Tier 1 because it is on the page a reader is looking at.
+
+**Input required before deciding**, and this is the blocker rather than the
+work: the duty cycle of `ok` against `degraded` over the S9 window, per cycle,
+with between-day variance, read from `publish.cycle` records in
+`/var/lib/mavo/run.jsonl`. Eight minutes on 2026-08-17 gave 13 against 5, which
+is an anecdote and is labelled as one in F107.
+
+**The options, none obviously right and each with a cost:**
+
+1. **A fourth feed state.** "Polled, nothing changed" as distinct from
+   degraded. Honest, and it is a schema change the consumer must learn, so it
+   needs a contract version and a decision on both sides of D-020.
+2. **Poll outcomes in the store.** Freshness computed from observation rather
+   than from events, which is what the word `newest_observation` already
+   promises. Changes what the store is for and grows it by one row per poll.
+3. **Leave the behaviour, change the sentence.** Cheapest, and it concedes that
+   a reader is told to distrust an accurate picture roughly *n* percent of the
+   time, where *n* is the number this task is waiting for.
+
+**Acceptance:** a decision entry naming the chosen option, the measured duty
+cycle it was chosen against, and a reopen condition. F107 closes with it.

@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.10
+Document:  docs/DECISIONS.md, version 2.11
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1159,3 +1159,44 @@ error against the interval; or M0 needs cross-poll state, in which case this
 entry governs the collector and a second entry governs the loop; or the host
 moves off GCP, which changes the supervision question rather than reusing this
 answer.
+
+## D-032. S9's window admits planned restarts of the report loop, and says how many
+
+**Decision.** S9's exit criterion is amended while the window is running. It
+now requires 72 hours of **uninterrupted collection** with every cycle
+accounted for and every pause named with its cause, and permits **at most two
+planned restarts of `mavo-report.service`**, each reported as its own segment
+rather than absorbed into a single figure. `mavo-collect.timer` is untouched
+for the duration: it produces the evidence and it feeds T40.
+
+**Amending a criterion inside its own window is the shape this project treats
+as a defect elsewhere**, so the reasons are stated rather than assumed.
+
+- **The original number was declared, not measured.** "72 hours unattended"
+  entered `docs/MVP.md` before the collector had run at all. It survives here
+  because it has a defensible reading found afterwards - three nights is the
+  minimum at which time-of-day separates from night-to-night variance, and
+  ~8,640 report cycles put an upper bound of 3.5e-4 on the unexplained-gap rate
+  by the rule of three - and neither of those was the reason it was written.
+- **The decision is taken while it is free.** Nothing needs a restart today.
+  A rule settled at the moment it becomes expensive is a rule shaped by what
+  the author wanted at that moment, which is the rounding-up F102 describes.
+- **The permitted restart does not threaten what the window measures.** The
+  three things it must show are the latency distribution, the gap rate in the
+  collector's cadence, and the `degraded` duty cycle. All three are properties
+  of `mavo-collect` and of the store; a five-second restart of the consuming
+  loop is visible in `run.jsonl` as a `sink.opened` line and is therefore a
+  **named** pause rather than a hole.
+
+**What is refused.** Restarting or reinstalling anything under
+`mavo-collect`. That resets the window, with no argument available, because the
+collector's continuity *is* the measurement.
+
+**Honest note on the author's interest.** This amendment is convenient for the
+rate of work, and convenience is a reason to distrust it. It is recorded with
+that stated rather than left for a reader to infer.
+
+**Reopen if:** a third restart of the report loop is wanted inside one window,
+in which case the window restarts rather than the limit rising; or any restart
+turns out not to be visible in `run.jsonl`, which would make "named pause" an
+assertion rather than a record.

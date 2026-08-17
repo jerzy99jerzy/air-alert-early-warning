@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.5 / 2026-08-14
+Version: 1.6 / 2026-08-14
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -85,47 +85,69 @@ The configuration's theoretical ceiling is 36 s. The measured maximum is
 configuration promises. D-027's one-hour figure (n=107) is confirmed at
 twenty-four times the scale, and the caveat attached to it is discharged.
 
-### `MAVO_LOG_FILE` is on the wrong unit, and the deploy that fixes it
+### The run log, and the claim about it that was wrong
 
-`mavo-collect.service` carries `Environment=MAVO_LOG_FILE=/var/lib/mavo/run.jsonl`
-and **no such file has ever existed**. Not a permissions problem: the directory
-is writable and holds `events`, `state.json` and `feed.json`, written by the
-same unit as the same user.
-
-Two faults, and the second was found only by reading the CLI (F103, F104):
-
-1. Nothing in the package read the variable. `mavo.obs.from_environment` had no
-   caller. **Repaired in 0.32.7.0**: `mavo report --watch` constructs the sink
-   and announces `run-log=<path>` on startup.
-2. **The variable is on the collector, and the collector is not the loop.**
-   `mavo-collect` is a `oneshot` that polls; the run log belongs to
-   `mavo-report.service`, which is the long-running `mavo report --watch --json`
-   process. The variable was copied from a documented invocation for
-   `mavo watch`, a subcommand that does not exist, into the unit that did.
-
-**Deploying 0.32.7.0, which is the first deploy in this series that changes an
-executable line.** Order matters: the package first, the unit second, so that
-the moment the variable moves there is already something to read it.
+Both `mavo-collect.service` and `mavo-report.service` carry
+`Environment=MAVO_LOG_FILE=/var/lib/mavo/run.jsonl`, and
+**`mavo-report.service` has carried it since it was written.** 0.32.7.0 stated
+here that the variable sat on the collector and belonged on the loop, and
+scheduled a `systemctl edit` to move it. That was false, drawn from reading one
+unit and not the other, and it is **F106**. Quoted rather than described, which
+is the repair T64 proposes to enforce:
 
 ```
-gcloud compute ssh vm-mavo --tunnel-through-iap --command "sudo /opt/mavo/venv/bin/pip install --upgrade /tmp/<wheel>"
-gcloud compute ssh vm-mavo --tunnel-through-iap --command "/opt/mavo/venv/bin/python -c \"import mavo, mavo.cli, pathlib; print(mavo.__version__, 'sink_from_environment' in pathlib.Path(mavo.cli.__file__).read_text())\""
-sudo systemctl edit mavo-report.service     # Environment=MAVO_LOG_FILE=/var/lib/mavo/run.jsonl
-sudo systemctl edit mavo-collect.service    # remove the same line
-sudo systemctl daemon-reload && sudo systemctl restart mavo-report.service
-sudo journalctl -u mavo-report.service -n 5 --no-pager -q   # expect run-log=/var/lib/mavo/run.jsonl
-sudo wc -l /var/lib/mavo/run.jsonl
+# systemctl cat mavo-report.service
+[Service]
+Type=simple
+User=mavo
+Environment=MAVO_LOG_FILE=/var/lib/mavo/run.jsonl
+ExecStart=/opt/mavo/venv/bin/mavo report --store /var/lib/mavo/events ... --watch --interval 120
+ReadWritePaths=/var/lib/mavo
+# .d/interval.conf overrides ExecStart with --feed and --interval 30
 ```
 
-**Verified by the symbol and by the file, not by the version string.** The
-second command reads `sink_from_environment` out of the installed `cli.py`; the
-last two are the only evidence that the sink is attached, because the whole of
-F103 is that every other indicator reported healthy while nothing was written.
+The single fault was that **no code read the variable**:
+`mavo.obs.from_environment` had no caller (F103). Repaired in 0.32.7.0 by one
+argument at one call site, so the deploy was an install and a restart with no
+unit edit at all.
 
-**S9's clock starts at the restart.** The exit criterion is 72 unattended hours
-with every cycle accounted for, plus the first end-to-end latency distribution
-from `tools/latency.py`. Neither is compressible and neither belongs in a
-release note written before they exist.
+### 0.32.7.0 on the host, and what proved it
+
+Deployed 2026-08-17. Wheel built from the commit under `v0.32.7.0`
+(`air_alert_early_warning-0.32.7.0-py3-none-any.whl`, sha256 `5741a156…21c0ad`),
+`mavo-collect.timer` stopped for the install and restarted, then
+`mavo-report.service` restarted.
+
+| Evidence | Reading |
+| --- | --- |
+| `sink_from_environment` in the installed `mavo/cli.py` | `True` |
+| `publish.cycle` in the installed `mavo/report.py` | `True` |
+| First journal line after restart | `run-log=/var/lib/mavo/run.jsonl` |
+| `/var/lib/mavo/run.jsonl` after four minutes | 19 lines, 9 `publish.cycle` records |
+| `NRestarts` | 0 |
+
+**The last two rows are the only ones that close F103.** Every other indicator
+reported healthy for nine releases while nothing was written, so a version
+string and a running unit prove nothing here by construction.
+
+**Run log growth, measured rather than estimated.** 443 bytes per cycle
+(`publish.cycle` 243 + `publish.interval` 200) at ~2,880 cycles a day is
+**1.28 MB/day**. `DEFAULT_MAX_BYTES` is 8 MiB with `DEFAULT_RETAIN` 5, so the
+first rotation falls at about **6.6 days** and the steady-state ceiling is
+48 MiB. **The S9 window ends before the first rotation**, which is stated in
+D-032 as a thing that window does not test.
+
+### The S9 window
+
+```
+Start: 2026-08-17 11:02:06 UTC   (restart of mavo-report.service)
+End:   2026-08-20 11:02:06 UTC
+```
+
+`mavo-collect.timer` is untouched for the duration: it produces the evidence
+and it feeds T40. Up to two planned restarts of `mavo-report.service` are
+permitted and each is reported as its own segment (**D-032**, an amendment made
+inside the window and argued there).
 
 ### Reading this host without lying to yourself
 

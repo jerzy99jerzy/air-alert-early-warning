@@ -6,7 +6,7 @@
 [![tests 410](https://img.shields.io/badge/tests-410-brightgreen)](tests/)
 [![coverage 96.61%](https://img.shields.io/badge/coverage-96.61%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 85](https://img.shields.io/badge/defects%20logged-85-informational)](docs/METHODOLOGY.md)
+[![defects logged 87](https://img.shields.io/badge/defects%20logged-87-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -710,7 +710,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 19 | 5,382 |
 | Tests | 45 | 7,496 |
 | Tools | 21 | 5,572 |
-| Documentation | 50 | 19,292 |
+| Documentation | 50 | 19,555 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -725,8 +725,8 @@ confidence interval attached.
 | Coverage | 96.61% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 85, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 30, counted from the log itself |
+| Defects logged with their class | 87, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 31, counted from the log itself |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
