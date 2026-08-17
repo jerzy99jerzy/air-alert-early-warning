@@ -894,6 +894,26 @@ def publish(
                 reason = f"write failed: {failure}"
                 break
             written += 1
+            # T23. One line per cycle, and it is written here rather than
+            # beside the interval draw for a reason the test that found this
+            # states plainly: until 0.32.7.0 the only `log.line` in this loop
+            # was `publish.interval`, emitted before sleeping. A cycle that did
+            # not sleep - the last one of every run, and every run that ended
+            # on a write failure - left no trace at all, so the record of the
+            # loop was a record of its pauses. The sink was attached to the
+            # sleep instead of to the work.
+            #
+            # `skipped` is deliberately absent rather than zero: this loop reads
+            # a store, it does not poll, so it has no window to have missed and
+            # a zero here would be a measurement nobody took.
+            if log is not None:
+                log.line(
+                    "publish", "publish.cycle", cycle=cycle_id,
+                    feed_state=report.feed_state.value,
+                    as_of=report.as_of.isoformat(timespec="seconds"),
+                    western_active=len(report.western_active),
+                    events=len(report.areas),
+                )
             if on_cycle is not None:
                 # F84. The observer is not the product; the file is. A
                 # BrokenPipeError from an announce print (stdout piped to a

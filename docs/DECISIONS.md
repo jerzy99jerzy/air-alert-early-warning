@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.9
+Document:  docs/DECISIONS.md, version 2.10
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -905,6 +905,15 @@ predicts, and its theoretical mean is 32.5 s; the +0.56 s residual is
 [inference] attributable to process spawn, against poll latencies of 0.29 to
 0.60 s measured the previous day.
 
+**Confirmed at twenty-four times the scale, 2026-08-17.** [measured, on the
+production host, 24 hours] n=2619 start-to-start intervals: min 30.06, p50
+33.00, p90 35.00, p99 35.01, **max 36.06** against the configuration's
+theoretical ceiling of 36 s. The one-hour figure above was not a lucky window,
+the mean is unchanged at 33.0, and **the caveat attached to this entry - that
+the margin is an estimate until a measured cadence exists - is discharged.**
+Method and units are in `docs/DEPLOYMENT.md`, which carries the date the host
+was read.
+
 **What this settles.** The hypothesis written into the drop-in was that
 `AccuracySec`, rather than the duration of the run itself, dominated the
 jitter. It did. Had the after-distribution still carried a tail near 50 s, the
@@ -1096,3 +1105,57 @@ entries would pass. Named here rather than left implicit, and tracked as T62.
 **Reopen if:** an identifier is issued by any means other than reading the
 highest number from the file; or a collision is found that the check did not
 stop, which means the check's parser and the file's headings have diverged.
+
+## D-031. The collector runs as a systemd timer and a oneshot unit on a Linux VM
+
+**Decision.** MAVO's collector runs on `vm-mavo`, an e2-micro in
+`europe-central2-a`, as `mavo-collect.service` (`Type=oneshot`, `User=mavo`)
+triggered by `mavo-collect.timer`. Supervision is systemd's: the timer owns the
+cadence, the unit owns one poll, and neither owns a loop. The same shape runs
+`mavo-push`; `mavo-report` and `mavo-adsb` are long-running units.
+
+**This decision was made by deploying it on 2026-08-11 and is being recorded on
+2026-08-17.** T25 asked which host the daemon lives on and carried status
+`decision` for six days after the question had been answered by an operator
+typing `systemctl enable`. Writing it down now is not bookkeeping: an
+unrecorded decision cannot be reopened, because nobody can say what it was.
+
+**Why a timer and a oneshot rather than a daemon**, argued after the fact and
+therefore stated as such:
+
+- **A crash is a missed poll, not an outage.** The next timer trigger starts a
+  fresh process. A long-running loop that dies stays dead until something
+  notices, and the thing that would notice does not exist yet.
+- **Attribution is free.** Every poll is its own unit invocation in the
+  journal, with its own exit status, which is how the 366-versus-14 timeout
+  comparison in `docs/DEPLOYMENT.md` was possible at all. A loop would have put
+  the same information inside one process's log, which is the log F103 records
+  as never having been written.
+- **T25's own argument holds.** A laptop that sleeps writes a record whose holes
+  look like quiet nights. A named systemd unit on a VM gives that attribution
+  without a signed wrapper, a `KeepAlive` plist or a TCC-safe data directory.
+
+**What this costs, and it is not nothing.** A oneshot per poll pays process
+spawn 2,619 times a day; measured at roughly 0.56 s of the 33.06 s mean
+interval, which is the residual D-027 attributes to spawn. It also means there
+is no process holding state between polls, so anything needing cross-poll
+state - a skipped-window count, a session's own cycle numbering - belongs to a
+loop rather than to this unit.
+
+**Corrected before this entry shipped, and the correction is F104.** The first
+draft continued: *M0 is therefore a new unit, not a change to this one.* That
+was inferred from `Type=oneshot` in the unit file without reading the CLI, and
+it is wrong. **The loop already exists**: `mavo report --watch --json` runs on
+this host as `mavo-report.service`, `publish()` has accepted a `log` since
+0.23.0.0, and attaching the run log turned out to be one argument at one call
+site. What this entry governs is the *collector*; the loop is a second
+long-running unit that was already there and already the right place. The
+distinction that survives is narrower than the sentence claimed: the collector
+cannot carry cross-poll state, and nothing about the run log ever needed it
+to.
+
+**Reopen if:** a poll's work grows to where spawn cost is no longer a rounding
+error against the interval; or M0 needs cross-poll state, in which case this
+entry governs the collector and a second entry governs the loop; or the host
+moves off GCP, which changes the supervision question rather than reusing this
+answer.

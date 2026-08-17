@@ -14,6 +14,7 @@ import json
 import re
 import sys
 import tomllib
+from datetime import date
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -235,6 +236,64 @@ def check_the_pins_match_the_gate_run(status: dict[str, object]) -> list[str]:
                 f"the gate's own run reports {count} {attribute}; the pin "
                 "cannot be read as a measurement of a green suite")
     return problems
+
+
+HOST_STATE = re.compile(r"^Host state measured: (\d{4})-(\d{2})-(\d{2})$", re.M)
+HOST_STATE_MAX_AGE_DAYS = 14
+
+
+def check_the_host_claim_is_no_older_than_the_release(status: dict[str, object]) -> list[str]:
+    """A statement about the production host carries a date, and the date is fresh.
+
+    **The gate cannot reach the host and never will.** CI has no tunnel, no
+    credentials and no business having them, so nothing here can verify that
+    `docs/DEPLOYMENT.md` describes what is running. Three claims about the host
+    went stale anyway and each was found by a person deciding to look, which is
+    not a mechanism.
+
+    The repair is to check the one property that *is* reachable. Content cannot
+    be verified from here; **freshness can**, because both dates are in the
+    tree. A host claim older than the release shipping it is a claim nobody
+    re-measured, and that is exactly the state F102 records.
+
+    Compared against the newest CHANGELOG date rather than against today, and
+    the difference matters: a check against the clock fails spontaneously on an
+    old commit and turns a true historical record into a red build. Against the
+    release date it is deterministic, reproducible on any commit forever, and
+    it asks its question at the only moment anyone can answer it.
+
+    This does not make the host claim true. It makes an unmeasured one visible
+    at release time, which is the whole of what a repository can do about a
+    machine it cannot see.
+    """
+    text = (ROOT / "docs" / "DEPLOYMENT.md").read_text(encoding="utf-8")
+    found = HOST_STATE.findall(text)
+    if len(found) != 1:
+        return [
+            f"docs/DEPLOYMENT.md carries {len(found)} `Host state measured: "
+            "YYYY-MM-DD` line(s) and must carry exactly one; the document "
+            "describes a machine no check here can reach, so the date is the "
+            "only part of the claim the gate can hold"
+        ]
+    measured = date(int(found[0][0]), int(found[0][1]), int(found[0][2]))
+
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    dates = re.findall(r"^## \d+\.\d+\.\d+\.\d+ - (\d{4})-(\d{2})-(\d{2})",
+                       changelog, re.M)
+    if not dates:
+        return ["CHANGELOG.md has no dated release heading to measure the "
+                "host claim against"]
+    released = date(int(dates[0][0]), int(dates[0][1]), int(dates[0][2]))
+
+    age = (released - measured).days
+    if age > HOST_STATE_MAX_AGE_DAYS:
+        return [
+            f"docs/DEPLOYMENT.md states the host was measured on {measured} "
+            f"and this release is dated {released}, {age} days later "
+            f"(limit {HOST_STATE_MAX_AGE_DAYS}). Re-read the host and update "
+            "the section, or state in it that the machine is no longer running"
+        ]
+    return []
 
 
 def check_statistics_match_the_tree(status: dict[str, object]) -> list[str]:
@@ -878,6 +937,7 @@ def main() -> int:
         + check_statistics_match_the_tree(status)
         + check_measured_block_is_recomputed(status)
         + check_the_pins_match_the_gate_run(status)
+        + check_the_host_claim_is_no_older_than_the_release(status)
         + check_badges_match_the_pins(status)
         + check_contents_anchors_resolve()
     )

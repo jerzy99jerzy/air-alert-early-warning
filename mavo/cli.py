@@ -23,6 +23,7 @@ from mavo.backfill import (
 )
 from mavo.errors import SourceUnavailable
 from mavo.evaluate import run_policy, run_rule
+from mavo.obs import from_environment as sink_from_environment
 from mavo.policy import Regime, policy_of
 from mavo.report import (
     DEFAULT_VALID_FOR_S,
@@ -243,6 +244,20 @@ def _cmd_report(args: argparse.Namespace) -> int:
                   f"feed={report.feed_state.value} "
                   f"western_active={len(report.western_active)}", flush=True)
 
+        # T23, F103. `publish` has accepted a `log` since the sink shipped at
+        # 0.23.0.0 and no caller ever passed one, so `MAVO_LOG_FILE` was read
+        # by nothing in the package while a production unit set it. The whole
+        # of the repair is this argument: the loop already emits every line
+        # the design calls for, to a sink that was never constructed.
+        #
+        # Constructed here rather than inside `publish` on purpose. A function
+        # that reaches into the environment for its own instrumentation cannot
+        # be tested without one, and `from_environment` returns `None` rather
+        # than a no-op writer precisely so that the decision to run without a
+        # log is made by a caller and is visible.
+        log = sink_from_environment()
+        if log is not None:
+            print(f"run-log={log.path}", flush=True)
         outcome = publish(
             store.replay,
             Path(args.json),
@@ -251,6 +266,7 @@ def _cmd_report(args: argparse.Namespace) -> int:
             valid_for_s=args.valid_for,
             on_cycle=announce,
             feed_path=Path(args.feed) if args.feed else None,
+            log=log,
         )
         print(outcome.line())
         # A loop that ends is not an error: it was told to stop, or the

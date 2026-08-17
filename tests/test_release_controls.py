@@ -225,3 +225,61 @@ def test_no_repository_is_not_a_pass(
     with pytest.raises(SystemExit) as raised:
         check_manifest.check()
     assert raised.value.code == 2
+
+
+def _tree_with(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+               measured: str, released: str) -> list[str]:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "DEPLOYMENT.md").write_text(
+        f"# Deployment\n\nHost state measured: {measured}\n\nBody.\n",
+        encoding="utf-8")
+    (tmp_path / "CHANGELOG.md").write_text(
+        f"# Changelog\n\n## 1.2.3.4 - {released}\n\nBody.\n", encoding="utf-8")
+    monkeypatch.setattr(docs_audit, "ROOT", tmp_path)
+    return docs_audit.check_the_host_claim_is_no_older_than_the_release({})
+
+
+def test_a_host_claim_from_the_release_week_is_silent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    assert _tree_with(monkeypatch, tmp_path, "2026-08-14", "2026-08-17") == []
+
+
+def test_a_host_claim_older_than_the_limit_is_reported(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The state F102 records: a section that says it is the state, and is not."""
+    problems = _tree_with(monkeypatch, tmp_path, "2026-07-01", "2026-08-17")
+    assert any("47 days later" in problem for problem in problems)
+
+
+def test_the_limit_is_measured_against_the_release_and_not_the_clock(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """An old commit stays green forever, which is why this is not `date.today()`.
+
+    A check against the clock turns a true historical record into a red build
+    the moment enough time passes, and CI re-running an old tag would then fail
+    for being old rather than for being wrong.
+    """
+    assert _tree_with(monkeypatch, tmp_path, "2020-01-05", "2020-01-10") == []
+
+
+def test_a_document_with_no_dated_host_claim_is_reported(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Undated is not a pass. The date is the only part of the claim this can hold."""
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "DEPLOYMENT.md").write_text(
+        "# Deployment\n\nThe host runs the collector.\n", encoding="utf-8")
+    (tmp_path / "CHANGELOG.md").write_text(
+        "# Changelog\n\n## 1.2.3.4 - 2026-08-17\n", encoding="utf-8")
+    monkeypatch.setattr(docs_audit, "ROOT", tmp_path)
+    problems = docs_audit.check_the_host_claim_is_no_older_than_the_release({})
+    assert any("carries 0" in problem for problem in problems)
+
+
+def test_the_host_claim_check_is_registered_in_the_audit() -> None:
+    source = Path(docs_audit.__file__).read_text(encoding="utf-8")
+    assert source.count(
+        "check_the_host_claim_is_no_older_than_the_release(status)") == 1

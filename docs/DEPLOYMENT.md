@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.4 / 2026-08-14
+Version: 1.5 / 2026-08-14
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -10,21 +10,131 @@ written after the fact rather than before, and says so.
 
 ## What is installed on the hosts, and how far behind it is
 
-[measured where a command output is quoted, otherwise reported]
+Host state measured: 2026-08-17
 
-**This section exists because the rest of this document describes a shape and
-not a state, and the two diverged without anything saying so.** Added at
-0.32.1.0, carried in from a handover written outside version control, which is
-where it had been living.
+**This section is the state. The rest of this document is the shape**, and the
+two diverged silently once already (F102), which is why the line above exists
+and why `tools/docs_audit.py` fails the gate when it falls more than fourteen
+days behind the release being cut. The gate cannot reach this machine and never
+will; freshness is the only property of a host claim a repository can hold.
 
-| Host | Installed | `main` | Consequence |
+**How every figure below was obtained**, so that a later reader can repeat it
+rather than trust it: `gcloud compute ssh vm-mavo --tunnel-through-iap`, then
+`systemctl cat`, `systemctl list-timers`, `sudo journalctl -u <unit>`, and the
+installed package read through its own interpreter.
+
+### Units, and there are four rather than one
+
+| Unit | Type | Cadence | What it does |
 | --- | --- | --- | --- |
-| `vm-mavo` | pre-0.28.1.0 [reported, from a 20.12 s timeout observed in the journal on 2026-08-13] | 0.32.0.0 | F98 is not deployed: the fetch timeout means 20 s per resolved address, not 10 s for the whole fetch. Every margin computed against the constant is wrong on this host |
-| `vm-site` | see the consumer repository | | |
+| `mavo-collect.service` | `oneshot`, `User=mavo` | `mavo-collect.timer`, 30 s + 5 s jitter, `AccuracySec=1s` | one poll into `/var/lib/mavo/events` |
+| `mavo-push.service` | `oneshot` | `mavo-push.timer`, 120 s + 15 s jitter | pushes `state.json` to the site |
+| `mavo-report.service` | long-running | continuous | writes the report |
+| `mavo-adsb.service` | long-running | continuous | the sampler, `mavo-adsb` repository |
 
-Tracked as **T60**, which is tier 1 not because it changes code but because
-measurements are being read off a host two releases behind the instrument this
-repository documents.
+**There is no daemon and the collector is not one.** A timer plus a `oneshot`
+unit is the supervision mechanism this project actually runs on, and it was
+never a decision until D-031 wrote it down.
+
+### The installed package, and how it was verified
+
+| | |
+| --- | --- |
+| Installed | `air-alert-early-warning 0.32.2.0`, `/opt/mavo/venv` |
+| Installed at | **2026-08-14 18:13:09 UTC**, from the `dist-info` directory's own timestamp |
+| `main` | 0.32.7.0 |
+| Behind by | three releases, **none of which changes an executable line**: 0.32.3.1 is identifiers and F99, 0.32.4.0 is `tools/vocab_gaps.py` and FEED-SPEC, 0.32.5.0 and 0.32.6.0 are tooling and documents |
+| Consequence | none. A deploy would change the version string and nothing the process executes |
+
+**Verified by reading a symbol, not a version string.**
+`'connect_within' in mavo/transport.py` returns `True` on the host, which is
+post-F98 code and cannot be faked by a reinstall under an already-built number.
+The version string alone has reported success against a host running different
+code once, and it cost an hour.
+
+### F98 on the wire, measured before and after
+
+The strongest evidence in this document, and it is an accident of the journal
+rather than a designed experiment:
+
+| | |
+| --- | --- |
+| Last fetch over 15 s | **2026-08-14 18:12:34 UTC**, 20.08 s |
+| Package installed | **2026-08-14 18:13:09 UTC** |
+| Gap | **35 seconds** |
+| Fetches over 15 s in the whole journal | 366, **every one before that moment** |
+| Timeouts in the seven days since | 14, **all between 10.01 s and 10.16 s** |
+| Failure rate | 14 in roughly 18,350 polls, 0.076% |
+
+The ten-second bound holds on the host. F98 is deployed and this is what
+deployed looks like from outside the code.
+
+### Cadence, measured over a full day
+
+`AccuracySec=1s` is in
+`/etc/systemd/system/mavo-collect.timer.d/interval.conf` with
+`OnUnitActiveSec=30` and `RandomizedDelaySec=5`. Start-to-start intervals over
+24 hours, 2026-08-16 to 2026-08-17:
+
+```
+n=2619   min=30.06   p50=33.00   p90=35.00   p99=35.01   max=36.06
+```
+
+The configuration's theoretical ceiling is 36 s. The measured maximum is
+36.06 s over 2,619 observations, so the distribution is inside what the
+configuration promises. D-027's one-hour figure (n=107) is confirmed at
+twenty-four times the scale, and the caveat attached to it is discharged.
+
+### `MAVO_LOG_FILE` is on the wrong unit, and the deploy that fixes it
+
+`mavo-collect.service` carries `Environment=MAVO_LOG_FILE=/var/lib/mavo/run.jsonl`
+and **no such file has ever existed**. Not a permissions problem: the directory
+is writable and holds `events`, `state.json` and `feed.json`, written by the
+same unit as the same user.
+
+Two faults, and the second was found only by reading the CLI (F103, F104):
+
+1. Nothing in the package read the variable. `mavo.obs.from_environment` had no
+   caller. **Repaired in 0.32.7.0**: `mavo report --watch` constructs the sink
+   and announces `run-log=<path>` on startup.
+2. **The variable is on the collector, and the collector is not the loop.**
+   `mavo-collect` is a `oneshot` that polls; the run log belongs to
+   `mavo-report.service`, which is the long-running `mavo report --watch --json`
+   process. The variable was copied from a documented invocation for
+   `mavo watch`, a subcommand that does not exist, into the unit that did.
+
+**Deploying 0.32.7.0, which is the first deploy in this series that changes an
+executable line.** Order matters: the package first, the unit second, so that
+the moment the variable moves there is already something to read it.
+
+```
+gcloud compute ssh vm-mavo --tunnel-through-iap --command "sudo /opt/mavo/venv/bin/pip install --upgrade /tmp/<wheel>"
+gcloud compute ssh vm-mavo --tunnel-through-iap --command "/opt/mavo/venv/bin/python -c \"import mavo, mavo.cli, pathlib; print(mavo.__version__, 'sink_from_environment' in pathlib.Path(mavo.cli.__file__).read_text())\""
+sudo systemctl edit mavo-report.service     # Environment=MAVO_LOG_FILE=/var/lib/mavo/run.jsonl
+sudo systemctl edit mavo-collect.service    # remove the same line
+sudo systemctl daemon-reload && sudo systemctl restart mavo-report.service
+sudo journalctl -u mavo-report.service -n 5 --no-pager -q   # expect run-log=/var/lib/mavo/run.jsonl
+sudo wc -l /var/lib/mavo/run.jsonl
+```
+
+**Verified by the symbol and by the file, not by the version string.** The
+second command reads `sink_from_environment` out of the installed `cli.py`; the
+last two are the only evidence that the sink is attached, because the whole of
+F103 is that every other indicator reported healthy while nothing was written.
+
+**S9's clock starts at the restart.** The exit criterion is 72 unattended hours
+with every cycle accounted for, plus the first end-to-end latency distribution
+from `tools/latency.py`. Neither is compressible and neither belongs in a
+release note written before they exist.
+
+### Reading this host without lying to yourself
+
+`journalctl -u <unit>` **without membership of `adm` or `systemd-journal`
+returns the operator's own journal, which is empty, and exits zero.** That zero
+is not a measurement of the service. The same query under `sudo` returns 77,162
+lines over seven days. Every journal figure in this document was taken with
+`sudo`, and any future one must be, or it is the project's own central error
+committed against its own machine.
 
 **Installing is not verifying, and the version string is not evidence.** A
 repaired archive reissued under an already-built version number makes `pip`

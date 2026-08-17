@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.30
+Document:  docs/METHODOLOGY.md, version 2.31
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -2932,4 +2932,249 @@ came back to the gate, which is precisely the regression this entry is about.
 **Reopen if:** the digest target reappears in `verify`; or any check in the
 gate is answered by an operator running a command the check's own message tells
 them not to run.
+
+### F102, 0.32.7.0. Three claims about the production host, all stale, all pessimistic
+
+Read on 2026-08-17 against `vm-mavo`:
+
+| Claim, and where it lived | True until | Actually |
+| --- | --- | --- |
+| "runs pre-0.28.1.0, so F98 is not deployed" - T60 and `docs/DEPLOYMENT.md` | 2026-08-14 18:13 UTC | 0.32.2.0, `connect_within` present, 10 s bound holding on the wire |
+| "`AccuracySec=1s` unconfirmed, D-027's margin is an estimate" - a handover outside version control | 2026-08-14 | applied, and D-027 **already carried** the one-hour measurement |
+| "T27, jitter, `ready`" - `TODO.md` | before 2026-08-11 | `RandomizedDelaySec=5` deployed and in the drop-in |
+
+Class: **a statement about a system outside the gate's reach, written in the
+present tense, correct when written.** F100's class, three more instances, and
+one of them was in a document the repository does not contain.
+
+**The direction is the finding.** Every one of these understated the state of
+the project. F98 was deployed and we said it was not; the cadence was measured
+and we said it was an estimate; jitter shipped and the backlog called it ready.
+Nothing in the whole set overstated progress. **This repository's discipline
+refuses to round completion up, and that discipline is asymmetric**: an
+overclaim is caught by the next person who checks, because checking is what the
+gate does, while an underclaim is stable, comfortable and invisible. It reads
+as rigour. Correcting one requires someone to go and look for good news, and
+nothing in this project ever prompts that.
+
+The single claim that went the other way - that tags here are GPG-signed, when
+five of five are annotated and unsigned and no key exists - came from a
+handover, which is the one artefact in this system with no gate at all.
+
+**Why it survived.** `docs/DEPLOYMENT.md` 1.4 opened by saying it describes a
+shape rather than a state and added a state section to fix exactly this. That
+section was then written once and never re-read, because **a document that says
+"this part is the state" still has no mechanism that notices when the state
+moves.** Saying a paragraph is perishable does not date it.
+
+**Repair.** `docs/DEPLOYMENT.md` carries `Host state measured: YYYY-MM-DD` and
+`check_the_host_claim_is_no_older_than_the_release` fails the gate when that
+date falls more than fourteen days behind the newest CHANGELOG date. The check
+cannot verify the content and does not pretend to; **it converts an
+unverifiable claim into a verifiable freshness**, which is the whole of what a
+repository can do about a machine it cannot see. Compared against the release
+date rather than the clock, so an old commit stays green forever and the
+question is asked at the only moment anyone can answer it.
+
+**Reopen if:** a host figure appears anywhere outside `docs/DEPLOYMENT.md`
+without a date; or the fourteen days pass without the check firing.
+
+### F103, 0.32.7.0. Observability configured on the host, documented, tested to 98%, and never once called
+
+`mavo-collect.service` carries `Environment=MAVO_LOG_FILE=/var/lib/mavo/run.jsonl`.
+No such file has ever existed. Not permissions: the directory is writable and
+holds `events`, `state.json` and `feed.json`, written by the same unit as the
+same user.
+
+**`mavo.obs.from_environment` has no caller in the package.** [measured, grep
+across `mavo/` and `tools/` at 0.32.6.0] `mavo/report.py` imports `RunLog` and
+uses it only as the type of an optional parameter that nothing passes.
+`docs/OBSERVABILITY.md` shows the variable alongside `mavo watch`, which is not
+a subcommand: the CLI offers `backfill`, `collect`, `fixture`, `gate`, `policy`
+and `report`. The loop the sink was designed for is M0 and waits on T25, which
+was itself unrecorded until D-031.
+
+Class: **a control that is switched on everywhere a person would look and
+connected nowhere.** Stronger than dead code, which announces itself by being
+unreachable. Every observation point here reports healthy: the unit sets the
+variable, the document describes the behaviour, `mavo/obs.py` sits at 98%
+branch coverage with a mutation-verified redaction test, and the file's absence
+is indistinguishable from a quiet log.
+
+**Why it survived.** Three reinforcing reasons.
+
+1. **The module was built and tested against its acceptance rather than against
+   a caller.** `docs/OBSERVABILITY.md` section 9 wrote seven criteria before the
+   code, five are met, and every one of them tests the sink *given a sink*.
+   None asks whether anything constructs one. Acceptance written before the code
+   protects against building the wrong thing and not against building the right
+   thing and leaving it unplugged.
+2. **The environment variable made the host look wired.** Somebody read the
+   documented invocation, took the variable from it, and put it in the unit that
+   exists - `collect` - rather than the one the document names, which does not.
+   The configuration is a faithful copy of an instruction for a command that was
+   never built.
+3. **Absence is the default reading of a missing log.** This is the project's
+   own central error, committed against its own instrumentation: an empty set
+   because nobody wrote and an empty set because nothing happened look the same,
+   and the artefact that would tell them apart is the one that does not exist.
+   The same shape appeared twice more in the session that found this, in a
+   `journalctl` call returning zero for want of a group membership, and in a
+   backlog entry reading `ready` for want of anyone asking the host.
+
+**Repair, and it is deliberately partial.** The variable is not removed and the
+sink is not wired in this release. Removing it would erase the evidence; wiring
+it into a `oneshot` that runs 2,619 times a day produces a different artefact
+from the continuous record the design is for, and D-031 records that M0 is a new
+unit rather than a flag on this one. What ships is the finding, written into
+`docs/DEPLOYMENT.md` beside the variable so its silence cannot be read as a
+quiet log, and T23 restated: **the sink and reader exist and are not attached**,
+which is a different task from the one the entry described.
+
+**Reopen if:** T23 attaches the sink without a test that fails when nothing
+writes; or any other configuration is added to a unit for a code path that has
+no caller.
+
+## The drift, and where its boundary is
+
+*Written 2026-08-17, after a session in which six claims in and around this
+repository were found stale in one afternoon. This section is not a defect
+entry. It is the answer to why there were six.*
+
+### What was actually wrong
+
+| Claim | Where it lived | Gated? |
+| --- | --- | --- |
+| the consumer does not map `kyiv` | `docs/METHODOLOGY.md` | yes, and about another repository |
+| the host runs pre-F98 | `TODO.md`, `docs/DEPLOYMENT.md` | yes, and about a machine |
+| T27 jitter is `ready` | `TODO.md` | yes, and about a machine |
+| `AccuracySec` is unconfirmed | a handover, outside version control | no |
+| tags here are GPG-signed | a handover, outside version control | no |
+| the run log is being written | a systemd unit on the host | no |
+
+**The gate is excellent inside its perimeter and the perimeter is
+`git ls-files`.** Every failure in that table is a claim that crossed a
+boundary: to another repository, to a machine, or to a document nobody's tooling
+reads. Not one of them is a claim about this package's own code, because claims
+about this package's own code are checked eleven ways before they can be
+committed.
+
+That is not an argument for widening the perimeter. Reaching into the consumer
+would rebuild the coupling D-020 removed; reaching into the host from CI needs
+credentials CI should not hold. **The boundary is correct and the claims cross
+it anyway**, which means the repair is never "check the far side" and always
+"hold the part of a crossing claim that stays on this side": its version anchor
+(F100), its date (F102), the symbol that proves it rather than the number that
+asserts it (T60).
+
+### Why nobody noticed, stated as a mechanism rather than as inattention
+
+**The unit of progress in the plan is a sprint; the unit of work is a release.**
+Fourteen releases have landed since S8 and `docs/MVP.md` has five sprint rows.
+Jitter, the drop-in, the timers and the host all arrived inside releases that
+were doing something else, and no step in the release procedure asks which
+backlog entries a release touched. `tools/todo_index.py` checks that the index
+agrees with the entries beneath it; nothing checks that the entries agree with
+the tree, and nothing could check that they agree with the host.
+
+**Deployment produces no commit.** The host acquired four units, two timers, a
+drop-in and an environment variable through operator actions that left no trace
+in version control. Everything that happens outside the repository is invisible
+to every check the repository has, and `docs/DEPLOYMENT.md` was the designated
+place for it precisely because that is true - which made that one file carry the
+whole burden with no mechanism behind it.
+
+**Absence is the default reading of everything unchecked.** A missing
+`run.jsonl` reads as a quiet log. A `journalctl` without `adm` returns zero and
+reads as no timeouts. A backlog entry saying `ready` reads as untouched. In all
+three the artefact that would say otherwise is the artefact that does not exist.
+**This project's central rule - silence is never confirmed absence - is enforced
+in the product's output and nowhere in the product's bookkeeping.**
+
+### The asymmetry, which is the part worth keeping
+
+Five of the six stale claims understated the project. F98 was deployed and we
+said it was not. The cadence was measured and D-027 already said so while a
+handover said it was an estimate. Jitter shipped and the backlog called it
+ready. The consumer mapped `kyiv` and this file said in bold that it did not.
+
+**The discipline that refuses to round completion up has no counterpart that
+refuses to round it down.** An overclaim is unstable: the gate, the reviewer or
+the next release finds it, because finding overclaims is what all of this
+machinery is for. An underclaim is stable, cheap and flattering to the
+project's self-image as rigorous. Correcting one requires somebody to go looking
+for good news, and no procedure here has ever asked anyone to do that.
+
+The single claim that ran the other way, that tags are signed, came from a
+handover. **The one artefact with no discipline at all was the one that
+overstated**, which is consistent rather than ironic: outside the gate, error
+has no preferred direction.
+
+### What this costs and what was done about it
+
+The cost is not embarrassment. It is that the sprint plan routed a session into
+deploying something already deployed, and that S9 was described as five open
+tasks when three of them were done. **A backlog that understates completion
+spends real work re-deciding settled questions**, and it does so invisibly,
+because re-deciding looks like diligence.
+
+Three repairs ship in 0.32.7.0 and none of them is a resolution to be more
+careful:
+
+- **F102's check.** A dated host claim, and the gate refuses one more than
+  fourteen days older than the release. Freshness is checkable where content is
+  not.
+- **F100's convention.** A statement about another repository carries the
+  version it was read against. Still unenforced, still recorded as unenforced.
+- **D-031.** The decision that had been made by deployment is written down, so
+  that it can be reopened rather than rediscovered.
+
+What is *not* repaired, and is named so the next session does not mistake it for
+solved: **nothing asks, at release time, which backlog entries this release
+closed.** That question would have caught T27 and T60 months of releases
+earlier. It is a candidate for `tools/release.sh` and it is not in this release,
+because a check that asks a human a question is a preference until it can fail.
+
+### F104, 0.32.7.0. An architectural conclusion about this package, drawn from a unit file instead of from the code
+
+D-031's first draft said: *M0 is therefore a new unit, not a change to this
+one*, and T23's rewritten acceptance repeated it as *per D-031 that is M0's new
+unit*. Both were inferred from `Type=oneshot` in `mavo-collect.service`, one
+step of reasoning from a fact about systemd to a claim about this package's
+architecture, with the package unread.
+
+**It is wrong and cheaply so.** `mavo report --watch --json` is the loop; it
+runs on the same host as `mavo-report.service`; `publish()` in `mavo/report.py`
+has accepted a `log: RunLog | None` parameter since the sink shipped at
+0.23.0.0. Attaching the run log was one argument at one call site. The
+conclusion that M0 needed building first would have deferred T23 behind work
+that does not exist.
+
+Class: **an inference about a system from the shape of its deployment**, which
+is F102's class with the arrow reversed. F102 is a stale claim about a machine
+held in a repository; this is a fresh claim about a repository drawn from a
+machine. Same boundary, same failure to cross it by reading.
+
+**Why it survived for the length of one afternoon rather than one release.** It
+was caught by writing the test before the release rather than after, and by
+nothing else. There is no check that could have caught it: the sentence was in a
+decision entry, decision entries are prose, and prose about architecture is
+exactly what `claim_lint` cannot reach.
+
+**Why it happened at all**, which is the part worth keeping. It was written in
+the same session as F102, whose subject is claims made without measurement, and
+by the same reasoning F102 describes: the unit file was in front of me and the
+CLI was not, so the available evidence became the answer. **Proximity of
+evidence decided the conclusion, and the conclusion was stated in the register
+of a settled decision.** The repair is not vigilance. It is that a decision
+entry asserting a property of the code names the file and function it read, the
+way a measurement names its date.
+
+**Repair.** D-031 carries the correction and the narrower claim that survives:
+the collector cannot hold cross-poll state, and the run log never needed it to.
+T23 closed. This entry, so that the next architectural sentence in a decision
+entry is read as needing a citation.
+
+**Reopen if:** any entry in `docs/DECISIONS.md` asserts a property of this
+package's code without naming where it was read.
 

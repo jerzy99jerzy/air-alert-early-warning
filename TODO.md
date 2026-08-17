@@ -4,14 +4,14 @@
 
 ### Where the backlog stands
 
-**19 of 62 closed, 43 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**24 of 62 closed, 38 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
-| `done` | 14 | Finished, with the release that closed it named in the entry |
+| `done` | 19 | Finished, with the release that closed it named in the entry |
 | `moved` | 5 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 28 | Nothing external blocks it; it needs a session |
-| `decision` | 7 | Waiting on a judgement rather than on work |
+| `ready` | 25 | Nothing external blocks it; it needs a session |
+| `decision` | 5 | Waiting on a judgement rather than on work |
 | `blocked-external` | 2 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 1 | Known cost carried on purpose |
@@ -27,9 +27,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 10 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T60](#t60-production-runs-older-code-than-main-and-nothing-here-says-so), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host)
+**Tier 1, 9 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host)
 
-**Tier 2, 20 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier)
+**Tier 2, 16 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier)
 
 **Tier 3, 13 open:** [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise)
 
@@ -41,10 +41,10 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | --- | --- |
 | **S7** | [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record) |
 | **S8** | [T36](#t36-the-hand-labelled-sample-retargeted), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T47](#t47-two-threat-kinds-the-consumer-cannot-name) |
-| **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T23](#t23-the-observability-sink-and-its-reader), [T24](#t24-keep-the-run-log-out-of-the-holdout), [T25](#t25-decide-where-the-daemon-lives), [T27](#t27-jitter-the-poll-interval-from-the-first-commit-of-m0) |
+| **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T60](#t60-production-runs-older-code-than-main-and-nothing-here-says-so), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T42](#t42-operating-intensity-of-the-jasionka-hub-measured-from-ads-b), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise) |
 
 <!-- index:end -->
 
@@ -619,38 +619,84 @@ in no package source, with an explicit allow-list for names that are deliberatel
 hypothetical. Verified red by citing a fabricated symbol in a scratch copy.
 
 
-## T23. The observability sink and its reader
-Status: `ready`, **S9** [tier 2]
-Blocks nothing today and blocks everything at M0: shadow mode's deliverable is a
-record of decisions that were never sent, so the log is the product rather than a
-diagnostic. Designed in `docs/OBSERVABILITY.md` with acceptance written before
-the code.
-**Acceptance:** the seven criteria in that document's section 9, each as a test.
-The two that are not merely plumbing: identical JSONL under `-q` and `-vv`, and
-a rendering that prints `unknown` where a stage could not measure, verified by a
-fixture whose parse report has no baseline.
+## T23. Attach the observability sink, which existed and was not connected
+Status: `done` (0.32.7.0) [tier 1]
+
+The sink and the reader shipped at 0.23.0.0; five of the seven criteria in
+`docs/OBSERVABILITY.md` section 9 were met and living in `tests/test_obs.py`.
+What was missing was a caller.
+
+**Measured 2026-08-17 (F103):** `mavo.obs.from_environment` had no caller
+anywhere in the package, `mavo/report.py` used `RunLog` only as the type of an
+optional parameter nothing passed, and the production unit set
+`MAVO_LOG_FILE=/var/lib/mavo/run.jsonl` against a file that had never existed.
+
+**The repair was one argument**, and the belief that it needed a new unit was
+itself wrong (**F104**): `mavo report --watch --json` is the loop, it runs as
+`mavo-report.service`, and `publish()` had accepted a `log` for nine releases.
+
+**What the tests found, which the wiring alone would not have.** The only
+`log.line` in the loop was `publish.interval`, written before sleeping, so a
+cycle that did not sleep - the last of every run, and every run ending on a
+write failure - left no trace. **The record of the loop was a record of its
+pauses.** A `publish.cycle` line now carries feed state, `as_of`, western
+count and event count, and `skipped` is absent rather than zero because this
+loop reads a store and has no window to have missed.
+
+**Acceptance met:**
+1. A live path constructs the sink, announced on stdout as `run-log=<path>` so
+   a variable that did not take is visible in one line rather than three days
+   later.
+2. **A test that fails when nothing writes.** Its first version asserted only
+   that the file was non-empty and passed against a tree with the wiring
+   removed, because `RunLog.__init__` writes its own retention line: a test of
+   the constructor wearing the name of a test of the loop. It asserts on
+   `publish.cycle` records now, and both it and the per-cycle count are
+   verified red against the unwired tree.
+3. The two remaining criteria in `docs/OBSERVABILITY.md` section 9 need the
+   notifier (S10) and a live view respectively, and stay named there rather
+   than rounded up.
+4. `MAVO_LOG_FILE` moves from `mavo-collect.service` to `mavo-report.service`
+   on the host, which is a deployment step recorded in `docs/DEPLOYMENT.md`,
+   not a change in this repository.
 
 ## T24. Keep the run log out of the holdout
-Status: `ready`, **S9** [tier 2]
+Status: `done` (0.23.0.0, recorded 0.32.7.0) [tier 2]
+
 The design and holdout split was frozen before any message content was read
 (D-012a). A run log echoing message bodies spends that split without anyone
 deciding to spend it.
-**Acceptance:** a hostile fixture carrying a recognisable token in every message
-body produces no occurrence of that token in the sink under default settings,
-and the debug switch that lifts this writes its own line into the record.
 
+**Acceptance met, and it was met four months of releases before this entry was
+updated.** `tests/test_obs.py::test_the_sink_carries_no_message_text_by_default`
+runs a hostile fixture whose every message body carries a recognisable token and
+asserts the token appears nowhere in the sink, with `bodies_not_logged` present
+so the redaction is visible rather than silent.
+`test_enabling_bodies_leaves_a_mark_in_the_record_it_weakened` holds the other
+half: the debug switch writes `sink.bodies_enabled` into the record it weakens,
+so a later reader can tell that the file may contain holdout content. Both carry
+named mutations.
+
+**Closed on reading the suite rather than on new work**, which is the same
+pattern as T27 and belongs to the same finding: the backlog understated
+completion and nothing ever prompts anyone to look for good news. See the drift
+section in `docs/METHODOLOGY.md`.
 
 ## T25. Decide where the daemon lives
-Status: `decision`, **S9** [tier 2]
-`docs/MOBILE.md` assumes an operator-controlled always-on host and does not say
-which. A laptop that sleeps is not one: shadow mode on a sleeping machine writes
-a record whose holes look like quiet nights, which is the defect this project
-exists to refuse, arriving through the scheduler. The answer changes what M0
-costs by more than any other open item: a Mac needs a signed wrapper, a
-`KeepAlive` plist and a TCC-safe data directory, while a Linux host gets the
-same attribution from a named systemd unit for free.
-**Acceptance:** a decision entry in `docs/DECISIONS.md` naming the host and the
-supervision mechanism, with the reopen condition stated.
+Status: `done` (D-031, 0.32.7.0) [tier 2]
+
+**Answered by deploying it on 2026-08-11 and recorded on 2026-08-17.** The
+collector runs on `vm-mavo` in `europe-central2-a` as a `oneshot` unit under a
+systemd timer, not as a daemon. `docs/MOBILE.md`'s always-on host is a Linux VM
+and the supervision mechanism is systemd's.
+
+**Acceptance met:** D-031 names the host and the mechanism and states its
+reopen condition. It also records the consequence T25 could not have known:
+there is no process holding state between polls, so **M0 is a new unit rather
+than a flag on this one**, which changes how T23 must be read.
+
+**Six days as a `decision` after the decision was made.** An unrecorded
+decision cannot be reopened, because nobody can say what it was.
 
 ## T26. Reproduce the pid-namespace hole in DirectoryLock, then fix it
 Status: `ready` [tier 3]
@@ -665,15 +711,20 @@ current implementation, and a threat-model row. If it does not reproduce, the
 negative result is recorded in `docs/METHODOLOGY.md` and this entry closes.
 
 ## T27. Jitter the poll interval from the first commit of M0
-Status: `ready`, **S9** [tier 2]
-A fixed 60-second period is both a beacon profile to a sensor and a perfectly
-regular load on an upstream with which there is no agreement. Ten to twenty
-percent jitter addresses both and costs one line. It goes in first because
-adding it later invalidates every interval measurement taken before it, and
-those measurements are the evidence that would justify tightening the poll.
-**Acceptance:** the interval is drawn per cycle, the draw is recorded in the run
-log, and the recorded distribution over 72 hours matches the configured range.
+Status: `done` (deployed 2026-08-11, recorded 0.32.7.0) [tier 2]
 
+`RandomizedDelaySec=5` is in `/etc/systemd/system/mavo-collect.timer.d/interval.conf`
+alongside `OnUnitActiveSec=30` and `AccuracySec=1s`, and has been since the
+collector was first enabled.
+
+**Closed six days late, and the lateness is the point.** The entry read `ready`
+while the thing it asks for was running in production, because the work arrived
+through a deployment rather than a release and nothing here connects the two.
+See **F102** and the drift section in `docs/METHODOLOGY.md`.
+
+**Acceptance met, measured:** the interval distribution over 24 hours is
+n=2619, p50 33.00 s, max 36.06 s against a theoretical ceiling of 36 s. Jitter
+is present in the spread and bounded by the configuration.
 
 ## T28. The crossing event list, dated and sourced
 Status: `deferred` (D-015). Was blocking while crossings were the target [tier 3]
@@ -1004,40 +1055,37 @@ coverage would become. Both need item 1's numbers first, and item 1 may say the
 work is not worth taking.
 
 ## T60. Production runs older code than `main`, and nothing here says so
-Status: `ready`, **blocks any measurement taken from the host**. [tier 1]
+Status: `done` (0.32.7.0), and **the premise was false before it was closed** [tier 1]
 
-`main` is at 0.32.0.0. The collector on `vm-mavo` was last installed before
-0.28.1.0, so it runs pre-F98 code. `docs/DEPLOYMENT.md` describes F98 as a
-repair; **no document in this repository records that the repair is not
-deployed**, and the deployment profile describes a shape rather than a state.
+The entry said `vm-mavo` was last installed before 0.28.1.0 and therefore ran
+pre-F98 code. Read on 2026-08-17: the host carries 0.32.2.0, installed
+**2026-08-14 18:13:09 UTC**, and `connect_within` is present in the installed
+`mavo/transport.py`. F98 has been deployed since three days after the entry was
+written, and no document here said so. That staleness is **F102**.
 
-**What it costs, measured.** The ten-second timeout is pre-F98 ten seconds per
-socket operation per resolved address, so a failed collection took 20.12 s on
-2026-08-13, read from the journal. Every staleness margin computed against a
-ten-second constant is therefore wrong on the host by up to a factor of two,
-including the one D-027 states.
+**Acceptance, all three, against measurement rather than assertion:**
 
-**Why this is tier 1 despite changing no code.** Measurements are being taken
-from this host and written into this repository. A measurement from an
-instrument two releases behind the instrument described here is a measurement
-of something else, and nothing currently makes that visible to whoever reads
-the number.
+1. *Post-F98 code on the host, verified by a symbol rather than a version
+   string.* `'connect_within' in mavo/transport.py` is `True`, read through
+   `/opt/mavo/venv/bin/python`, which is the interpreter `ExecStart` names. The
+   first attempt at this read used the system `python3` and returned
+   `ModuleNotFoundError`, which is a correct answer to the wrong question.
+2. *A line in `docs/DEPLOYMENT.md` stating what is installed, with its date,
+   distinct from what this repository describes.* Written, and now carrying
+   `Host state measured:` with a gate check that refuses a date more than
+   fourteen days behind the release.
+3. *D-027's interval distribution re-read after the change.* n=2619 over 24
+   hours: min 30.06, p50 33.00, p90 35.00, p99 35.01, max 36.06, against a
+   configuration ceiling of 36. D-027's one-hour figure is confirmed at
+   twenty-four times the scale.
 
-**Acceptance:**
-1. 0.32.0.0 installed on `vm-mavo`, verified by grepping the installed module
-   for a string the release added rather than by reading the version string.
-   The version string alone has already reported success against a host
-   running different code once, and it cost an hour.
-2. A line in `docs/DEPLOYMENT.md` stating what is installed, with its date,
-   distinct from what this repository describes.
-3. D-027's post-change interval distribution re-read after the deploy, since
-   the one recorded at 0.31.0.0 was taken on pre-F98 code and the timeout
-   change plausibly moves the tail.
+**A deploy was not needed and this is measured, not assumed.** The host is
+three releases behind `main` and none of 0.32.3.1, 0.32.4.0, 0.32.5.0 or
+0.32.6.0 changes an executable line.
 
-**Reopen condition for the general shape:** any release that is tagged and not
-deployed leaves this task open by definition. The repair is the line in item 2,
-which makes the gap visible instead of requiring somebody to remember it.
-
+**The reopen condition stands and is now cheap to check:** any release that is
+tagged and not deployed leaves this open by definition. The repair is the dated
+line, which the gate holds.
 
 ## T61. S7 against T31, T33 and T34: decide, then record
 Status: `ready`, **S7**, and it is a decision rather than work. [tier 2]

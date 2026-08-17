@@ -16,6 +16,114 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.7.0 - 2026-08-17
+
+**S9 was described as five open tasks. Three of them were already running in
+production. This release closes them, records why nobody knew, and adds the one
+check that would have caught it.**
+
+- **T60 closes and its premise was false.** The entry said `vm-mavo` ran
+  pre-0.28.1.0 code with F98 undeployed. Read on 2026-08-17: 0.32.2.0,
+  installed **2026-08-14 18:13:09 UTC**, `connect_within` present in the
+  installed module. **The journal makes it a boundary rather than a
+  correlation**: the last fetch over 15 s was 20.08 s at 18:12:34, thirty-five
+  seconds before that timestamp, and all 366 events over 15 s in the entire
+  journal fall before it. The fourteen timeouts since are all between 10.01 and
+  10.16 s. Verified by a symbol, not a version string, and through the
+  interpreter `ExecStart` names rather than the system one.
+- **No deploy was needed, measured rather than assumed.** The host is three
+  releases behind and none of them changes an executable line.
+- **D-027's caveat is discharged.** n=2619 intervals over 24 hours: min 30.06,
+  p50 33.00, p90 35.00, p99 35.01, max 36.06, against a configuration ceiling
+  of 36. The one-hour figure taken on 2026-08-14 holds at twenty-four times the
+  scale. **T27 closes** on the same measurement; `RandomizedDelaySec=5` has been
+  deployed since 2026-08-11 while the backlog said `ready`.
+- **T25 closes as D-031**, six days after a deployment answered it. Timer plus
+  `oneshot`, not a daemon, with the consequence T25 could not have known
+  written down: nothing holds state between polls, so **M0 is a new unit rather
+  than a flag on this one**.
+- **T24 closes on reading the suite.** Its acceptance was met at 0.23.0.0 by two
+  named, mutation-covered tests. No new work; the entry was four months of
+  releases behind the code.
+- **F103. T23 is not the task it said it was.** `mavo.obs.from_environment` has
+  no caller anywhere in the package; `mavo/report.py` uses `RunLog` only as the
+  type of a parameter nothing passes; the production unit sets
+  `MAVO_LOG_FILE=/var/lib/mavo/run.jsonl` and **no such file has ever existed**;
+  `docs/OBSERVABILITY.md` shows the variable beside `mavo watch`, a subcommand
+  that does not exist. Every observation point reports healthy - unit set,
+  document written, module at 98% branch coverage - and nothing is connected.
+  T23 retitled, raised to tier 1, and given an acceptance clause that did not
+  exist: **a test that fails when nothing writes.** The variable stays, named in
+  `docs/DEPLOYMENT.md` so its silence is not read as a quiet log.
+- **F102, and the direction is the finding.** Three stale claims about the host,
+  and with F100 and T24 that is five in one session. **Every one understated
+  the project.** F98 was deployed and we said it was not; the cadence was
+  measured and a handover said it was an estimate; jitter shipped and the
+  backlog called it ready; the consumer mapped `kyiv` and this repository said
+  in bold that it did not. The discipline that refuses to round completion up
+  has no counterpart refusing to round it down, and an underclaim is stable,
+  cheap and flattering. The one claim that ran the other way - that tags here
+  are signed - came from a handover, the one artefact with no gate at all.
+- **The gate now holds the freshness of a claim it cannot verify.**
+  `docs/DEPLOYMENT.md` carries `Host state measured: YYYY-MM-DD` and
+  `check_the_host_claim_is_no_older_than_the_release` fails when that date falls
+  more than fourteen days behind the newest CHANGELOG date. Compared against the
+  release rather than the clock, so an old commit stays green forever and the
+  question is asked at the only moment anyone can answer it. **The check cannot
+  verify the content and does not pretend to.**
+- **`docs/METHODOLOGY.md` gains "The drift, and where its boundary is".** Not a
+  defect entry: the answer to why there were six. Every stale claim crossed a
+  boundary - to another repository, to a machine, or to a handover - and none
+  was about this package's own code, because those are checked eleven ways
+  before they can be committed. The perimeter is `git ls-files` and it is drawn
+  correctly; the repair is never "check the far side" but "hold the part of a
+  crossing claim that stays on this side": its version anchor, its date, the
+  symbol that proves it rather than the number that asserts it.
+- **`docs/DEPLOYMENT.md` records how to read the host without lying to
+  yourself.** `journalctl -u <unit>` without membership of `adm` returns the
+  operator's own empty journal and exits zero. The same query under `sudo`
+  returns 77,162 lines. That zero is the project's own central error committed
+  against its own machine, and it was committed during this session.
+
+- **T23 closes, and the belief that it needed M0 first was wrong (F104).**
+  `mavo report --watch --json` **is** the loop, it runs on the host as
+  `mavo-report.service`, and `publish()` has accepted a `log: RunLog | None`
+  since the sink shipped at 0.23.0.0. The repair is one argument at one call
+  site. D-031's first draft said M0 needed a new unit; that was inferred from
+  `Type=oneshot` in a unit file with the CLI unread, in the same session as
+  F102, whose subject is claims made without measurement. **Proximity of
+  evidence decided the conclusion and the conclusion was written in the
+  register of a settled decision.**
+- **The tests found what the wiring alone would not.** The only `log.line` in
+  the loop was `publish.interval`, emitted before sleeping, so a cycle that did
+  not sleep - the last of every run, every run ending on a write failure - left
+  no trace: **the record of the loop was a record of its pauses.** A
+  `publish.cycle` line now carries feed state, `as_of` and both counts, with
+  `skipped` absent rather than zero, because this loop reads a store and has no
+  window to have missed.
+- **The first version of the T23 test was a test of the constructor.** It
+  asserted the log file was non-empty and passed against a tree with the wiring
+  removed, because `RunLog.__init__` writes its own retention line. It asserts
+  on `publish.cycle` records now. Both attachment tests are verified red
+  against the unwired tree, which is the whole reason this defect is closed
+  rather than moved.
+- **`MAVO_LOG_FILE` is on the wrong unit as well as unread.** It sits on
+  `mavo-collect`, the `oneshot` poller, copied from a documented invocation for
+  `mavo watch`, a subcommand that does not exist. The run log belongs to
+  `mavo-report.service`. `docs/DEPLOYMENT.md` carries the deploy order -
+  package first, unit second - and the two commands that are the only evidence
+  the sink is attached, because the whole of F103 is that every other indicator
+  reported healthy.
+- **This is the first release in the series that changes an executable line**,
+  so production needs it. S9's clock starts at the restart: 72 unattended hours
+  and the first end-to-end latency distribution, neither compressible and
+  neither written up before it exists.
+
+**Not repaired, and named rather than implied.** Nothing asks at release time
+which backlog entries a release closed. That question would have caught T27 and
+T60 many releases earlier. It belongs with `tools/release.sh` and is not here,
+because a check that asks a human a question is a preference until it can fail.
+
 ## 0.32.6.0 - 2026-08-17
 
 **F101. A control shipped one release ago produced the behaviour it forbade.**
