@@ -7,14 +7,17 @@ powiadomienia.**
 Dokument dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.2
+Document:  docs/BRIEF-PL.md, version 2.3
+Measured:  2026-08-17, against STATUS.json at 0.32.9.0
 Audience:  a Polish reader without a technical background: a journalist, an
            analyst, a prospective recipient, anyone deciding whether the
            author is careful
 Companion: BRIEF (the same document in English), FOUNDATIONS (the same claims
            with provenance labels), METHODOLOGY (the defect log)
 Note:      this is the original and the English version follows it. The
-           readers this is written for are Polish
+           readers this is written for are Polish. Every figure below is
+           either pinned in STATUS.json or labelled as somebody else's, as a
+           prior measurement, or as an illustration
 ```
 
 ---
@@ -58,8 +61,10 @@ rzeczy nie ma w feedzie, który ten projekt czyta.
 ## Skąd dane
 
 Z jednego publicznego kanału Telegram, na którym ukraińskie służby ogłaszają
-alarmy. Zebrano **61 041 wiadomości ze 118 dni** i to jest cały materiał
-dowodowy projektu.
+alarmy. Zebrano **61 041 wiadomości**, ciągłych, bez luk, z zapisaną sumą
+kontrolną całości. Pomiary w tym dokumencie pochodzą z okna projektowego,
+czyli z **99 nocy i 48 540 wiadomości**; reszta korpusu to materiał odłożony,
+o którym niżej.
 
 Jedno źródło to poważna słabość i jest w dokumentacji opisana jako taka. Dwa
 komercyjne API, które wyglądały na niezależną alternatywę, okazały się czytać
@@ -70,14 +75,23 @@ Kanał ma jedną cechę, która przesądziła o konstrukcji: **99,3% wiadomości
 hasztag z nazwą powiatu**, w mianowniku, z podkreśleniami zamiast spacji. To
 znaczy, że kanał sam etykietuje swoje wiadomości, a projekt tylko czyta
 etykietę. Nie ma tu żadnego uczenia maszynowego ani rozpoznawania nazw w
-tekście, bo nie ma czego rozpoznawać.
+tekście, bo nie ma czego rozpoznawać. W oknie projektowym jest 127 różnych
+hasztagów, z czego **126 rozwiązuje się jednoznacznie** do kodu ukraińskiego
+rejestru państwowego.
 
 Pierwsza wersja tego czytnika działała inaczej: szukała nazw obwodów w treści
-wiadomości. Sprawdzona na dwudziestu prawdziwych wiadomościach trafiła
-**0 razy na 20**. Nie dlatego, że była źle napisana, tylko dlatego, że
-zbudowano ją na wyobrażeniu o tym, jak kanał pisze, zamiast na tym, jak pisze
-naprawdę. Ten wynik jest w repozytorium zapisany jako defekt z numerem, razem z
-wyjaśnieniem, czemu żaden przegląd kodu by go nie znalazł.
+wiadomości. Sprawdzona na dwudziestu prawdziwych wiadomościach trafiła **0 razy
+na 20**. Nie dlatego, że była źle napisana, tylko dlatego, że zbudowano ją na
+wyobrażeniu o tym, jak kanał pisze, zamiast na tym, jak pisze naprawdę. Ten
+wynik jest w repozytorium zapisany jako defekt z numerem, razem z wyjaśnieniem,
+czemu żaden przegląd kodu by go nie znalazł.
+
+Wersja po przebudowie rozwiązuje obszar w **20 wiadomościach na 20** z tej samej
+próby prawdziwej treści, a wynik jest przypięty jako asercja, więc nie da się go
+po cichu popsuć. Osobno sprawdzono, czy hasztag zgadza się z tym, co wiadomość
+mówi prozą: na **38 521 porównywalnych wiadomościach zgodność przekracza 99,99%**.
+To jedyny wewnętrzny sposób weryfikacji geokodera, jaki był dostępny bez drugiego
+źródła, i jest opisany jako taki, a nie jako niezależne potwierdzenie.
 
 ## Dlaczego to nie przewiduje przelotu nad granicę
 
@@ -87,12 +101,20 @@ Obserwacja, od której projekt się zaczął: każde naruszenie polskiej przestr
 w badanym okresie wypadło w noc masowego ataku na zachodnią Ukrainę. Brzmi jak
 gotowy predyktor.
 
-Problem: **noce masowych ataków to około 57% dób**. Naruszeń było kilkanaście w
-cztery lata, czyli około trzech rocznie.
+Problem: **noce masowych ataków to około 57% dób** `[liczba cudza, z zewnątrz,
+dla okresu i obszaru, których ten projekt nie mierzył]`. Naruszeń było
+kilkanaście w cztery lata, czyli około trzech rocznie.
 
 Zbudujmy z tego najprostszy możliwy system: alarm w każdą noc ataku. Odezwie
 się ponad 200 razy w roku i trafi 3 razy. Nie przegapi niczego. I nie powie
 nikomu nic, czego nie mówi kalendarz.
+
+Jest też liczba własna, zmierzona na tym korpusie, a nie pożyczona. W oknie
+projektowym alarm objął całą zachodnią Ukrainę **22 razy**, a liczba
+raportowanych naruszeń polskiej przestrzeni w te noce wynosi **zero**. Reguła
+budząca ludzi w każdą taką noc miałaby w tym oknie 22 pobudki i 0 trafień. Dla
+skali: epizodów alarmowych w zachodnich rejonach jest średnio 5,73 tygodniowo, a
+tych obejmujących cały zachód 1,56 tygodniowo.
 
 Można zapytać: czy taki system nie jest jednak odrobinę lepszy niż nic?
 Prawdopodobnie tak, odrobinę. **Ale przy trzech zdarzeniach rocznie nie da się
@@ -123,10 +145,12 @@ Odmawia trzech rzeczy i to są decyzje, nie ograniczenia techniczne:
 
 **Nie mówi, co robić.** Instruują służby państwowe. Ten projekt raportuje.
 
-**Nie podaje jednej liczby kilometrów, tylko przedział.** „0–46 km" znaczy, że
-najbliższa krawędź obszaru jest gdzieś w tym zakresie. Jedna liczba
-sugerowałaby precyzję, której nie ma, a fałszywa precyzja z przecinkiem
-dziesiętnym jest gorsza od jawnej niepewności.
+**Nie podaje jednej liczby kilometrów, tylko przedział.** Zapis „0-46 km"
+`[przykład]` znaczy, że najbliższa krawędź obszaru jest gdzieś w tym zakresie.
+Jedna liczba sugerowałaby precyzję, której nie ma, a fałszywa precyzja z
+przecinkiem dziesiętnym jest gorsza od jawnej niepewności. Odległość policzono
+dla 127 obszarów; 5 przedziałów sięga zera, czyli obszar dotyka granicy, a
+najbliższy środek obszaru leży 14,2 km od niej.
 
 Jest też czwarta odmowa, mniej oczywista i najważniejsza z nich: **cisza nigdy
 nie znaczy „bezpiecznie"**. Jeśli zbieranie danych przestanie działać, strona
@@ -139,42 +163,58 @@ jest zbudowany wokół tego rozróżnienia.
 To pytanie, które przy prywatnym projekcie jest ważniejsze od technologii,
 więc kilka konkretów zamiast zapewnień.
 
-**Log defektów ma 60 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
+**Log defektów ma 87 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
 tego nie zauważył i jaka to klasa błędu. Wpisy przeciw interesowi projektu też
 tam są, łącznie z tym o wyniku 0 na 20 i z tym, w którym dokumentacja
-twierdziła, że coś jest sprawdzane, a nie było.
+twierdziła, że coś jest sprawdzane, a nie było. Osobno zapisano **31 decyzji
+projektowych**, każdą z warunkiem, który by ją otworzył z powrotem.
 
-**Część danych została zapieczętowana, zanim ktokolwiek je przeczytał.** Ostatnie
-20% zebranych wiadomości jest odłożone i nietknięte. Nie da się dostroić
-systemu do dowodów, których się nie widziało - to jedyny sposób, żeby późniejszy
-wynik cokolwiek znaczył.
+**Część danych została zapieczętowana, zanim ktokolwiek je przeczytał.**
+Odłożone jest 20,01% zebranych wiadomości i nie zostały otwarte. Nie da się
+dostroić systemu do dowodów, których się nie widziało; to jedyny sposób, żeby
+późniejszy wynik cokolwiek znaczył. Cały korpus ma zapisaną sumę kontrolną i
+potwierdzoną ciągłość, więc podmiana albo wycięcie fragmentu jest wykrywalne.
 
 **Każda liczba w dokumentacji ma etykietę pochodzenia:** zmierzone, cudze,
 wywnioskowane, założone. Te 57% z akapitu wyżej jest liczbą cudzą i tak jest
 oznaczone, łącznie z uwagą, że źródło mogło mieć na myśli inny obszar niż ten
 projekt.
 
+**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 410 testów,
+w tym 13 skryptowanych ataków na własne zabezpieczenia; pokrycie kodu wynosi
+96,61% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
+sprawdzane: 12 z 13 zweryfikowano tak, że celowo psuto chronioną kontrolę i
+wymagano, żeby atak to wykrył. Ten jeden bez takiej weryfikacji jest wypisywany
+jako niezweryfikowany przy każdym uruchomieniu, zamiast być przemilczany.
+
 ## Gdzie to jest teraz, bez upiększeń
 
 Działa: zbieranie danych, rozpoznawanie obszaru z hasztagów, obliczanie
-odległości do granicy, raport, plik zasilający stronę internetową i mapę.
+odległości do granicy, raport, plik zasilający stronę internetową i mapę, oraz
+sama strona z mapą, uruchomiona publicznie pod adresem tymczasowym. Adres
+docelowy jeszcze nie istnieje, a tymczasowy nie nadaje się do rozsyłania.
+
 Kolumnę odległości sprawdzono na trzy sposoby, ale tylko jeden z nich to
 niezależne źródło: inna geometria i inna metoda dają trzy punkty kontrolne w
 granicy 1,1 km. Drugi przelicza ten sam kontur inaczej uproszczony i daje 0,04
 km, czyli testuje arytmetykę, nie źródło. Trzeci mierzy, jak bardzo źródło samo
 w sobie może się mylić, o jakiś kilometr, i to jest podłoga, nie potwierdzenie.
+`[te trzy liczby pochodzą z przeglądu wydania, nie z bramki]`
 
-Nie działa dobrze: rozpoznawanie **typu** zagrożenia. Po ostatniej poprawce
-system rozpoznaje typ w około 20% alarmów, wcześniej w 13%. Reszta wyświetla
-się jako „typ nieznany", i to jest uczciwe wyświetlenie, ale nie jest to dobry
-wynik i nie jest tak nazywany.
+Nie działa dobrze: rozpoznawanie **typu** zagrożenia. Znacznik rodzaju niesie
+**19,6% wiadomości**, a po połączeniu go ze stanem alarmu zostaje **17,0%**.
+Reszta wyświetla się jako „typ nieznany", i to jest uczciwe wyświetlenie, ale
+nie jest to dobry wynik i nie jest tak nazywany. To sufit samego kanału, nie
+parsera: każde rozszerzenie słownika testowano na pełnym korpusie i zwracało
+zero nowych trafień.
 
 Nie zaczęte: rzeczy, które decydują o tym, czy to kiedykolwiek trafi do ludzi.
 Nie ma stanowiska prawnego wobec rozsyłania ostrzeżeń osobom postronnym i nie
 odbyła się ani jedna rozmowa z kimś, kto miałby je dostawać.
 
 **Nikt nie dostaje dziś żadnego powiadomienia i nie dostanie, dopóki tamte dwie
-rzeczy się nie wydarzą.**
+rzeczy się nie wydarzą.** Publiczna strona nie jest publiczną usługą
+ostrzegania i w dokumentacji jest tak nazwana wprost.
 
 Nie ma podanej daty i to jest świadome. Naruszenia zdarzają się kilka razy w
 roku, więc żaden miesięczny test nie pokaże, czy system je łapie. To
@@ -186,7 +226,12 @@ fikcją.
 Lista spisana z góry, bo tylko wtedy taka lista cokolwiek znaczy.
 
 Jeśli powstanie polski publiczny kanał danych o alarmach, projekt straci sens i
-zostanie zamknięty, a nie przepozycjonowany.
+zostanie zamknięty, a nie przepozycjonowany. Sprawdzono, czy taki kanał już
+istnieje: w polskim katalogu otwartych danych przejrzano 1 510 768 zasobów, z
+czego 29 dotyczy ostrzegania, a **strumieni czytelnych maszynowo jest zero**.
+Wyszukiwanie było zawężone do jednego katalogu i nie jest dowodem, że nic
+takiego nie istnieje nigdzie; jest dowodem, że nie znaleziono go tam, gdzie
+powinno leżeć.
 
 Jeśli okaże się, że raportowanie po polsku pomaga komuś kierować ogniem, praca
 zostanie wstrzymana. To wygląda na mało prawdopodobne, bo dane są publiczne i
@@ -203,14 +248,19 @@ Gdyby ktoś chciał to zweryfikować, a nie przyjąć na słowo:
 brzmieć „strona mówi, że nie wie", a nie „strona wygląda spokojnie". To jest
 sprawdzalne w kodzie i w testach.
 
-*Ile z tych liczb pochodzi z pomiaru, a ile z rozsądnego przypuszczenia?*
-Każda ma etykietę. Warto sprawdzić kilka losowych.
+*Ile z tych liczb pochodzi z pomiaru, a ile z rozsądnego przypuszczenia?* Każda
+ma etykietę. Warto sprawdzić kilka losowych.
 
 *Co ten system robi w noc, kiedy nic się nie dzieje?* Ma mówić „żaden zachodni
 rejon nie zgłasza alarmu", a nie „bezpiecznie". Różnica nie jest kosmetyczna.
 
 *Czego autor jeszcze nie zmierzył?* Lista jest w repozytorium, ustawiona w trzy
 poziomy priorytetu, i jest dłuższa niż lista rzeczy zmierzonych.
+
+*Które liczby w tym dokumencie są pilnowane maszynowo?* Wszystkie zmierzone
+pochodzą z `STATUS.json` i rozjazd między nimi a kodem wywraca bramkę. Liczby
+oznaczone jako cudze, przykładowe albo pochodzące z przeglądu wydania nie są
+pilnowane i są tak podpisane.
 
 ---
 
