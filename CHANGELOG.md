@@ -16,6 +16,42 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.33.0.1 - 2026-08-19
+
+**F108. Two releases in two days shipped a manifest that did not describe the
+commit, and the gate that exists to catch exactly that passed both times
+because the files it was missing were invisible to it.**
+
+- **`check_manifest.py` reads `git ls-files`, so an untracked file is not a
+  file.** `--write` omits it, `--completeness` then holds against a list that
+  does not contain it, and `make verify` goes green. `git add` follows, the
+  file becomes tracked, and the manifest is already wrong one commit before
+  anybody looks. Every check in that module shared the blind spot, so no
+  amount of running them in a different order would have found it.
+- **This is the second occurrence in two days and the first one was fixed by
+  hand.** `5626e790` failed CI on 2026-08-17 and `bb85ec5` corrected it with a
+  commit whose entire content was rewritten digests. That fix restored the
+  state and left the mechanism, so the mechanism ran again at 0.33.0.0 and
+  produced two failing runs, on `main` and on the tag. A rule enforced by
+  remembering to type the commands in the right order is a preference, and
+  this is the sixth confirmed instance of that in this repository.
+- **The perimeter is widened by exactly one step.** `completeness` now also
+  fails on a file that is present, not ignored, and not yet tracked - the one
+  condition under which every other check in the file passes while being wrong
+  about the next commit. `--exclude-standard` keeps `.venv`, `.gate` and the
+  outreach artefacts invisible, which is the reason the wider check is safe to
+  put in the gate at all.
+- **The failure message now names the ordering.** `git add` first, then `make
+  manifest-write`. The reverse writes a manifest that cannot see the new file.
+- **Verified in both directions:** the check fires on a planted untracked file
+  and clears when the tree is clean. A check that only ever passes is not a
+  check, which is the same rule the fixtures in 0.33.0.0 were rewritten under.
+- **`v0.33.0.0` stays on origin, failing.** Deleting a published tag to hide a
+  red run would make the history lie about what was released, and this
+  repository already carries two stated tag debts rather than reconstructed
+  ones. The tag is real, the run is real, and this entry is why.
+- **Still not deployed.** S9 closes 2026-08-20 11:02:06 UTC.
+
 ## 0.33.0.0 - 2026-08-19
 
 **The consumer has no geometry below the oblast, so a distance at raion

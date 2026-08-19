@@ -80,6 +80,39 @@ def tracked_files() -> list[str]:
     )
 
 
+def untracked_files() -> list[str]:
+    """Files present, not ignored, and not yet tracked.
+
+    The blind spot that produced two broken releases in two days. Every check
+    in this file reads `git ls-files`, so a file that has been created but not
+    staged is invisible to all of them: `--write` omits it from the manifest,
+    `--completeness` then holds against a file list that does not contain it,
+    and the gate goes green. The file becomes tracked at `git add` and the
+    manifest is already wrong, one commit before anybody looks.
+
+    So the perimeter has to be widened by exactly one step: a file about to
+    enter the repository is treated as already in it. Ignored files stay
+    invisible, which is what `--exclude-standard` buys, and that is the whole
+    point - `.venv`, `.gate` and the outreach artefacts must not appear here.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "ls-files", "--others", "--exclude-standard"],
+        capture_output=True, text=True, check=False,
+    )
+    if result.returncode != 0:
+        print(f"manifest: CANNOT CHECK: git ls-files --others: "
+              f"{result.stderr.strip()}", file=sys.stderr)
+        raise SystemExit(2)
+    # The manifest itself is excluded here for the same reason it is excluded
+    # from `tracked_files`: it cannot describe itself, so whether it happens to
+    # be staged yet is not this check's business. Without this line the check
+    # fires on its own output the moment `--write` runs in a fresh repository.
+    return sorted(
+        path for path in result.stdout.splitlines()
+        if path and path not in EXCLUDED
+    )
+
+
 def digest(path: str) -> str:
     return hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
 
@@ -124,12 +157,20 @@ def completeness() -> int:
                 for path in paths if path not in entries]
     problems += [f"listed and no longer tracked: {path}"
                  for path in sorted(set(entries) - set(paths))]
+    # F108. Untracked and unignored is a finding, not a neutral state: it is
+    # the one condition under which every other check in this file passes
+    # while being wrong about the next commit. Reported before `git add`,
+    # which is the only moment at which it is cheap.
+    problems += [f"present, not ignored and not yet tracked: {path}"
+                 for path in untracked_files()]
     for problem in problems:
         print(f"manifest-completeness: {problem}", file=sys.stderr)
     if problems:
         print(
             f"manifest-completeness: {len(problems)} problem(s); a file entered "
-            "or left the repository without the manifest following it",
+            "or left the repository without the manifest following it. Run "
+            "`git add` first, then `make manifest-write`; the reverse order "
+            "writes a manifest that cannot see the new file",
             file=sys.stderr,
         )
         return 1
