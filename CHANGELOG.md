@@ -16,6 +16,43 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.32.10.0 - 2026-08-19
+
+**The trailing block crossed the contract for eleven releases with no key set
+behind it, and the granularity it is published at was written down nowhere a
+gate could read.**
+
+- **`recent_7d` had no `REQUIRED_*` tuple.** `REQUIRED_TOP` asserts the block is
+  present; nothing asserted what is inside it. Every other block in the payload
+  has had its keys checked since v3. A rename of `alerts_count` would have
+  reached the consumer intact, and the consumer shades a whole oblast from this
+  layer, so the failure mode is a repainted map rather than an empty list -
+  which is the harder one to notice. `REQUIRED_RECENT` now checks the three
+  keys, that the join field is a register slug and not a display name (F74, one
+  block over), that the count is a positive integer, and that a null close is
+  null rather than absent.
+- **One entry per oblast is now asserted rather than assumed.** Two entries for
+  one oblast would let a consumer sum them, and the sum is the F76 number: how
+  finely an oblast is subdivided, rendered as how often it was attacked.
+- **`areas` is per raion and `recent_7d` is per oblast, and nothing said so.**
+  The two blocks were readable as one vocabulary at two resolutions, which they
+  are not: an oblast is the parent of the areas, not a coarser measurement of
+  the same place. A check now fails if an identifier appears in both key
+  spaces. Documented in `docs/WEBAPP.md` beside the fields rather than in a
+  decision nobody joins on.
+- **The check's own fixture could not fail two of its assertions.** Every
+  trailing entry it produced carried `last_alert_ended_at: null`, so a payload
+  incapable of ever emitting a timestamp would have passed the null-or-string
+  check. The fixture now opens and affirmatively closes one episode inside the
+  window, in an oblast neither live area occupies. Fifth logged instance of a
+  fixture whose shape made the thing under test unable to fail (F44).
+- **Five mutants, five killed**, run against `mavo/report.py` before the entry
+  above was written: renamed key, display name in the join field, close never
+  published, zero count, duplicated entry.
+- **No runtime path changed.** `mavo/` is untouched; the diff is one gate tool
+  plus documentation. Deliberate: the S9 unattended window closes
+  2026-08-20 11:02:06 UTC and a deploy would reset it.
+
 ## 0.32.9.0 - 2026-08-17
 
 **S8 closes, a sixth sprint is added after beta, and the accuracy claim this

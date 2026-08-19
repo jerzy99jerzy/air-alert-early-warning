@@ -709,8 +709,8 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | --- | --- | --- |
 | Package `mavo/` | 19 | 5,382 |
 | Tests | 45 | 7,496 |
-| Tools | 21 | 5,576 |
-| Documentation | 50 | 19,825 |
+| Tools | 21 | 5,667 |
+| Documentation | 50 | 19,862 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,

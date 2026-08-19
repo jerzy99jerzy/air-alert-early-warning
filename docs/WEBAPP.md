@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.8 / 2026-08-17
+Version: 2.9 / 2026-08-19
 Status: **built, deployed, and publicly reachable.** `mavo-site` 4.12.0.0 runs
 at `https://34.116.232.215.sslip.io/` and carries its own gate (seven checks,
 24 mutants, a jsdom browser harness), its own defect log and its own audit.
@@ -139,7 +139,7 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `oblast_name` | Register name (`Львівська`) | For display. Never join on it |
 | `source_last_message_at` | When the source last spoke, may be `null` | Distinct from `generated_at`. A page showing only the latter tells a reader it is fresh while the feed behind it is hours old |
 | `window_days` | The trailing window behind `recent_7d` | A count without its window is a number the reader has to guess about |
-| `recent_7d[]` | Per-oblast alert count over that window | Counts *declarations*, not days under alert: one six-day alert is one declaration, not six |
+| `recent_7d[]` | Per-**oblast** alert count over that window | Counts *declarations*, not days under alert: one six-day alert is one declaration, not six. **This block is at a different granularity from `areas[]`, which is per raion.** An oblast is the parent of the areas, not a coarser measurement of the same place, and the two lists share no key space: `areas[].area_id` is a KATOTTG code, `recent_7d[].oblast` is a slug. A page printing a number from each in adjacent sentences is printing two different quantities, and a reader has no way to see it. Asserted by `tools/contract_check.py`, not left to this row |
 | `border_km_lower` / `_upper` | Interval to the border, may be `null` | A single number here would be false with a decimal point on it |
 | `kind` | `missile`, `drone`, `glide_bomb`, `artillery`, `unknown` | Five values, and the consumer currently labels three. See below |
 | `events` | The twenty-minute window, **always present** | An absent block and an empty one read alike to a careless reader. Empty means nothing happened, and the page must say so in words |

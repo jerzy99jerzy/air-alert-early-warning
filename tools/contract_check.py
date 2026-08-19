@@ -28,7 +28,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from mavo.areas import OBLAST_SLUGS, AreaTable  # noqa: E402
+from mavo.areas import OBLAST_SLUGS, AreaTable, oblast_slug  # noqa: E402
 from mavo.report import (  # noqa: E402
     FEED_WINDOW_S,
     SCHEMA_VERSION,
@@ -60,6 +60,11 @@ REQUIRED_ITEM = ("area_id", "oblast", "oblast_name", "alert", "kind", "role",
                  "at", "west")
 REQUIRED_AREA = ("katottg", "area_id", "oblast", "oblast_name", "alert", "kind",
                  "since", "border_km_lower", "border_km_upper")
+# The trailing block had no key set here for eleven releases while every other
+# block in the payload had one. `recent_7d` is the layer the consumer shades a
+# whole oblast from, so a rename here repaints the map rather than emptying a
+# list, and nothing on either side would have said so.
+REQUIRED_RECENT = ("oblast", "alerts_count", "last_alert_ended_at")
 
 
 def _event(
@@ -94,6 +99,13 @@ def check_contract() -> list[str]:
     if not western:
         return ["no western area in the map to build a contract check on"]
     subject = western[0]
+    # A third area, in an oblast neither live one occupies, so its entry in the
+    # trailing block is the closed episode and nothing else.
+    live_slugs = {oblast_slug(area.oblast) for area in western[:2]}
+    closed = next(
+        (area for area in western if oblast_slug(area.oblast) not in live_slugs),
+        western[-1],
+    )
     events = [
         _event(subject.code, AlertState.ACTIVE, 5, now),
         _event("UA00000000000000000", AlertState.ACTIVE, 5, now),  # unresolvable
@@ -103,6 +115,13 @@ def check_contract() -> list[str]:
         # indistinguishable from its positive one is not a probe.
         _event(western[1].code if len(western) > 1 else subject.code,
                AlertState.ACTIVE, 4, now, role=AreaRole.CONTINUATION),
+        # An episode that opens and affirmatively closes inside the window, so
+        # `last_alert_ended_at` is non-null on at least one entry. Without it
+        # every entry carries null, the null-or-timestamp check below passes on
+        # a payload that could never produce a timestamp, and the check cannot
+        # fail. Same rule as the continuation event above (F44).
+        _event(closed.code, AlertState.ACTIVE, 400, now),
+        _event(closed.code, AlertState.CLEAR, 300, now),
     ]
     report = compose(events, as_of=now, table=table)
     with tempfile.TemporaryDirectory() as directory:
@@ -141,6 +160,78 @@ def check_contract() -> list[str]:
     else:
         if unresolved[0].get("oblast_name") != "unknown":
             problems.append("an unresolvable oblast must print as unknown, not blank")
+
+    # The trailing block. Per **oblast**, while `areas` above is per raion, and
+    # the two are joined by nothing: an oblast is the parent of the areas, not
+    # a coarser measurement of the same place. The checks below hold that line
+    # rather than assume it.
+    recent = payload.get("recent_7d")
+    if not isinstance(recent, list):
+        problems.append("recent_7d must be a list, present even when empty")
+    else:
+        if not recent:
+            problems.append(
+                "the trailing block was empty on a fixture that declares three "
+                "alerts inside the window; the checks below would all vacate"
+            )
+        seen_slugs: set[str] = set()
+        closed_seen = False
+        for entry in recent:
+            for key in REQUIRED_RECENT:
+                if key not in entry:
+                    problems.append(f"recent_7d entry is missing {key!r}")
+            slug = entry.get("oblast", "")
+            # F74 again, one block over. The consumer shades geometry from this
+            # slug, so a display name here paints nothing and says nothing.
+            if not slug:
+                problems.append(
+                    "a trailing entry carried no oblast slug; an oblast the "
+                    "register cannot resolve is dropped from this count, never "
+                    "published with an empty join key"
+                )
+            elif slug not in KNOWN_SLUGS:
+                problems.append(f"recent_7d oblast {slug!r} is not a register slug")
+            elif slug in seen_slugs:
+                # One entry per oblast is what makes `alerts_count` an episode
+                # count. Two entries for one oblast would let a consumer sum
+                # them, and the sum is the F76 number: how finely the oblast is
+                # subdivided, rendered as how often it was attacked.
+                problems.append(f"recent_7d carries {slug!r} more than once")
+            seen_slugs.add(slug)
+            count = entry.get("alerts_count")
+            if not isinstance(count, int) or isinstance(count, bool) or count < 1:
+                problems.append(
+                    f"recent_7d alerts_count {count!r} is not a positive integer; "
+                    "an oblast with no episode leaves the block rather than "
+                    "appearing with a zero"
+                )
+            ended = entry.get("last_alert_ended_at")
+            if ended is None:
+                continue
+            closed_seen = True
+            if not isinstance(ended, str):
+                problems.append(
+                    f"recent_7d last_alert_ended_at {ended!r} is neither null nor "
+                    "a timestamp; null is unknown and must not render as ended"
+                )
+        if recent and not closed_seen:
+            problems.append(
+                "no trailing entry carried a close, though the fixture closes "
+                "one episode inside the window; the null branch is the only one "
+                "being exercised"
+            )
+        # The granularity guard. `areas` is per raion and `recent_7d` is per
+        # oblast, so the two lists cannot be read as one vocabulary and a
+        # consumer that prints a number from each in one sentence is printing
+        # two different quantities. Checked rather than documented, because a
+        # rule without a gate check is a preference.
+        area_ids = {area.get("area_id") for area in payload.get("areas", [])}
+        if area_ids & {entry.get("oblast") for entry in recent}:
+            problems.append(
+                "an identifier appears both as an area_id and as a trailing "
+                "oblast slug; the two blocks are at different granularities and "
+                "must not share a key space"
+            )
 
     # v3. The stream is a contract of its own and gets its own reading.
     stream = payload.get("events")
