@@ -3,7 +3,7 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 410](https://img.shields.io/badge/tests-427-brightgreen)](tests/)
+[![tests 427](https://img.shields.io/badge/tests-427-brightgreen)](tests/)
 [![coverage 96.61%](https://img.shields.io/badge/coverage-96.61%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
 [![defects logged 87](https://img.shields.io/badge/defects%20logged-87-informational)](docs/METHODOLOGY.md)
@@ -33,7 +33,7 @@ import namespace is `mavo` because it must be unique rather than descriptive. Th
 codename lives in documentation and conversation. Stated here rather than left
 implicit, because that is where the inconsistency otherwise lives.
 
-Status: pre-alpha, **four sprints from beta** on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate.
+Status: pre-alpha, **three sprints from beta** (S9, S10, S11) on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate.
 
 **Deployed and publicly reachable since 2026-08-12 at [34.116.232.215.sslip.io/en](https://34.116.232.215.sslip.io/en)** (Polish: [/pl](https://34.116.232.215.sslip.io/pl)). The address is temporary and a proper domain is being arranged. It is printed here because a README that says "publicly reachable" without saying where is asking to be trusted on the one claim a reader could check in a second.
 
@@ -43,7 +43,7 @@ That is the cheaper half of beta: the instrument is live. The other half is not 
 
 Running is not the same as measured, and this repository's defect log is largely a record of what happens when the two are read as one thing.
 
-**Fourteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `STATUS.json` still records nine; that field is wrong by its own definition and is left wrong deliberately, because raising the number would assert that three more sprints met their exit criteria, which is a larger claim than a test file can carry. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S7.** S8 is half met and declared half met: the distance column is verified three ways, the hand-checked sample is twenty eastern messages from one afternoon. S9 is under way and its latency half now has a measurement behind it, though not yet a written record: the store spans 7.84 days, the distribution has been taken, and `docs/CHANNEL.md` section 8a is deliberately still empty of it, because one term in the tail is unattributed and a row that assigned our own blindness to the source would be worse than no row. The seventy-two-hour half is a clock still running. "Unattended" turned out to need a definition of its own - the store has three stretches of an hour or more with nothing recorded in it, and only one is provably an outage rather than a quiet channel. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
+**Fourteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `sprint_test_files` in `STATUS.json` lists ten of them, S0 through S9; the four that are missing are missing deliberately, because adding them would read as an assertion that S10 through S13 met their exit criteria, which is a larger claim than a test file can carry. The field was renamed to what it counts after F93, and the gap it now leaves is visible rather than averaged away. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S7.** S8 is half met and declared half met: the distance column is verified three ways, the hand-checked sample is twenty eastern messages from one afternoon. S9 is under way and its latency half now has a measurement behind it, though not yet a written record: the store spans 7.84 days, the distribution has been taken, and `docs/CHANNEL.md` section 8a is deliberately still empty of it, because one term in the tail is unattributed and a row that assigned our own blindness to the source would be worse than no row. The seventy-two-hour half is a clock still running. "Unattended" turned out to need a definition of its own - the store has three stretches of an hour or more with nothing recorded in it, and only one is provably an outage rather than a quiet channel. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
 
 Area resolution works against real channel content and the number that used to
 sit here was wrong. **20 of 20 real messages resolve their area to a unique code
@@ -58,11 +58,26 @@ wrong thing for two sprints (F90). The table was right and the call was not.
 
 What is still not measured is the part that matters most: **no hand-checked
 correctness rate exists for western areas**, which are the only ones this
-product is for. The sample is drawn and its draw is fingerprinted (T36); it is
-not yet scored, and until it is, every correctness claim here is about
-mechanism rather than about accuracy.
+product is for. The instrument for it exists and is stratified so that half of
+a draw is western by construction; what does not exist is the population. The
+west is 3.5% of what the channel carries, and a sample about the areas near the
+border cannot be drawn from nights on which those areas were quiet. T36 is
+therefore typed as blocked on something outside the project rather than as
+work waiting to be done, and it moved to S12 for that reason. Until it is
+scored, every correctness claim here is about mechanism rather than about
+accuracy.
 
----
+**One thing did change on 2026-08-18, and it is an observation rather than a
+measurement.** A real raid put eight western raions under alert across four
+oblasts, the whole of Ternopil oblast among them, and both contract files were
+preserved from the public address while it was happening. That is the first
+time this instrument has been watched doing the job it exists for. It is not a
+check: reading a preserved payload back with a script compares the
+instrument's output against the instrument's own reference tables, and
+agreement there is guaranteed by construction rather than measured. The
+snapshot is a frozen claim, and it becomes evidence only when the channel's own
+messages are put beside it by hand. `tools/western_worksheet.py` builds that
+comparison and fills none of it in.
 
 ---
 
@@ -605,10 +620,12 @@ decision this repository exists to enforce.
 
 Since 2026-08-11 a collector has run on a host without supervision, feeding a
 public page. Three numbers came out of the first night that no amount of
-reading the code would have produced.
+reading the code would have produced. **The first of them no longer describes
+the host**, and the correction is below the three.
 
-**Roughly one poll in eight fails.** Eleven unreachable out of ninety-five in
-a twelve-hour journal; nine of sixty in the window measured most closely.
+**Roughly one poll in eight failed, before F98.** Eleven unreachable out of
+ninety-five in a twelve-hour journal; nine of sixty in the window measured most
+closely.
 Consecutive failures happen: the longest run was two and the longest gap
 between successful reads was seven minutes, against a ten-minute staleness
 threshold. Two explanations were tested and closed - rate limiting by the
@@ -627,8 +644,19 @@ and a rejection that bounced in twenty milliseconds are indistinguishable in
 the journal. Eleven refusals were logged before anyone noticed. That is F44 in
 the diagnostics rather than in the schedule, and it is T55.
 
+**The failure rate after F98 is smaller by two orders of magnitude, and
+unsettled.** `docs/DEPLOYMENT.md` pins fourteen timeouts in roughly 18,350
+polls, 0.076%, measured over the seven days after the fix landed on
+2026-08-14 18:13:09 UTC. Two windows read on 2026-08-19 came out at 6.9% and
+13.4%. Those two windows were chosen because the store had gaps in them, so the
+figures are selection on the outcome and are not an estimate of anything; what
+they do establish, which no rate would, is that **the failures arrive in
+clusters**. The unconditional rate over the whole journal has not been read.
+Until it is, the honest statement is that the pinned figure stands and the
+distribution behind it does not.
+
 The consumer's own release notes carry the other half of this: what a page has
-to do when the instrument feeding it is blind one time in eight.
+to do when the instrument feeding it can go blind without saying so.
 
 ## Current finding
 
@@ -715,8 +743,8 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | --- | --- | --- |
 | Package `mavo/` | 19 | 5,603 |
 | Tests | 46 | 7,838 |
-| Tools | 21 | 5,793 |
-| Documentation | 51 | 20,081 |
+| Tools | 22 | 6,036 |
+| Documentation | 51 | 20,174 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -780,8 +808,13 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: 170 tests passing, of which 12 are harness attacks.
-  Coverage 96.90% against a floor of 95. The floor stays a ratchet under T9:
+- `make verify` green: **427 tests passing, of which 13 are harness attacks.
+  Coverage 96.61%** against a floor of 95. These three numbers read 170, 12 and
+  96.90% until 0.33.0.2, while the badges at the head of this file and the
+  table in *The repository in numbers* carried the current ones. `docs_audit`
+  checks the badges and the table and did not check this list, so one document
+  disagreed with itself in three places for many releases. The floor stays a
+  ratchet under T9:
   the rise is below the five-point threshold that moves it. The old caveat
   stands in kind:
   `transport.py` carries the one genuinely network-bound function, and it drags
@@ -799,11 +832,12 @@ A number appears in this documentation only when the code produced it.
   fixed called that same shape, so it never flipped (F90 in
   `docs/METHODOLOGY.md`). Pinning a number is not the same as pinning the number
   the product produces.
-- The harness is mutation-verified as of 0.4.0.0, after slipping twice. Ten
-  controls disabled one at a time; the guarding attack must go red. **The first
-  run killed 7 of 10**, and the three survivors were defects in the attacks
-  themselves (F38 to F40), one of them written the same afternoon. One attack of
-  eleven carries no mutation and is listed as unverified rather than assumed.
+- The harness is mutation-verified as of 0.4.0.0, after slipping twice.
+  Controls are disabled one at a time and the guarding attack must go red.
+  **The first run killed 7 of 10**, and the three survivors were defects in the
+  attacks themselves (F38 to F40), one of them written the same afternoon. The
+  current run kills **12 of 12**. One attack of **thirteen** carries no
+  mutation and is printed as unverified on every run rather than assumed.
 - Every number above except the classifier hit rate was produced against a
   synthetic history. None of them is a claim about the world.
 

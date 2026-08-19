@@ -16,6 +16,65 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.33.0.2 - 2026-08-19
+
+**A full read of `README.md` against the tree. Seven claims were stale and six
+of the seven understated the project, which is the asymmetry `METHODOLOGY.md`
+recorded and the first time it has been checked deliberately rather than
+noticed.**
+
+- **The measured-claims list disagreed with the badges in the same file.** It
+  said 170 tests, 12 attacks and 96.90% coverage while the badges and the
+  numbers table said 427, 13 and 96.61%. `docs_audit` checks the badges and the
+  table; nothing checked the prose list, so one document contradicted itself in
+  three places across many releases. The mutation bullet said one attack of
+  eleven is unverified, where it is one of thirteen, and did not say that the
+  current run kills 12 of 12.
+- **The tests badge's alt text read 410 while the badge itself read 427.** The
+  gate compares the shields.io URL against `STATUS.json` and does not read the
+  text beside it. Corrected; the wider fix is not attempted here, because a
+  lint for alt text is a different change from a documentation release.
+- **"Four sprints from beta" was written while S8 was open.** S8 closed on
+  17 August, so three stand between here and beta, and they are named.
+- **"Fourteen sprints have landed, `STATUS.json` still records nine, raising it
+  would assert three more."** Fourteen minus ten is four. The field lists S0
+  through S9, which is ten entries, and the sentence did its own arithmetic
+  wrong while being about the danger of rounding a count.
+- **"Roughly one poll in eight fails" is a pre-F98 measurement, and
+  `docs/DEPLOYMENT.md` has pinned 0.076% since the fix.** Two documents in one
+  repository held figures two orders of magnitude apart, and the README held
+  the worse one. Both are now stated with their windows, together with the two
+  readings taken on 2026-08-19 that came out at 6.9% and 13.4% - and with the
+  reason those two are not an estimate: the windows were chosen because the
+  store had gaps in them, which is selection on the outcome. What they do
+  establish is that the failures cluster.
+- **T36's paragraph described a drawn sample waiting to be scored.** T36 was
+  retyped at 0.32.9.0 as blocked on a population that has not appeared and
+  moved to S12. A sample about areas near the border cannot be drawn from
+  nights on which those areas were quiet.
+- **The 2026-08-18 western raid is recorded as an observation and not as a
+  check.** Eight western raions across four oblasts, both contract files
+  preserved from the public address while it was happening, the first time this
+  instrument has been watched doing the job it exists for. Reading a preserved
+  payload back with a script compares the instrument's output against the
+  instrument's own reference tables, so agreement there is guaranteed by
+  construction. The snapshot is a frozen claim; it becomes evidence when the
+  channel's own messages are put beside it by hand.
+- **`tools/western_worksheet.py` builds that comparison and answers none of
+  it.** One row per western area, nearest first, with `area_ok`, `time_ok` and
+  `distance_plausible` empty, the snapshot's sha256 in the header, and the
+  raion's own name resolved from the register, because `state.json` carries the
+  oblast's name and the channel names raions. `--score` refuses a partially
+  filled sheet and prints no pooled rate: eight rows carry neither a rate nor
+  an interval, and a percentage over eight rows would end up in a sentence
+  where it read as the correctness of the instrument. What eight rows can do,
+  which neither the 2026-08-10 sample nor T36's fifty can, is judge intervals
+  that reach the border; the 2026-08-10 sample judged intervals 700 to
+  1,000 km wide, where an error of tens of kilometres is invisible.
+- **Two duplicated horizontal rules removed.**
+- **No runtime path changed**, and nothing is deployed. S9 closes
+  2026-08-20 11:02:06 UTC.
+
 ## 0.33.0.1 - 2026-08-19
 
 **F108. Two releases in two days shipped a manifest that did not describe the

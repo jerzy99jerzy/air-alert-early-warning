@@ -859,7 +859,14 @@ def check_the_readme_status_agrees_with_the_sprint_files(
                 f"the README says {said} sprint files landed, the tree has "
                 f"{len(files)}"
             )
-    if len(files) != len(numbers) and "left wrong deliberately" not in readme:
+    # A substring match on prose, and therefore a check that breaks whenever
+    # the prose it watches is improved rather than when the claim it watches
+    # goes wrong. It did exactly that at 0.33.0.2, when the paragraph was
+    # rewritten to fix its own arithmetic. Left as a substring match because
+    # the alternative is a marker comment nobody reading the README can see;
+    # noted here so the next person to trip it knows it is the check that is
+    # brittle, not the sentence.
+    if len(files) != len(numbers) and "missing deliberately" not in readme:
         problems.append(
             f"sprint_test_files lists {len(numbers)} sprints and the tree has "
             f"{len(files)} sprint files, and the README does not say the field "
