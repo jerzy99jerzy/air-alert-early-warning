@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.32.10.0",
+  "version": "0.33.0.0",
   "python_requires": ">=3.11",
   "sprint_test_files": [
     0,
@@ -42,7 +42,7 @@
     "docs/reviews/0.10.1.0.md": "1.0",
     "docs/reviews/0.11.1.0.md": "1.0",
     "docs/FEED-SPEC.md": "1.8",
-    "docs/WEBAPP.md": "2.9",
+    "docs/WEBAPP.md": "3.0",
     "docs/reviews/0.13.0.0.md": "1.0",
     "docs/reviews/0.15.0.0.md": "1.0",
     "docs/reviews/0.20.0.0.md": "1.0",
@@ -59,12 +59,13 @@
     "docs/reviews/0.29.0.0.md": "1.0",
     "docs/reviews/0.28.0.0.md": "1.0",
     "docs/reviews/0.31.0.0.md": "1.0",
-    "docs/reviews/0.32.0.0.md": "1.0"
+    "docs/reviews/0.32.0.0.md": "1.0",
+    "docs/reviews/0.33.0.0.md": "1.0"
   },
   "threat_model_rows": 14,
   "harness_attacks": 13,
   "measured": {
-    "tests_passing": 410,
+    "tests_passing": 427,
     "coverage_percent": 96.61,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 1,
@@ -129,14 +130,14 @@
     "taken_at": "2026-08-11"
   },
   "statistics": {
-    "package_lines": 5382,
+    "package_lines": 5603,
     "package_files": 19,
-    "test_lines": 7496,
-    "test_files": 45,
-    "tool_lines": 5667,
+    "test_lines": 7838,
+    "test_files": 46,
+    "tool_lines": 5752,
     "tool_files": 21,
-    "documentation_lines": 19862,
-    "documentation_files": 50,
+    "documentation_lines": 20039,
+    "documentation_files": 51,
     "runtime_dependencies": 0
   },
   "defects_logged": 87,

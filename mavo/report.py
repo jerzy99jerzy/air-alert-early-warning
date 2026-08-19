@@ -308,6 +308,66 @@ class RecentOblast:
 
 
 @dataclass(frozen=True, slots=True)
+class RecentArea:
+    """How often one **area** was under alert over the trailing window.
+
+    The raion-level counterpart of `RecentOblast`, and deliberately not a
+    finer rendering of it. `RecentOblast.alerts_count` answers "how often was
+    this oblast under attack"; this answers "how often was this raion under
+    attack", and the two are different questions with different answers. One
+    western episode lights every raion of an oblast at once, so summing
+    `episodes` across an oblast's areas reproduces exactly the number F76 was
+    logged for: how finely the oblast is subdivided, wearing the costume of
+    how often it was attacked. **The field is named `episodes` rather than
+    `alerts_count` for that reason** - a consumer that reaches for the
+    familiar name gets a `KeyError` rather than a plausible sum.
+
+    This block exists because the consumer has no geometry below the oblast:
+    `geometry.json` carries 25 oblast outlines and nothing finer [reported,
+    from the consumer, 2026-08-19]. A distance at raion granularity therefore
+    cannot be computed downstream at all, and an oblast-level interval would
+    not be the same quantity: its lower bound comes from one raion and its
+    upper from another, so it describes no single place while carrying the
+    same field names as the per-area interval that describes exactly one.
+    Two quantities under one name is the defect this block is shaped to avoid.
+
+    The interval is copied from the same `border_km.csv` row the live picture
+    reads, so the weekly sentence and the live sentence are comparable by
+    construction rather than by a consumer's assumption.
+    """
+
+    code: str
+    name: str
+    oblast_slug: str
+    oblast_name: str
+    episodes: int
+    last_active_at: datetime
+    last_ended_at: datetime | None
+    border_lower_km: float | None
+    border_upper_km: float | None
+    is_western: bool
+
+    def as_item(self) -> dict[str, object]:
+        """The contract form. Field names match `areas` where they overlap."""
+        return {
+            "katottg": self.code,
+            "area_name": self.name,
+            "oblast": self.oblast_slug,
+            "oblast_name": self.oblast_name,
+            "episodes": self.episodes,
+            "last_active_at": self.last_active_at.isoformat(timespec="seconds"),
+            "last_ended_at": (
+                self.last_ended_at.isoformat(timespec="seconds")
+                if self.last_ended_at is not None
+                else None
+            ),
+            "border_km_lower": self.border_lower_km,
+            "border_km_upper": self.border_upper_km,
+            "west": self.is_western,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class Report:
     """The composed picture at one moment, with its own blindness measured."""
 
@@ -317,6 +377,13 @@ class Report:
     areas: tuple[AreaPicture, ...]
     unresolved_areas: tuple[str, ...]
     recent: tuple[RecentOblast, ...] = ()
+    #: The same window at raion granularity (0.33.0.0). Published to
+    #: `feed.json` rather than `state.json`: measured at 10.2 KiB for the west
+    #: alone and 35.5 KiB for every area the map knows, against a `state.json`
+    #: of 13,150 bytes polled every 30 s on the host [measured, 2026-08-19].
+    #: The headline sentence the page needs from it is one object, and that
+    #: one travels in `state.json` as `nearest_7d`.
+    recent_areas: tuple[RecentArea, ...] = ()
     trailing_days: int = DEFAULT_TRAILING_DAYS
     #: The short window published inside `state.json` (T50).
     stream: EventWindow | None = None
@@ -390,6 +457,27 @@ class Report:
             if p.area is not None and p.area.border_lower_km is not None
         ]
         return min(candidates) if candidates else None
+
+
+    @property
+    def nearest_recent(self) -> RecentArea | None:
+        """The nearest area that was under alert in the trailing window.
+
+        None when nothing in the window has a distance, and None is unknown:
+        a page rendering it as "nothing near" would be printing silence as
+        calm, which is the one thing this project refuses everywhere.
+
+        A reduction the producer performs rather than the consumer, because
+        the page needs exactly this sentence in its headline and the block it
+        would be reduced from travels in the other file. `recent_areas` is
+        sorted nearest-first with unknowns last, so this is its head with the
+        unknown case excluded rather than a second ordering that could
+        disagree with the first.
+        """
+        for entry in self.recent_areas:
+            if entry.border_lower_km is not None:
+                return entry
+        return None
 
 
 def trailing_counts(
@@ -489,6 +577,106 @@ def trailing_counts(
     )
 
 
+def trailing_areas(
+    events: Iterable[ThreatEvent],
+    *,
+    as_of: datetime,
+    days: int = DEFAULT_TRAILING_DAYS,
+    table: AreaTable,
+) -> tuple[RecentArea, ...]:
+    """Alert episodes per **area** over the trailing window, nearest first.
+
+    The same episode rule as `trailing_counts`, applied one level down, and
+    the same three invariants restated here rather than inherited, because a
+    fold that reasons about a different key does not get them for free:
+
+    **UNKNOWN does not close an episode.** A source that stops naming a raion
+    has not said its alert ended. Only an affirmative all-clear closes one, so
+    an episode left open by a feed outage stays open and the count errs in the
+    direction that does not understate.
+
+    **An episode that overlaps the window counts, wherever it opened (F85).**
+    The whole log is replayed: events before the cutoff move the running state
+    without counting, an area already active as the window opens is counted
+    once as it crosses, and only an episode both opened and affirmatively
+    closed before the window falls outside. A cutoff applied as a filter on
+    events would age out the opening transition of a long alert and render the
+    most persistently attacked area as the quietest.
+
+    **An area the register cannot resolve is dropped, never folded.** It has
+    no code to key on, no distance and no oblast, and attaching it to a
+    neighbour would put a wrong number somewhere plausible. Those areas are
+    already visible as `unresolved_areas` beside this.
+
+    Ordered by the lower bound of the interval, nearest first, with unknown
+    distances last: the same key `western_active` uses, for the same reason.
+    An area with no distance must not sort as though it were near.
+    """
+    cutoff = as_of - timedelta(days=days)
+    open_since: dict[str, datetime] = {}
+    episodes: dict[str, int] = {}
+    last_active: dict[str, datetime] = {}
+    last_close: dict[str, datetime] = {}
+    ordered = sorted(events, key=lambda e: (e.ts_source, e.area_id))
+    edge = next(
+        (i for i, e in enumerate(ordered) if e.ts_source >= cutoff), len(ordered)
+    )
+    for event in ordered[:edge]:
+        if table.by_code(event.area_id) is None:
+            continue
+        if event.state is AlertState.ACTIVE:
+            open_since.setdefault(event.area_id, event.ts_source)
+        elif is_clear(event.state):
+            open_since.pop(event.area_id, None)
+    # Episodes already running as the window opens: counted here, once, so the
+    # loop below cannot count them again (`open_since` is already populated).
+    # `last_active` is seeded with the opening time, which predates the window
+    # and is the honest answer: the area has been under alert since then, and
+    # reporting the cutoff instead would invent a transition that never
+    # happened.
+    for code, since in open_since.items():
+        episodes[code] = 1
+        last_active[code] = since
+    for event in ordered[edge:]:
+        if table.by_code(event.area_id) is None:
+            continue
+        if event.state is AlertState.ACTIVE:
+            if event.area_id not in open_since:
+                episodes[event.area_id] = episodes.get(event.area_id, 0) + 1
+                open_since[event.area_id] = event.ts_source
+            last_active[event.area_id] = event.ts_source
+        elif is_clear(event.state):
+            if open_since.pop(event.area_id, None) is not None:
+                last_close[event.area_id] = event.ts_source
+
+    found: list[RecentArea] = []
+    for code, count in episodes.items():
+        area = table.by_code(code)
+        if area is None:  # pragma: no cover - filtered in both loops above
+            continue
+        found.append(
+            RecentArea(
+                code=code,
+                name=area.name,
+                oblast_slug=oblast_slug(area.oblast) if area.oblast else "",
+                oblast_name=area.oblast if area.oblast else "unknown",
+                episodes=count,
+                last_active_at=last_active[code],
+                last_ended_at=last_close.get(code),
+                border_lower_km=area.border_lower_km,
+                border_upper_km=area.border_upper_km,
+                is_western=area.is_western,
+            )
+        )
+
+    def key(entry: RecentArea) -> tuple[int, float, float, str]:
+        if entry.border_lower_km is None:
+            return (1, 0.0, 0.0, entry.code)
+        return (0, entry.border_lower_km, entry.border_upper_km or 0.0, entry.code)
+
+    return tuple(sorted(found, key=key))
+
+
 def compose(
     events: Iterable[ThreatEvent],
     *,
@@ -560,6 +748,13 @@ def compose(
         areas=tuple(pictures),
         unresolved_areas=tuple(unresolved),
         recent=trailing_counts(
+            replayed, as_of=moment, days=trailing_days, table=table
+        ),
+        # Same log, same moment, same window as the block above it. Two
+        # compositions would be two weeks, and a page whose headline named an
+        # area its own history block did not list would have no way to say
+        # which half to believe.
+        recent_areas=trailing_areas(
             replayed, as_of=moment, days=trailing_days, table=table
         ),
         trailing_days=trailing_days,
@@ -651,6 +846,22 @@ def to_contract(report: Report) -> dict[str, object]:
             }
             for entry in report.recent
         ],
+        # 0.33.0.0. The nearest area that was under alert in the window, at
+        # **raion** granularity, so the weekly sentence and the live sentence
+        # measure the same thing and a reader comparing them is comparing
+        # like with like. `recent_7d` above deliberately carries no distance:
+        # an oblast-level interval takes its lower bound from one raion and
+        # its upper from another, describes no single place, and would carry
+        # the same field names as the per-area interval that describes
+        # exactly one. Two quantities under one name, one line apart.
+        #
+        # `null` is unknown and never "nothing near". The full block this
+        # reduces travels in `feed.json`; see `RecentArea`.
+        "nearest_7d": (
+            report.nearest_recent.as_item()
+            if report.nearest_recent is not None
+            else None
+        ),
         "areas": [
             {
                 "katottg": picture.area.code if picture.area is not None else "",
@@ -724,6 +935,16 @@ def to_feed(report: Report) -> dict[str, object]:
     return {
         "v": SCHEMA_VERSION,
         "generated_at": report.as_of.isoformat(timespec="seconds"),
+        # 0.33.0.0. The trailing window at raion granularity, nearest first.
+        # Here rather than in `state.json` because it is measured at 10.2 KiB
+        # for the west and 35.5 KiB for every area the map knows, against a
+        # `state.json` of 13,150 bytes polled every thirty seconds
+        # [measured, 2026-08-19]. This file is fetched when a reader opens the
+        # panel, which is where a week of history belongs.
+        #
+        # Always present, empty or not, for the same reason the event block is.
+        "window_days": report.trailing_days,
+        "recent_7d_areas": [entry.as_item() for entry in report.recent_areas],
         **block,
     }
 

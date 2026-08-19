@@ -53,8 +53,8 @@ WEBAPP = Path(__file__).resolve().parent.parent / "docs" / "WEBAPP.md"
 KNOWN_SLUGS = frozenset(OBLAST_SLUGS.values())
 
 REQUIRED_TOP = ("v", "generated_at", "valid_for_s", "state", "observation_age_s",
-                "source_last_message_at", "window_days", "recent_7d", "areas",
-                "events", "counts_24h")
+                "source_last_message_at", "window_days", "recent_7d",
+                "nearest_7d", "areas", "events", "counts_24h")
 REQUIRED_STREAM = ("window_start", "window_s", "truncated", "items")
 REQUIRED_ITEM = ("area_id", "oblast", "oblast_name", "alert", "kind", "role",
                  "at", "west")
@@ -65,6 +65,14 @@ REQUIRED_AREA = ("katottg", "area_id", "oblast", "oblast_name", "alert", "kind",
 # whole oblast from, so a rename here repaints the map rather than emptying a
 # list, and nothing on either side would have said so.
 REQUIRED_RECENT = ("oblast", "alerts_count", "last_alert_ended_at")
+# 0.33.0.0. The same window one level down, in `feed.json`. Field names match
+# `areas` where they overlap so a consumer writes one reader, and the count is
+# `episodes` rather than `alerts_count` because it answers a different question
+# (F76): summing it across an oblast measures how finely that oblast is
+# subdivided, not how often it was attacked.
+REQUIRED_RECENT_AREA = ("katottg", "area_name", "oblast", "oblast_name",
+                        "episodes", "last_active_at", "last_ended_at",
+                        "border_km_lower", "border_km_upper", "west")
 
 
 def _event(
@@ -281,6 +289,83 @@ def check_contract() -> list[str]:
     for key in REQUIRED_STREAM:
         if key not in feed:
             problems.append(f"feed is missing {key!r}")
+    # 0.33.0.0. The trailing window at raion granularity lives here, and the
+    # placement is a contract term rather than an implementation detail: this
+    # file is fetched when a reader opens the panel, `state.json` is polled
+    # every thirty seconds, and the block is measured at 10.2 to 35.5 KiB
+    # against a 13,150-byte `state.json`.
+    areas_block = feed.get("recent_7d_areas")
+    if not isinstance(areas_block, list):
+        problems.append("feed is missing recent_7d_areas, or it is not a list")
+    else:
+        if not areas_block:
+            problems.append(
+                "the per-area trailing block was empty on a fixture that "
+                "declares alerts inside the window; the checks below vacate"
+            )
+        for entry in areas_block:
+            for key in REQUIRED_RECENT_AREA:
+                if key not in entry:
+                    problems.append(f"recent_7d_areas entry is missing {key!r}")
+            if "alerts_count" in entry:
+                problems.append(
+                    "a per-area entry carries alerts_count; that is the oblast "
+                    "block's field name and summing this one reproduces F76"
+                )
+            slug = entry.get("oblast", "")
+            if slug and slug not in KNOWN_SLUGS:
+                problems.append(f"recent_7d_areas oblast {slug!r} is not a slug")
+            count = entry.get("episodes")
+            if not isinstance(count, int) or isinstance(count, bool) or count < 1:
+                problems.append(
+                    f"recent_7d_areas episodes {count!r} is not a positive integer"
+                )
+        # Nearest first, unknown last. A page reads the head of this list, and
+        # an unknown distance sorting first would put "unknown" where the
+        # headline expects the nearest measured place.
+        known = [
+            e.get("border_km_lower") for e in areas_block
+            if e.get("border_km_lower") is not None
+        ]
+        if known != sorted(known):
+            problems.append("recent_7d_areas is not ordered nearest first")
+        seen_unknown = False
+        for entry in areas_block:
+            if entry.get("border_km_lower") is None:
+                seen_unknown = True
+            elif seen_unknown:
+                problems.append(
+                    "an area with no distance sorts ahead of a measured one; "
+                    "unknown must never read as near"
+                )
+                break
+
+    # The reduction in `state.json` and the block in `feed.json` come from one
+    # composition, so the headline cannot name an area the history does not.
+    nearest = payload.get("nearest_7d")
+    if nearest is not None:
+        for key in REQUIRED_RECENT_AREA:
+            if key not in nearest:
+                problems.append(f"nearest_7d is missing {key!r}")
+        if isinstance(areas_block, list) and areas_block:
+            first_known = next(
+                (e for e in areas_block if e.get("border_km_lower") is not None),
+                None,
+            )
+            if first_known is not None and first_known.get("katottg") != nearest.get(
+                "katottg"
+            ):
+                problems.append(
+                    "nearest_7d names a different area from the head of "
+                    "recent_7d_areas; the page headline and the panel would "
+                    "disagree about the same week"
+                )
+    if "recent_7d_areas" in payload:
+        problems.append(
+            "the per-area block is in state.json, which is polled every "
+            "thirty seconds; it belongs in feed.json"
+        )
+
     if feed.get("window_s") != FEED_WINDOW_S:
         problems.append(f"feed window {feed.get('window_s')} != {FEED_WINDOW_S}")
     if feed.get("v") != SCHEMA_VERSION:

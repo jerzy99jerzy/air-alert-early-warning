@@ -16,6 +16,61 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.33.0.0 - 2026-08-19
+
+**The consumer has no geometry below the oblast, so a distance at raion
+granularity cannot be computed downstream at all. The producer now publishes
+it, and the question of what an oblast-level interval would have meant is
+withdrawn rather than answered.**
+
+- **`recent_7d` gets no distance, and that is the decision.** The open contract
+  question asked whether an oblast interval should span all its areas or only
+  the ones that alerted. Both are wrong in the same way: the lower bound comes
+  from one raion and the upper from another, so the interval describes no
+  single place while carrying the same field names as the per-area interval
+  that describes exactly one. Two quantities under one name, one line apart in
+  the same payload, and a reader with no way to see it. The block stays a pure
+  count per oblast.
+- **`recent_7d_areas[]` in `feed.json`.** The same window at raion
+  granularity, nearest first, with the interval copied from the same
+  `border_km.csv` row the live picture reads. The weekly sentence and the live
+  sentence are therefore comparable by construction rather than by the
+  consumer's assumption.
+- **`nearest_7d` in `state.json`, 241 bytes.** The page needs one sentence in
+  its headline and the block it reduces travels in the other file. Placement is
+  measured, not argued: the full block is 10.2 KiB for the west and 35.5 KiB
+  for every area the map knows, against a `state.json` of **13,150 bytes**
+  polled every thirty seconds on `vm-mavo` [measured, 2026-08-19]. Putting the
+  block in the polled file would have grown it by 78% to 270%. The placement is
+  asserted by the gate, not left to a comment.
+- **The count is `episodes`, never `alerts_count`.** Summing the per-area
+  counts across an oblast reproduces exactly the number F76 was logged for:
+  one western episode lights every raion at once, so the sum measures how
+  finely the oblast is subdivided while wearing the costume of how often it was
+  attacked. A consumer reaching for the familiar key now gets a `KeyError`
+  rather than a plausible number. Asserted twice, in the regression and in the
+  contract check.
+- **Three invariants restated rather than inherited.** `trailing_areas` keys on
+  the area, so nothing it does follows from what was proved about a fold keyed
+  on the oblast: UNKNOWN does not close an episode, an episode overlapping the
+  window's left edge counts once wherever it opened (F85), and an area the
+  register cannot resolve is dropped rather than folded into a neighbour.
+- **Eleven mutants, eleven killed** - six against the fold, five against the
+  contract check. Renamed key, UNKNOWN closing an episode, the F85 cutoff
+  applied as a filter, unknown distance sorting first, the block copied into
+  the polled file, the reduction taken from the far end of the order, and the
+  oblast block growing a distance field.
+- **One mutant survived the first attempt and the fixture was the reason.** The
+  ordering test built a table where *no* area had a distance, so there was
+  nothing for the unknown to sort against and the assertion passed whichever
+  way the comparison went. Rewritten against a table where one area has a
+  distance and one does not, which is the only shape in which the two orderings
+  are distinguishable. Sixth logged instance of a fixture whose shape made the
+  thing under test unable to fail, and it is recorded here rather than fixed
+  quietly because the count is the finding.
+- **Not deployed.** The S9 unattended window closes 2026-08-20 11:02:06 UTC and
+  a deploy resets it. Tagged and pushed only.
+
 ## 0.32.10.0 - 2026-08-19
 
 **The trailing block crossed the contract for eleven releases with no key set

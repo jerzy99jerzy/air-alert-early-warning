@@ -3,7 +3,7 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 410](https://img.shields.io/badge/tests-410-brightgreen)](tests/)
+[![tests 410](https://img.shields.io/badge/tests-427-brightgreen)](tests/)
 [![coverage 96.61%](https://img.shields.io/badge/coverage-96.61%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
 [![defects logged 87](https://img.shields.io/badge/defects%20logged-87-informational)](docs/METHODOLOGY.md)
@@ -707,10 +707,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 19 | 5,382 |
-| Tests | 45 | 7,496 |
-| Tools | 21 | 5,667 |
-| Documentation | 50 | 19,862 |
+| Package `mavo/` | 19 | 5,603 |
+| Tests | 46 | 7,838 |
+| Tools | 21 | 5,752 |
+| Documentation | 51 | 20,039 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -721,7 +721,7 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 410, of which 13 are scripted attacks |
+| Tests | 427, of which 13 are scripted attacks |
 | Coverage | 96.61% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |

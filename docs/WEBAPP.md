@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 2.9 / 2026-08-19
+Version: 3.0 / 2026-08-19
 Status: **built, deployed, and publicly reachable.** `mavo-site` 4.12.0.0 runs
 at `https://34.116.232.215.sslip.io/` and carries its own gate (seven checks,
 24 mutants, a jsdom browser harness), its own defect log and its own audit.
@@ -139,7 +139,9 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `oblast_name` | Register name (`Львівська`) | For display. Never join on it |
 | `source_last_message_at` | When the source last spoke, may be `null` | Distinct from `generated_at`. A page showing only the latter tells a reader it is fresh while the feed behind it is hours old |
 | `window_days` | The trailing window behind `recent_7d` | A count without its window is a number the reader has to guess about |
-| `recent_7d[]` | Per-**oblast** alert count over that window | Counts *declarations*, not days under alert: one six-day alert is one declaration, not six. **This block is at a different granularity from `areas[]`, which is per raion.** An oblast is the parent of the areas, not a coarser measurement of the same place, and the two lists share no key space: `areas[].area_id` is a KATOTTG code, `recent_7d[].oblast` is a slug. A page printing a number from each in adjacent sentences is printing two different quantities, and a reader has no way to see it. Asserted by `tools/contract_check.py`, not left to this row |
+| `nearest_7d` | The nearest **raion** under alert in the trailing window, or `null` | 0.33.0.0. Same granularity and same `border_km.csv` row as `areas[]`, so the weekly sentence and the live sentence are comparable by construction. `null` is unknown and must never render as "nothing near". The full block it reduces is `recent_7d_areas` in `feed.json` |
+| `feed.json: recent_7d_areas[]` | The trailing window per raion, nearest first, unknown distance last | Carries `episodes`, **not** `alerts_count`. Summing `episodes` across an oblast's areas does not give that oblast's `alerts_count` and must not be used as though it did: one western episode lights every raion at once, so the sum measures how finely the oblast is subdivided (F76). In `feed.json` rather than `state.json` because it is 10.2 KiB for the west and 35.5 KiB for every area the map knows, against a 13,150-byte `state.json` polled every thirty seconds [measured on `vm-mavo`, 2026-08-19] |
+| `recent_7d[]` | Per-**oblast** alert count over that window | Counts *declarations*, not days under alert: one six-day alert is one declaration, not six. **This block is at a different granularity from `areas[]`, which is per raion.** An oblast is the parent of the areas, not a coarser measurement of the same place, and the two lists share no key space: `areas[].area_id` is a KATOTTG code, `recent_7d[].oblast` is a slug. **It carries no distance, deliberately.** An oblast-level interval takes its lower bound from one raion and its upper from another, so it describes no single place while wearing the field names of the per-area interval that describes exactly one; a page printing both in adjacent sentences would print two quantities under one name. The weekly distance sentence comes from `nearest_7d` instead. Asserted by `tools/contract_check.py`, not left to this row |
 | `border_km_lower` / `_upper` | Interval to the border, may be `null` | A single number here would be false with a decimal point on it |
 | `kind` | `missile`, `drone`, `glide_bomb`, `artillery`, `unknown` | Five values, and the consumer currently labels three. See below |
 | `events` | The twenty-minute window, **always present** | An absent block and an empty one read alike to a careless reader. Empty means nothing happened, and the page must say so in words |
