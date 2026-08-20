@@ -16,6 +16,61 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.36.0.0 - 2026-08-20
+
+**A pinned failure rate was wrong by two orders of magnitude, and the release
+that "corrected" the README six days ago corrected it towards the wrong
+number.** F109. `docs/DEPLOYMENT.md` carried 0.076%; the measured rate is
+9.7% to 10.6% across three journal windows and four live probe series. The
+older README sentence, "roughly one poll in eight", was closer and was
+replaced at 0.33.0.2 by a pin that read F98's timeout bound as a frequency.
+
+- **How the pin was built.** Numerator counted over seven days, denominator
+  over nine, quotient described as a rate. Its denominator is within two per
+  cent of the count of *successful* collections in the whole journal, which is
+  what made it look plausible.
+- **A refusal does not print `Finished mavo-collect`.** It prints
+  `Failed to start` with `status=3`, so every count of polls taken from
+  `Finished` lines has been a count of successes wearing the name of attempts.
+  This is also what makes the S9 window close: 7,076 successes plus 774
+  refusals is 7,850 attempts over 259,200 s, a 33.0 s cadence against a
+  measured median of 33.0 s.
+- **The failure is a SYN that goes out and is not answered.** `time_connect`
+  zero, no bytes. Three explanations excluded by measurement rather than by
+  argument: DNS (40 probes with resolution skipped refused at the same rate as
+  40 with it), the missing IPv4 route (20 consecutive fetches all chose the
+  AAAA record), and path MTU (a black hole there completes the handshake and
+  stalls on transfer). **Which side drops the packets is `[unknown]`**, T70.
+- **`CONNECT_BUDGET_S = 2.0`.** Every successful connect measured took 23 to
+  55 ms, so two seconds is thirty-six times the slowest success and cannot cut
+  off a connection that was going to work. It replaces paying the whole fetch
+  budget for silence.
+- **One retry, and only when the connection was never established.** A request
+  that arrived may have been acted on, so repeating it would be a decision
+  about the far side rather than about our own timeout; that every fetch here
+  is a `GET` is not the reason it is safe, because a `GET` that arrived is
+  still a `GET` that arrived. Attempts share the outer deadline, and no retry
+  is made without room for a whole connect budget.
+- **The estimate is seven observations and is labelled as seven.** 7 of 7
+  retries connected; the one-sided 95% lower bound on retry success is 65%,
+  putting the repaired rate between 1.1% and 3.7%. T69 carries the measurement
+  that closes it, and F109 reopens rather than T69 closing if the host reads at
+  or above 4%.
+- **An F98 regression was preserved rather than adjusted.** The test asserting
+  that a deadline is spent across addresses instead of repeated now names its
+  connect budget explicitly, so the new cap cannot quietly retire the old
+  invariant to make the new feature pass.
+- **A test's clock stub held exactly two readings** and F109 reads the clock a
+  third time to decide whether a retry still fits. Unbounded after the first
+  reading now. Noted rather than only fixed, because that stub encoded how many
+  times the code under test was believed to call `time.monotonic`.
+- Nine regressions on the new behaviour. T69 and T70 opened.
+- **Observed and not repaired:** `test_the_elapsed_figure_distinguishes_a_fast_failure_from_a_slow_one`
+  patches `urllib.request.urlopen`, which stopped being the seam at 0.28.1.0.
+  It passes because the real resolver fails on `example.invalid`, not because
+  of the mock it installs. It tests the right thing for the wrong reason and
+  reaches the network to do it.
+
 ## 0.35.0.0 - 2026-08-20
 
 **Three claims that were maintained by hand and drifted, each now maintained by

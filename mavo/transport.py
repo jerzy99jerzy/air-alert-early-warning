@@ -30,6 +30,25 @@ USER_AGENT = f"mavo/{__version__} (+https://github.com/jerzy99jerzy)"
 DEFAULT_TIMEOUT_S = 10.0
 MAX_BYTES = 4_000_000
 
+# F109. A connect that has not completed in this long is not a slow connect.
+# Measured on the production host 2026-08-20 over 180 requests: every
+# successful connection completed in 23 to 55 ms, and every failure consumed
+# the whole budget with `time_connect` at exactly zero, which is a SYN that
+# went out and was never answered. Two seconds is thirty-six times the slowest
+# success observed, so it cannot cut off a connection that was going to work,
+# and it costs a fifth of what the old ceiling did when nothing was coming
+# back.
+CONNECT_BUDGET_S = 2.0
+
+# F109. One retry, and one only. Over the same 180 requests the refusal rate
+# was 10.6%, and in 7 of 7 observed cases an immediate second attempt
+# connected in 24 to 33 ms, so the failures are not correlated at this
+# timescale `[measured, n=7; the one-sided 95% lower bound on retry success is
+# 65%]`. A second attempt therefore removes most of the rate; a third would be
+# arithmetic on a number nobody has measured, and would start to compete with
+# the 30 s collection interval.
+CONNECT_RETRIES = 1
+
 # F98. The floor a read is given once the budget is spent. Zero would put the
 # socket into non-blocking mode, where a slow server produces `BlockingIOError`
 # rather than a timeout, so the refusal would name the wrong thing.
@@ -61,6 +80,7 @@ def connect_within(
     resolve: Resolver = socket.getaddrinfo,
     attempt: Attempt = _attempt_one,
     clock: Clock = time.monotonic,
+    connect_budget: float = CONNECT_BUDGET_S,
 ) -> socket.socket:
     """Connect to ``address``, with every attempt sharing one deadline.
 
@@ -70,13 +90,19 @@ def connect_within(
     IPv6-only machine the address that cannot work is tried anyway. The budget
     here is spent, not repeated: the second attempt gets what the first left.
 
+    **F109.** Each attempt is additionally capped at ``connect_budget``. The
+    deadline bounds the fetch; this bounds one silence inside it. Without the
+    cap a single unanswered SYN spends the entire fetch budget waiting for a
+    packet that measurement says is not coming, and the caller learns nothing
+    it could not have learned in two seconds.
+
     Raises the last ``OSError`` seen, or ``TimeoutError`` if the deadline
     passed before any address could be tried.
     """
     host, port = address
     failure: OSError | None = None
     for candidate in resolve(host, port):
-        budget = deadline - clock()
+        budget = min(deadline - clock(), connect_budget)
         if budget <= 0:
             break
         try:
@@ -93,10 +119,24 @@ def remaining_budget(deadline: float, clock: Clock = time.monotonic) -> float:
     return max(deadline - clock(), EXPIRED_BUDGET_FLOOR_S)
 
 
+class _Progress:
+    """Whether one attempt got as far as an open connection.
+
+    **F109.** A retry is only safe, and only useful, before the other end has
+    said anything. This records the one bit that decides it, and it is a
+    mutable object rather than a return value because the connection classes
+    are constructed by ``urllib`` and hand nothing back to the caller.
+    """
+
+    def __init__(self) -> None:
+        self.connected = False
+
+
 class _BoundedHTTPConnection(http.client.HTTPConnection):
     """An http connection that spends one deadline across connect and read."""
 
     deadline: float = 0.0
+    progress: _Progress = _Progress()
 
     def _within(
         self,
@@ -110,6 +150,7 @@ class _BoundedHTTPConnection(http.client.HTTPConnection):
         """Connect under the deadline, then hand the read what is left of it."""
         self._create_connection = self._within
         super().connect()
+        self.progress.connected = True
         if self.sock is not None:
             self.sock.settimeout(remaining_budget(self.deadline))
 
@@ -118,6 +159,7 @@ class _BoundedHTTPSConnection(http.client.HTTPSConnection):
     """The https connection. The TLS handshake inherits the connect budget."""
 
     deadline: float = 0.0
+    progress: _Progress = _Progress()
 
     def _within(
         self,
@@ -131,12 +173,13 @@ class _BoundedHTTPSConnection(http.client.HTTPSConnection):
         """Connect and handshake under the deadline, then bound the read."""
         self._create_connection = self._within
         super().connect()
+        self.progress.connected = True
         if self.sock is not None:
             self.sock.settimeout(remaining_budget(self.deadline))
 
 
 def _bound_to(
-    base: type[http.client.HTTPConnection], deadline: float
+    base: type[http.client.HTTPConnection], deadline: float, progress: _Progress
 ) -> type[http.client.HTTPConnection]:
     """A connection class carrying this request's deadline.
 
@@ -149,40 +192,59 @@ def _bound_to(
         deadline = 0.0
 
     _Bound.deadline = deadline
+    _Bound.progress = progress
     return _Bound
 
 
 class _BoundedHTTPHandler(urllib.request.HTTPHandler):
     """Opens http connections that share one deadline."""
 
-    def __init__(self, deadline: float) -> None:
+    def __init__(self, deadline: float, progress: _Progress | None = None) -> None:
         super().__init__()
         self.deadline = deadline
+        # Optional so the handler can be constructed for what it was built to
+        # do before F109 existed: carry a deadline. A handler with no record to
+        # write into gets a private one rather than a `None` to guard on.
+        self.progress = progress if progress is not None else _Progress()
 
     def http_open(self, req: urllib.request.Request) -> Any:
         """Open ``req`` on a deadline-bounded connection."""
-        return self.do_open(_bound_to(_BoundedHTTPConnection, self.deadline), req)
+        return self.do_open(
+            _bound_to(_BoundedHTTPConnection, self.deadline, self.progress), req
+        )
 
 
 class _BoundedHTTPSHandler(urllib.request.HTTPSHandler):
     """Opens https connections that share one deadline."""
 
-    def __init__(self, deadline: float) -> None:
+    def __init__(self, deadline: float, progress: _Progress | None = None) -> None:
         super().__init__()
         self.deadline = deadline
+        # Optional so the handler can be constructed for what it was built to
+        # do before F109 existed: carry a deadline. A handler with no record to
+        # write into gets a private one rather than a `None` to guard on.
+        self.progress = progress if progress is not None else _Progress()
 
     def https_open(self, req: urllib.request.Request) -> Any:
         """Open ``req`` on a deadline-bounded connection, TLS included."""
         # No context argument: `HTTPSConnection` builds the same default
         # `ssl` context urllib would have handed it, and reaching for the
         # handler's private attribute to pass it along buys nothing.
-        return self.do_open(_bound_to(_BoundedHTTPSConnection, self.deadline), req)
+        return self.do_open(
+            _bound_to(_BoundedHTTPSConnection, self.deadline, self.progress), req
+        )
 
 
-def _open(request: urllib.request.Request, timeout_s: float, deadline: float) -> Any:
+def _open(
+    request: urllib.request.Request,
+    timeout_s: float,
+    deadline: float,
+    progress: _Progress | None = None,
+) -> Any:
     """Perform the request under one deadline. The seam the tests replace."""
+    record = progress if progress is not None else _Progress()
     opener = urllib.request.build_opener(
-        _BoundedHTTPHandler(deadline), _BoundedHTTPSHandler(deadline)
+        _BoundedHTTPHandler(deadline, record), _BoundedHTTPSHandler(deadline, record)
     )
     return opener.open(request, timeout=timeout_s)
 
@@ -225,6 +287,45 @@ class UrllibTransport:
         """
         self.timeout_s = timeout_s
 
+    def _attempt(
+        self, request: urllib.request.Request, deadline: float, tried: list[int]
+    ) -> bytes:
+        """Fetch, retrying only a request that never reached the other end.
+
+        **F109.** The condition is `progress.connected`, and it is the whole
+        safety argument. A request that connected may have been received and
+        acted on, so repeating it is a decision about the far side rather than
+        about our own timeout; a request whose SYN was never answered cannot
+        have been. That every fetch here is a `GET` is not the reason this is
+        safe, because a `GET` that arrived is still a `GET` that arrived.
+
+        Attempts share the outer deadline, so a retry cannot extend the fetch
+        past the budget its caller set. It is only made when what remains is
+        enough for a whole connect budget, since a retry with two hundred
+        milliseconds left is an attempt engineered to fail and would report a
+        second failure that measures nothing but the clock.
+
+        ``tried`` is appended to rather than returned, because the count has
+        to survive the raise: a refusal that hid a retry would understate what
+        the network cost, and the caller writing the journal line is on the
+        other side of the exception.
+        """
+        failure: Exception | None = None
+        for _attempt in range(1 + CONNECT_RETRIES):
+            progress = _Progress()
+            tried.append(1)
+            try:
+                with _open(request, self.timeout_s, deadline, progress) as response:
+                    return bytes(response.read(MAX_BYTES + 1))
+            except (urllib.error.URLError, OSError, ValueError) as refused:
+                failure = refused
+                if progress.connected:
+                    raise
+                if time.monotonic() + CONNECT_BUDGET_S > deadline:
+                    raise
+        assert failure is not None  # unreachable: the loop runs at least once
+        raise failure
+
     def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
         """Fetch ``url``, capped in size and time. Refuses any non-http(s) scheme.
 
@@ -246,9 +347,10 @@ class UrllibTransport:
             sent = {**sent, **headers}
         request = urllib.request.Request(url, headers=sent)
         started = time.monotonic()
+        deadline = started + self.timeout_s
+        tried: list[int] = []
         try:
-            with _open(request, self.timeout_s, started + self.timeout_s) as response:
-                raw = response.read(MAX_BYTES + 1)
+            raw = self._attempt(request, deadline, tried)
         except (urllib.error.URLError, OSError, ValueError) as failure:
             # T55. The refusal carries how long it waited and what was raised,
             # because without them a stall that hit the ten-second ceiling and
@@ -264,9 +366,10 @@ class UrllibTransport:
             # and a diagnostic that reports nonsense under load is worse than
             # one that reports nothing.
             waited = time.monotonic() - started
+            attempts = "" if len(tried) <= 1 else f", {len(tried)} attempts"
             raise SourceUnavailable(
                 f"{url}: {failure} "
-                f"[after {waited:.2f}s, {type(failure).__name__}]"
+                f"[after {waited:.2f}s, {type(failure).__name__}{attempts}]"
             ) from failure
         if len(raw) > MAX_BYTES:
             raise SourceUnavailable(f"{url}: response exceeds {MAX_BYTES} bytes")

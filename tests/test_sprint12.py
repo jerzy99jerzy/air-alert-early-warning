@@ -353,6 +353,7 @@ def test_the_elapsed_figure_distinguishes_a_fast_failure_from_a_slow_one() -> No
     presence of a number. Without this, a build that printed a constant would
     pass.
     """
+    import itertools
     import urllib.error
     from unittest import mock
 
@@ -360,7 +361,14 @@ def test_the_elapsed_figure_distinguishes_a_fast_failure_from_a_slow_one() -> No
     from mavo.transport import UrllibTransport
 
     def refuse_after(seconds: float) -> str:
-        clock = iter([0.0, seconds])
+        # The stub held exactly two readings until 0.36.0.0, which modelled a
+        # fetch that reads the clock twice. F109 reads it again to decide
+        # whether a retry still fits inside the deadline, so a two-value
+        # iterator now runs out mid-fetch. Unbounded after the first reading:
+        # the figure under test is the difference between the start and the
+        # refusal, and holding every later reading at `seconds` keeps that
+        # difference exactly what the test names.
+        clock = itertools.chain([0.0], itertools.repeat(seconds))
         with mock.patch("urllib.request.urlopen",
                         side_effect=urllib.error.URLError("no route")), \
              mock.patch("time.monotonic", side_effect=lambda: next(clock)):

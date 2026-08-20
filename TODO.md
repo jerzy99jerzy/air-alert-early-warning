@@ -4,13 +4,13 @@
 
 ### Where the backlog stands
 
-**27 of 67 closed, 40 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**27 of 69 closed, 42 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 19 | Finished, with the release that closed it named in the entry |
 | `moved` | 8 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 27 | Nothing external blocks it; it needs a session |
+| `ready` | 29 | Nothing external blocks it; it needs a session |
 | `decision` | 7 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -26,11 +26,11 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 11 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T66](#t66-attempt-completeness-as-its-own-instrument), [T68](#t68-decide-where-if-anywhere-a-polish-warning-renders)
+**Tier 1, 12 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T66](#t66-attempt-completeness-as-its-own-instrument), [T68](#t68-decide-where-if-anywhere-a-polish-warning-renders), [T69](#t69-a-connect-budget-and-one-retry-on-the-measured-failure)
 
 **Tier 2, 16 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of)
 
-**Tier 3, 13 open:** [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise)
+**Tier 3, 14 open:** [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise), [T70](#t70-which-side-drops-the-packets)
 
 ### By sprint
 
@@ -43,7 +43,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T68](#t68-decide-where-if-anywhere-a-polish-warning-renders) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T68](#t68-decide-where-if-anywhere-a-polish-warning-renders), [T69](#t69-a-connect-budget-and-one-retry-on-the-measured-failure), [T70](#t70-which-side-drops-the-packets) |
 
 <!-- index:end -->
 
@@ -1858,3 +1858,46 @@ it is made.** T67 stops at a table; nothing renders.
 
 **Acceptance:** a decision entry naming the surface, the words the page uses
 to say this is not a warning channel, and a reopen condition.
+
+## T69. A connect budget and one retry, on the measured failure
+Status: `ready` [tier 1]
+
+Shipped at 0.36.0.0: `CONNECT_BUDGET_S = 2.0` and one retry, made only when
+the connection was never established. What remains is the part a release
+cannot do, which is finding out whether it worked.
+
+**The estimate this rests on is seven observations.** 7 of 7 retries connected
+on 2026-08-20, giving a one-sided 95% lower bound of 65% on retry success and
+a repaired rate between 1.1% and 3.7% `[inference]`. The failures are
+independent at a one-second timescale or they are not, and seven trials cannot
+tell 100% from 70%.
+
+**Acceptance:** the refusal rate over at least 24 hours on the host after this
+release is deployed, read the same way F109 read it - refusals and attempts
+counted separately from the journal, not a ratio quoted from anywhere. Below
+4% closes it. At or above 4% reopens F109 rather than closing this.
+
+
+## T70. Which side drops the packets
+Status: `ready` [tier 3]
+
+`time_connect` is zero on every refusal and no bytes arrive, so a SYN leaves
+and nothing answers. Three explanations are excluded by measurement: DNS (40
+probes with resolution skipped refused at the same rate), the absent IPv4
+route (20 consecutive fetches all chose the AAAA record), and path MTU (a
+black hole there completes the handshake and stalls on transfer, and these
+never reach the handshake).
+
+What remains is loss on the IPv6 egress path or refusal at the far end, and
+nothing in the journal distinguishes them, because the application sees one
+duration either way.
+
+**Tier 3, deliberately.** T69's repair works whichever answer this has, so
+knowing costs a diagnosis and buys nothing operational today. It matters if
+T69's acceptance fails, and then it is the next question rather than a
+parallel one.
+
+**Acceptance:** `tcpdump -i ens4 ip6 and port 443` across at least one
+refusal, with the SYN retransmissions counted and any response recorded.
+Refusal at the far end and loss on the path look different on the wire even
+though they look identical from inside the process.

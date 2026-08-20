@@ -3307,3 +3307,53 @@ the same state. `check_every_cited_defect_has_an_entry` closes the mechanism at
 **Reopen condition:** it reopens if a release ships with the manifest
 regenerated to make a check green, which is the act the tool's own error
 message forbids.
+
+### F109, 0.36.0.0. A pinned failure rate that was two orders of magnitude wrong
+
+`docs/DEPLOYMENT.md` has carried **0.076%** as the collector's poll failure
+rate since 2026-08-14, and `README.md` was corrected at 0.33.0.2 to agree with
+it, replacing an older sentence that said roughly one poll in eight. **The
+older sentence was closer.** The measured rate is between 9.7% and 10.6%.
+
+**How the pin was built.** Its numerator, 14, counts fetches over 15 seconds
+in the seven days after F98 landed. Its denominator, "roughly 18,350 polls",
+is within two per cent of the number of *successful* collections in the whole
+journal, which spans nine days. A numerator from one window over a denominator
+from another, and the quotient described as a failure rate.
+
+**What is actually there** `[measured 2026-08-20, on the host]`:
+
+| Window | Attempts | Refusals | Rate |
+| --- | --- | --- | --- |
+| 08-14 18:13 → 08-17 11:02, the window the pin names | 7,074 | 689 | 9.7% |
+| 08-17 11:02 → 08-20 11:02, the S9 window | 7,850 | 774 | 9.9% |
+| Whole journal | 19,956 | 1,966 | 9.9% |
+| Four live probe series, same afternoon | 180 | 19 | 10.6% |
+
+**F98 bounded the cost of a failure and not its frequency, and the pin read
+the bound as the frequency.** Every refusal in the journal sits at 10.0
+seconds, which is the timeout doing exactly what F98 made it do.
+
+**What the failure is.** `time_connect` is zero on every refusal and the
+response body is empty: a SYN goes out and nothing comes back. Not DNS - 40
+probes with the address pinned and resolution skipped refused at the same rate
+as 40 with it. Not the missing IPv4 route - 20 consecutive fetches all chose
+the AAAA record and none touched the A record. Not path MTU - a black hole
+there would complete the handshake and stall on transfer, and these never
+reach the handshake. **Which side drops the packets is `[unknown]`** and T70
+holds the question.
+
+**Repair, and its evidence.** Every successful connect measured took 23 to 55
+ms, so `CONNECT_BUDGET_S = 2.0` cannot cut off a connection that was going to
+work and stops paying ten seconds for silence. In 7 of 7 observed cases an
+immediate retry connected, so one retry removes most of the rate; the
+one-sided 95% lower bound on retry success is 65%, which puts the repaired
+rate between 1.1% and 3.7% `[inference from n=7]`. **The retry is made only
+when the connection was never established**, because a request that arrived
+may have been acted on and repeating it would be a decision about the far
+side rather than about our own timeout.
+
+**Reopen condition:** it reopens if the refusal rate measured after this
+release lands on the host is not below 4%, which would mean the failures are
+correlated at the timescale a retry works on, and the estimate above rested on
+seven observations.

@@ -44,9 +44,11 @@ class _Response:
 def _serving(monkeypatch: pytest.MonkeyPatch, payload: bytes) -> None:
     # The seam moved at 0.28.1.0: the fetch no longer calls `urlopen`, because
     # `urlopen` cannot be given a deadline that spans connect and read (F98).
+    # It grew a fourth argument at 0.36.0.0, the record saying whether an
+    # attempt reached the far end, which is what decides a retry (F109).
     monkeypatch.setattr(
         "mavo.transport._open",
-        lambda request, timeout_s, deadline: _Response(payload),
+        lambda request, timeout_s, deadline, progress=None: _Response(payload),
     )
 
 
@@ -66,7 +68,9 @@ def test_a_body_over_the_cap_is_a_refusal_not_a_truncation(
 
 
 def test_a_url_error_maps_to_the_one_refusal_type(monkeypatch: pytest.MonkeyPatch) -> None:
-    def refuse(request: Any, timeout_s: float, deadline: float) -> Any:
+    def refuse(
+        request: Any, timeout_s: float, deadline: float, progress: Any = None
+    ) -> Any:
         raise urllib.error.URLError("injected")
 
     monkeypatch.setattr("mavo.transport._open", refuse)
@@ -142,6 +146,13 @@ def test_f98_the_budget_is_spent_across_addresses_rather_than_repeated() -> None
             resolve=_two_addresses,
             attempt=stalls,
             clock=clock,
+            # Named explicitly at 0.36.0.0. F109 caps each attempt at two
+            # seconds by default, and this test is about the *deadline* being
+            # spent rather than repeated. Letting the new cap change the
+            # expected numbers here would quietly retire an F98 regression to
+            # make an F109 feature pass, which is how a suite stops defending
+            # the thing it was written for.
+            connect_budget=10.0,
         )
 
     assert handed == [10.0]

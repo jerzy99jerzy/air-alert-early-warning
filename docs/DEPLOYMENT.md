@@ -63,11 +63,30 @@ rather than a designed experiment:
 | Package installed | **2026-08-14 18:13:09 UTC** |
 | Gap | **35 seconds** |
 | Fetches over 15 s in the whole journal | 366, **every one before that moment** |
-| Timeouts in the seven days since | 14, **all between 10.01 s and 10.16 s** |
-| Failure rate | 14 in roughly 18,350 polls, 0.076% |
+| Timeouts in the seven days since | 14, **all between 10.0 s and 10.2 s** |
+| ~~Failure rate~~ | ~~14 in roughly 18,350 polls, 0.076%~~ **withdrawn at 0.36.0.0, F109** |
+
+**The withdrawn row is left in place rather than deleted**, because a figure
+that was quoted for six days and repaired into `README.md` at 0.33.0.2 should
+not vanish from the document that held it. It divided a numerator counted over
+seven days by a denominator counted over nine, and described the quotient as a
+failure rate.
+
+| Refusal rate, measured 2026-08-20 | Attempts | Refusals | Rate |
+| --- | --- | --- | --- |
+| 08-14 18:13 → 08-17 11:02, the window above | 7,074 | 689 | **9.7%** |
+| 08-17 11:02 → 08-20 11:02, the S9 window | 7,850 | 774 | **9.9%** |
+| Whole journal | 19,956 | 1,966 | **9.9%** |
+
+A refusal does not print `Finished mavo-collect`; it prints `Failed to start`
+with `status=3`. Attempts are the sum of the two, which is what makes the S9
+window's arithmetic close: 7,850 attempts over 259,200 seconds is a 33.0 s
+cadence against a measured median of 33.0 s.
 
 The ten-second bound holds on the host. F98 is deployed and this is what
-deployed looks like from outside the code.
+deployed looks like from outside the code. **F98 bounded the cost of a failure
+and not its frequency**, and the withdrawn row above read the bound as the
+frequency (F109).
 
 ### Cadence, measured over a full day
 
