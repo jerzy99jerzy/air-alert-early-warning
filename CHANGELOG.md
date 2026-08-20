@@ -16,6 +16,40 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.34.0.0 - 2026-08-20
+
+**A reader for the Polish civil-warning feed, and no decision about where it
+renders.** RSO publishes XML; RCB publishes nothing, because it is not a
+publication system. The reader has no `poll`, no store and no caller, which is
+the position `ukrainealarm.py` holds and for a related reason: a module that
+can be dropped into the collector by accident makes a product decision by
+default.
+
+- **The feed reports nothing in two shapes and this project has a rule for
+  neither.** `<latitude></latitude>` is present and empty; `valid_from` on a
+  road message is absent. An adapter testing presence reads the first as a
+  value. Both now read `None`, and the collapse is deliberate: inventing a
+  difference between them would be a claim about the publisher's intent that
+  nobody has measured.
+- **An unparseable page is not an empty page.** Damaged bytes, an oversized
+  body and a doctype all refuse. An empty page is a real answer on a quiet
+  day, so it must not also be the answer to a question we failed to ask. The
+  doctype guard is there because `xml.etree` is documented as unsafe against
+  entity expansion and this feed has never carried one, so refusing the
+  construct removes the class rather than bounding it.
+- **Timestamps arrive with no offset and are not converted in the parser.**
+  `to_utc` takes the zone from its caller and refuses an hour the zone maps
+  twice. A silently chosen offset is wrong for one hour of one night a year,
+  which is the error profile nobody ever finds. `rso_alarm` stays text for the
+  same class of reason: reading it as an integer asserts an ordering of
+  MSWiA's severity levels that is undocumented and unverified here.
+- **A row without an identifier is dropped and counted on the page.** A caller
+  reading only the list cannot otherwise tell a short page from a damaged one.
+  Same distinction as `gaps` against `unobserved` in `mavo-adsb`.
+- Nineteen regressions. T66, T67 and T68 opened; **T66 existed in a handover
+  and not in this file**, which is how a task can be discussed for a day and
+  still not be work anybody agreed to.
+
 ## 0.33.0.2 - 2026-08-19
 
 **A full read of `README.md` against the tree. Seven claims were stale and six

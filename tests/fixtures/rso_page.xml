@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<newses>
+  <pagination_info totalItems="17" itemsPerPage="20"/>
+  <news>
+    <id>23261045</id>
+    <title>Gwałtowne wzrosty stanów wody</title>
+    <shortcut>podkarpackie, zlewnie dopływów Wisły oraz zlewnia Strwiąża</shortcut>
+    <content>W obszarach występowania prognozowanych opadów burzowych</content>
+    <rso_alarm>1</rso_alarm>
+    <rso_icon></rso_icon>
+    <valid_from>2026-08-20 12:15:00</valid_from>
+    <valid_to>2026-08-21 10:00:00</valid_to>
+    <repetition>5</repetition>
+    <longitude></longitude>
+    <latitude></latitude>
+    <water_level_value></water_level_value>
+    <water_level_warning_status_value></water_level_warning_status_value>
+    <water_level_alarm_status_value></water_level_alarm_status_value>
+    <water_level_trend></water_level_trend>
+    <type></type>
+    <river_name></river_name>
+    <location_name></location_name>
+    <created_at>2026-08-20 11:27:07</created_at>
+    <updated_at>2026-08-20 12:13:47</updated_at>
+    <provinces>
+      <province id="9" slug="podkarpackie" city="">Podkarpackie</province>
+    </provinces>
+  </news>
+  <news>
+    <id>23260001</id>
+    <title>Utrudnienia drogowe</title>
+    <rso_alarm>0</rso_alarm>
+    <created_at>2026-08-20 06:00:00</created_at>
+    <provinces>
+      <province id="9" slug="podkarpackie" city="Rzeszów">Podkarpackie</province>
+      <province id="6" slug="lubelskie" city="">Lubelskie</province>
+    </provinces>
+  </news>
+</newses>

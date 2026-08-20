@@ -3,8 +3,8 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 427](https://img.shields.io/badge/tests-427-brightgreen)](tests/)
-[![coverage 96.61%](https://img.shields.io/badge/coverage-96.61%25-brightgreen)](Makefile)
+[![tests 446](https://img.shields.io/badge/tests-446-brightgreen)](tests/)
+[![coverage 96.75%](https://img.shields.io/badge/coverage-96.75%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
 [![defects logged 87](https://img.shields.io/badge/defects%20logged-87-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
@@ -741,10 +741,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 19 | 5,603 |
-| Tests | 46 | 7,838 |
+| Package `mavo/` | 20 | 5,889 |
+| Tests | 47 | 8,051 |
 | Tools | 22 | 6,036 |
-| Documentation | 51 | 20,174 |
+| Documentation | 52 | 20,372 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -755,8 +755,8 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 427, of which 13 are scripted attacks |
-| Coverage | 96.61% against a floor of 95, a ratchet that is never lowered |
+| Tests | 446, of which 13 are scripted attacks |
+| Coverage | 96.75% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 87, the count pinned against the log itself |
@@ -808,12 +808,13 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: **427 tests passing, of which 13 are harness attacks.
-  Coverage 96.61%** against a floor of 95. These three numbers read 170, 12 and
+- `make verify` green: **446 tests passing, of which 13 are harness attacks.
+  Coverage 96.75%** against a floor of 95. These three numbers read 170, 12 and
   96.90% until 0.33.0.2, while the badges at the head of this file and the
   table in *The repository in numbers* carried the current ones. `docs_audit`
-  checks the badges and the table and did not check this list, so one document
-  disagreed with itself in three places for many releases. The floor stays a
+  checks the badges and the table and **still does not check this list**, so
+  the correction at 0.33.0.2 and the update at 0.34.0.0 were both done by hand
+  and the next one can be missed the same way. The floor stays a
   ratchet under T9:
   the rise is below the five-point threshold that moves it. The old caveat
   stands in kind:
