@@ -16,6 +16,7 @@ import sys
 import tomllib
 from datetime import date
 from pathlib import Path
+from urllib.parse import unquote
 from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -635,6 +636,84 @@ def check_defect_count_is_pinned(status: dict[str, object]) -> list[str]:
 CITED_WITHOUT_AN_ENTRY = ("D-025",)
 
 
+#: Defect identifiers that `CHANGELOG.md` cites and `docs/METHODOLOGY.md` has
+#: no entry for. They predate the registry being read as the register rather
+#: than as a narrative, and entries are not written for them now: the releases
+#: that cited them are dated, the defects were real, and reconstructing what
+#: they said from the number alone would be inventing a record in the one file
+#: whose value is that it does not invent. The check below fails if one gains
+#: an entry, so the list can shrink and cannot quietly stay stale.
+CITED_DEFECTS_WITHOUT_AN_ENTRY = ("F14", "F17", "F18", "F28", "F29")
+
+
+def check_every_cited_defect_has_an_entry(status: dict[str, object]) -> list[str]:
+    """A defect cited in the changelog has an entry in the register.
+
+    Added at 0.35.0.0, and the gap it closes had been open since 0.33.0.1.
+    F108 was written into ``CHANGELOG.md`` and never into
+    ``docs/METHODOLOGY.md``. Nothing failed: ``check_defect_count_is_pinned``
+    compares the entry count against ``STATUS.json`` and the README badge, so
+    three artefacts agreed about a number while the newest defect sat outside
+    all of them. A count cannot notice an absence it was never told about.
+
+    The direction matters. This reads the changelog and asks the register,
+    which is the direction a citation travels; the older check reads the
+    register and asks the pin. Both are needed and neither substitutes.
+    """
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    register = (ROOT / "docs" / "METHODOLOGY.md").read_text(encoding="utf-8")
+    entries = set(re.findall(r"^### (F\d+),", register, re.M))
+    cited = set(re.findall(r"\bF\d{1,3}\b", changelog))
+    problems: list[str] = []
+    for number in sorted(cited - entries, key=lambda n: int(n[1:])):
+        if number not in CITED_DEFECTS_WITHOUT_AN_ENTRY:
+            problems.append(
+                f"CHANGELOG.md cites {number} and docs/METHODOLOGY.md has no "
+                f"entry for it; write the entry, or name it in "
+                f"CITED_DEFECTS_WITHOUT_AN_ENTRY with the reason"
+            )
+    for number in CITED_DEFECTS_WITHOUT_AN_ENTRY:
+        if number in entries:
+            problems.append(
+                f"{number} now has an entry and is still listed in "
+                f"CITED_DEFECTS_WITHOUT_AN_ENTRY; remove it from the list"
+            )
+    return problems
+
+
+def check_badge_alt_text_matches_the_badge(status: dict[str, object]) -> list[str]:
+    """The words beside a badge say what the badge says.
+
+    ``check_badges_match_the_pins`` reads the shields.io URL and does not read
+    the text next to it, so at 0.33.0.2 the tests badge rendered 427 while its
+    alt text read 410 and had done for a release. Alt text is what a reader
+    with images disabled sees and what a screen reader speaks, so a drifted
+    one is not cosmetic: it is the only version of the figure some readers get.
+
+    Compared as digit sequences rather than as strings, because the URL
+    percent-encodes and the alt text does not.
+    """
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    problems: list[str] = []
+    for alt, url in re.findall(r"!\[([^\]]*)\]\((https://img\.shields\.io[^)]*)\)", readme):
+        # Decoded first: the URL percent-encodes spaces, pipes and per-cent
+        # signs, and every one of those escapes carries digits of its own.
+        # Comparing the raw path would compare `%20` against nothing.
+        path = unquote(url.split("/badge/", 1)[-1].split("?")[0])
+        # The trailing segment is the colour, which is not a claim about
+        # anything. `--` is shields' escape for a literal hyphen and survives
+        # the split because the colour cannot contain one.
+        claim = path.rsplit("-", 1)[0]
+        in_alt = re.findall(r"\d+", alt)
+        in_url = re.findall(r"\d+", claim)
+        if in_alt != in_url:
+            problems.append(
+                f"README badge alt text {alt!r} carries {in_alt} and the badge "
+                f"itself carries {in_url}"
+            )
+    return problems
+
+
 def check_defect_identifiers_are_unique(status: dict[str, object]) -> list[str]:
     """Two entries in the defect log may not carry the same `F<n>`.
 
@@ -940,6 +1019,8 @@ def main() -> int:
         + check_the_readme_status_agrees_with_the_sprint_files(status)
         + check_defect_identifiers_are_unique(status)
         + check_defect_count_is_pinned(status)
+        + check_every_cited_defect_has_an_entry(status)
+        + check_badge_alt_text_matches_the_badge(status)
         + check_decision_count_is_derived_from_the_log(status)
         + check_statistics_match_the_tree(status)
         + check_measured_block_is_recomputed(status)

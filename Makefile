@@ -2,9 +2,9 @@
 PY := python3
 PKG := mavo
 
-.PHONY: verify private-artifacts manifest-completeness manifest manifest-write coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
+.PHONY: verify private-artifacts lint-precision manifest-completeness manifest manifest-write coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
 
-verify: private-artifacts manifest-completeness coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation
+verify: private-artifacts manifest-completeness coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain lint-precision docs-audit manual-audit contract-check todo-index brief-check harness-mutation
 	@echo "verify: OK"
 
 # pytest exits 5 when nothing is collected. That exit code is NOT swallowed:
@@ -40,6 +40,13 @@ lint-mermaid:
 
 lint-domain:
 	$(PY) tests/lint_domain.py
+
+# A figure printed past the precision that changes a decision is not rigour.
+# Counted per document against a ceiling that may fall and may not rise,
+# because which class a figure belongs to is not decidable from its shape:
+# `0.076` and `7.84` look identical and only one of them is noise.
+lint-precision:
+	$(PY) tools/precision_lint.py
 
 docs-audit:
 	$(PY) tools/docs_audit.py

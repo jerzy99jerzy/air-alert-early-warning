@@ -452,3 +452,31 @@ section 7 replaces them and most of this document becomes background.
 Deciding this changes what M0 costs by more than any other open item here, and
 it is recorded as T25 rather than left to be settled by whichever machine was
 convenient on the day.
+
+## The release order, and why the obvious one cannot run
+
+**apply → add → manifest-write → verify → manifest → commit → tag.**
+
+The order after F108 was written as apply → add → verify → manifest, and it
+**cannot be executed when a release adds a file**. `manifest-completeness` is
+inside `verify`, and it fails on a file that is tracked and not listed, which
+is exactly what a new file is after `git add` and before `check_manifest.py
+--write`. Measured twice in one session while shipping 0.34.0.0.
+
+| Step | Command | What would go wrong without it |
+| --- | --- | --- |
+| apply | `git apply --check` first, then `git apply` | a patch half-applied leaves a tree nobody can name |
+| add | `git add -A` | F108: `check_manifest.py` reads `git ls-files`, so an untracked file is not a file to it |
+| manifest-write | `make manifest-write` | `verify` cannot pass while a tracked file is unlisted |
+| verify | `make verify` | the gate |
+| manifest | `make manifest` | digests describe *this* tree; deliberately outside `verify`, which runs on trees under edit |
+| commit | `verify && commit` as one chain | a commit made after a failed gate looks identical to one made after a passing gate |
+| tag | on the **full hash**, never `HEAD~n` or `HEAD` | six tagging failures across this project family |
+
+**Regeneration is a release step, not a repair step.** Running `manifest-write`
+to make a red check green is the same act as moving a tag, and the tool's own
+error message says so.
+
+**After tagging, read the tag rather than trusting it**: `git show
+<tag>:pyproject.toml` prints the version the tag actually points at, which has
+disagreed with the worktree before.

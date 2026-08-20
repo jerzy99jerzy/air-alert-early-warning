@@ -3268,3 +3268,42 @@ contract or the schema. **T65**, with the S9 figure as its input.
 **Reopen condition, stated because this entry ships open:** it closes when the
 duty cycle is measured and a decision entry names the chosen repair.
 
+### F108, 0.33.0.1. The manifest gate could not see the files it was missing
+
+`tools/check_manifest.py` reads the tree through `git ls-files`, so an
+**untracked** file is not a file to any check in that module. `--write` omits
+it, `--completeness` then holds against a list that does not contain it,
+`make verify` goes green, `git add` follows, and the manifest is wrong one
+commit before anybody looks. The gate's perimeter and the release's perimeter
+were the same command and were assumed to be the same set.
+
+**Second occurrence in two days.** `5626e790` failed CI on 2026-08-17 and
+`bb85ec5` fixed it with a commit whose entire content was rewritten digests.
+That fix restored the state and left the mechanism, which is the difference
+between a repair and a correction.
+
+**Repaired at 0.33.0.1.** `completeness` now also fails on a file that is
+present, not ignored and not yet tracked. `--exclude-standard` keeps `.venv`,
+`.gate` and outreach artefacts invisible; `MANIFEST.sha256` is excluded by name
+for the same self-reference reason it is excluded elsewhere. Verified in both
+directions: red on a planted untracked file, green on a clean tree.
+
+**What the repair did not reach, found at 0.35.0.0.** The documented release
+order after this defect read apply → add → verify → manifest, and that order
+**cannot be executed when a release adds a file**: `manifest-completeness` is
+inside `verify`, so `verify` fails on the new file before the manifest is ever
+written. Measured twice in one session while shipping 0.34.0.0. The order is
+now apply → add → **manifest-write** → verify → manifest → commit → tag, and it
+is in `docs/DEPLOYMENT.md` rather than only in a handover.
+
+**This entry itself is the third finding.** F108 was written into
+`CHANGELOG.md` at 0.33.0.1 and not into this file, and the gate could not see
+that either: `check_defect_count_is_pinned` compares the entry count against
+`STATUS.json` and the README badge, so three artefacts agreed about a number
+while the newest defect sat outside all of them. Four older identifiers are in
+the same state. `check_every_cited_defect_has_an_entry` closes the mechanism at
+0.35.0.0 and names those four rather than inventing entries for them.
+
+**Reopen condition:** it reopens if a release ships with the manifest
+regenerated to make a check green, which is the act the tool's own error
+message forbids.

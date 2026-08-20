@@ -16,6 +16,57 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.35.0.0 - 2026-08-20
+
+**Three claims that were maintained by hand and drifted, each now maintained by
+the gate.** No runtime path changes. The pattern across all three is one
+sentence: a check can only see what it was told to look at, and each of these
+had a check beside it that was looking somewhere else.
+
+- **A defect could be cited and never registered.** F108 was written into this
+  file at 0.33.0.1 and never into `docs/METHODOLOGY.md`, and nothing failed:
+  `check_defect_count_is_pinned` counts entries in the register and compares
+  them against `STATUS.json` and the README badge, so three artefacts agreed
+  about a number while the newest defect sat outside all of them. A count
+  cannot notice an absence it was never told about. The new check reads the
+  changelog and asks the register, which is the direction a citation travels.
+  F108's entry is written. **F14, F17, F18, F28 and F29 are cited here with no
+  entry** and are named in a frozen list rather than reconstructed: the
+  releases that cited them are dated, the defects were real, and inventing
+  what they said from the number alone would be fabricating a record in the
+  one file whose worth is that it does not.
+- **A badge's alt text could disagree with the badge.** It did, for a release:
+  427 in the image and 410 in the words beside it. `check_badges_match_the_pins`
+  reads the shields.io URL and not the text, and alt text is the only version
+  of the figure a reader with images off ever gets. Compared after decoding,
+  because the first attempt compared the raw path and reported every badge with
+  a space in its label, and a check that cries on a clean tree is removed by
+  whoever is trying to ship.
+- **Nothing measured how precise this documentation pretends to be.** 288
+  figures carry two or more decimals. `lint-precision` counts them per document
+  against a ceiling that may fall and may not rise. It counts rather than
+  judges because the class is not decidable from the shape: `0.076` and `7.84`
+  look identical and only one is noise. Counts keep every digit, ratios whose
+  digits are the claim keep them, and statistical output keeps three decimals
+  where the reader is checking the sums. The README's own latency paragraph is
+  swept: 7.84 days is 7.8, and 22.7, 109.7 and 266.7 seconds are 23, 110 and
+  267.
+- **The ceilings were first seeded from the wrong scan.** An early pass had
+  used a pattern that also matched fragments of version strings, so
+  `docs/METHODOLOGY.md` was recorded at 212 where it holds 81. Caught because
+  the tool measured the tree instead of trusting the number. Same class as
+  F102 and F104 and the fourth instance this week.
+- **The release order after F108 could not be executed.** apply → add → verify
+  → manifest fails at `verify` whenever a release adds a file, because
+  `manifest-completeness` lives inside it. Measured twice while shipping
+  0.34.0.0. `docs/DEPLOYMENT.md` now carries apply → add → manifest-write →
+  verify → manifest → commit → tag, with what each step prevents.
+- T40, T42 and T46 carried no state and the backlog index had been printing
+  that as a defect in the entries for weeks. T40 is `ready` with the row
+  waiting on T66, T42 is `moved` to `mavo-adsb`, T46 is `ready` and partial.
+- Eleven regressions on the three new checks, each planted red before being
+  read green.
+
 ## 0.34.0.0 - 2026-08-20
 
 **A reader for the Polish civil-warning feed, and no decision about where it
