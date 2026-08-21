@@ -35,7 +35,7 @@ implicit, because that is where the inconsistency otherwise lives.
 
 Status: pre-alpha, **three sprints from beta** (S9, S10, S11) on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate.
 
-**Deployed and publicly reachable since 2026-08-12 at [34.116.232.215.sslip.io/en](https://34.116.232.215.sslip.io/en)** (Polish: [/pl](https://34.116.232.215.sslip.io/pl)). The address is temporary and a proper domain is being arranged. It is printed here because a README that says "publicly reachable" without saying where is asking to be trusted on the one claim a reader could check in a second.
+**Deployed and publicly reachable since 2026-08-12, at [mavo.org.pl/en](https://mavo.org.pl/en)** (Polish: [mavo.org.pl/pl](https://mavo.org.pl/pl)). The address is printed here because a README that says "publicly reachable" without saying where is asking to be trusted on the one claim a reader could check in a second.
 
 That is the cheaper half of beta: the instrument is live. The other half is not met. **No western area has ever been hand-checked**, and western areas are the only kind this product is for (T36).
 
@@ -330,10 +330,10 @@ across the border. Decisions about your own safety come from the official
 Polish channels.
 
 **Is it live?** Yes, and the page is public:
-[34.116.232.215.sslip.io/en](https://34.116.232.215.sslip.io/en). It is also
-early: read the status line above before you rely on any number in it. If the
-link does not resolve, the address has moved rather than the project having
-stopped; the repository is the durable artefact and the deployment is not.
+[mavo.org.pl/en](https://mavo.org.pl/en). It is also early: read the status
+line above before you rely on any number in it. If the link does not resolve,
+the deployment has moved rather than the project having stopped; the
+repository is the durable artefact and the deployment is not.
 
 **Does it track me?** The public page keeps no logs of addresses, sets no
 cookies, and makes no third-party requests. Visits are counted as two numbers a
@@ -620,18 +620,25 @@ decision this repository exists to enforce.
 
 Since 2026-08-11 a collector has run on a host without supervision, feeding a
 public page. Three numbers came out of the first night that no amount of
-reading the code would have produced. **The first of them no longer describes
-the host**, and the correction is below the three.
+reading the code would have produced. **Two of them have since been corrected,
+one of them twice** - the second correction corrected the first - and the
+history is kept below the three, because a finding whose corrections are
+deleted reads as more stable than it ever was.
 
 **Roughly one poll in eight failed, before F98.** Eleven unreachable out of
 ninety-five in a twelve-hour journal; nine of sixty in the window measured most
 closely.
 Consecutive failures happen: the longest run was two and the longest gap
 between successful reads was seven minutes, against a ten-minute staleness
-threshold. Two explanations were tested and closed - rate limiting by the
-source, ruled out by ten requests in fifty seconds all returning 200, and the
-administrative tunnel, ruled out because the collector does not use it. One
-remains open with a mechanism and is T39.
+threshold. Three explanations were tested. The administrative tunnel is closed
+and stays closed - the collector does not use it. Packet loss on the path was
+closed on 2026-08-21 at the power the question needed: 600 ICMP packets, zero
+lost. **And the rate-limiting closure was wrong**: it was ruled out on ten
+requests in fifty seconds all returning 200, a probe with no power against a
+limiter metering a longer window, and a 600-request probe at one per second
+failed at 10.7% in the same minutes the collector, at one per 33 s, failed
+not at all. What meters by rate and by protocol is a limiter; whose it is
+remains unknown, and T39 carries the question with its own reversal recorded.
 
 **The margin is smaller than an independence assumption suggests.** Failures
 cluster, so the interval between successful reads is not the poll interval
@@ -644,16 +651,23 @@ and a rejection that bounced in twenty milliseconds are indistinguishable in
 the journal. Eleven refusals were logged before anyone noticed. That is F44 in
 the diagnostics rather than in the schedule, and it is T55.
 
-**The failure rate after F98 is smaller by two orders of magnitude, and
-unsettled.** `docs/DEPLOYMENT.md` pins fourteen timeouts in roughly 18,350
-polls, 0.076%, measured over the seven days after the fix landed on
-2026-08-14 18:13:09 UTC. Two windows read on 2026-08-19 came out at 6.9% and
-13.4%. Those two windows were chosen because the store had gaps in them, so the
-figures are selection on the outcome and are not an estimate of anything; what
-they do establish, which no rate would, is that **the failures arrive in
-clusters**. The unconditional rate over the whole journal has not been read.
-Until it is, the honest statement is that the pinned figure stands and the
-distribution behind it does not.
+**The paragraph that stood here until 0.37.0.0 said the post-F98 failure rate
+was 0.076% and that the pinned figure stands. Both halves were wrong**, and
+the sentence this one replaces was itself a correction - made at 0.33.0.2,
+against the older "one poll in eight", by an audit that reconciled documents
+with documents and never asked the machine. The measured rate is **9.7% to
+10.9%** across three journal windows and four live probe series (F109). F98
+bounded the **cost** of a failure at ten seconds and did not touch its
+frequency; the withdrawn pin read the bound as the frequency, dividing a
+numerator from one window by a denominator from another. The repair - a two-
+second connect budget and one retry, made only when the connection was never
+established - reached the host as 0.36.0.1 on 2026-08-21, after its first
+version spent fourteen hours crashing on the failures instead of refusing
+them (F110). **The retry has not yet been observed doing its job**, and T69
+holds the measurement that would show it. A reader who takes one thing from
+this section should take the shape of the error rather than the number:
+internal consistency is not accuracy, and a repository whose gate enforces
+the first arrived at a wrong figure by agreeing with itself.
 
 The consumer's own release notes carry the other half of this: what a page has
 to do when the instrument feeding it can go blind without saying so.
@@ -743,8 +757,8 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | --- | --- | --- |
 | Package `mavo/` | 20 | 6,035 |
 | Tests | 49 | 8,586 |
-| Tools | 23 | 6,276 |
-| Documentation | 55 | 21,102 |
+| Tools | 23 | 6,285 |
+| Documentation | 56 | 21,462 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,

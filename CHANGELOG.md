@@ -16,6 +16,73 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.37.0.0 - 2026-08-21
+
+**The documentation catches up to the machine.** A week of field findings -
+F108 through F110, a withdrawn pin, a closed hypothesis, a reopened one, two
+deploys and a withdrawal - lived in session logs and a defect register while
+the operational documents went on describing 2026-08-17. No code path changes;
+one CI line.
+
+- **`docs/DEPLOYMENT.md` is rewritten from readings, not reconciled.** The
+  installed-package table carried two answers in one document (0.32.2.0 and
+  0.32.7.0) and the repair is structural rather than numerical: the table is
+  now the newest reading, a deploy-history table below it is every reading
+  including 0.36.0.0's withdrawal after fourteen hours, and the two share no
+  rows. Host state measured 2026-08-21, by symbol and digest.
+- **Three sections that did not exist and each earned its place this week:**
+  the network the host actually has (no external IPv4, an egress black hole
+  that doubles the cost of every fallback, a public site the host cannot
+  reach and must not probe); files staged in `/var/tmp` because `/tmp` lost a
+  snapshot for reasons excluded one by one and never established; and
+  counting refusals without repeating F110 - three counts that must
+  reconcile, because a rate computed from any single token measures that
+  token's printer.
+- **The release-order table's tag row now says assert-then-tag**, because on
+  2026-08-20 the assertion caught a hand-pasted hash that was the wrong
+  commit before a tag existed, and the old row's advice began after the
+  mistake.
+- **T39 reverses one of its own closures.** The 600-packet probe it asked for
+  ran: 0% ICMP loss at 99.8% power, 10.7% TCP failure in the same window, and
+  the collector clean at its own cadence through both. Packet loss is closed;
+  the rate-limit hypothesis, closed on 2026-08-11 by an n=10 probe with no
+  power against a metered window, is **reopened**. The entry also records
+  that step 4 was taken before steps 2 and 3, against its own ordering, and
+  what that cost.
+- **T40 carries the two-cadence caveat**: the distribution's first day and a
+  half was taken at ~141 s, D-027's thirty seconds is true only from the
+  drop-in's mtime, and the median is a mixture until the 8a row says so.
+- **F109's entry records its reopening and the probe that moved the cause.**
+  T69 carries the 0.36.0.1 anchor, 08:52:36 UTC, and the re-verified refusal
+  path.
+- **T71 and T72 opened**: a `collect.attempt` sink through the machinery
+  `report` already has, argued from what this week cost to count by grep; and
+  `filterwarnings = error` as recorded debt with its fifteen unclosed handles
+  named as the work.
+- **CI gains 3.12.** The comment beside the matrix claimed the development
+  version was covered and the matrix did not contain it, so every "gate
+  green" in a release note was a reading CI never took. One line; the claim
+  and the matrix now agree.
+- `TODO.md`'s "Where the project is" is rewritten at its own rule, version in
+  the first sentence, with the sentence `todo_index` reads left intact and
+  the reason written beside it.
+- **The README's field-findings section still said the pinned figure stands.**
+  0.36.0.0 withdrew the pin in `docs/DEPLOYMENT.md` and left the README
+  paragraph that had been corrected *towards* it at 0.33.0.2, so for one day
+  the two documents disagreed in exactly the way the audit at 0.33.0.2 was
+  built to prevent. Rewritten, with the history of both corrections kept in
+  place, and the rate-limiting closure in the same section reversed to match
+  T39. The intro above the three findings now says two were corrected, one
+  twice.
+- **Every address in the tree is `mavo.org.pl`.** The README linked the
+  temporary sslip.io address in two places and promised a domain that has
+  existed for days; `docs/WEBAPP.md`'s header claimed `mavo-site` 4.12.0.0 at
+  that address while 4.41.0.0 runs at the domain - the third time that header
+  lagged the consumer, and its own lag count now says three. `docs/
+  DATA-FLOW.md`'s transport paragraph carries the F109/F110 shape: every
+  failure becomes the one refusal, a silent connect costs 2 s, a connected
+  request is never repeated.
+
 ## 0.36.0.1 - 2026-08-21
 
 **Hotfix. 0.36.0.0 killed 168 polls with a traceback and this session read the

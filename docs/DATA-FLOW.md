@@ -72,10 +72,14 @@ network client.
 
 **In:** a URL. **Out:** `str`, or `SourceUnavailable`.
 
-The transport does exactly one thing and refuses in exactly one way. It caps the
-response at 4 MB and the request at 10 seconds, and it converts every
-library-specific failure into `SourceUnavailable` so no caller has to know which
-HTTP library is underneath.
+The transport does exactly one thing and refuses in exactly one way. It caps
+the response at 4 MB and the request at 10 seconds, and since 0.36.0.1 it
+converts **every** failure into `SourceUnavailable` - not every
+library-specific one, a distinction paid for by F110, when an exception
+outside the expected set walked through three handlers and killed the process
+168 times. Inside the deadline, one silent connect now costs 2 s rather than
+the whole budget, and a request that never reached the far end is attempted
+once more (F109); a request that connected is never repeated, whatever it was.
 
 **What can be lost here:** everything, at once, and visibly. An outage raises
 rather than returning an empty string, which is MT11. The distinction between

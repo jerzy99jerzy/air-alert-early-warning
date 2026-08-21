@@ -6,8 +6,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # Both ends of the supported range, including the version developed on.
-        python-version: ["3.11", "3.14"]
+        # Both ends of the supported range, plus the version development and
+        # the release gates actually run on. Until 0.37.0.0 the comment above
+        # this line claimed 3.12 was covered and the matrix did not contain
+        # it, so every "gate green" in a release note was a reading CI never
+        # took. The claim and the matrix now say the same thing.
+        python-version: ["3.11", "3.12", "3.14"]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7

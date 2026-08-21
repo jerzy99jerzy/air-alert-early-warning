@@ -10,7 +10,7 @@ written after the fact rather than before, and says so.
 
 ## What is installed on the hosts, and how far behind it is
 
-Host state measured: 2026-08-17
+Host state measured: 2026-08-21
 
 **This section is the state. The rest of this document is the shape**, and the
 two diverged silently once already (F102), which is why the line above exists
@@ -40,17 +40,32 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.32.2.0`, `/opt/mavo/venv` |
-| Installed at | **2026-08-14 18:13:09 UTC**, from the `dist-info` directory's own timestamp |
-| `main` | 0.32.7.0 |
-| Behind by | three releases, **none of which changes an executable line**: 0.32.3.1 is identifiers and F99, 0.32.4.0 is `tools/vocab_gaps.py` and FEED-SPEC, 0.32.5.0 and 0.32.6.0 are tooling and documents |
-| Consequence | none. A deploy would change the version string and nothing the process executes |
+| Installed | `air-alert-early-warning 0.36.0.1`, `/opt/mavo/venv` |
+| Installed at | **2026-08-21 08:52:36 UTC**, the `date -u` printed in the install chain itself |
+| `main` | 0.37.0.0, the release this reading ships in |
+| Behind by | one release - this one, which changes documentation and one CI line and **no executable line**; the deploy is deliberately deferred past T69's reading, because a reinstall inside a clean measurement window buys a version string and risks the window |
 
-**Verified by reading a symbol, not a version string.**
-`'connect_within' in mavo/transport.py` returns `True` on the host, which is
-post-F98 code and cannot be faked by a reinstall under an already-built number.
-The version string alone has reported success against a host running different
-code once, and it cost an hour.
+**An earlier version of this table carried two different answers in one
+document**: 0.32.2.0 here and 0.32.7.0 in the deploy record below, both under
+one measured-on date. Both were true of different moments and the section had
+no rule about which moment it describes. The rule now: this table is the
+newest reading, the deploy history below is every reading, and they share no
+rows.
+
+**Deploy history since this section was first written:**
+
+| Version | Installed at (UTC) | Fate |
+| --- | --- | --- |
+| 0.32.2.0 | 2026-08-14 18:13:09 | superseded |
+| 0.32.7.0 | 2026-08-17 11:02:06 | superseded; its restart opened the S9 window |
+| 0.36.0.0 | 2026-08-20 18:19:43 | **withdrawn after 14 hours.** F110: 168 polls died with a traceback and exit `1/FAILURE`, and the refusal line stopped being written |
+| 0.36.0.1 | 2026-08-21 08:52:36 | current |
+
+**Verified by symbol and by digest, not by version string.**
+`resolve_stream` and `RETRYABLE` import on the host, and the installed
+`mavo/transport.py` has the same sha256 as the tree under the tag. The version
+string alone has reported success against a host running different code once,
+and it cost an hour.
 
 ### F98 on the wire, measured before and after
 
@@ -125,6 +140,13 @@ ReadWritePaths=/var/lib/mavo
 # .d/interval.conf overrides ExecStart with --feed and --interval 30
 ```
 
+**Correction, 2026-08-21, to the quoted comment's last line**: `systemctl cat`
+read on the host shows **two** drop-in `ExecStart` pairs after the base line,
+not one - the first adds `--feed` at `--interval 120`, the second re-states
+`--feed` at `--interval 30`, and the last one wins. The quote above described
+one override because one file was read. Same class as the error the quote
+exists to record.
+
 The single fault was that **no code read the variable**:
 `mavo.obs.from_environment` had no caller (F103). Repaired in 0.32.7.0 by one
 argument at one call site, so the deploy was an install and a restart with no
@@ -167,6 +189,61 @@ End:   2026-08-20 11:02:06 UTC
 and it feeds T40. Up to two planned restarts of `mavo-report.service` are
 permitted and each is reported as its own segment (**D-032**, an amendment made
 inside the window and argued there).
+
+**Outcome, read 2026-08-20 after the window closed** `[measured]`:
+`NRestarts=0`, `ActiveEnterTimestamp` equal to the window's opening second, and
+7,850 attempts - 7,076 finishes plus 774 refusals - over 259,200 s, a 33.0 s
+cadence against a measured median of 33.0 s. Continuity held with zero
+restarts against the two the amendment permitted. **The refusal half of that
+journal is F109's evidence**: the 774 are 9.9% of attempts, against a rate this
+document pinned at 0.076% until the pin was withdrawn.
+
+### The network this host actually has
+
+Measured 2026-08-20, because a check written without these facts hangs and its
+author reads the hang as an outage.
+
+| | |
+| --- | --- |
+| Internal IPv4 | `10.20.0.2/32`, and the push to the site travels over it |
+| External IPv4 | **none.** `curl -4` to anywhere hangs to its own ceiling; packets leave by the default route and die without ICMP |
+| External IPv6 | `2600:1900:4140:3cb::/128`, the only public egress |
+| `mavo.org.pl` | **A record only.** This host cannot reach its own public site, over either family |
+
+Two consequences worth stating as rules. **Never probe the public site from
+`vm-mavo`** - the probe measures the missing route, not the site, and this
+session did exactly that once. And when an IPv6 connection fails, **the IPv4
+fallback does not rescue the attempt, it doubles its cost**: the black hole
+consumes whatever budget the attempt has left, which is why every refusal in
+the journal sits exactly on the timeout.
+
+### Files staged on this host
+
+`/var/tmp`, not `/tmp`. On 2026-08-20 a store snapshot written to `/tmp`
+existed at 16:31 with a size and an owner, and was gone before 17:17, with the
+reboot, `systemd-tmpfiles-clean` and permissions all excluded by measurement
+and the cause **never established**. `/var/tmp` survives what `/tmp` is allowed
+to lose, and the snapshot procedure, the wheels and the probe outputs moved
+there the same day. The unexplained deletion stays unexplained; the rule
+removes the class rather than the mystery.
+
+### Counting refusals without repeating F110
+
+A refusal prints `Failed to start` with `status=3` and **never** prints
+`Finished mavo-collect`; a crash prints a traceback with `status=1` and no
+refusal line at all. For fourteen hours under 0.36.0.0 the second was
+happening and a count of `[UNREACHABLE]` lines read zero, and that zero was
+read as a quiet network.
+
+So the reading is three numbers or it is nothing:
+
+1. attempts = `Starting mavo-collect` lines,
+2. finishes = `Finished mavo-collect` lines,
+3. refusals = `[UNREACHABLE]` lines,
+
+and **1 minus 2 must equal 3**. When it does not, the difference is processes
+dying some third way, and the rate computed from any single token is a
+measurement of that token's printer, not of the network.
 
 ### Reading this host without lying to yourself
 
@@ -490,7 +567,7 @@ is exactly what a new file is after `git add` and before `check_manifest.py
 | verify | `make verify` | the gate |
 | manifest | `make manifest` | digests describe *this* tree; deliberately outside `verify`, which runs on trees under edit |
 | commit | `verify && commit` as one chain | a commit made after a failed gate looks identical to one made after a passing gate |
-| tag | on the **full hash**, never `HEAD~n` or `HEAD` | six tagging failures across this project family |
+| tag | assert first, in the same chain: `git show "$V:pyproject.toml"` must print the version being tagged, **then** `git tag` on that same hash | six tagging failures across this project family, and on 2026-08-20 the assertion caught a hand-pasted hash that was the wrong commit **before** the tag existed |
 
 **Regeneration is a release step, not a repair step.** Running `manifest-write`
 to make a red check green is the same act as moving a tag, and the tool's own

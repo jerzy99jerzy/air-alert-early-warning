@@ -1,12 +1,18 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.0 / 2026-08-19
-Status: **built, deployed, and publicly reachable.** `mavo-site` 4.12.0.0 runs
-at `https://34.116.232.215.sslip.io/` and carries its own gate (seven checks,
-24 mutants, a jsdom browser harness), its own defect log and its own audit.
-Everything described here was read out of that package rather than remembered.
+Version: 3.1 / 2026-08-21
+Status: **built, deployed, and publicly reachable.** `mavo-site` 4.41.0.0 runs
+at `https://mavo.org.pl/` and carries its own gate (with a coverage floor, a
+jsdom browser harness and 93 mutants), its own defect log and its own audit.
+The version and address in this line were read from the consumer's own tree
+and from the live DNS on 2026-08-21, not remembered - which matters, because
+the previous revision of this line was doing the remembering: it said 4.12.0.0
+at a temporary address while the site had shipped through 4.41.0.0 at its own
+domain. That is the third time this header lagged the consumer, and the count
+is kept in the paragraph below on purpose.
 
-**The document has been behind the consumer twice**, at 2.5 and again here: it
+**The document has been behind the consumer three times**, at 2.5, at 3.0 -
+whose header claimed 4.12.0.0 while 4.41.0.0 was live - and before that here: it
 said 4.1.0.0 while the site had shipped through 4.12.0.0, including the release
 that made the map the page and the one that made a switched-off layer stay off.
 Recorded rather than quietly corrected, because a document that keeps reading

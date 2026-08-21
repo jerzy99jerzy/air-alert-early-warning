@@ -82,17 +82,26 @@ FIGURE_PL = re.compile(r"(?<![\d,.])\d+,\d{2}(?!\d)")
 #: Lowered at 0.36.0.0:
 #: * ``docs/DEPLOYMENT.md`` 14 to 12. The F98 table's own figures were rounded
 #:   while the section around them was rewritten.
+#:
+#: Raised at 0.37.0.0:
+#: * ``TODO.md`` 27 to 28. "Where the project is" quotes ``0.076``, the
+#:   withdrawn pin, beside the measured rate - the third site of the same
+#:   exception, and the same reason each time: the contrast is the record.
+#: * ``docs/DEPLOYMENT.md`` 12 to 13. The S9 outcome paragraph quotes
+#:   ``0.076``, the withdrawn pin, beside the measured 9.9% - the contrast is
+#:   the finding and rounding the quote would soften the record, same
+#:   exception as the F109 entry itself.
 CEILINGS: dict[str, int] = {
     "ENGINEERING.md": 3,
     "README.md": 23,
-    "TODO.md": 27,
+    "TODO.md": 28,
     "docs/BRIEF-PL.md": 6,
     "docs/BRIEF.md": 6,
     "docs/CHANNEL.md": 19,
     "docs/COMPUTATION.md": 20,
     "docs/DATA-FLOW.md": 6,
     "docs/DECISIONS.md": 32,
-    "docs/DEPLOYMENT.md": 12,
+    "docs/DEPLOYMENT.md": 13,
     "docs/FEED-SPEC.md": 6,
     "docs/FOUNDATIONS.md": 7,
     "docs/MANUAL.md": 19,

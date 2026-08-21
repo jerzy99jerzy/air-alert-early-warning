@@ -3358,6 +3358,21 @@ release lands on the host is not below 4%, which would mean the failures are
 correlated at the timescale a retry works on, and the estimate above rested on
 seven observations.
 
+**Reopened 2026-08-21, before the window could even be read.** F110: 0.36.0.0
+crashed on the failures instead of refusing them, so the 14-hour window
+measured a broken exit path. The rate over that window, counted as starts
+minus finishes, was 10.9% - unchanged. The repair carrying the retry reached
+the host at 08:52:36 UTC as 0.36.0.1 and the acceptance clock restarted there.
+
+**A same-day probe moved the cause** `[measured 2026-08-21, 09:15-09:28 UTC]`:
+600 ICMP packets to the channel's address returned with **0% loss** (rtt 22.8
+±0.3 ms), while 600 TCP requests in the same window failed at **10.7%**, and
+the collector polling at its own 33 s cadence through that same window refused
+**zero of 34**. Loss on the path is excluded at 99.8% power; what remains
+selects on protocol and on request rate, which is the shape of a limiter -
+**the hypothesis T39 closed on an n=10 probe on 2026-08-11, wrongly.** Which
+side imposes it is still `[unknown]`.
+
 ### F110, 0.36.0.1. A resolver that returned datagram addresses, and a cap that reached them
 
 `connect_within` called `socket.getaddrinfo(host, port)` with no `type`.
