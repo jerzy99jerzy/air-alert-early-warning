@@ -16,6 +16,17 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.37.0.2 - 2026-08-21
+
+**`docs/WEBAPP.md` stops naming the consumer's current version, after lagging
+it a fourth time.** Revision 3.2 pinned `mavo-site` 4.41.0.0 from a dated read;
+the consumer shipped five releases the same day and reached its host that
+evening. The header now states the address and the fact that the consumer
+versions itself, and any consumer version below is a dated measurement rather
+than a claim about today. A cross-repository pin has no gate on this side to
+keep it true, so the pin goes rather than the count going to five. No code
+path changes.
+
 ## 0.37.0.1 - 2026-08-21
 
 **Three corrections the operator called, all documentation, none cosmetic.**

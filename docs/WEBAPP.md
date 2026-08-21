@@ -1,24 +1,28 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.2 / 2026-08-21
-Status: **built, deployed, and publicly reachable.** `mavo-site` 4.41.0.0 runs
-at `https://mavo.org.pl/` and carries its own gate (with a coverage floor, a
-jsdom browser harness and 93 mutants), its own defect log and its own audit.
-The version and address in this line were read from the consumer's own tree
-and from the live DNS on 2026-08-21, not remembered - which matters, because
-the previous revision of this line was doing the remembering: it said 4.12.0.0
-at a temporary address while the site had shipped through 4.41.0.0 at its own
-domain. That is the third time this header lagged the consumer, and the count
-is kept in the paragraph below on purpose.
+Version: 3.3 / 2026-08-21
+Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
+The consumer carries its own version, its own gate (coverage floor, jsdom
+browser harness, mutation register), its own defect log and its own audit;
+**this document no longer states which version is current**, because that
+number lives in the consumer's tree and its deployment table, and a copy of it
+here has no gate on this side to keep it true. Any consumer version named
+below is a dated measurement, not a claim about today.
 
-**The document has been behind the consumer three times**, at 2.5, at 3.0 -
+**The document has been behind the consumer four times**, at 2.5, at 3.0 -
 whose header claimed 4.12.0.0 while 4.41.0.0 was live - and before that here: it
 said 4.1.0.0 while the site had shipped through 4.12.0.0, including the release
 that made the map the page and the one that made a switched-off layer stay off.
+The fourth is revision 3.2 itself: its header read 4.41.0.0 from a dated,
+honest measurement, and that measurement aged within hours - the consumer
+shipped five releases and reached the host the same evening. An honest read of
+a moving number is still a number that goes stale; only a header with no
+current number in it cannot. That is the repair 3.3 makes, and it retires the
+gate check this paragraph used to promise: a check cannot exist on this side
+of two repositories, so the claim it would have guarded is gone instead.
 Recorded rather than quietly corrected, because a document that keeps reading
 plausibly while the thing it describes moves is the failure class this file has
-now demonstrated twice. The gate check that would stop a third is named at the
-end of this section and does not exist yet.
+now demonstrated repeatedly.
 
 **This document was four releases behind the consumer until 2.5.** The version
 recorded here said 1.2.0.0 while the site had reached 4.1.0.0, which is the
