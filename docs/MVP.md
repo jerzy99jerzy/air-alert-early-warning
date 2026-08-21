@@ -234,7 +234,7 @@ is a diagram that goes stale, and this one carries five words per node.
 flowchart LR
     S7["S7 area resolution<br/>closed 9 Aug, amended"]
     S8["S8 the report<br/>closed 17 Aug, amended"]
-    S9["S9 real time<br/>window running"]
+    S9["S9 real time<br/>window closed 20 Aug, 8a row outstanding"]
     S10["S10 delivery<br/>not started"]
     S11["S11 hardening<br/>not started"]
     BETA{{"BETA<br/>built and delivered"}}
@@ -262,7 +262,7 @@ flowchart LR
         direction LR
         A["S7 met"]
         B["S8 met"]
-        C["S9 running"]
+        C["S9 open"]
         D["S10"]
         E["S11"]
     end

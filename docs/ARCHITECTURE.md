@@ -33,20 +33,21 @@ Note:      the block index is maintained as a table so that a rename leaves a
 flowchart TD
     NET["transport.py<br/>the only module that reaches the network"]
     subgraph IN["Sources: everything implements ThreatSource"]
-        TG["telegram.py<br/>public Ajax channel, WIRED<br/>pattern table scores 0 of 20"]
-        UA["alerts.in.ua adapter<br/>not yet wired, token outstanding"]
-        OFF["ukrainealarm adapter<br/>not yet wired"]
+        TG["telegram.py<br/>public Ajax channel, WIRED<br/>tags name area and unit, docs/CHANNEL.md"]
+        RSO["rso.py<br/>Polish RSO reader, built 0.34.0.0<br/>no caller until T68 names the surface"]
+        UA["alerts.in.ua adapter<br/>not built, token outstanding, T1"]
+        OFF["ukrainealarm.py<br/>in the tree, not wired"]
         FIX["fixture.py<br/>synthetic scenarios"]
-        PL["Polish channel adapter<br/>unscheduled, T8a/T8b"]
     end
     NET --> TG
+    NET -.-> RSO
     NET -.-> UA
     NET -.-> OFF
     TG --> EV
+    RSO -.-> EV
     UA -.-> EV
     OFF -.-> EV
     FIX --> EV
-    PL -.-> EV
 
     EV["ThreatEvent<br/>area / state / kind / provenance / ts_source / ts_ingest"]
     EV --> STORE[("EventStore<br/>append-only, idempotent by content hash")]
@@ -57,7 +58,7 @@ flowchart TD
     POLICY --> BASE["baserate.py<br/>contingency, Fisher, Wilson, lift"]
     BASE --> GATE["gate<br/>recall, alarm rate, association"]
     GATE --> OBS["observation tier<br/>ambient, silent, NOT BUILT"]
-    GATE --> ALARM["alarm tier<br/>critical push, NOT BUILT, S7"]
+    GATE --> ALARM["alarm tier<br/>critical push, NOT BUILT, S10"]
     ALARM --> HUMAN["recipient<br/>never a substitute for sirens"]
 ```
 
@@ -81,7 +82,7 @@ Maintained as a table so that a rename leaves a visibly stale row.
 | `ThreatEvent` | `mavo/schema.py` | Normalized transition. Stores both source and ingest time because the difference is the feed latency that eats the warning budget |
 | `AlertState` | `mavo/schema.py` | Four states. UNKNOWN is silence, PARTIAL_CLEAR is contradiction, and neither resolves to CLEAR |
 | transport | `mavo/transport.py` | The only module that imports a network client. One answer, in one place, to what this tool can talk to |
-| Telegram adapter | `mavo/sources/telegram.py` | The one wired live source. Parses the public channel page; its pattern table is measured at 0 of 20 and is under redesign, and it reports the skipped message window rather than assuming continuity |
+| Telegram adapter | `mavo/sources/telegram.py` | The one wired live source. Parses the public channel page; area resolution runs on the channel's own tags since S7 (the pre-S7 pattern table measured 0 of 20, F23, and was replaced rather than repaired), and it reports the skipped message window rather than assuming continuity |
 | `EventStore` | `mavo/store.py` | Append-only log of transitions, never snapshots. Idempotent by content hash so a re-poll costs nothing |
 | replay | `mavo/store.py` | Reconstructs any past moment. The backtest and the live correlator run this same path |
 | rules | `mavo/rules.py` | Explicit predicates returning the moment they fire, which is what makes lead time measurable. R1 to R4 plus the missile and drone conjunctions |
@@ -208,9 +209,13 @@ numbers look good.
 **Owns** the only wired live adapter. Two independent regexes, three
 classification layers, the window-gap computation.
 
-**Measured state:** state layer 15 of 20, means layer 4 of 20, area layer **0 of
-20**, so the classifier scores 0 of 20 overall (F23). The failure is pinned as
-assertions and the redesign waits for the corpus.
+**Measured state, two eras, both kept.** Pre-S7: state layer 15 of 20, means
+layer 4 of 20, area layer **0 of 20**, so the classifier scored 0 of 20 overall
+(F23) - the failure that forced the redesign. Since S7 the area layer runs on
+the channel's own tags against the KATOTTG register (`docs/CHANNEL.md` holds
+the coverage measurement), and the twenty-message sample resolves 20 of 20. The
+sentence this replaces still described the pre-S7 table at 0.37.0.1, thirteen
+sprints after it was replaced.
 
 ### `mavo/cli.py` (254 lines)
 

@@ -1,6 +1,10 @@
 # The notification channel: technology choice and MVP
 
-Version: 1.3 / 2026-08-09
+Version: 1.4 / 2026-08-21
+Diagram correction at 1.4: the node named `mavo watch daemon` never shipped.
+D-031 chose a timer plus a `oneshot` collector, and `mavo report --watch` was
+already the loop; the diagram showed the design this document predates rather
+than the system that runs.
 Status: **plan.** Nothing in this document is built. Sections are marked with
 the manual's convention where present behaviour is described: everything here
 is NOT BUILT unless it names a module that exists.
@@ -77,14 +81,15 @@ what is already legitimate: the operator notifying himself.
 
 ```mermaid
 flowchart LR
-    CH[Telegram channel] --> W[mavo watch daemon]
-    W --> ST[(event store)]
-    W --> DP[DecisionPolicy plus delivery ledger]
+    CH[Telegram channel] --> C["mavo collect<br/>timer plus oneshot, D-031"]
+    C --> ST[(event store)]
+    ST --> R["mavo report --watch"]
+    R --> DP["DecisionPolicy plus delivery ledger<br/>S10, not built"]
     DP --> NT[Notifier protocol]
     NT --> NF[self-hosted ntfy over TLS]
     NF --> AND[Android client]
     NF --> OTH[other subscribed devices]
-    W -. degradation .-> NT
+    R -. degradation .-> NT
 ```
 
 One new seam: `Notifier`, a protocol in the same pattern as `Transport` and

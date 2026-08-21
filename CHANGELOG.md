@@ -16,6 +16,46 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.37.0.1 - 2026-08-21
+
+**Three corrections the operator called, all documentation, none cosmetic.**
+
+- **The western hand-check sentence was false and is rewritten everywhere it
+  appeared.** The README said no western area has ever been hand-checked. On
+  2026-08-18 the operator read the page against the channel while eight
+  western raions were under alert - the check this product exists for, on the
+  population it exists for. What the tree lacks is the *record*: the by-hand
+  verdicts were never written down, and the worksheet built for that night
+  holds questions without answers. Every site now distinguishes the check
+  (done once, as testimony) from the recorded rate (absent, T36), and the
+  claim this repository stands on is "counts as done what it can show" rather
+  than "never happened". Three README sites and the licence-disclaimer
+  paragraph updated; T36 and the S12 criterion unchanged, because the
+  instrumented sample is still the thing they wait for.
+- **The README latency paragraph traded machine precision for prose.** Days
+  with a decimal, second-exact percentiles and a message count to four digits
+  read as an instrument talking; a reader gets the same decision-shaping
+  facts from "half within about twenty seconds, inside a single poll" and "the
+  slowest hundredth takes several minutes". The exact figures live in T40
+  beside the caveats they need - including the two-cadence mixture that makes
+  second-level precision misleading in a summary. Deliberate imprecision,
+  chosen where precision would overstate what is settled.
+- **The same README paragraph still said S9's seventy-two-hour clock was
+  running.** It closed on 2026-08-20 with zero restarts. Rewritten to the one
+  remaining clause, the unwritten 8a row.
+- **Every mermaid diagram audited against the tree; five carried
+  discrepancies.** `ARCHITECTURE.md` showed the pre-S7 source list: no
+  `rso.py`, an alarm tier attributed to S7, and "pattern table scores 0 of
+  20" thirteen sprints after the table was replaced - two prose sections
+  carried the same era and are rewritten with both eras kept. `MOBILE.md`
+  drew a `mavo watch` daemon that never shipped (D-031); the diagram now
+  shows the timer-plus-oneshot collector and the report loop, with the
+  correction dated in the header. `MVP.md`'s two sprint diagrams said S9's
+  window was running. `WEBAPP.md`'s flow gained the push cadence. The
+  README's own pipeline showed snapshots on the live path; they are an
+  opt-in side branch and the diagram now says so.
+- Document versions bumped where markers exist: MOBILE 1.4, WEBAPP 3.2.
+
 ## 0.37.0.0 - 2026-08-21
 
 **The documentation catches up to the machine.** A week of field findings -

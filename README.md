@@ -37,13 +37,13 @@ Status: pre-alpha, **three sprints from beta** (S9, S10, S11) on the plan in [`d
 
 **Deployed and publicly reachable since 2026-08-12, at [mavo.org.pl/en](https://mavo.org.pl/en)** (Polish: [mavo.org.pl/pl](https://mavo.org.pl/pl)). The address is printed here because a README that says "publicly reachable" without saying where is asking to be trusted on the one claim a reader could check in a second.
 
-That is the cheaper half of beta: the instrument is live. The other half is not met. **No western area has ever been hand-checked**, and western areas are the only kind this product is for (T36).
+That is the cheaper half of beta: the instrument is live. The other half has been done once and recorded nowhere: during the 2026-08-18 raid the operator read the page against the channel while eight western raions were under alert - the check this product exists for, performed on the population it exists for, living as testimony because the verdicts were never written down. **No recorded hand-checked correctness rate exists for western areas**, and the instrumented sample with a stated error rate waits on that population reaching sample size (T36). This repository counts as done what it can show.
 
-**Latency is now measured end to end**, which it was not for the first thirty-two releases. Over 7.8 days and 5,120 messages, half arrive within **23 s** of the timestamp the channel put on them, against a polling interval of 30 s, so at the median most of the wait is ours to shorten. The tail is another matter: **p90 is 110 s, p99 is 267 s**, and for a warning instrument the tail is the part that counts. How much of it belongs to the source and how much to our own failed polls is not yet separated, so T40 stays open, with a number in it now rather than a blank.
+**Latency is now measured end to end**, which it was not for the first thirty-two releases. Over a week of store and five thousand messages, half arrive within about twenty seconds of the timestamp the channel put on them - inside a single poll, so at the median most of the wait is ours to shorten. The tail is another matter: the slowest tenth takes on the order of two minutes, the slowest hundredth several, and for a warning instrument the tail is the part that counts. How much of that belongs to the source and how much to our own failed polls is not yet separated, so T40 stays open, with a measurement in it now rather than a blank; the exact figures live there, beside the caveats they need.
 
 Running is not the same as measured, and this repository's defect log is largely a record of what happens when the two are read as one thing.
 
-**Fourteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `sprint_test_files` in `STATUS.json` lists ten of them, S0 through S9; the four that are missing are missing deliberately, because adding them would read as an assertion that S10 through S13 met their exit criteria, which is a larger claim than a test file can carry. The field was renamed to what it counts after F93, and the gap it now leaves is visible rather than averaged away. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S7.** S8 is half met and declared half met: the distance column is verified three ways, the hand-checked sample is twenty eastern messages from one afternoon. S9 is under way and its latency half now has a measurement behind it, though not yet a written record: the store spans 7.8 days, the distribution has been taken, and `docs/CHANNEL.md` section 8a is deliberately still empty of it, because one term in the tail is unattributed and a row that assigned our own blindness to the source would be worse than no row. The seventy-two-hour half is a clock still running. "Unattended" turned out to need a definition of its own - the store has three stretches of an hour or more with nothing recorded in it, and only one is provably an outage rather than a quiet channel. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
+**Fourteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `sprint_test_files` in `STATUS.json` lists ten of them, S0 through S9; the four that are missing are missing deliberately, because adding them would read as an assertion that S10 through S13 met their exit criteria, which is a larger claim than a test file can carry. The field was renamed to what it counts after F93, and the gap it now leaves is visible rather than averaged away. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S7.** S8 is half met and declared half met: the distance column is verified three ways, the hand-checked sample is twenty eastern messages from one afternoon. S9 is open on one remaining clause: its seventy-two-hour half closed on 2026-08-20 with zero restarts and every cycle accounted for, its latency distribution is taken, and `docs/CHANNEL.md` section 8a is deliberately still empty of it, because one term in the tail is unattributed and a row that assigned our own blindness to the source would be worse than no row. "Unattended" turned out to need a definition of its own - the store has three stretches of an hour or more with nothing recorded in it, and only one is provably an outage rather than a quiet channel. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
 
 Area resolution works against real channel content and the number that used to
 sit here was wrong. **20 of 20 real messages resolve their area to a unique code
@@ -56,8 +56,8 @@ superseded in sprint 7, and the two tests written to announce F23's closure
 called the same untabled path, so the tripwire stayed green and confirmed the
 wrong thing for two sprints (F90). The table was right and the call was not.
 
-What is still not measured is the part that matters most: **no hand-checked
-correctness rate exists for western areas**, which are the only ones this
+What is still not recorded is the part that matters most: **no recorded
+hand-checked correctness rate exists for western areas**, the areas this
 product is for. The instrument for it exists and is stratified so that half of
 a draw is western by construction; what does not exist is the population. The
 west is 3.5% of what the channel carries, and a sample about the areas near the
@@ -67,17 +67,17 @@ work waiting to be done, and it moved to S12 for that reason. Until it is
 scored, every correctness claim here is about mechanism rather than about
 accuracy.
 
-**One thing did change on 2026-08-18, and it is an observation rather than a
-measurement.** A real raid put eight western raions under alert across four
-oblasts, the whole of Ternopil oblast among them, and both contract files were
-preserved from the public address while it was happening. That is the first
-time this instrument has been watched doing the job it exists for. It is not a
-check: reading a preserved payload back with a script compares the
-instrument's output against the instrument's own reference tables, and
-agreement there is guaranteed by construction rather than measured. The
-snapshot is a frozen claim, and it becomes evidence only when the channel's own
-messages are put beside it by hand. `tools/western_worksheet.py` builds that
-comparison and fills none of it in.
+**One thing did change on 2026-08-18.** A real raid put eight western raions
+under alert across four oblasts, the whole of Ternopil oblast among them; both
+contract files were preserved from the public address while it was happening,
+**and the operator read the page against the channel as it ran** - the first
+time this instrument was watched, and checked, doing the job it exists for.
+What that night did not leave behind is a record. Reading the preserved
+payload back with a script compares the instrument against its own reference
+tables, so the snapshot alone proves nothing, and the by-hand verdicts stayed
+with the person who made them. `tools/western_worksheet.py` exists to turn
+exactly such a night into rows a reader can audit; for 2026-08-18 it holds the
+questions with none of the answers filled in.
 
 ---
 
@@ -202,7 +202,7 @@ flowchart LR
 
     subgraph PROD["air-alert-early-warning (this repository)"]
         FETCH["fetch<br/>every 30 s"]
-        SNAP[("page snapshots<br/>stored as served")]
+        SNAP[("page snapshots<br/>kept when asked, as served")]
         PARSE["parse<br/>state, area, kind"]
         STORE[("event store<br/>SQLite, append only")]
         REPORT["report<br/>fold to current state"]
@@ -218,8 +218,8 @@ flowchart LR
     READER(["reader"])
 
     CH --> FETCH
-    FETCH --> SNAP
-    SNAP --> PARSE
+    FETCH -.->|"--save-raw"| SNAP
+    FETCH --> PARSE
     KAT --> PARSE
     PARSE --> STORE
     STORE --> REPORT
@@ -758,7 +758,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 20 | 6,035 |
 | Tests | 49 | 8,586 |
 | Tools | 23 | 6,285 |
-| Documentation | 56 | 21,462 |
+| Documentation | 56 | 21,512 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -881,8 +881,8 @@ waives attribution and that it waives the disclaimer, and it waives neither.
 **What the disclaimer means in this particular case**, since this is warning
 software: the licence's "AS IS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND"
 is not boilerplate to skim past. This tool is pre-alpha, it has never delivered
-a warning to anyone, **no hand-checked correctness rate exists for the western
-areas it is built for**, and its threat-kind tables cover roughly one alert in
+a warning to anyone, **no recorded hand-checked correctness rate exists for the
+western areas it is built for**, and its threat-kind tables cover roughly one alert in
 ten (F71). Anyone deploying
 it for someone else's safety is taking a decision the author has not taken and
 would want to be asked about first.

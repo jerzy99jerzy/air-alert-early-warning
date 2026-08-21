@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.1 / 2026-08-21
+Version: 3.2 / 2026-08-21
 Status: **built, deployed, and publicly reachable.** `mavo-site` 4.41.0.0 runs
 at `https://mavo.org.pl/` and carries its own gate (with a coverage floor, a
 jsdom browser harness and 93 mutants), its own defect log and its own audit.
@@ -400,7 +400,7 @@ flowchart LR
   collector --> store[(event store)]
   store --> report[mavo report --watch]
   report -->|writes every cycle| state[/state.json/]
-  state --> site[mavo-site, separate host]
+  state -->|pushed every 120 s| site[mavo-site, separate host]
   site --> reader([reader])
 ```
 
