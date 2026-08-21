@@ -40,6 +40,17 @@ MAX_BYTES = 4_000_000
 # back.
 CONNECT_BUDGET_S = 2.0
 
+# The exceptions a failed fetch is expected to raise, and the only ones a
+# retry is considered for. **F110 is why this is a named constant and not why
+# it is narrow.** It was a guess about what `http.client` plus `ssl` can
+# raise, the guess was wrong, and `NotImplementedError` walked out of `fetch`,
+# past `_cmd_collect`, and killed 168 polls with a traceback and the wrong
+# exit code. `fetch` now maps *anything* to `SourceUnavailable`; this tuple
+# survives only to decide what is worth attempting twice, where narrow is
+# correct: an exception nobody predicted is not evidence that a second attempt
+# would go better.
+RETRYABLE = (urllib.error.URLError, OSError, ValueError)
+
 # F109. One retry, and one only. Over the same 180 requests the refusal rate
 # was 10.6%, and in 7 of 7 observed cases an immediate second attempt
 # connected in 24 to 33 ms, so the failures are not correlated at this
@@ -60,9 +71,41 @@ Attempt = Callable[[_Resolved, float], socket.socket]
 Clock = Callable[[], float]
 
 
+def resolve_stream(host: str, port: int) -> Sequence[_Resolved]:
+    """Resolve ``host`` to stream addresses only.
+
+    **F110.** ``socket.getaddrinfo(host, port)`` with no ``type`` returns
+    **three** entries per family, not one: `SOCK_STREAM`, `SOCK_DGRAM` and
+    `SOCK_RAW`. A loop that walks them will, after the stream address fails,
+    reach the datagram one, and `connect()` on a UDP socket returns
+    immediately because there is nothing to negotiate. What comes back is a
+    connected-looking socket that TLS then refuses, from inside the standard
+    library, with an exception no caller here was catching.
+
+    This was latent from 0.28.1.0 and unreachable until 0.36.0.0: the first
+    attempt spent the whole ten-second deadline, so the loop always broke on
+    an exhausted budget before it could try a datagram. Capping the attempt
+    left budget behind, and the bug was one release old the moment it became
+    reachable.
+    """
+    return socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+
+
 def _attempt_one(resolved: _Resolved, budget: float) -> socket.socket:
-    """Open one connection to one resolved address, bounded by ``budget``."""
+    """Open one connection to one resolved address, bounded by ``budget``.
+
+    **F110.** Refuses a candidate that is not a stream, because the resolver
+    is an injectable seam and a fix that lives only in the default resolver
+    protects the production path and nothing else. The test that found this
+    passes a datagram address deliberately.
+    """
     family, kind, proto, _canonical, sockaddr = resolved
+    if kind != socket.SOCK_STREAM:
+        raise OSError(
+            f"refusing a {kind.name} address: this transport speaks TLS over "
+            f"streams, and connect() on a socket that is not one succeeds "
+            f"without having connected to anything"
+        )
     sock = socket.socket(family, kind, proto)
     try:
         sock.settimeout(budget)
@@ -77,7 +120,7 @@ def connect_within(
     deadline: float,
     address: tuple[str, int],
     *,
-    resolve: Resolver = socket.getaddrinfo,
+    resolve: Resolver = resolve_stream,
     attempt: Attempt = _attempt_one,
     clock: Clock = time.monotonic,
     connect_budget: float = CONNECT_BUDGET_S,
@@ -317,7 +360,7 @@ class UrllibTransport:
             try:
                 with _open(request, self.timeout_s, deadline, progress) as response:
                     return bytes(response.read(MAX_BYTES + 1))
-            except (urllib.error.URLError, OSError, ValueError) as refused:
+            except RETRYABLE as refused:
                 failure = refused
                 if progress.connected:
                     raise
@@ -351,7 +394,7 @@ class UrllibTransport:
         tried: list[int] = []
         try:
             raw = self._attempt(request, deadline, tried)
-        except (urllib.error.URLError, OSError, ValueError) as failure:
+        except Exception as failure:
             # T55. The refusal carries how long it waited and what was raised,
             # because without them a stall that hit the ten-second ceiling and
             # a rejection that bounced in twenty milliseconds are the same line

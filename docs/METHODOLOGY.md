@@ -3357,3 +3357,58 @@ side rather than about our own timeout.
 release lands on the host is not below 4%, which would mean the failures are
 correlated at the timescale a retry works on, and the estimate above rested on
 seven observations.
+
+### F110, 0.36.0.1. A resolver that returned datagram addresses, and a cap that reached them
+
+`connect_within` called `socket.getaddrinfo(host, port)` with no `type`.
+**That returns three entries per family, not one**: `SOCK_STREAM`,
+`SOCK_DGRAM` and `SOCK_RAW`, so six for a host with an A and an AAAA record
+`[measured]`. The loop walked all of them.
+
+`connect()` on a datagram socket returns immediately, because there is nothing
+to negotiate; it records a default peer and reports success. `connect_within`
+handed back a socket that looked open, `ssl.wrap_socket` refused it from
+inside the standard library with `NotImplementedError`, and that is a
+`RuntimeError` rather than an `OSError`, so it was caught by nothing: not the
+retry, not `fetch`, not `_cmd_collect`.
+
+**Latent from 0.28.1.0, reachable from 0.36.0.0.** F98 gave the first attempt
+the entire ten-second deadline, so the loop always broke on an exhausted
+budget before it could reach a second entry. F109's two-second cap left eight
+seconds behind, and the defect was one release old the moment it became
+reachable.
+
+**Measured on the host over 2026-08-20 18:19 to 2026-08-21 08:23**: 1,539
+starts, 1,371 finishes, **168 processes killed by a traceback**, exit
+`1/FAILURE` where the contract says `3` for unreachable. Not one
+`[UNREACHABLE]` line was written, so a count of refusals over that window read
+**zero**, and this session read that zero as a quiet network for one full
+turn. The refusal rate had not moved: 168 of 1,539 is 10.9%, against 9.9% the
+day before.
+
+**Three repairs, because one would have been the same bet again:**
+
+* `resolve_stream` asks for `SOCK_STREAM` only. The defect at its source.
+* `_attempt_one` refuses a non-stream candidate. The resolver is an injectable
+  seam, and a fix that lives only in the default protects the production path
+  and nothing else.
+* `fetch` maps **any** exception to `SourceUnavailable`, naming the type in
+  the message. The old tuple was a guess about what `http.client` plus `ssl`
+  can raise; the guess was wrong once and would be wrong again. The tuple
+  survives as `RETRYABLE`, deciding only what is worth a second attempt, where
+  narrow is right: an exception nobody predicted is not evidence that trying
+  again would go better.
+
+**Why the regressions missed it, and this is the part worth carrying.** The
+test written for F109 handed `connect_within` two addresses and made both
+`SOCK_STREAM`, because that is what its author believed `getaddrinfo`
+returns. The fixture was arranged from the implementation's belief rather than
+from the interface, which is the recurring defect class this project logs, and
+it produced a suite that could not have failed on the bug it was written
+beside. The regression now passes a datagram address deliberately, and a
+second test asserts against the **real** resolver that the six-entry premise
+still holds, so this cannot decay into testing a stub.
+
+**Reopen condition:** it reopens if any exception leaves `UrllibTransport.fetch`
+as anything other than `SourceUnavailable`, or if `mavo-collect` exits
+`1/FAILURE` on the host for a network cause.

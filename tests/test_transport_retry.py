@@ -27,8 +27,10 @@ from mavo.transport import (
     CONNECT_BUDGET_S,
     CONNECT_RETRIES,
     UrllibTransport,
+    _attempt_one,
     _Progress,
     connect_within,
+    resolve_stream,
 )
 
 
@@ -236,3 +238,129 @@ def test_the_worst_case_stays_inside_the_collection_interval() -> None:
 def test_the_progress_record_starts_disconnected() -> None:
     """A record defaulting to connected would silently disable every retry."""
     assert _Progress().connected is False
+
+
+# --------------------------------------------------------------------------
+# F110. The address list has three entries per family, not one.
+# --------------------------------------------------------------------------
+
+
+def _stream_then_datagram(host: str, port: int) -> list[Any]:
+    """What `getaddrinfo` actually returns, which is not what a stub returned.
+
+    The regression that missed F110 handed `connect_within` two addresses and
+    made both of them `SOCK_STREAM`, because that is what the author believed
+    the resolver returns. It returns `SOCK_STREAM`, `SOCK_DGRAM` and
+    `SOCK_RAW` for **each** family: six entries for a host with an A and an
+    AAAA record. A fixture arranged from the implementation's belief rather
+    than from the interface is how this survived eight releases.
+    """
+    return [
+        (socket.AF_INET6, socket.SOCK_STREAM, 6, "", ("::1", port, 0, 0)),
+        (socket.AF_INET6, socket.SOCK_DGRAM, 17, "", ("::1", port, 0, 0)),
+        (socket.AF_INET6, socket.SOCK_RAW, 0, "", ("::1", port, 0, 0)),
+    ]
+
+
+def test_a_datagram_address_is_refused_rather_than_connected() -> None:
+    """`connect()` on UDP succeeds without connecting to anything.
+
+    It negotiates nothing, so it returns immediately and hands back a socket
+    that looks open. TLS then refuses it from inside the standard library with
+    `NotImplementedError`, which is not an `OSError` and was caught by nobody.
+    """
+    clock = _Clock()
+
+    with pytest.raises(OSError) as refusal:
+        connect_within(
+            clock.now + 10.0,
+            ("example.invalid", 443),
+            # The datagram entry alone, so the refusal names the kind under
+            # test rather than whichever entry happened to be walked last.
+            resolve=lambda host, port: _stream_then_datagram(host, port)[1:2],
+            attempt=_attempt_one,
+            clock=clock,
+        )
+    assert "SOCK_DGRAM" in str(refusal.value), str(refusal.value)
+
+
+def test_the_default_resolver_asks_for_streams_only() -> None:
+    """The repair at its source: six entries become two.
+
+    Checked against the real resolver on a name that always resolves, because
+    a test that stubs `getaddrinfo` here would be testing the stub.
+    """
+    every = socket.getaddrinfo("localhost", 443)
+    kinds = {row[1] for row in every}
+    assert socket.SOCK_DGRAM in kinds, "the premise of F110 no longer holds"
+
+    streams = resolve_stream("localhost", 443)
+    assert {row[1] for row in streams} == {socket.SOCK_STREAM}, streams
+
+
+def test_a_capped_attempt_leaves_budget_and_that_is_what_exposed_this() -> None:
+    """The mechanism, stated as a test rather than as a changelog line.
+
+    Before the cap the first attempt spent the whole deadline, so the loop
+    always broke on an exhausted budget and never reached a second entry. The
+    latent defect was unreachable for eight releases for that reason alone.
+    """
+    clock = _Clock()
+    reached: list[str] = []
+
+    def stalls(resolved: Any, budget: float) -> Any:
+        reached.append(resolved[1].name)
+        clock.spend(budget)
+        raise TimeoutError("timed out")
+
+    with pytest.raises(OSError):
+        connect_within(
+            clock.now + 10.0,
+            ("example.invalid", 443),
+            resolve=_stream_then_datagram,
+            attempt=stalls,
+            clock=clock,
+        )
+    assert reached == ["SOCK_STREAM", "SOCK_DGRAM", "SOCK_RAW"], reached
+    assert clock.now == 1006.0, "three capped attempts, not one ten-second wait"
+
+
+def test_an_unforeseen_exception_still_leaves_fetch_as_a_refusal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The whole of F110's damage was one exception nobody had listed.
+
+    `NotImplementedError` is a `RuntimeError`, so it passed through the fetch,
+    through `_cmd_collect`'s handler, and out of the process: 168 polls died
+    with a traceback and exit 1 where the contract says 3. The type is named
+    in the message so that widening the net does not also hide what happened.
+    """
+    def surprises(request: Any, timeout_s: float, deadline: float,
+                  progress: Any = None) -> Any:
+        raise NotImplementedError("only stream sockets are supported")
+
+    monkeypatch.setattr("mavo.transport._open", surprises)
+    with pytest.raises(SourceUnavailable) as refusal:
+        UrllibTransport().fetch("https://example.invalid")
+    assert "NotImplementedError" in str(refusal.value), str(refusal.value)
+
+
+def test_an_unforeseen_exception_is_not_worth_a_second_attempt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Narrow where it decides a retry, wide where it decides a refusal.
+
+    An exception nobody predicted is not evidence that trying again would go
+    better, and a retry on a programming error doubles the cost of finding it.
+    """
+    seen: list[int] = []
+
+    def surprises(request: Any, timeout_s: float, deadline: float,
+                  progress: Any = None) -> Any:
+        seen.append(1)
+        raise NotImplementedError("only stream sockets are supported")
+
+    monkeypatch.setattr("mavo.transport._open", surprises)
+    with pytest.raises(SourceUnavailable):
+        UrllibTransport().fetch("https://example.invalid")
+    assert len(seen) == 1, seen

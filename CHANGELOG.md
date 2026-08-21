@@ -16,6 +16,43 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.36.0.1 - 2026-08-21
+
+**Hotfix. 0.36.0.0 killed 168 polls with a traceback and this session read the
+resulting silence as a quiet network.** F110.
+
+- **`connect_within` resolved without a `type`.** `socket.getaddrinfo(host,
+  port)` returns `SOCK_STREAM`, `SOCK_DGRAM` and `SOCK_RAW` for each family:
+  six entries for a host with an A and an AAAA record. The loop walked them
+  all. `connect()` on a datagram socket returns immediately because there is
+  nothing to negotiate, so what came back looked open, and `ssl.wrap_socket`
+  refused it with `NotImplementedError` - a `RuntimeError`, caught by nothing
+  in this package.
+- **Latent from 0.28.1.0 and reachable from 0.36.0.0.** F98 spent the whole
+  deadline on the first attempt, so the loop always broke on an exhausted
+  budget before a second entry. F109's two-second cap left eight seconds
+  behind. The bug was one release old the moment it stopped being unreachable.
+- **What it cost, measured over 14 hours on the host**: 1,539 starts, 1,371
+  finishes, 168 exits at `1/FAILURE` where the contract says `3`, and **not
+  one `[UNREACHABLE]` line**. A refusal count over that window read zero. The
+  rate had not moved at all: 168 of 1,539 is 10.9% against 9.9% the day
+  before, so **F109 is reopened and T69 is not met**.
+- **Three repairs.** `resolve_stream` asks for streams only; `_attempt_one`
+  refuses a non-stream candidate, because the resolver is an injectable seam
+  and a fix in the default protects the production path alone; and `fetch`
+  maps **any** exception to `SourceUnavailable` with the type named in the
+  message. The old tuple survives as `RETRYABLE` and now decides only what is
+  worth a second attempt, where being narrow is correct.
+- **The F109 regression could not have caught this.** It handed
+  `connect_within` two addresses and made both `SOCK_STREAM`, because that is
+  what its author believed the resolver returns. A fixture arranged from the
+  implementation's belief rather than from the interface - the class this
+  repository logs repeatedly, this time in a test written the same day. The
+  new regression passes a datagram address deliberately, and a second test
+  asserts against the **real** `getaddrinfo` that the six-entry premise still
+  holds, so it cannot decay into testing a stub.
+- Five regressions, 471 tests. Nothing else changed.
+
 ## 0.36.0.0 - 2026-08-20
 
 **A pinned failure rate was wrong by two orders of magnitude, and the release

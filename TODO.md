@@ -1862,9 +1862,10 @@ to say this is not a warning channel, and a reopen condition.
 ## T69. A connect budget and one retry, on the measured failure
 Status: `ready` [tier 1]
 
-Shipped at 0.36.0.0: `CONNECT_BUDGET_S = 2.0` and one retry, made only when
-the connection was never established. What remains is the part a release
-cannot do, which is finding out whether it worked.
+Shipped at 0.36.0.0 and **not exercised once**: the retry never fired, because
+the exception that was actually being raised was outside the tuple it caught
+(F110). Repaired at 0.36.0.1. What remains is the part a release cannot do,
+which is finding out whether it works.
 
 **The estimate this rests on is seven observations.** 7 of 7 retries connected
 on 2026-08-20, giving a one-sided 95% lower bound of 65% on retry success and
@@ -1876,6 +1877,43 @@ tell 100% from 70%.
 release is deployed, read the same way F109 read it - refusals and attempts
 counted separately from the journal, not a ratio quoted from anywhere. Below
 4% closes it. At or above 4% reopens F109 rather than closing this.
+
+**The window is anchored to a timestamp nothing in this tree can derive.** The
+deploy moment has to be read from the host at install time and written here,
+because a window that starts too early mixes in the old transport and produces
+a rate that looks plausible and measures two regimes. Journald takes
+`--since 'YYYY-MM-DD HH:MM'` in host local time, and this host is on UTC
+`[measured 2026-08-20]`.
+
+| | |
+| --- | --- |
+| Deploy of 0.36.0.0 to `vm-mavo` | 2026-08-20 18:19:43 UTC |
+| First reading, 14 h later | **void.** F110 killed 168 polls before they could refuse, so the window measured a broken exit path rather than a network |
+| Deploy of 0.36.0.1 | fill in the UTC minute |
+| Read no earlier than | that moment plus 24 h |
+
+**The first attempt at this measurement returned zero refusals and it was
+wrong.** Not because the arithmetic was wrong but because the line it counted
+had stopped being written. A count of a token is a measurement of the token,
+and the token is only a proxy for the event while the code that writes it is
+on the path. Check that `[UNREACHABLE]` lines exist at all before dividing by
+anything.
+
+Three counts, and they are three because a ratio quoted from one command is
+the shape of F109:
+
+```
+sudo journalctl -u mavo-collect.service --since 'FILL IN' --no-pager | grep -c UNREACHABLE
+sudo journalctl -u mavo-collect.service --since 'FILL IN' --no-pager | grep -c 'Finished mavo-collect'
+sudo journalctl -u mavo-collect.service --since 'FILL IN' --no-pager | grep -c '2 attempts'
+```
+
+Attempts are the first plus the second: a refusal prints `Failed to start`
+with `status=3` and never `Finished`. The third count is new information
+rather than a check - it says how many polls the retry rescued, which is the
+only direct measurement of the mechanism this task shipped, and it can be
+compared against the first to see whether the two agree about how often the
+network refused.
 
 
 ## T70. Which side drops the packets
