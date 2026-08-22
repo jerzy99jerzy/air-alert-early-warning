@@ -1897,9 +1897,11 @@ public feed of the same data, and it is a finding for T8a rather than a route
 to take.
 
 **RCB publishes into this feed, and `mavo/sources/rso.py` said otherwise.**
-MSWiA's own page records that on 2026-04-30 the Government Centre for Security
+MSWiA's own page records that on 2024-04-30 the Government Centre for Security
 was given the task of publishing communiques, and names RCB and MSWiA as
-responsible for the nationwide ones. What is *not* in RSO is Alert RCB, the
+responsible for the nationwide ones. The date shipped at 0.38.0.0 as 2026 and
+was wrong by two years (F112); this session quoted the source correctly and
+transposed it while writing the tree. What is *not* in RSO is Alert RCB, the
 statutory SMS, and RCB's own FAQ says so in those words. Two different objects,
 one abbreviation. The docstring's blanket claim is corrected at 0.38.0.0.
 

@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.38.0.0",
+  "version": "0.38.0.1",
   "python_requires": ">=3.11",
   "sprint_test_files": [
     0,
@@ -41,7 +41,7 @@
     "docs/CHANNEL.md": "1.4",
     "docs/reviews/0.10.1.0.md": "1.0",
     "docs/reviews/0.11.1.0.md": "1.0",
-    "docs/FEED-SPEC.md": "1.9",
+    "docs/FEED-SPEC.md": "2.0",
     "docs/WEBAPP.md": "3.3",
     "docs/reviews/0.13.0.0.md": "1.0",
     "docs/reviews/0.15.0.0.md": "1.0",
@@ -132,7 +132,7 @@
     "consumed_sources_sampled": 3,
     "consumed_sources_with_ipv6": 3
   },
-  "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except real_messages_resolving_an_area and real_messages_classified_as_alerts, which are pinned by tests against real channel content; nothing here is a claim about the world",
+  "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except real_messages_resolving_an_area and real_messages_classified_as_alerts, which are pinned by tests against real channel content, and the rso_* and *_hosts_* keys, which are hand measurements of the live RSO endpoint and of DNS taken on 2026-08-22 and are exactly claims about the world on that day; nothing else here is a claim about the world",
   "corpus": {
     "pages": 3062,
     "size_mb": 325,
@@ -148,16 +148,16 @@
     "taken_at": "2026-08-11"
   },
   "statistics": {
-    "package_lines": 6460,
+    "package_lines": 6461,
     "package_files": 20,
     "test_lines": 8824,
     "test_files": 49,
     "tool_lines": 6285,
     "tool_files": 23,
-    "documentation_lines": 21872,
+    "documentation_lines": 21974,
     "documentation_files": 57,
     "runtime_dependencies": 0
   },
-  "defects_logged": 91,
+  "defects_logged": 92,
   "decisions_recorded": 31
 }

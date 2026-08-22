@@ -8,8 +8,9 @@ docstring conflated them.** *Alert RCB*, the statutory SMS, is not in this
 feed and has no feed of its own: the Government Centre for Security hands text
 and scope to the mobile operators and they broadcast, and its own FAQ states
 that the alert is not part of RSO. *RCB communiques* are a different object.
-Since 2026-04-30 that body publishes into this feed and is, with MSWiA, the
-named author of the nationwide ones `[reported: MSWiA's own page]`.
+Since April 2024 that body has published into this feed and is, with MSWiA,
+the named author of the nationwide ones `[reported: MSWiA's own page; the
+date shipped at 0.38.0.0 as 2026 and was wrong by two years, F112]`.
 
 So this module does read RCB, some of the time, and cannot tell when. The
 payload carries voivodeship scope and no issuer field `[n=1 fixture]`, so a

@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 1.9 / 2026-08-22
+Version: 2.0 / 2026-08-22
 A specification, written from the position of someone who tried to build against
 one and found there was nothing to build against. The Ukrainian equivalent was
 consumed and measured over a corpus of 118 days; the work of building against it
@@ -9,17 +9,19 @@ Both facts are stated because the argument below rests on the second: what the
 convention enables is cheap to exploit, and that is the point. Companion:
 [`docs/CHANNEL.md`](CHANNEL.md), which is the measurement this rests on, and
 T8a in [`../TODO.md`](../TODO.md), which is where the gap was first recorded.
-T8a is the measurement this document argues from and has not yet made: a
-verdict per Polish source against the five properties in section 3. Until it
-exists, section 2 rests on `[reported]` and `[assumption, unmeasured]` rows
-rather than on a survey.
+T8a is the survey this document argues from. Its first source-level
+verdict, for the RSO stream, was measured on 2026-08-22 and is folded into
+sections 2 and 4a below; the remaining Polish sources still rest on
+`[reported]` rows rather than on a reading, and are marked as such.
 
 ```
-Note: this document describes a feed that does not exist. It is not a claim
-      about anyone's competence and makes none. It is a technical description of
-      an interface, written by someone who consumed the Ukrainian equivalent for
-      118 days of it and can therefore say precisely which properties turned out
-      to matter and which did not
+Note: this document describes a feed that does not yet exist. Poland's nearest
+      existing counterpart, the RSO stream, was read and measured on
+      2026-08-22; section 2 records what it is, and the last entries of
+      section 4a record what consuming it taught. That reading corrected this
+      document in several places, and the corrections are marked rather than
+      silent. None of it is a claim about anyone's competence, and this
+      document makes none
 ```
 
 ## Contents
@@ -69,8 +71,25 @@ institution.
 | --- | --- | --- |
 | Sirens | People within earshot | No, and cannot be |
 | RCB alert (SMS) | Roughly 14 million recipients | No. Free text to a phone |
-| RSO application | Its installed base | Partially, and not as an open stream |
+| RSO stream (XML and JSON) | Anyone who finds the address | Yes `[measured 2026-08-22]` - with the gaps recorded in section 4a |
+| RSO CAP interface | Holders of an access token | In format, yes. Access is by writing to the system's administrator |
 | The announced MSWiA application | Not yet released | Unknown |
+
+**A correction to earlier editions, measured 2026-08-22.** This document used
+to describe the RSO stream as closed. It is not. The service behind the RSO
+application publishes its list pages as XML and JSON, publicly, with no token
+and no registration, and its integration page says so in plain words. This
+project read the stream in one evening, which is the strongest form a
+correction like this can take.
+
+The same evening showed why the stream, as published today, is not yet the
+feed this document describes. No message says what it is: five categories
+exist, but only in the address of the request, never in the record. No message
+says who issued it, although two different kinds of authority publish into the
+same stream. The scope named "all" quietly returns a fraction of the data. And
+history thins to a handful of records per week across the whole country, so
+the week this project most needed to look back at is already mostly gone. Each
+of these is measured, and each has its own entry at the end of section 4a.
 
 **Measured rather than assumed, 2026-08-09.** The full metadata catalogue of the
 open data portal was downloaded and searched: 1,510,768 resources, filtered on
@@ -90,6 +109,12 @@ Read against the standard, that is not a formatting failure. XML is permitted at
 level 3 and HTML is only discouraged above it, so the entries are correct. What
 they are is **static documents**, correctly declared as such.
 
+Read at the level of content on 2026-08-22, the four resources are: the
+National Crisis Management Plan, the National Critical Infrastructure
+Protection Programme with its standards annex, and a directory of
+crisis-management centres with their contact details. Plans and contacts. Not
+one dated event, and not one alert.
+
 Level 3 is also the exact level at which the standard says API delivery is
 recommended, precisely so that data can be machine-processed. The publisher is
 therefore already at the threshold the standard describes, and publishing files.
@@ -101,15 +126,24 @@ category exists on the portal for air quality, complete with a dynamic API. For
 alerting it does not exist, and the publisher who would own it is already
 present, already compliant, and already publishing something else.
 
-The consequence is one sentence long. **Nobody outside the state can build
-anything on Polish alerting data**, however competent, however willing, and
-regardless of what they intend to build: a research dataset, an accessibility
-tool for deaf users, a display for a school, a check on how fast the system
-actually is.
+The consequence needs stating more carefully than earlier editions of this
+document put it, because this project has since built against the one stream
+that exists. It is not that nothing can be built. It is that **alerting is
+absent from the place where the state publishes data as data.** The stream
+lives outside the catalogue, as the backend of an application: no entry, no
+version, no stated schema, no stated retention, free to change shape without
+notice. A research dataset, an accessibility tool for deaf users, a display
+for a school, a check on how fast the system actually is - each can be
+attempted against it, and each inherits every gap in section 4a with no
+contract underneath.
 
 This project hit that wall directly. The Ukrainian side of the border is
-measured down to the raion, 118 days of it, 60,680 messages. The Polish side is
-zero. The asymmetry is not about data volume; it is about format.
+measured down to the raion, 118 days of it, 60,680 messages. The Polish side
+is one evening old, and it cannot be built backwards: the stream's own
+retention keeps a thin file, and the week of the July cruise-missile impact
+survives in it as a handful of rows for the whole country. The asymmetry is
+not about data volume; it is about whether the data is treated as worth
+keeping.
 
 The catalogue search is reproducible: download the portal's own catalogue
 metadata, unpack, and filter the description fields. The command is in this
@@ -219,7 +253,7 @@ happening now. For most public data that gap costs nothing. For alerting it is
 the difference between a quiet night and a dead system, and a consumer cannot
 tell them apart from the outside.
 
-## 4a. Nine properties learned by shipping, not by specifying
+## 4a. Properties learned by shipping, not by specifying
 
 Sections 1 to 4 were written before this project had a consumer in production.
 It has had one since 2026-08-11, and five requirements emerged that the
@@ -233,10 +267,13 @@ names a means of attack at all: the answer bounds what any consumer of such a
 feed can display, and it is not a number a parser can improve. Thirteen and
 fourteen were added at 1.8, from two defects found in this project's own
 contract on one day, both of the same shape: a fact the publisher held and the
-consumer could not use. Fifteen, sixteen and seventeen were added at 1.9, and
-they are the first three drawn from **reading a Polish source rather than a
-Ukrainian one**. Their evidence is a single evening against one endpoint, which
-makes them narrower than the rest and is stated here rather than buried.
+consumer could not use. Fifteen and seventeen were added at 1.9, the
+first entries drawn from **reading a Polish source rather than a Ukrainian
+one**; their evidence is a single evening against one endpoint, which makes
+them narrower than the rest, and that is said here rather than buried. Sixteen
+was added at 1.9 and withdrawn at 2.0. The stub below says why, because a
+withdrawal recorded openly is part of the same discipline these properties ask
+of a publisher.
 
 **Six. A cap, published, and a flag saying when it bound.** [measured]
 
@@ -485,22 +522,24 @@ that will eventually recover the wrong one.
 The Polish RSO feed publishes five categories. They are real: they partition
 the data, they appear in the address, and the publisher's own documentation
 lists their slugs at a dedicated endpoint. **None of them appears in a
-communique.** Measured across 156 messages, not one carried a category field:
+communique.** Measured across the 156 messages the "all" scope returns, not
+one carried a category field:
 `type` is present and empty in all 156, `rso_icon` likewise. The only way a
 consumer knows what a row is, is to remember which URL returned it.
 
-The same holds for the author. Since 2026-04-30 the Government Centre for
-Security publishes into this feed and is, with the ministry, responsible for
-the nationwide messages; the sixteen voivodeship crisis centres publish the
-rest. **No field distinguishes them.** A consumer that wants to label a warning
-with who issued it cannot, and a consumer that labels the whole block with one
-issuer's name is wrong about most of it.
+The same holds for the author. Since April 2024 the Government Centre for
+Security has published into this feed, and the system's owner names it, with
+the ministry, as responsible for the nationwide messages, while the
+voivodeship crisis centres publish the rest `[reported: the owner's own
+description of the system]`. **No field distinguishes them.** A consumer that
+wants to label a warning with who issued it cannot, and a consumer that labels
+the whole block with one issuer's name is wrong about most of it.
 
 This is not a request for a rich taxonomy. It is the observation that a
 publisher which already classifies, already routes by that classification, and
-already publishes the vocabulary as a document, is withholding the one place
-the classification would cost nothing: the record. One field per message, drawn
-from a list that already exists.
+already publishes the vocabulary as a document, leaves it out of the one place
+it would cost nothing: the record. One field per message, drawn from a list
+that already exists.
 
 **What it costs the consumer to work around, precisely.** Five requests instead
 of one, plus bookkeeping to remember which request produced which row, plus the
@@ -509,34 +548,21 @@ everything. The workaround exists. That it exists is not an argument against the
 field; it is a measure of what the missing field costs, multiplied by every
 consumer.
 
-**Sixteen. Reachability is a property of the consumer and the publisher
-together, and no feed states it.** [measured, n=6, one network, one evening]
+**Sixteen. Withdrawn at 2.0.**
 
-"The data is publicly available" is a statement about licence and format. It
-says nothing about which address families answer, and a consumer discovers the
-answer by deploying.
+As shipped at 1.9, this entry asked publishers to state which address families
+their endpoints answer on. The measurement behind it was real: the Polish
+state sources read that evening publish no IPv6 addresses, while every source
+this project consumes publishes both. But the failure that prompted the entry
+was this project's own network, configured for the sources it was built to
+reach and for nothing else. A specification aimed at publishers is not the
+place to file a consumer's configuration lesson, and a document with this
+one's exposure should not carry its weakest claim at the same rank as its
+strongest.
 
-Measured from one host: three Polish state sources publish `A` records and no
-`AAAA` at all - the alerting feed, the national open-data portal, and that
-portal's API. The three sources this project consumes successfully all publish
-both. A single-stack IPv6 consumer resolves the name, gets addresses, and never
-connects; the name resolving is not the same fact as the host answering, and
-from a log the two look identical.
-
-**This is not an accusation and there is no blocking to report.** The failure
-recorded here was the consumer's own network, correctly configured for what it
-was built to reach. That is exactly why it belongs in a specification rather
-than in a complaint: the consumer could not have known before deploying, and
-nothing in the publisher's documentation could have told it.
-
-One line of metadata fixes it: which address families the endpoint answers on.
-It costs a publisher nothing and it is the difference between a consumer that
-knows it cannot reach a feed and a consumer that concludes the country is
-quiet.
-
-The sample is six hosts on one network on one evening. It is an observation
-about interface documentation, not a survey of Polish public administration,
-and it should not be read as one.
+What survives of it is consumer-side and lives in this repository's defect log
+rather than here: the name resolving is not the host answering, and in a log
+the two look the same.
 
 **Seventeen. A parameter the server does not honour must be refused, not
 accepted.** [measured, 2026-08-22, and it is three findings wearing one shape]
@@ -547,9 +573,13 @@ complete one, in a single evening of reading it:
 - **A scope named "all" that is not all.** The five categories hold 461
   distinct communiques and share none. The `wszystkie` scope returns 156. The
   305 it omits are one category, and nothing in the payload, the pagination
-  block or the publisher's documentation mentions the omission. A collector
-  reading the obvious address reads a third of the feed and has no signal that
-  it did.
+  block or the integration page mentions the omission. A collector reading the
+  obvious address reads a third of the feed and has no signal that it did. The
+  exclusion may well be deliberate - the site's own navigation treats water
+  levels as a separate tab - and deliberate-and-unstated is exactly the
+  problem: the scope is still called *all*, in a path where the excluded
+  category is a legal value of the same parameter, and nothing a consumer can
+  read says otherwise.
 - **A count named for the total that counts the page.** The pagination
   attribute is `totalItems`. On page 1 it reads 20; on page 2 it reads 20; on
   the unpaged request over the same data it reads 156. A consumer deriving a
@@ -557,10 +587,11 @@ complete one, in a single evening of reading it:
   stop condition that does work is an empty page, which the endpoint returns
   with status 200.
 - **Date parameters that are accepted and ignored.** The publisher's
-  integration page documents `from` and `to`. Passed to the XML endpoint with a
-  seven-day window, the response was 200 and contained 150 records spanning
-  seven months, of which ten fell inside the window. A consumer counting rows
-  sees a plausible number and concludes the filter works.
+  integration page documents `from` and `to` for its search interface. Passed
+  to the XML endpoint, which accepts them without complaint, with a seven-day
+  window, the response was 200 and contained 150 records spanning seven
+  months, of which ten fell inside the window. A consumer counting rows sees a
+  plausible number and concludes the filter works.
 
 The third is the worst because it is the cheapest to prevent. **An unrecognised
 parameter should produce a 400, not a 200.** Silently ignoring it converts a

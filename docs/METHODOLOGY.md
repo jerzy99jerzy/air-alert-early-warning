@@ -3469,3 +3469,35 @@ not get quoted.
 
 **Reopen condition:** it reopens the next time a number reaches a document or a
 decision without a stated way it could have been wrong.
+
+### F112, 0.38.0.1. A date quoted correctly in conversation and transposed by two years in the tree
+
+The MSWiA page dates its decision entrusting the Government Centre for
+Security with publishing communiques to 30 April 2024. The session that read
+that page quoted it correctly, with a citation, in conversation. What was then
+written into this repository, in five places at once - the module docstring,
+the backlog, the changelog, the release review and FEED-SPEC - said 2026.
+
+**Why it matters more than a typo.** FEED-SPEC is the document written for
+exactly the institutions whose decision the date describes. A reader there who
+knows their own calendar finds the error in seconds, and every measured number
+around it inherits the doubt. The five copies also show how the error
+propagates: one wrong transcription, pasted with confidence into every artefact
+that needed the fact.
+
+**Why it survived.** 2026 is this project's present, so the digits looked at
+home among every other date in the tree. Nothing checks a date in prose
+against a source, and F111's rule - a counter without a falsifying case is not
+a measurement - was applied to counters and not to transcription. It is the
+sixth instance of F111's class in one session: a value of the right shape,
+read as the value that was meant.
+
+**Remediation.** A second-hand fact that enters the tree carries its
+provenance label at the point of entry, not only in the conversation that
+found it, and the label includes the date of reading. The corrected passages
+now do. The structural fix - checking labelled claims against their sources -
+is T22's scope and T22 is still open; this entry is the argument for its
+priority.
+
+**Reopen condition:** the next externally-sourced date or figure that reaches
+the tree without a provenance label, or the next one found wrong.

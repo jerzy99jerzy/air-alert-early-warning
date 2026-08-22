@@ -16,6 +16,43 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.38.0.1 - 2026-08-22
+
+**Documentation only, and it is an audit of the release before it.** FEED-SPEC
+goes to 2.0 after being read against the evening's measurements as a document
+with institutional exposure, and four of its claims did not survive the
+reading.
+
+**A date wrong by two years, in five files (F112).** The decision entrusting
+the Government Centre for Security with publishing communiques is from April
+2024. The tree said 2026 in the module docstring, the backlog, this changelog,
+the release review and FEED-SPEC - in the one document written for the
+institutions whose decision it dates. The session quoted the source correctly
+in conversation and transposed it while writing the tree. Corrected
+everywhere, and the corrections are marked in place rather than silent.
+
+**"Not an open stream" was false.** Earlier editions described RSO as closed.
+The stream is public XML and JSON with no token, measured by building against
+it; section 2 now says so as a named correction, and says why what exists is
+still not the feed the document describes.
+
+**"Nobody outside the state can build anything" fell with it.** Restated as
+what the measurement supports: alerting is absent from the place where the
+state publishes data as data, and what exists lives outside the catalogue with
+no contract underneath.
+
+**Property sixteen withdrawn.** It generalised a lesson from this project's
+own network configuration into an ask of publishers. The measurement stands;
+the rank did not. A stub records the withdrawal openly, and what survives is
+filed consumer-side, where it belongs.
+
+Also tightened at 2.0: the date parameters are documented for the search
+interface rather than the XML path and the text no longer implies otherwise;
+the "all"-scope finding carries the charitable reading and the criticism lands
+on unstated rather than on deliberate; the category sample names which 156
+messages it was; STATUS.json's note now names which keys are hand measurements
+of the live endpoint rather than gate output.
+
 ## 0.38.0.0 - 2026-08-22
 
 **A communique reaches a table of its own, and reading the endpoint corrected
@@ -39,7 +76,7 @@ empty page, returned with status 200.
 **The docstring's claim that this feed never carries RCB was wrong.** Two
 objects share the abbreviation: the statutory SMS, which has no feed and is not
 in RSO, and the nationwide communiques, which that body has published into this
-feed since 2026-04-30. So the reader does read them, some of the time, and
+feed since April 2024. So the reader does read them, some of the time, and
 cannot tell when, because no field names an issuer.
 
 **An index on a missing column pre-empted the schema refusal.** `CREATE INDEX`
