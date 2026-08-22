@@ -16,6 +16,17 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.37.0.3 - 2026-08-22
+
+**T69 closes on its binding reading, and the reading demotes the estimate it
+shipped on.** Refusal rate on `vm-mavo` over 24 h 2 m: 24 of 2628 attempts,
+0.9% against the 4% threshold, with exact three-way agreement between starts,
+finishes and failures - the divergence check F110 taught this task to carry.
+F109 stays closed. The retry rescued 23 of 47 first-attempt refusals: 49%
+success, which excludes the 65% lower bound seven observations had suggested -
+refusals are correlated at the one-second timescale, and the retry halves the
+rate rather than eliminating it. Documentation only; no code path changes.
+
 ## 0.37.0.2 - 2026-08-21
 
 **`docs/WEBAPP.md` stops naming the consumer's current version, after lagging
