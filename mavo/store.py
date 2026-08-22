@@ -39,6 +39,12 @@ EXPECTED_COLUMNS = (
     "content_hash", "area_id", "state", "ts_source", "ts_ingest",
     "source_id", "kind", "provenance", "raw_fields", "oblast", "role",
 )
+EXPECTED_COMMUNIQUE_COLUMNS = (
+    "digest", "feed", "source_id", "ts_ingest", "provinces", "fields",
+)
+EXPECTED_ATTEMPT_COLUMNS = (
+    "started_at", "feed", "url", "outcome", "items", "unreadable", "detail",
+)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
@@ -70,8 +76,61 @@ CREATE TABLE IF NOT EXISTS kind_events (
     source_id    TEXT NOT NULL,
     raw_fields   TEXT NOT NULL
 );
+-- T67. The third stream, and the third table, for the reason the second one
+-- exists: a Polish communique has a different issuer, a different scope and a
+-- different lifetime from a Ukrainian alert, and a shared `state` column
+-- between them is the modelling error F25 recorded.
+--
+-- `feed` names the endpoint the row was read from and is written by the
+-- caller, not by the publisher. The RSO payload carries no issuer field at
+-- all; this column records our reading. If the feed ever names an issuer,
+-- that is a different column and it is not this one.
+--
+-- Every field the publisher sent is kept in `fields` as JSON, unfiltered.
+-- D-034: nothing is dropped by category here. A row this project cannot
+-- classify is a row it stores and cannot classify, which is a different
+-- object from a row that was never published.
+CREATE TABLE IF NOT EXISTS communiques (
+    digest     TEXT PRIMARY KEY,
+    feed       TEXT NOT NULL,
+    source_id  TEXT NOT NULL,
+    ts_ingest  TEXT NOT NULL,
+    provinces  TEXT NOT NULL,
+    fields     TEXT NOT NULL
+);
+
+-- FEED-SPEC property nine, owed by this project to itself. RSO publishes no
+-- heartbeat, so an hour with no communiques and an hour in which this
+-- collector was dead are the same empty set in `communiques` and no care at
+-- rendering time recovers the difference.
+--
+-- `items` is NULL for a refusal and 0 for a page that was read and held
+-- nothing. Those are two different facts and the schema has to make them
+-- representable differently or the distinction collapses at the first
+-- timeout. The two writers below exist so that the wrong combination cannot
+-- be expressed by a caller.
+CREATE TABLE IF NOT EXISTS feed_attempts (
+    started_at TEXT NOT NULL,
+    feed       TEXT NOT NULL,
+    url        TEXT NOT NULL,
+    outcome    TEXT NOT NULL,
+    items      INTEGER,
+    unreadable INTEGER,
+    detail     TEXT
+);
+"""
+
+# **Separate from `_SCHEMA`, and the separation is load-bearing.** An index
+# names columns, so `CREATE INDEX` against a table written by an older version
+# raises `OperationalError: no such column` from inside `executescript`, before
+# the refusal below can run. The caller then gets a message naming a column and
+# nothing about which version wrote the store or what to do next. Tables first,
+# columns checked, indexes last.
+_INDEXES = """
 CREATE INDEX IF NOT EXISTS idx_events_ts_source ON events (ts_source);
 CREATE INDEX IF NOT EXISTS idx_events_area ON events (area_id, ts_source);
+CREATE INDEX IF NOT EXISTS idx_communiques_feed ON communiques (feed, ts_ingest);
+CREATE INDEX IF NOT EXISTS idx_attempts_feed ON feed_attempts (feed, started_at);
 """
 
 
@@ -102,6 +161,8 @@ class EventStore:
             conn.executescript(_SCHEMA)
             conn.commit()
             self._refuse_an_older_schema(conn)
+            conn.executescript(_INDEXES)
+            conn.commit()
 
     @staticmethod
     def _refuse_an_older_schema(conn: sqlite3.Connection) -> None:
@@ -121,6 +182,12 @@ class EventStore:
             for column in EXPECTED_KIND_COLUMNS
             if column not in kind_found
         ]
+        for table, expected in (
+            ("communiques", EXPECTED_COMMUNIQUE_COLUMNS),
+            ("feed_attempts", EXPECTED_ATTEMPT_COLUMNS),
+        ):
+            present = tuple(row[1] for row in conn.execute(f"PRAGMA table_info({table})"))
+            missing += [f"{table}.{column}" for column in expected if column not in present]
         if missing:
             raise SchemaMismatch(
                 f"store is missing column(s) {', '.join(missing)}; it was written by an "
@@ -329,3 +396,148 @@ class EventStore:
                     source_id=row[6],
                     raw_fields=json.loads(row[7]),
                 )
+
+    def append_communiques(self, feed: str, communiques: Iterable[Any]) -> int:
+        """Insert communiques, ignoring ones already present. Returns rows added.
+
+        Idempotence is by the communique's own content digest and not by its
+        identifier, because the feed edits in place: `updated_at` moves and the
+        identifier does not, so a store keyed on the identifier could not tell
+        a re-publication from a rewrite. Keying on content means an edit lands
+        as a second row and both readings survive, which is what a record is
+        for.
+
+        `feed` is stated by the caller. Nothing here infers it, because the
+        payload does not carry it.
+        """
+        now = _stored_form(datetime.now(UTC), "ts_ingest")
+        rows = [
+            (
+                item.digest(),
+                feed,
+                item.id,
+                now,
+                json.dumps(
+                    [[p.slug, p.name, p.city] for p in item.provinces],
+                    sort_keys=True,
+                    ensure_ascii=False,
+                ),
+                json.dumps(item.fields, sort_keys=True, ensure_ascii=False),
+            )
+            for item in communiques
+        ]
+        if not rows:
+            return 0
+        with closing(self._connect()) as conn:
+            before = conn.total_changes
+            conn.executemany(
+                "INSERT OR IGNORE INTO communiques (digest, feed, source_id, ts_ingest, "
+                "provinces, fields) VALUES (?, ?, ?, ?, ?, ?)",
+                rows,
+            )
+            conn.commit()
+            return conn.total_changes - before
+
+    def count_communiques(self, feed: str | None = None) -> int:
+        """Rows held, for the whole table or one feed."""
+        with closing(self._connect()) as conn:
+            if feed is None:
+                return int(conn.execute("SELECT COUNT(*) FROM communiques").fetchone()[0])
+            return int(
+                conn.execute(
+                    "SELECT COUNT(*) FROM communiques WHERE feed = ?", (feed,)
+                ).fetchone()[0]
+            )
+
+    def replay_communiques(self, feed: str) -> Iterator[dict[str, Any]]:
+        """Every communique held for one feed, oldest reading first.
+
+        Ordered by ingest time and then by digest, because ingest time ties
+        whenever one poll stored several rows and a tie broken by nothing is a
+        different order on every read.
+        """
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT source_id, ts_ingest, provinces, fields FROM communiques "
+                "WHERE feed = ? ORDER BY ts_ingest, digest",
+                (feed,),
+            ).fetchall()
+        for row in rows:
+            yield {
+                "source_id": row[0],
+                "ts_ingest": row[1],
+                "provinces": json.loads(row[2]),
+                "fields": json.loads(row[3]),
+            }
+
+    def record_read(
+        self, feed: str, url: str, started_at: datetime, items: int, unreadable: int
+    ) -> None:
+        """Log a poll that returned a page. `items` may legitimately be zero.
+
+        Separate from ``record_refusal`` so that a caller cannot write a
+        refusal carrying `items=0`. That single confusion is the one this
+        table exists to prevent, and a shared writer with optional arguments
+        would leave it one keyword away.
+        """
+        self._record(feed, url, started_at, "read", items, unreadable, None)
+
+    def record_refusal(self, feed: str, url: str, started_at: datetime, detail: str) -> None:
+        """Log a poll that returned nothing readable. `items` stays NULL.
+
+        NULL is not zero here and the distinction is the property: zero means
+        the publisher said there is nothing, NULL means we did not find out.
+        """
+        self._record(feed, url, started_at, "refused", None, None, detail)
+
+    def _record(
+        self,
+        feed: str,
+        url: str,
+        started_at: datetime,
+        outcome: str,
+        items: int | None,
+        unreadable: int | None,
+        detail: str | None,
+    ) -> None:
+        row = (
+            _stored_form(started_at, "started_at"),
+            feed,
+            url,
+            outcome,
+            items,
+            unreadable,
+            detail,
+        )
+        with closing(self._connect()) as conn:
+            conn.execute(
+                "INSERT INTO feed_attempts (started_at, feed, url, outcome, items, "
+                "unreadable, detail) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                row,
+            )
+            conn.commit()
+
+    def attempts(self, feed: str) -> tuple[dict[str, Any], ...]:
+        """Every poll logged for one feed, oldest first.
+
+        Returned whole rather than streamed: this table holds one row per poll
+        and is read by a person asking what the collector was doing, not by
+        the report path.
+        """
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT started_at, url, outcome, items, unreadable, detail "
+                "FROM feed_attempts WHERE feed = ? ORDER BY started_at, rowid",
+                (feed,),
+            ).fetchall()
+        return tuple(
+            {
+                "started_at": row[0],
+                "url": row[1],
+                "outcome": row[2],
+                "items": row[3],
+                "unreadable": row[4],
+                "detail": row[5],
+            }
+            for row in rows
+        )

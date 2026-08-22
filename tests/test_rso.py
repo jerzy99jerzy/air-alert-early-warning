@@ -8,20 +8,27 @@ elements would edit the thing under test.
 
 from __future__ import annotations
 
+import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from mavo.errors import SourceUnavailable
+from mavo.errors import NaiveTimestamp, SchemaMismatch, SourceUnavailable
 from mavo.sources.rso import (
+    CATEGORIES,
+    FEED,
     AmbiguousLocalTime,
     Communique,
     Page,
     Province,
+    page_url,
     parse_page,
+    poll_once,
     to_utc,
 )
+from mavo.store import EventStore
+from mavo.transport import FailingTransport, StubTransport
 
 FIXTURE = Path(__file__).parent / "fixtures" / "rso_page.xml"
 
@@ -33,7 +40,7 @@ def page() -> Page:
 
 def test_the_page_reports_its_pagination_as_the_feed_stated_it(page: Page) -> None:
     """Seventeen items across pages of twenty, from the feed's own header."""
-    assert page.total_items == 17, page
+    assert page.items_on_page == 17, page
     assert page.items_per_page == 20, page
     assert len(page.communiques) == 2, page.communiques
 
@@ -101,7 +108,7 @@ def test_an_item_without_an_identifier_is_dropped_and_counted() -> None:
     page = parse_page(payload)
     assert page.unreadable == 1, page
     assert [c.id for c in page.communiques] == ["7"], page.communiques
-    assert page.total_items == 2, "the feed's own count survives our own losses"
+    assert page.items_on_page == 2, "the feed's own count survives our own losses"
 
 
 def test_a_province_without_a_slug_does_not_become_a_scope() -> None:
@@ -149,14 +156,14 @@ def test_an_oversized_payload_is_refused_by_length_alone() -> None:
 def test_a_page_with_no_pagination_header_reports_unknown_not_zero() -> None:
     """Absent counts are unknown. Zero is a measurement nobody took."""
     page = parse_page(b"<newses><news><id>7</id></news></newses>")
-    assert page.total_items is None, page
+    assert page.items_on_page is None, page
     assert page.items_per_page is None, page
 
 
 def test_a_pagination_figure_that_is_not_a_number_is_unknown_not_zero() -> None:
     """Same rule one layer down: unreadable is not empty."""
     page = parse_page(b'<newses><pagination_info totalItems="many"/></newses>')
-    assert page.total_items is None, page
+    assert page.items_on_page is None, page
 
 
 def test_the_naive_timestamp_is_not_converted_by_the_parser(page: Page) -> None:
@@ -211,3 +218,161 @@ def test_the_reader_is_not_wired_into_the_collector() -> None:
 
     assert not hasattr(rso, "poll")
     assert not any(hasattr(obj, "poll") for obj in (Page, Communique, Province))
+
+
+# --- 0.38.0.0: the poll path, the table of its own, and the attempt log ------
+#
+# Everything below was written against a live reading of the endpoint on
+# 2026-08-22 rather than against the fixture alone, and the numbers quoted in
+# the assertions' messages are from that reading. The fixture is still what the
+# tests run on; the measurements are why these particular invariants and not
+# others.
+
+
+
+def test_a_category_outside_the_published_vocabulary_is_refused() -> None:
+    """A sixth slug is a change in the feed, not a string to interpolate."""
+    with pytest.raises(SourceUnavailable) as refusal:
+        page_url("powietrzne")
+    assert "powietrzne" in str(refusal.value)
+    assert "stany-wod" in str(refusal.value), "the refusal names the vocabulary it checked"
+
+
+def test_every_published_category_builds_an_address() -> None:
+    """Five slugs, measured from /kategorie, and each one resolves."""
+    assert len(CATEGORIES) == 5, CATEGORIES
+    for name in CATEGORIES:
+        assert page_url(name, 3).endswith(f"/{name}/3?_format=xml"), name
+
+
+def test_poll_reads_a_page_through_the_transport(page: Page) -> None:
+    """The seam is the transport; the parser never opens a socket."""
+    body = FIXTURE.read_text(encoding="utf-8")
+    read, elapsed = poll_once(StubTransport(body), page_url("ogolne"))
+    assert [c.id for c in read.communiques] == [c.id for c in page.communiques]
+    assert elapsed >= 0.0
+
+
+def test_poll_lets_a_refusal_through_rather_than_returning_an_empty_page() -> None:
+    """An unreachable endpoint is not a quiet country, one layer up as well."""
+    with pytest.raises(SourceUnavailable):
+        poll_once(FailingTransport(), page_url("ogolne"))
+
+
+def test_communiques_land_in_their_own_table(tmp_path: Path, page: Page) -> None:
+    """F25's lesson in SQL: a communique is not an alert with a different state."""
+    store = EventStore(tmp_path / "s.sqlite3")
+    assert store.append_communiques(FEED, page.communiques) == 2
+    assert store.count_communiques(FEED) == 2
+    assert store.count() == 0, "nothing reached the alert table"
+    rows = list(store.replay_communiques(FEED))
+    # Set, not sequence. Both rows share an ingest timestamp, so the order
+    # falls to the digest, and asserting a digest-derived order would be a
+    # fixture arranged by the implementation rather than against it. What is
+    # worth asserting is that the order is *stable*, which is why the tie is
+    # broken by a column at all.
+    assert {r["source_id"] for r in rows} == {"23260001", "23261045"}
+    assert [r["source_id"] for r in store.replay_communiques(FEED)] == [
+        r["source_id"] for r in rows
+    ], "two replays of an unchanged store agree"
+    by_id = {r["source_id"]: r for r in rows}
+    assert by_id["23261045"]["provinces"] == [["podkarpackie", "Podkarpackie", None]]
+    assert by_id["23261045"]["fields"]["rso_icon"] is None, (
+        "empty and absent both read as nothing; measured empty 156/156 on 2026-08-22"
+    )
+
+
+def test_re_reading_the_same_page_adds_nothing(tmp_path: Path, page: Page) -> None:
+    """Idempotence by content digest. The feed republishes; the store does not grow."""
+    store = EventStore(tmp_path / "s.sqlite3")
+    store.append_communiques(FEED, page.communiques)
+    assert store.append_communiques(FEED, page.communiques) == 0
+    assert store.count_communiques() == 2
+
+
+def test_an_edited_communique_lands_beside_the_original(tmp_path: Path) -> None:
+    """`updated_at` moves and the identifier does not, so both readings survive.
+
+    Keying on the identifier would overwrite the earlier reading and lose the
+    fact that the publisher changed its mind, which for a record rather than an
+    alarm is the whole content.
+    """
+    store = EventStore(tmp_path / "s.sqlite3")
+    def at(hour: str) -> Communique:
+        return Communique(id="7", fields={"title": "Ostrzeżenie", "updated_at": hour})
+
+    first, edited = at("2026-08-20 12:00:00"), at("2026-08-20 13:00:00")
+    assert store.append_communiques(FEED, [first]) == 1
+    assert store.append_communiques(FEED, [edited]) == 1
+    assert store.count_communiques(FEED) == 2
+
+
+def test_one_feed_does_not_count_another(tmp_path: Path, page: Page) -> None:
+    """`feed` is stated by the caller, and the counts respect it."""
+    store = EventStore(tmp_path / "s.sqlite3")
+    store.append_communiques(FEED, page.communiques)
+    assert store.count_communiques("some-other-feed") == 0
+    assert list(store.replay_communiques("some-other-feed")) == []
+
+
+def test_appending_nothing_writes_nothing(tmp_path: Path) -> None:
+    """An empty page is a real answer and costs no row."""
+    store = EventStore(tmp_path / "s.sqlite3")
+    assert store.append_communiques(FEED, []) == 0
+
+
+def test_a_refusal_and_an_empty_page_are_stored_differently(tmp_path: Path) -> None:
+    """**The property this table exists for.**
+
+    Zero means the publisher said there is nothing. NULL means we did not find
+    out. Collapse them and an hour with a dead collector reads as a quiet
+    country, which is section 4 of FEED-SPEC applied to our own consumer.
+    """
+    store = EventStore(tmp_path / "s.sqlite3")
+    when = datetime(2026, 8, 22, 14, 0, tzinfo=UTC)
+    store.record_read(FEED, "u/read", when, 0, 0)
+    store.record_refusal(FEED, "u/refused", when, "connection timed out")
+
+    rows = store.attempts(FEED)
+    assert [r["outcome"] for r in rows] == ["read", "refused"]
+    empty, refused = rows
+    assert empty["items"] == 0, "a page that was read and held nothing"
+    assert refused["items"] is None, "a poll that never found out"
+    assert empty["items"] is not refused["items"], "the two must not collapse"
+    assert refused["detail"] == "connection timed out"
+    assert empty["detail"] is None
+
+
+def test_the_attempt_log_is_kept_per_feed(tmp_path: Path) -> None:
+    """One collector, several endpoints; a silence on one is not a silence on all."""
+    store = EventStore(tmp_path / "s.sqlite3")
+    when = datetime(2026, 8, 22, 14, 0, tzinfo=UTC)
+    store.record_read(FEED, "u", when, 3, 0)
+    assert len(store.attempts(FEED)) == 1
+    assert store.attempts("elsewhere") == ()
+
+
+def test_a_naive_timestamp_cannot_enter_the_attempt_log(tmp_path: Path) -> None:
+    """The log orders by ISO text, which is chronological in one offset only."""
+    store = EventStore(tmp_path / "s.sqlite3")
+    with pytest.raises(NaiveTimestamp):
+        store.record_read(FEED, "u", datetime(2026, 8, 22, 14, 0), 1, 0)
+
+
+def test_a_store_predating_these_tables_is_refused_rather_than_migrated(
+    tmp_path: Path,
+) -> None:
+    """D-013: a migration would invent values no row ever carried.
+
+    Built by hand rather than by an older version of this class, because there
+    is no older version to run. The shape is what matters: a `communiques`
+    table exists and lacks a column, which `CREATE TABLE IF NOT EXISTS` is
+    silent about.
+    """
+    path = tmp_path / "old.sqlite3"
+    with sqlite3.connect(path) as conn:
+        conn.execute("CREATE TABLE communiques (digest TEXT PRIMARY KEY, feed TEXT)")
+    with pytest.raises(SchemaMismatch) as refusal:
+        EventStore(path)
+    assert "communiques.source_id" in str(refusal.value)
+    assert "Rebuild" in str(refusal.value), "the refusal names the remedy"

@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 1.8 / 2026-08-17
+Version: 1.9 / 2026-08-22
 A specification, written from the position of someone who tried to build against
 one and found there was nothing to build against. The Ukrainian equivalent was
 consumed and measured over a corpus of 118 days; the work of building against it
@@ -219,7 +219,7 @@ happening now. For most public data that gap costs nothing. For alerting it is
 the difference between a quiet night and a dead system, and a consumer cannot
 tell them apart from the outside.
 
-## 4a. Six properties learned by shipping, not by specifying
+## 4a. Nine properties learned by shipping, not by specifying
 
 Sections 1 to 4 were written before this project had a consumer in production.
 It has had one since 2026-08-11, and five requirements emerged that the
@@ -233,7 +233,10 @@ names a means of attack at all: the answer bounds what any consumer of such a
 feed can display, and it is not a number a parser can improve. Thirteen and
 fourteen were added at 1.8, from two defects found in this project's own
 contract on one day, both of the same shape: a fact the publisher held and the
-consumer could not use.
+consumer could not use. Fifteen, sixteen and seventeen were added at 1.9, and
+they are the first three drawn from **reading a Polish source rather than a
+Ukrainian one**. Their evidence is a single evening against one endpoint, which
+makes them narrower than the rest and is stated here rather than buried.
 
 **Six. A cap, published, and a flag saying when it bound.** [measured]
 
@@ -474,6 +477,107 @@ maximum - is meaningless without the interval it was taken over, and the
 interval belongs in the data as a field rather than in the label. Prose is for
 readers; a consumer that has to read prose to recover a number is a consumer
 that will eventually recover the wrong one.
+
+
+**Fifteen. A category is a property of the record, or it does not exist.**
+[measured, 2026-08-22]
+
+The Polish RSO feed publishes five categories. They are real: they partition
+the data, they appear in the address, and the publisher's own documentation
+lists their slugs at a dedicated endpoint. **None of them appears in a
+communique.** Measured across 156 messages, not one carried a category field:
+`type` is present and empty in all 156, `rso_icon` likewise. The only way a
+consumer knows what a row is, is to remember which URL returned it.
+
+The same holds for the author. Since 2026-04-30 the Government Centre for
+Security publishes into this feed and is, with the ministry, responsible for
+the nationwide messages; the sixteen voivodeship crisis centres publish the
+rest. **No field distinguishes them.** A consumer that wants to label a warning
+with who issued it cannot, and a consumer that labels the whole block with one
+issuer's name is wrong about most of it.
+
+This is not a request for a rich taxonomy. It is the observation that a
+publisher which already classifies, already routes by that classification, and
+already publishes the vocabulary as a document, is withholding the one place
+the classification would cost nothing: the record. One field per message, drawn
+from a list that already exists.
+
+**What it costs the consumer to work around, precisely.** Five requests instead
+of one, plus bookkeeping to remember which request produced which row, plus the
+certainty that any consumer who does not know to do this has silently mislabelled
+everything. The workaround exists. That it exists is not an argument against the
+field; it is a measure of what the missing field costs, multiplied by every
+consumer.
+
+**Sixteen. Reachability is a property of the consumer and the publisher
+together, and no feed states it.** [measured, n=6, one network, one evening]
+
+"The data is publicly available" is a statement about licence and format. It
+says nothing about which address families answer, and a consumer discovers the
+answer by deploying.
+
+Measured from one host: three Polish state sources publish `A` records and no
+`AAAA` at all - the alerting feed, the national open-data portal, and that
+portal's API. The three sources this project consumes successfully all publish
+both. A single-stack IPv6 consumer resolves the name, gets addresses, and never
+connects; the name resolving is not the same fact as the host answering, and
+from a log the two look identical.
+
+**This is not an accusation and there is no blocking to report.** The failure
+recorded here was the consumer's own network, correctly configured for what it
+was built to reach. That is exactly why it belongs in a specification rather
+than in a complaint: the consumer could not have known before deploying, and
+nothing in the publisher's documentation could have told it.
+
+One line of metadata fixes it: which address families the endpoint answers on.
+It costs a publisher nothing and it is the difference between a consumer that
+knows it cannot reach a feed and a consumer that concludes the country is
+quiet.
+
+The sample is six hosts on one network on one evening. It is an observation
+about interface documentation, not a survey of Polish public administration,
+and it should not be read as one.
+
+**Seventeen. A parameter the server does not honour must be refused, not
+accepted.** [measured, 2026-08-22, and it is three findings wearing one shape]
+
+Three ways this feed returned a partial answer indistinguishable from a
+complete one, in a single evening of reading it:
+
+- **A scope named "all" that is not all.** The five categories hold 461
+  distinct communiques and share none. The `wszystkie` scope returns 156. The
+  305 it omits are one category, and nothing in the payload, the pagination
+  block or the publisher's documentation mentions the omission. A collector
+  reading the obvious address reads a third of the feed and has no signal that
+  it did.
+- **A count named for the total that counts the page.** The pagination
+  attribute is `totalItems`. On page 1 it reads 20; on page 2 it reads 20; on
+  the unpaged request over the same data it reads 156. A consumer deriving a
+  page count from it divides 20 by 20 and stops after one page of eight. The
+  stop condition that does work is an empty page, which the endpoint returns
+  with status 200.
+- **Date parameters that are accepted and ignored.** The publisher's
+  integration page documents `from` and `to`. Passed to the XML endpoint with a
+  seven-day window, the response was 200 and contained 150 records spanning
+  seven months, of which ten fell inside the window. A consumer counting rows
+  sees a plausible number and concludes the filter works.
+
+The third is the worst because it is the cheapest to prevent. **An unrecognised
+parameter should produce a 400, not a 200.** Silently ignoring it converts a
+consumer's mistake into a consumer's false belief, and the false belief
+survives every check the consumer knows how to run: the request succeeded, the
+data parsed, the count was reasonable.
+
+The general property: **where a request can be partially honoured, the response
+must say so in the response.** A flag, a status, an echo of the parameters
+actually applied. Any of them costs one field. Without one, every consumer of
+every such endpoint is one plausible number away from a wrong conclusion it
+cannot detect, and the correct-looking result is indistinguishable from the
+correct one by construction.
+
+This is section 4's invariant moved from the feed's contents to the feed's
+protocol. There, silence must not mean safety. Here, **a partial answer must
+not look complete.**
 
 
 ## 5. The objection, and the answer

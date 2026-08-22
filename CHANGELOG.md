@@ -16,6 +16,53 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.38.0.0 - 2026-08-22
+
+**A communique reaches a table of its own, and reading the endpoint corrected
+four things this repository believed.** `mavo rso` polls the Polish
+civil-warning feed, stores communiques keyed on content digest, and logs every
+attempt whether or not it succeeded. Communiques go to their own table: a
+different author, a different scope and a different lifetime from an alert, and
+a shared `state` column between them is F25 expressed in SQL.
+
+**`wszystkie` is not all, measured.** The five published categories hold 461
+distinct communiques and share none; the endpoint's own all-scope returns 156
+and omits `stany-wod` without a word anywhere. The collector walks the category
+list. A single-address default would have read a third of the feed with no
+signal that it had.
+
+**`totalItems` counts the page, not the total**, so `Page.total_items` is now
+`Page.items_on_page` and nothing derives a page count from it. Pages 1 and 2
+both reported 20 against 156 across the same data. The stop condition is an
+empty page, returned with status 200.
+
+**The docstring's claim that this feed never carries RCB was wrong.** Two
+objects share the abbreviation: the statutory SMS, which has no feed and is not
+in RSO, and the nationwide communiques, which that body has published into this
+feed since 2026-04-30. So the reader does read them, some of the time, and
+cannot tell when, because no field names an issuer.
+
+**An index on a missing column pre-empted the schema refusal.** `CREATE INDEX`
+inside the same script as `CREATE TABLE` raised `OperationalError: no such
+column` before `_refuse_an_older_schema` could name the version and the remedy.
+Tables, then the column check, then indexes.
+
+**The attempt log distinguishes a refusal from an empty page.** Null items
+where the poll never found out, zero where the publisher had nothing. Without
+it an hour with a dead collector and an hour with a quiet country are the same
+empty table, and no care at rendering time recovers a distinction that was
+never written.
+
+FEED-SPEC 1.9 adds three properties, the first three drawn from a Polish source
+rather than a Ukrainian one: a category belongs in the record, reachability is a
+property of the consumer and publisher together, and a parameter the server does
+not honour must be refused rather than accepted. F111 records the five counters
+this session read as measurements of something they did not measure.
+
+T68 removed from the backlog: the rendering surface is the operator's decision
+and the entry was bookkeeping claiming to be a gate. T67 carries the endpoint,
+its provenance, and what remains.
+
 ## 0.37.0.3 - 2026-08-22
 
 **T69 closes on its binding reading, and the reading demotes the estimate it

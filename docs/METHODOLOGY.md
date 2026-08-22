@@ -3427,3 +3427,45 @@ still holds, so this cannot decay into testing a stub.
 **Reopen condition:** it reopens if any exception leaves `UrllibTransport.fetch`
 as anything other than `SourceUnavailable`, or if `mavo-collect` exits
 `1/FAILURE` on the host for a network cause.
+
+### F111, 0.38.0.0. Five counters in one evening, none of which measured what it was read as
+
+Not five defects. One, with five instances, all in instruments this assistant
+built to answer a question and then read as though the answer were the
+question's.
+
+| Instrument | Read as | Actually measured |
+| --- | --- | --- |
+| `wszystkie/wszystkie` | the whole feed | 156 of 461 communiques |
+| `totalItems` | the total | items on the requested page |
+| `dig +short AAAA \| wc -l` | address records | records **and** CNAME lines |
+| `grep -c 'Stopień:'` | messages carrying a degree | 2 of 106, against a body that visibly contains it |
+| `curl` timeouts to five hosts | a publisher blocking datacentres | this host having no IPv4 egress |
+
+The fifth is the expensive one. A conclusion had been drafted, in words, for a
+public document naming a broadcaster and a ministry, on the strength of five
+timeouts. The control that overturned it was requested by the operator, not
+supplied by the assistant, and it took one command.
+
+**Why they survived.** Each instrument returned a number of the right type and
+a plausible magnitude. Nothing about `156`, `20`, `1`, `2` or a timeout looks
+wrong. The check that catches this class is not review; it is building the
+falsifying case into the measurement, and it worked exactly once tonight: the
+date-range probe printed the span of the records it received alongside their
+count, so a filter that had been ignored could not read as a filter that had
+worked.
+
+**F103's lesson, one layer out.** That entry recorded a conclusion drawn from
+whichever file was open rather than from the file the conclusion was about.
+This is the same act performed on a command: the output of the command that was
+run, read as the output of the command that was meant.
+
+**Remediation, and it is a rule rather than a fix.** A counter without a
+falsifying case beside it is not a measurement. Where a probe can return a
+plausible number for the wrong reason - a scope that silently narrows, a
+parameter silently ignored, a pattern that matches a superset - the probe must
+print the fact that would distinguish the two, in the same output, or it does
+not get quoted.
+
+**Reopen condition:** it reopens the next time a number reaches a document or a
+decision without a stated way it could have been wrong.

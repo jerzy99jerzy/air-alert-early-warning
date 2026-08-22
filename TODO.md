@@ -4,14 +4,14 @@
 
 ### Where the backlog stands
 
-**28 of 71 closed, 43 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**28 of 70 closed, 42 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 20 | Finished, with the release that closed it named in the entry |
 | `moved` | 8 | Owned by another repository; the entry here is a pointer, not a copy |
 | `ready` | 29 | Nothing external blocks it; it needs a session |
-| `decision` | 7 | Waiting on a judgement rather than on work |
+| `decision` | 6 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 | `debt` | 2 | Known cost carried on purpose |
@@ -26,7 +26,7 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 11 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T66](#t66-attempt-completeness-as-its-own-instrument), [T68](#t68-decide-where-if-anywhere-a-polish-warning-renders)
+**Tier 1, 10 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T66](#t66-attempt-completeness-as-its-own-instrument)
 
 **Tier 2, 17 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink)
 
@@ -43,7 +43,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T68](#t68-decide-where-if-anywhere-a-polish-warning-renders), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T72](#t72-warnings-are-not-errors-in-the-suite-and-the-suite-leaks-handles) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T72](#t72-warnings-are-not-errors-in-the-suite-and-the-suite-leaks-handles) |
 
 <!-- index:end -->
 
@@ -1876,35 +1876,50 @@ than from a fixture, a table of its own because a communique has a different
 issuer, scope and lifetime from an alert and a shared `state` column is the
 modelling error F25 recorded, and backfill as far as the endpoint pages.
 
+**The endpoint, found 2026-08-22** `[reported by the publisher, not yet
+fetched from this project]`. TVP's own integration page publishes it and
+states outright that the XML is public:
+
+    https://komunikaty.tvp.pl/komunikatyxml/{WOJEWODZTWO}/{KATEGORIA}/{STRONA}?_format=xml
+
+`wszystkie` stands in for either scope parameter, page `0` returns everything
+with pagination suppressed, and `_format` also takes `json`. The slug
+vocabularies are their own documents at `/wojewodztwa?_format=xml` and
+`/kategorie?_format=xml`. The identification is not just the address: the page
+says `itemsPerPage` is an attribute of `pagination_info`, which is exactly what
+`tests/fixtures/rso_page.xml` carries, so the fixture came from here.
+
+**There is a second interface and it fails the first FEED-SPEC property.** The
+same page offers CAP (Common Alerting Protocol, OASIS v1.2) with an OpenAPI
+description, behind an access token issued by writing to the system's
+administrator. That is the permission regime section 3 names, sitting beside a
+public feed of the same data, and it is a finding for T8a rather than a route
+to take.
+
+**RCB publishes into this feed, and `mavo/sources/rso.py` said otherwise.**
+MSWiA's own page records that on 2026-04-30 the Government Centre for Security
+was given the task of publishing communiques, and names RCB and MSWiA as
+responsible for the nationwide ones. What is *not* in RSO is Alert RCB, the
+statutory SMS, and RCB's own FAQ says so in those words. Two different objects,
+one abbreviation. The docstring's blanket claim is corrected at 0.38.0.0.
+
+**The consequence is a naming problem the consumer already has.** RCB
+communiques and voivodeship ones arrive in the same stream, and the payload
+carries no issuer field to tell them apart `[n=1 fixture]`. A consumer heading
+that says `Komunikaty RCB` is wrong for most rows and a heading that drops RCB
+is wrong for some. This is FEED-SPEC's next property rather than a defect in
+the parser.
+
 **The number to expect before sizing this.** Pomorskie carried two messages on
 2026-08-20 and Podkarpackie seventeen, dominated by storms and water levels.
 The air-threat categories exist in the scheme and were not observed in the
-sample. This is not a second alert stream.
+sample; RENEGADE, chemical and biological air or naval threats and ballistic
+attack are named as publishable categories `[reported]`. This is not a second
+alert stream.
 
 **Acceptance:** communiques from the live endpoint in a table of their own,
 with the timezone decision recorded, and a count of pages the endpoint offers.
 
-
-## T68. Decide where, if anywhere, a Polish warning renders
-Status: `decision` [tier 1]
-
-Adding a Polish layer changes what this instrument's silence means. Today a
-reader knows the map is a window onto Ukraine. Beside Polish warnings, an
-absent warning reads as no warning, and this instrument is structurally later
-than the statutory SMS already on that reader's phone. **A live warning layer
-adds a way to be misled by absence and subtracts nothing.**
-
-The version that adds something is the one the project lacks: a dated,
-state-issued, territorially-scoped record that Poland treated a threat as
-serious, sitting in the history as an outcome column rather than on the map as
-an alarm. Every question about western episodes currently has no right-hand
-side. 2026-08-18 supplies the first paired point.
-
-**This is the operator's decision and nothing is built past the reader until
-it is made.** T67 stops at a table; nothing renders.
-
-**Acceptance:** a decision entry naming the surface, the words the page uses
-to say this is not a warning channel, and a reopen condition.
 
 ## T69. A connect budget and one retry, on the measured failure
 Status: `done` (0.37.0.3) [tier 1]

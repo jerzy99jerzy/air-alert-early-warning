@@ -1,11 +1,22 @@
 """The Polish civil-warning stream, read as a record and not as an alarm.
 
 RSO (`Regionalny System Ostrzegania`) publishes an XML feed run for MSWiA by
-TVP. RCB, the body that sends the statutory SMS, publishes no feed at all: it
-hands text and scope to the mobile operators and they broadcast, so the only
-public trace of an individual RCB alert is a social account and a web page.
-This module reads the RSO feed. It does not read RCB, and no amount of parsing
-turns one into the other.
+TVP.
+
+**Two different things share the abbreviation RCB, and until 0.38.0.0 this
+docstring conflated them.** *Alert RCB*, the statutory SMS, is not in this
+feed and has no feed of its own: the Government Centre for Security hands text
+and scope to the mobile operators and they broadcast, and its own FAQ states
+that the alert is not part of RSO. *RCB communiques* are a different object.
+Since 2026-04-30 that body publishes into this feed and is, with MSWiA, the
+named author of the nationwide ones `[reported: MSWiA's own page]`.
+
+So this module does read RCB, some of the time, and cannot tell when. The
+payload carries voivodeship scope and no issuer field `[n=1 fixture]`, so a
+communique written by the Government Centre for Security and one written by a
+voivodeship crisis centre arrive indistinguishable. That is a property of the
+feed, it is the next entry FEED-SPEC needs, and it is not something a parser
+can repair.
 
 **What this is for.** The project has no labelled outcome variable. Every
 question it asks about western episodes -- was that night different, does a
@@ -17,11 +28,20 @@ and an issuer is exactly that missing column.
 sees Polish warnings drawn beside Ukrainian ones will read an absent warning
 as no warning, and this instrument is structurally later than the SMS that
 arrives on the same reader's phone automatically and by statute. Such a layer
-would add a way to be misled by absence and subtract nothing. **Where, if
-anywhere, this data renders is the operator's decision and is not recorded
-yet** `[undecided]`; until it is, this module is a reader with no caller in
-the collector, which is the same position `ukrainealarm.py` holds and for a
-related reason.
+would add a way to be misled by absence and subtract nothing.
+
+**Where this renders, decided** (D-033, T68). In text, in a block below the
+map, never as a layer on it, and always beneath a sentence saying this is not
+a warning channel. **Under the name of the feed it was read from and never
+under `RCB`.** The two are different institutions publishing different things,
+this module reads only one of them, and a page that says otherwise asserts a
+source it does not have.
+
+**Nothing is filtered by category** (D-034). An allowlist of recognised
+categories would drop a communique of a category nobody anticipated, which is
+this project's founding failure reached by a different route: the reader is
+told about a quiet country because our own vocabulary was short. Classification
+orders what is shown; it never decides what exists.
 
 **What the feed does that this project is built to refuse.** Elements arrive
 present and empty rather than absent: `<latitude></latitude>` is a field that
@@ -48,11 +68,13 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from xml.etree import ElementTree
 
 from mavo.errors import SourceUnavailable
+from mavo.transport import Transport
 
 #: Cheapest defence against an entity-expansion payload, and the reason it is
 #: cheap: `xml.etree` is documented as unsafe against one, an entity bomb needs
@@ -170,10 +192,20 @@ class Page:
     `unreadable` is on the page rather than logged, because a caller that sees
     only `communiques` cannot tell a short page from a damaged one, and that
     is the same distinction as `gaps` versus `unobserved` one repository over.
+
+    **`items_on_page` is named for what it measures and not for what the feed
+    calls it.** The attribute is `totalItems`, and on a paged request it is not
+    a total: measured 2026-08-22, pages 1 and 2 both reported 20 while the
+    unpaged request over the same category set reported 156. A caller deriving
+    a page count from it divides 20 by 20, reads one page of eight, and gets a
+    partial answer shaped exactly like a complete one. **The stop condition is
+    an empty page**, which page 9 returned with status 200 while page 8 held
+    16 rows. An empty page is a real answer; the attempt log is what keeps it
+    distinguishable from a refusal.
     """
 
     communiques: tuple[Communique, ...] = ()
-    total_items: int | None = None
+    items_on_page: int | None = None
     items_per_page: int | None = None
     unreadable: int = 0
 
@@ -232,7 +264,7 @@ def parse_page(payload: bytes) -> Page:
         raise SourceUnavailable(f"RSO page is not well-formed XML: {exc}") from exc
 
     pagination = root.find("pagination_info")
-    total = _int(_attr(pagination, "totalItems")) if pagination is not None else None
+    on_page = _int(_attr(pagination, "totalItems")) if pagination is not None else None
     per_page = _int(_attr(pagination, "itemsPerPage")) if pagination is not None else None
 
     items: list[Communique] = []
@@ -256,7 +288,7 @@ def parse_page(payload: bytes) -> Page:
         )
     return Page(
         communiques=tuple(items),
-        total_items=total,
+        items_on_page=on_page,
         items_per_page=per_page,
         unreadable=unreadable,
     )
@@ -284,3 +316,71 @@ def to_utc(local: str, zone: str) -> datetime:
             "the feed carries no offset to settle it"
         )
     return earlier.astimezone(UTC)
+
+
+#: What the store calls rows read from this endpoint. Not an issuer: the feed
+#: names none, and this project has measured that the body publishing the
+#: statutory SMS publishes no feed at all. This string says which endpoint the
+#: bytes came from and claims nothing further.
+FEED = "rso"
+
+
+#: The five categories, from `/kategorie?_format=xml` (fetched 2026-08-22).
+#: **A category is a property of the query and not of the record**: no
+#: communique carries one, measured over 156 messages, so the only way a
+#: consumer knows what a row is, is to remember which address returned it.
+CATEGORIES = (
+    "ogolne",
+    "meteorologiczne",
+    "hydrologiczne",
+    "informacje-drogowe",
+    "stany-wod",
+)
+
+#: **`wszystkie` does not mean all, and there is no address that does.**
+#: Measured 2026-08-22: the five categories hold 461 distinct communiques
+#: between them and no two share one, while `wszystkie/wszystkie` returns 156.
+#: The 305 missing rows are `stany-wod`, dropped without a word anywhere in the
+#: payload or the publisher's documentation. A collector that reads
+#: `wszystkie` reads two thirds of the feed and cannot tell.
+#:
+#: This constant is therefore a template and not an address. A caller
+#: enumerates `CATEGORIES`; there is no shortcut and this comment exists so
+#: nobody reintroduces one.
+PAGE_URL = "https://komunikaty.tvp.pl/komunikatyxml/wszystkie/{category}/{page}?_format=xml"
+
+#: The slug vocabularies, each its own document.
+PROVINCES_URL = "https://komunikaty.tvp.pl/wojewodztwa?_format=xml"
+CATEGORIES_URL = "https://komunikaty.tvp.pl/kategorie?_format=xml"
+
+
+def page_url(category: str, page: int = 1) -> str:
+    """One page of one category. Pages are 1-based; page 0 suppresses paging.
+
+    Refuses a category outside the published vocabulary rather than building
+    an address the endpoint will answer with something unexpected. The five
+    slugs are a measured list, not a guess, and a sixth appearing is a change
+    in the feed that a caller should hear about rather than absorb.
+    """
+    if category not in CATEGORIES:
+        raise SourceUnavailable(
+            f"{category!r} is not one of the published RSO categories "
+            f"({', '.join(CATEGORIES)}); read {CATEGORIES_URL} before adding one"
+        )
+    return PAGE_URL.format(category=category, page=page)
+
+
+def poll_once(transport: Transport, url: str) -> tuple[Page, float]:
+    """Fetch one page and parse it. Returns the page and the seconds it took.
+
+    Bytes rather than text at the parser boundary, so `parse_page` keeps its
+    doctype refusal and its ceiling. The transport hands back a decoded string,
+    so the length checked here is the length of the document as decoded and not
+    the length that arrived on the wire; the ceiling is therefore a second line
+    of defence rather than the first, and it is kept because the first one
+    lives in a different module and can change without this one noticing.
+    """
+    started = time.monotonic()
+    body = transport.fetch(url)
+    page = parse_page(body.encode("utf-8"))
+    return page, time.monotonic() - started

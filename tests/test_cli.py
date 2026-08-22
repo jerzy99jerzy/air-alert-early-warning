@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from mavo.cli import main
+from mavo.store import EventStore
 
 
 def test_fixture_command_writes_a_store(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -159,3 +160,75 @@ def test_backfill_releases_the_lock_when_it_finishes(tmp_path: Path) -> None:
     main(["backfill", "--out", str(out), "--pages", "1", "--delay", "0",
           "--stub", str(page)])
     assert not (out / ".backfill.lock").exists()
+
+
+# --- 0.38.0.0: `mavo rso` ----------------------------------------------------
+
+
+def test_rso_walks_every_category_rather_than_trusting_wszystkie(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """**Measured 2026-08-22: `wszystkie` returns 156 of 461 communiques.**
+
+    The five categories are disjoint and hold 461 between them; the endpoint's
+    own all-scope drops the 305 in `stany-wod` and says so nowhere. A default
+    that read it would produce a partial answer shaped like a complete one, so
+    the command reads the list and this test is what keeps it doing so.
+    """
+    fixture = Path("tests/fixtures/rso_page.xml").read_text(encoding="utf-8")
+    stub = tmp_path / "page.xml"
+    stub.write_text(fixture, encoding="utf-8")
+    code = main(["rso", "--stub", str(stub), "--store", str(tmp_path / "s.sqlite3")])
+    out = capsys.readouterr().out
+    assert code == 0
+    for name in ("ogolne", "meteorologiczne", "hydrologiczne",
+                 "informacje-drogowe", "stany-wod"):
+        assert f"/{name}/" in out, f"{name} was not read"
+    assert "/wszystkie/wszystkie/" not in out, "the partial scope must not be used"
+
+
+def test_rso_stores_each_communique_once_across_the_walk(tmp_path: Path) -> None:
+    """Five reads of one page are two rows, and the count says which is which."""
+    fixture = Path("tests/fixtures/rso_page.xml").read_text(encoding="utf-8")
+    stub = tmp_path / "page.xml"
+    stub.write_text(fixture, encoding="utf-8")
+    store_path = tmp_path / "s.sqlite3"
+    assert main(["rso", "--stub", str(stub), "--store", str(store_path)]) == 0
+    store = EventStore(store_path)
+    assert store.count_communiques("rso") == 2
+    assert len(store.attempts("rso")) == 5, "one logged attempt per category"
+
+
+def test_rso_refuses_a_category_outside_the_published_vocabulary(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """argparse rejects it before any address is built."""
+    with pytest.raises(SystemExit):
+        main(["rso", "--category", "powietrzne"])
+
+
+def test_rso_exits_three_when_any_category_refused(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A partial reading must not exit 0.
+
+    One category refusing is not the feed refusing, so the walk continues and
+    the others are still read and stored. But the exit code carries the fact
+    that the reading is incomplete, because a wrapper reading only stdout would
+    otherwise record a short day as a quiet one.
+    """
+    broken = tmp_path / "broken.xml"
+    broken.write_text("<newses><news><id>1</id>", encoding="utf-8")
+    store_path = tmp_path / "s.sqlite3"
+    code = main(["rso", "--stub", str(broken), "--store", str(store_path)])
+    assert code == 3, "a partial reading is not a successful one"
+    out = capsys.readouterr().out
+    assert "[UNREACHABLE]" in out
+    assert "refused=5/5" in out
+
+    # Every refusal left a row, and each row says we did not find out rather
+    # than that the publisher had nothing.
+    attempts = EventStore(store_path).attempts("rso")
+    assert len(attempts) == 5
+    assert all(a["outcome"] == "refused" for a in attempts)
+    assert all(a["items"] is None for a in attempts)

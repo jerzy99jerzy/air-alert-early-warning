@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.37.0.3",
+  "version": "0.38.0.0",
   "python_requires": ">=3.11",
   "sprint_test_files": [
     0,
@@ -41,7 +41,7 @@
     "docs/CHANNEL.md": "1.4",
     "docs/reviews/0.10.1.0.md": "1.0",
     "docs/reviews/0.11.1.0.md": "1.0",
-    "docs/FEED-SPEC.md": "1.8",
+    "docs/FEED-SPEC.md": "1.9",
     "docs/WEBAPP.md": "3.3",
     "docs/reviews/0.13.0.0.md": "1.0",
     "docs/reviews/0.15.0.0.md": "1.0",
@@ -65,13 +65,14 @@
     "docs/reviews/0.35.0.0.md": "1.0",
     "docs/reviews/0.36.0.0.md": "1.0",
     "docs/reviews/0.36.0.1.md": "1.0",
-    "docs/reviews/0.37.0.0.md": "1.0"
+    "docs/reviews/0.37.0.0.md": "1.0",
+    "docs/reviews/0.38.0.0.md": "1.0"
   },
   "threat_model_rows": 14,
   "harness_attacks": 13,
   "measured": {
-    "tests_passing": 471,
-    "coverage_percent": 96.84,
+    "tests_passing": 488,
+    "coverage_percent": 96.46,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 1,
     "policy_combined_alarms_per_week": 1.96,
@@ -117,7 +118,19 @@
     "hand_checked_rows": 20,
     "hand_checked_whole_row_errors": 0,
     "real_messages_resolving_an_area": 20,
-    "real_messages_classified_as_alerts": 15
+    "real_messages_classified_as_alerts": 15,
+    "rso_categories_published": 5,
+    "rso_communiques_across_categories": 461,
+    "rso_communiques_under_all_scope": 156,
+    "rso_communiques_in_water_levels": 305,
+    "rso_messages_sampled": 156,
+    "rso_messages_with_a_category_field": 0,
+    "rso_messages_with_empty_type": 156,
+    "rso_messages_with_empty_icon": 156,
+    "polish_state_hosts_sampled": 3,
+    "polish_state_hosts_with_ipv6": 0,
+    "consumed_sources_sampled": 3,
+    "consumed_sources_with_ipv6": 3
   },
   "note": "measured numbers are produced by `make verify` (Python 3.12) and `mavo policy` against the synthetic history, except real_messages_resolving_an_area and real_messages_classified_as_alerts, which are pinned by tests against real channel content; nothing here is a claim about the world",
   "corpus": {
@@ -135,16 +148,16 @@
     "taken_at": "2026-08-11"
   },
   "statistics": {
-    "package_lines": 6035,
+    "package_lines": 6460,
     "package_files": 20,
-    "test_lines": 8586,
+    "test_lines": 8824,
     "test_files": 49,
     "tool_lines": 6285,
     "tool_files": 23,
-    "documentation_lines": 21555,
-    "documentation_files": 56,
+    "documentation_lines": 21872,
+    "documentation_files": 57,
     "runtime_dependencies": 0
   },
-  "defects_logged": 90,
+  "defects_logged": 91,
   "decisions_recorded": 31
 }

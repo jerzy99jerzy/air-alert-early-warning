@@ -40,8 +40,9 @@ Note:      every constant, exit code and output line here was read out of the
    3. [`mavo policy`](#43-mavo-policy---built)
    4. [`mavo backfill`](#44-mavo-backfill---built)
    5. [`mavo collect`](#45-mavo-collect---partial)
-   6. [`mavo watch`](#46-mavo-watch---not-built-sprint-7)
-   7. [`mavo report`](#47-mavo-report---built)
+   6. [`mavo rso`](#46-mavo-rso---built)
+   7. [`mavo watch`](#47-mavo-watch---not-built-sprint-7)
+   8. [`mavo report`](#48-mavo-report---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -311,12 +312,51 @@ Exit codes:
 | 3 | the source was unreachable. Distinct from reachable and quiet |
 | 4 | `--save-raw` was requested and the snapshot could not be written. Loud rather than silent, because a snapshot that quietly fails to land is a quiet loss of exactly the evidence the redesign needs |
 
-### 4.6 `mavo watch` - NOT BUILT (sprint 7)
+### 4.6 `mavo rso` - BUILT
+
+Polls the Polish civil-warning feed once, stores what it read, and logs that it
+tried.
+
+```
+mavo rso --stub tests/fixtures/rso_page.xml --store /tmp/mavo.sqlite3
+```
+
+Without `--stub` it fetches the list endpoint TVP's integration page publishes.
+`--url` overrides it to reach one voivodeship, one category, or a later page.
+
+**Communiques land in their own table, never beside the Ukrainian alerts.** A
+communique has a different author, a different scope and a different lifetime
+from an alert, and sharing a state column between them is the modelling error
+F25 recorded. Idempotence is by content digest and not by the feed's
+identifier, because the feed edits in place: an edited communique lands as a
+second row and both readings survive.
+
+**Nothing is filtered by category.** The feed carries storms, water levels,
+road disruption and, on the publisher's own account, air threats. An allowlist
+of categories this project recognises would drop a communique of a category
+nobody anticipated, and the reader would be told about a quiet country because
+our vocabulary was short.
+
+**`--store` also writes the attempt log, and that is the reason to pass it.**
+This feed publishes no heartbeat, so without a record of every poll an hour in
+which Poland was quiet and an hour in which this collector was dead are the
+same empty table. The distinction cannot be recovered afterwards at any cost,
+because the information was never written. A refusal is stored with a null item
+count; a page that was read and held nothing is stored with zero. Those are two
+different facts and the schema keeps them apart.
+
+| Code | Meaning |
+| --- | --- |
+| 0 | fetched and parsed, whatever the communique count |
+| 3 | the source was unreachable. The attempt is logged first, then the code is returned |
+| 7 | the store could not be opened or written |
+
+### 4.7 `mavo watch` - NOT BUILT (sprint 7)
 
 Will run the decision policy continuously and emit to an output channel. Until
 shadow mode has run its full window, this command will refuse to send anything.
 
-### 4.7 `mavo report` - BUILT
+### 4.8 `mavo report` - BUILT
 
 Renders the current picture from a store, and optionally writes the
 `state.json` contract a separate web application consumes.

@@ -39,6 +39,10 @@ from mavo.report import (
 )
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
 from mavo.sources.fixture import FixtureSource, generate_history
+from mavo.sources.rso import CATEGORIES as RSO_CATEGORIES
+from mavo.sources.rso import FEED as RSO_FEED
+from mavo.sources.rso import page_url as rso_page_url
+from mavo.sources.rso import poll_once as rso_poll_once
 from mavo.sources.telegram import CHANNEL_URL, poll_once
 from mavo.store import EventStore
 from mavo.transport import StubTransport, Transport, UrllibTransport
@@ -224,6 +228,83 @@ def _cmd_collect(args: argparse.Namespace) -> int:
 
 
 
+def _cmd_rso(args: argparse.Namespace) -> int:
+    """Poll the Polish civil-warning feed and record what happened.
+
+    **Every category, or the reading is partial and says nothing about it.**
+    The endpoint offers a scope called `wszystkie`, and measured 2026-08-22 it
+    returned 156 communiques where the five categories hold 461 between them
+    with no overlap. The 305 it drops are `stany-wod`, and nothing in the
+    payload or the publisher's documentation mentions the omission. A default
+    that reads `wszystkie` would be a partial answer shaped exactly like a
+    complete one, so this command walks the list instead.
+
+    **The attempt is logged before the exit code is chosen**, and that ordering
+    is the point. A refusal that leaves no row behind is an hour this collector
+    cannot distinguish from an hour Poland was quiet, and the distinction is
+    unrecoverable afterwards at any cost, because the information was never
+    written (FEED-SPEC nine).
+
+    Exit codes match `collect`: unreachable is 3 and a failed store is 7, so a
+    wrapper reading only stdout cannot mistake either for an empty country.
+    """
+    transport: Transport = StubTransport(Path(args.stub).read_text(encoding="utf-8")) \
+        if args.stub else UrllibTransport()
+    store = None
+    if args.store:
+        try:
+            store = EventStore(Path(args.store))
+        except Exception as failure:  # noqa: BLE001
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+
+    if args.url:
+        targets = [args.url]
+    elif args.category:
+        targets = [rso_page_url(args.category, args.page)]
+    else:
+        targets = [rso_page_url(name, args.page) for name in RSO_CATEGORIES]
+
+    seen = appended = unreadable = 0
+    refused = 0
+    for url in targets:
+        started = datetime.now(UTC)
+        try:
+            page, elapsed = rso_poll_once(transport, url)
+        except SourceUnavailable as unreachable_now:
+            if store is not None:
+                store.record_refusal(RSO_FEED, url, started, str(unreachable_now))
+            waited = (datetime.now(UTC) - started).total_seconds()
+            print(f"[UNREACHABLE] {unreachable_now} (attempt {waited:.2f}s)")
+            refused += 1
+            # No break. One category refusing is not the feed refusing, and
+            # abandoning the rest would turn one failure into four silences.
+            continue
+        if store is not None:
+            store.record_read(RSO_FEED, url, started, len(page.communiques), page.unreadable)
+            try:
+                appended += store.append_communiques(RSO_FEED, page.communiques)
+            except Exception as failure:  # noqa: BLE001
+                print(f"[STORE-FAILED] {failure}")
+                return 7
+        seen += len(page.communiques)
+        unreadable += page.unreadable
+        print(f"read={len(page.communiques)} unreadable={page.unreadable} "
+              f"items_on_page={page.items_on_page} items_per_page={page.items_per_page} "
+              f"latency={elapsed:.3f}s {url}")
+
+    print(f"seen={seen} unreadable={unreadable} refused={refused}/{len(targets)} "
+          f"stored={appended} (seen minus stored is idempotence, not loss)")
+    if unreadable:
+        print("NOTE: rows without an identifier are counted, never dropped. A page that "
+              "lost half its rows must not read as a short page.")
+    if refused:
+        # Any refusal makes the reading partial, and a partial reading that
+        # exits 0 is the shape this project refuses everywhere else.
+        return 3
+    return 0
+
+
 def _cmd_report(args: argparse.Namespace) -> int:
     """Render the current picture from a store, and optionally the contract file.
 
@@ -348,6 +429,38 @@ def build_parser() -> argparse.ArgumentParser:
              "(builds the sprint-5 corpus; the page is a ~20-message window, F27)",
     )
     collect.set_defaults(func=_cmd_collect)
+
+    rso = subparsers.add_parser(
+        "rso", help="poll the Polish civil-warning feed once and record the attempt"
+    )
+    rso.add_argument(
+        "--category",
+        choices=RSO_CATEGORIES,
+        help="one published category. Omit to walk all five, which is the "
+             "only way to read the whole feed: the endpoint's own "
+             "`wszystkie` returns 156 of 461 communiques and says nothing "
+             "about the 305 it drops (T67)",
+    )
+    rso.add_argument(
+        "--page", type=int, default=0,
+        help="page number, or 0 for the unpaged reading. Pages are 1-based "
+             "and the stop condition is an empty page, never a count derived "
+             "from the feed's own `totalItems`, which reports the page rather "
+             "than the total",
+    )
+    rso.add_argument(
+        "--url",
+        help="read this exact address instead, bypassing category selection. "
+             "For reaching one voivodeship or a page nobody has modelled yet",
+    )
+    rso.add_argument("--stub", help="read a saved page instead of the network")
+    rso.add_argument(
+        "--store",
+        help="append the communiques, and log the attempt whether or not it "
+             "succeeded. Without it a refusal leaves no trace and a dead "
+             "collector is indistinguishable from a quiet country",
+    )
+    rso.set_defaults(func=_cmd_rso)
 
     report_cmd = subparsers.add_parser(
         "report", help="render the current picture from a store"
