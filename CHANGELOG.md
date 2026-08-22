@@ -16,6 +16,41 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.38.0.2 - 2026-08-22
+
+**Re-read the whole of FEED-SPEC this time, not just the parts the last
+release touched.** Four claims did not survive it, and all four were things a
+reader could have checked.
+
+Section 5 said Ukraine publishes "exactly this". It does not. Section 3 of the
+same document asks for register codes, a versioned schema, an API and a
+heartbeat; what Ukraine has is a public channel with a naming convention.
+Reworded to say what is actually there - considerably less than this document
+asks for, published throughout the war against an adversary attacking daily,
+which is the part that carries weight against the objection anyway.
+
+Dropped the SMS reach figure. Nothing in this repository sources it and it
+appeared nowhere else. The paragraph reads the same without it, which is a
+fair test of whether a number was carrying an argument or decorating one.
+
+Section 4 still carried the first-night failure rate on its own, without the
+reconciliation the README and `docs/DEPLOYMENT.md` picked up at 0.36.0.0. The
+number holds. What was missing was the correction behind it: a later release
+pinned a much lower rate from a different window, and squaring the windows
+against each other withdrew that pin as wrong by two orders of magnitude
+(F109). Two documents in one repository, two answers, nothing checking between
+them.
+
+Cut "found the time to adopt a naming convention" from section 1. The header
+says this document makes no claim about anyone's competence. That sentence was
+one. The convention is still described, and the reader can draw the comparison
+without being handed it.
+
+Also: section 1 said the parser took an afternoon where the header says two.
+The header was right.
+
+Documentation only. No code path changes.
+
 ## 0.38.0.1 - 2026-08-22
 
 **Documentation only, and it is an audit of the release before it.** FEED-SPEC

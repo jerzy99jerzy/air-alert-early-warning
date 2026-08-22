@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 2.0 / 2026-08-22
+Version: 2.1 / 2026-08-22
 A specification, written from the position of someone who tried to build against
 one and found there was nothing to build against. The Ukrainian equivalent was
 consumed and measured over a corpus of 118 days; the work of building against it
@@ -54,13 +54,13 @@ for spaces, unit type spelled out.
 
 **What that convention cost the publisher: nothing.** It is a formatting rule in
 a message a person writes anyway. **What it enabled on the receiving side:** one
-person, in an afternoon, built a parser that resolves every area to a national
+person, over two afternoons, built a parser that resolves every area to a national
 register code with a measured error rate of zero on the design window. No API,
 no token, no agreement, no procurement, no funding.
 
-A country under daily attack on its own territory found the time to adopt a
-naming convention in its public alert messages. That is the entire technical gap
-being described here.
+The convention is in use in the public alert messages of a country under daily
+attack on its own territory, and it adds nothing to a message somebody writes
+anyway. That is the entire technical gap being described here.
 
 ## 2. What is available on the Polish side today
 
@@ -70,7 +70,7 @@ institution.
 | Channel | Reaches | Machine-readable |
 | --- | --- | --- |
 | Sirens | People within earshot | No, and cannot be |
-| RCB alert (SMS) | Roughly 14 million recipients | No. Free text to a phone |
+| RCB alert (SMS) | Phones across the country | No. Free text to a phone |
 | RSO stream (XML and JSON) | Anyone who finds the address | Yes `[measured 2026-08-22]` - with the gaps recorded in section 4a |
 | RSO CAP interface | Holders of an access token | In format, yes. Access is by writing to the system's administrator |
 | The announced MSWiA application | Not yet released | Unknown |
@@ -231,6 +231,15 @@ counted: **eleven of ninety-five polls failed** in a twelve-hour journal, and
 nine of sixty in the two-hour window measured most closely. Consecutive
 failures happen; the longest run was two and the longest gap between
 successful reads was seven minutes, against a ten-minute staleness threshold.
+
+That first-night rate is close to where the figure settled, but it took a
+correction to get there. A later release read a much lower rate from a
+different window and pinned it; reconciling the windows against each other put
+the rate back at roughly one poll in nine, and withdrew the lower pin as
+wrong by two orders of magnitude (F109 in the defect log, with the current
+figures in this repository's README and `docs/DEPLOYMENT.md`). Worth saying
+plainly, because the paragraph below argues from a consumer's failure rate
+being knowable at all.
 
 The number that matters is not the failure rate. It is that **the consumer
 could tell**, on every one of those eleven occasions, because the channel
@@ -617,11 +626,16 @@ not look complete.**
 
 The objection deserves an answer rather than a dismissal, and there is one.
 
-Ukraine, attacked daily, publishes exactly this and has done so throughout the
-war. The alert state is already observable to anyone with ears, a window, or a
-phone: sirens are audible, RCB messages go to fourteen million people, and both
-are public the moment they are issued. What is currently unpublished is not the
-information. It is **the format**.
+Ukraine publishes considerably less than section 3 asks for - a public
+channel with a naming convention, no register codes, no schema, no heartbeat -
+and has done so throughout the war, under an adversary attacking daily. That
+is where this objection has most force, and it is where the answer to it is
+being tested in practice rather than argued.
+
+Closer to home: the alert state is already observable to anyone with ears, a
+window, or a phone. Sirens are audible, the statutory SMS reaches phones
+across the country, and both are public the moment they are issued. What is
+currently unpublished is not the information. It is **the format**.
 
 An unreadable format does not protect an adversary's target from being
 observed. It excludes citizens, researchers, municipalities and accessibility
