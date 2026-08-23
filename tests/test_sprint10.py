@@ -759,7 +759,16 @@ def test_the_contract_publishes_the_window_it_used() -> None:
     payload = to_contract(report)
     assert payload["window_days"] == 7
     assert payload["recent_7d"] == [
-        {"oblast": "lviv", "alerts_count": 1, "last_alert_ended_at": None}
+        {
+            "oblast": "lviv",
+            "alerts_count": 1,
+            "last_alert_ended_at": None,
+            # 3,600 s of a 60-minute alert that has not ended: the figure that
+            # does not collapse when raions overlap (F114), beside the count
+            # that does. `still_under_alert` says it is still growing.
+            "alert_seconds": 3600,
+            "still_under_alert": True,
+        }
     ]
 
 

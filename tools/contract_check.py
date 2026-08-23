@@ -64,7 +64,8 @@ REQUIRED_AREA = ("katottg", "area_id", "oblast", "oblast_name", "alert", "kind",
 # block in the payload had one. `recent_7d` is the layer the consumer shades a
 # whole oblast from, so a rename here repaints the map rather than emptying a
 # list, and nothing on either side would have said so.
-REQUIRED_RECENT = ("oblast", "alerts_count", "last_alert_ended_at")
+REQUIRED_RECENT = ("oblast", "alerts_count", "last_alert_ended_at",
+                   "alert_seconds", "still_under_alert")
 # 0.33.0.0. The same window one level down, in `feed.json`. Field names match
 # `areas` where they overlap so a consumer writes one reader, and the count is
 # `episodes` rather than `alerts_count` because it answers a different question
@@ -72,7 +73,8 @@ REQUIRED_RECENT = ("oblast", "alerts_count", "last_alert_ended_at")
 # subdivided, not how often it was attacked.
 REQUIRED_RECENT_AREA = ("katottg", "area_name", "oblast", "oblast_name",
                         "episodes", "last_active_at", "last_ended_at",
-                        "border_km_lower", "border_km_upper", "west")
+                        "border_km_lower", "border_km_upper", "west",
+                        "alert_seconds", "still_under_alert")
 
 
 def _event(
@@ -212,6 +214,29 @@ def check_contract() -> list[str]:
                     f"recent_7d alerts_count {count!r} is not a positive integer; "
                     "an oblast with no episode leaves the block rather than "
                     "appearing with a zero"
+                )
+            # F114. The figure that does not collapse, bounded by the window
+            # it is reported inside. A duration longer than its own window is
+            # a clipping fault, and a negative one is a clock fault; both are
+            # findings rather than values, so neither may travel.
+            window_s = int(payload.get("window_days") or 0) * 86400
+            seconds = entry.get("alert_seconds")
+            if not isinstance(seconds, int) or isinstance(seconds, bool):
+                problems.append(
+                    f"recent_7d alert_seconds {seconds!r} is not an integer; "
+                    "the quantity a consumer shades by cannot be a string"
+                )
+            elif seconds < 0 or (window_s and seconds > window_s):
+                problems.append(
+                    f"recent_7d alert_seconds {seconds} is outside its own "
+                    f"window of {window_s}s; a share of the window cannot "
+                    "exceed one"
+                )
+            if not isinstance(entry.get("still_under_alert"), bool):
+                problems.append(
+                    "recent_7d still_under_alert must be a boolean; a growing "
+                    "figure that cannot be told from a finished one is the "
+                    "collapse this field exists to prevent"
                 )
             ended = entry.get("last_alert_ended_at")
             if ended is None:

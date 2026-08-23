@@ -294,17 +294,39 @@ def event_window(
 
 @dataclass(frozen=True, slots=True)
 class RecentOblast:
-    """How often one oblast declared an alert over the trailing window.
+    """How much, and how often, one oblast was under alert over the window.
 
     Oblast granularity rather than raion, because the consumer shades whole
     oblasts and a raion-level count would be a finer number rendered at a
     coarser resolution: precision the display cannot carry and a reader would
     assume anyway.
+
+    **Two quantities, because one of them collapses and the other does not
+    (F114).** `alerts_count` counts stretches: it goes up only when the oblast
+    goes from no raion under alert to at least one. Under sustained attack the
+    raions overlap and the oblast never falls wholly quiet, so forty alerts
+    over a week count as one - measured, and measured at exactly that ratio.
+    The number is therefore *lowest where attack is heaviest*, which is the
+    opposite of what a reader takes it for.
+
+    `alert_seconds` is the union of the time any raion of this oblast spent
+    under alert, clipped to the window at both ends. It does not collapse:
+    forty overlapping alerts and forty spaced ones give nearly the same total.
+    It is the quantity to shade a map by and the quantity to answer "how bad
+    was this week here" with; `alerts_count` answers the different and
+    narrower question of how many separate flare-ups there were.
+
+    `open_at_as_of` says the oblast was still under alert when the picture was
+    composed, which makes `alert_seconds` a lower bound that is still growing.
+    An open stretch rendered identically to a closed one is the same collapse
+    one layer out.
     """
 
     slug: str
     alerts_count: int
     last_alert_ended_at: datetime | None
+    alert_seconds: int = 0
+    open_at_as_of: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -346,6 +368,16 @@ class RecentArea:
     border_lower_km: float | None
     border_upper_km: float | None
     is_western: bool
+    #: Seconds this area spent under alert inside the window, clipped at both
+    #: ends. `episodes` collapses when alerts overlap or when an all-clear
+    #: never arrives (F114); this does not. Summing `alert_seconds` across an
+    #: oblast's areas is still not the oblast's `alert_seconds`, for the same
+    #: reason the counts do not sum: the oblast figure is a union over
+    #: simultaneous raions, not a total.
+    alert_seconds: int = 0
+    #: Still under alert when the picture was composed, which makes
+    #: `alert_seconds` a lower bound rather than a total.
+    open_at_as_of: bool = False
 
     def as_item(self) -> dict[str, object]:
         """The contract form. Field names match `areas` where they overlap."""
@@ -364,6 +396,8 @@ class RecentArea:
             "border_km_lower": self.border_lower_km,
             "border_km_upper": self.border_upper_km,
             "west": self.is_western,
+            "alert_seconds": self.alert_seconds,
+            "still_under_alert": self.open_at_as_of,
         }
 
 
@@ -534,6 +568,12 @@ def trailing_counts(
     active: dict[str, set[str]] = {}
     episodes: dict[str, int] = {}
     last_close: dict[str, datetime] = {}
+    #: Start of the stretch currently open per oblast, already clipped to the
+    #: window. Separate from `last_close` because a stretch that opened before
+    #: the cutoff contributes from the cutoff, not from when it opened: the
+    #: window is seven days and a figure inside it may not exceed seven days.
+    span_since: dict[str, datetime] = {}
+    seconds: dict[str, float] = {}
     ordered = sorted(events, key=lambda e: (e.ts_source, e.area_id))
     inside = next(
         (i for i, e in enumerate(ordered) if e.ts_source >= cutoff), len(ordered)
@@ -549,29 +589,51 @@ def trailing_counts(
         elif is_clear(event.state):
             running.discard(event.area_id)
     # Episodes open as the window begins: counted here, once, so the loop
-    # below cannot count them again (`running` is already non-empty).
+    # below cannot count them again (`running` is already non-empty). Their
+    # clock starts at the cutoff for the same reason.
     for slug, running in active.items():
         if running:
             episodes[slug] = 1
+            span_since[slug] = cutoff
     for event in ordered[inside:]:
         area = table.by_code(event.area_id)
         slug = oblast_slug(area.oblast) if area is not None else ""
         if not slug:
             continue
+        # Clamped rather than trusted. `ts_source` is the source's clock and
+        # T40 measured it disagreeing with ours in both directions; an event
+        # stamped after `as_of` must not be able to make a duration longer
+        # than the window it is reported inside.
+        stamp = min(event.ts_source, as_of)
         running = active.setdefault(slug, set())
         if event.state is AlertState.ACTIVE:
             if not running:
                 episodes[slug] = episodes.get(slug, 0) + 1
+                span_since[slug] = stamp
             running.add(event.area_id)
         elif is_clear(event.state):
             running.discard(event.area_id)
             if not running and slug in episodes:
                 last_close[slug] = event.ts_source
+                opened = span_since.pop(slug, None)
+                if opened is not None:
+                    seconds[slug] = seconds.get(slug, 0.0) + max(
+                        0.0, (stamp - opened).total_seconds()
+                    )
+    # Stretches still running when the picture was composed are counted up to
+    # `as_of` and said to be open. Ending them silently at the last event
+    # would report a quiet tail that nobody observed.
+    for slug, opened in span_since.items():
+        seconds[slug] = seconds.get(slug, 0.0) + max(
+            0.0, (as_of - opened).total_seconds()
+        )
     return tuple(
         RecentOblast(
             slug=slug,
             alerts_count=count,
             last_alert_ended_at=last_close.get(slug),
+            alert_seconds=int(seconds.get(slug, 0.0)),
+            open_at_as_of=slug in span_since,
         )
         for slug, count in sorted(episodes.items())
     )
@@ -617,6 +679,13 @@ def trailing_areas(
     episodes: dict[str, int] = {}
     last_active: dict[str, datetime] = {}
     last_close: dict[str, datetime] = {}
+    #: The clipped twin of `open_since`. `open_since` keeps the real opening
+    #: time because `last_active` is seeded from it and reporting the cutoff
+    #: there would invent a transition that never happened; a duration inside
+    #: a seven-day window may not exceed seven days, so it needs the other
+    #: one. Two clocks, two purposes, named rather than shared.
+    span_since: dict[str, datetime] = {}
+    seconds: dict[str, float] = {}
     ordered = sorted(events, key=lambda e: (e.ts_source, e.area_id))
     edge = next(
         (i for i, e in enumerate(ordered) if e.ts_source >= cutoff), len(ordered)
@@ -637,17 +706,29 @@ def trailing_areas(
     for code, since in open_since.items():
         episodes[code] = 1
         last_active[code] = since
+        span_since[code] = cutoff
     for event in ordered[edge:]:
         if table.by_code(event.area_id) is None:
             continue
+        stamp = min(event.ts_source, as_of)
         if event.state is AlertState.ACTIVE:
             if event.area_id not in open_since:
                 episodes[event.area_id] = episodes.get(event.area_id, 0) + 1
                 open_since[event.area_id] = event.ts_source
+                span_since[event.area_id] = stamp
             last_active[event.area_id] = event.ts_source
         elif is_clear(event.state):
             if open_since.pop(event.area_id, None) is not None:
                 last_close[event.area_id] = event.ts_source
+                opened = span_since.pop(event.area_id, None)
+                if opened is not None:
+                    seconds[event.area_id] = seconds.get(event.area_id, 0.0) + max(
+                        0.0, (stamp - opened).total_seconds()
+                    )
+    for code, opened in span_since.items():
+        seconds[code] = seconds.get(code, 0.0) + max(
+            0.0, (as_of - opened).total_seconds()
+        )
 
     found: list[RecentArea] = []
     for code, count in episodes.items():
@@ -666,6 +747,8 @@ def trailing_areas(
                 border_lower_km=area.border_lower_km,
                 border_upper_km=area.border_upper_km,
                 is_western=area.is_western,
+                alert_seconds=int(seconds.get(code, 0.0)),
+                open_at_as_of=code in span_since,
             )
         )
 
@@ -843,6 +926,16 @@ def to_contract(report: Report) -> dict[str, object]:
                     if entry.last_alert_ended_at is not None
                     else None
                 ),
+                # F114/F115. `alerts_count` collapses under overlap and the
+                # collapse is worst where attack is heaviest; these two carry
+                # the quantity that does not. A consumer shading a map should
+                # read `alert_seconds` over `window_days * 86400`, which is
+                # bounded, needs no thresholds chosen against a distribution,
+                # and cannot invert. `alerts_count` stays because "how many
+                # separate flare-ups" is a real and different question.
+                "alert_seconds": entry.alert_seconds,
+                # A figure still growing must not render as a total.
+                "still_under_alert": entry.open_at_as_of,
             }
             for entry in report.recent
         ],

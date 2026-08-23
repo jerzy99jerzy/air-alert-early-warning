@@ -88,7 +88,20 @@ def state_of(status: str) -> str:
     lowered = status.lower()
     if "done" in lowered or "largely met" in lowered:
         return "done"
-    if "moved" in lowered:
+    # F113. `moved` is the one state whose word is also ordinary prose: four
+    # entries declaring `ready` carried a provenance note reading "Moved from
+    # S8 at 0.32.9.0" and were counted as closed, one of them tier 1 and two
+    # of them in the open sprint. The entry regex extends the status blob to
+    # the first blank line, so that prose is inside the string this function
+    # reads. Requiring the declared token is the narrowest repair that
+    # separates the two: measured against this file it moves exactly the four
+    # and touches nothing else, where restricting the whole function to the
+    # first physical line also moved T40 and T50 and would have been a second
+    # defect shipped as a fix. The other states are left scanning the blob
+    # because none of their words appears in this file as prose; if one ever
+    # does, it arrives as this defect again and the test below is the place
+    # it lands.
+    if "`moved`" in lowered:
         return "moved"
     for state in ("blocked-external", "deferred", "debt", "decision"):
         if state in lowered:

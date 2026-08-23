@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.32
+Document:  docs/METHODOLOGY.md, version 2.33
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -3501,3 +3501,123 @@ priority.
 
 **Reopen condition:** the next externally-sourced date or figure that reaches
 the tree without a provenance label, or the next one found wrong.
+
+### F113, 0.39.0.0. The index that cannot drift read an entry's prose as its status
+
+`tools/todo_index.py::state_of` searched the whole status blob for a state
+word, and `ENTRY` extends that blob to the first blank line, so it includes the
+entry's own explanation of its history. Four entries declaring `` `ready` ``
+carried the note *Moved from S8 at 0.32.9.0* and were counted `moved`, which
+the generated table renders as closed.
+
+The table under-reported open work by four: 24 of 70 closed rather than 28 of
+42 open, tier 1 at eleven rather than ten, S9 holding five tasks rather than
+three and S11 three rather than two. T47 is tier 1 and was invisible.
+
+**Why it survived.** `--check` compares the rendered block against what the
+same classifier produces, so both sides shared the fault and agreed. A
+self-consistency check is not a truth check; regenerating from a wrong
+function always reproduces the wrong answer. This is the class F111 named -
+a counter with no falsifying case - applied to a classifier.
+
+**Why the first repair was refused.** Reading only the first physical line
+also moved T40, whose sprint token is on the second, and T50, whose `done` is
+not on the first. Measured before shipping: six entries changed instead of
+four. A fix that changes more than the defect is a second defect wearing the
+first one's justification. The shipped repair requires the declared backticked
+token for `moved` alone and moves exactly the four.
+
+**A fifth instance surfaced from the regression rather than the report.** T61
+declared `` `ready` `` and said in the same sentence that it is a decision
+rather than work, so the classifier called it `decision` - the right answer
+reached from the wrong half of the line. The token was corrected; the guard
+added here reports the two halves disagreeing instead of silently picking one.
+
+**Remediation.** `tests/test_todo_index_state.py`, with cases that pair a
+declared state against prose naming a different one, so a classifier reading
+either half alone can be told from one reading the declaration. Named mutation:
+restore `"moved" in lowered`.
+
+**Reopen condition:** the next state word that appears in this file as ordinary
+prose, or the next gate whose check consumes the function it is checking.
+
+### F114, 0.39.0.0. The alert count collapses under overlap, hardest where attack is heaviest
+
+`trailing_counts` opens an episode when an oblast goes from no raion under
+alert to at least one, and closes it only on an affirmative all-clear of the
+last one. Under sustained attack the raions overlap and the oblast never falls
+wholly quiet, so a week of alerts counts as one.
+
+**Measured**, eight Kharkiv raions over a seven-day window: twenty
+oblast-wide alerts each cleanly cleared count as 20; the same twenty with one
+raion's all-clear missing count as **1**; forty single-raion alerts count as
+40 when spaced and **1** when staggered to overlap. The same forty alerts, two
+answers, differing only in whether they overlap.
+
+**Neither branch is an error condition.** Overlap is the normal state of an
+oblast under sustained attack, and a declaration closed by silence rather than
+by an affirmative all-clear is the normal behaviour of the source.
+
+**What a reader concluded.** Kharkiv rendered `1` for a week in which it was
+under alert almost continuously, beside a caption saying the column counts
+alert declarations. The consumer's map shades from the same field, so the most
+continuously attacked oblast drew paler than one with six discrete episodes -
+measured, bucket 1 against bucket 2. That is F76's failure in a new direction:
+the shading stopped measuring how finely an oblast is subdivided and started
+measuring how often it fell completely silent.
+
+**Why it survived.** `trailing_counts`' own docstring records of F76 that *the
+regression that should have caught it used one raion, so the mutation had
+nothing to bite*. That weakness was never repaired. No fixture put two raions
+of one oblast into overlapping alert, and a single-raion fixture cannot express
+overlap at all, so no mutation of this fold could go red on it. The lesson was
+written down and the fixtures were not changed.
+
+**Remediation.** `alert_seconds` and `still_under_alert` on `RecentOblast` and
+`RecentArea`, in `state.json` and `feed.json`, bounded by `tools/contract_check.py`
+against their own window. The oblast figure is a **union** over simultaneous
+raions, not a sum, or it would measure subdivision again in a new field.
+Clipped at both edges and clamped at `as_of`, because a source clock ahead of
+ours must not publish minutes that had not happened. `alerts_count` stays,
+renamed in prose to what it measures: how many separate flare-ups, not how bad
+the week was.
+
+`tests/test_trailing_duration.py`, six regressions, every fixture carrying two
+raions of one oblast, five named mutations verified red.
+
+**Reopen condition:** the first quantity added to the trailing block whose
+regression uses one raion, or the first shading scale that reads `alerts_count`
+again.
+
+### F115, 0.39.0.0. A rationale that defended a different quantity than the one rendered
+
+`trailing_counts` and `trailing_areas` both carried: *only an affirmative
+all-clear closes one, which means an episode left open by a feed outage stays
+open, and the count errs in the direction that does not understate.*
+
+The sentence is true of the alert **state** - an open episode keeps the area
+shown as still dangerous - and false of the **count**, which is the number a
+reader sees. The identical rule suppresses every subsequent episode, measured
+above at forty to one, and the suppression is largest for the most attacked
+oblast.
+
+**The same wrong word travelled.** `docs/WEBAPP.md` described `recent_7d[]` as
+counting *declarations*, which is precisely the number F76 was logged for
+removing, and the consumer's own caption and its `contract_fields` justification
+were copied from that row. One sentence in a contract document became three
+wrong sentences downstream, in two repositories, in front of readers.
+
+**Why it survived.** No check compares a rationale against the behaviour it
+describes, and no check compares a consumer's caption against the producer
+contract row it paraphrases. Prose was reviewed as prose; the arithmetic it
+claimed was never run against it.
+
+**Remediation.** Both docstrings say which quantity the rule protects and which
+it suppresses. The `recent_7d[]` row and the shading paragraph in
+`docs/WEBAPP.md` say what the field measures, that it inverts, and which field
+a consumer should shade by instead. The consumer's caption and justification
+are corrected as F-S41 in its own log.
+
+**Reopen condition:** the next docstring that argues for a rule's direction
+without a test asserting that direction, or the next consumer string that
+paraphrases a producer contract row with no check joining them.

@@ -16,6 +16,76 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.39.0.0 - 2026-08-23
+
+**Kharkiv showed one alert for a week in which it was under alert almost
+continuously, and the number was right about the rule it implements and wrong
+about everything a reader takes it for.**
+
+**F114. The alert count collapses under overlap.** `alerts_count` rises only
+when an oblast goes from no raion under alert to at least one, and falls closed
+only on an affirmative all-clear of the last one. Measured over eight Kharkiv
+raions and a seven-day window: twenty oblast-wide alerts each cleanly cleared
+count as 20; the same twenty with one raion's all-clear missing count as **1**;
+forty single-raion alerts count as 40 spaced and **1** overlapping. The same
+forty alerts, two answers, differing only in whether they overlap - and both
+branches are the normal behaviour of an oblast under sustained attack and of a
+source that closes declarations with silence.
+
+**The count is therefore lowest where attack is heaviest**, and the consumer
+shades its map from it, so the most continuously attacked oblast drew paler
+than one with six discrete episodes. That is F76's failure in a new direction:
+the shading stopped measuring how finely an oblast is subdivided and started
+measuring how often it fell completely silent.
+
+**`alert_seconds` and `still_under_alert`**, on `RecentOblast` and `RecentArea`,
+in `state.json` and `feed.json`. The oblast figure is a **union** over
+simultaneous raions rather than a sum, or it would measure subdivision again in
+a new field. Clipped to the window at both edges, so a share of the window
+cannot exceed one and a shading scale needs no bucket edges chosen by eye.
+Clamped at `as_of`, because a source clock ahead of ours must not publish
+minutes that had not happened. `tools/contract_check.py` bounds both fields
+against the window they are reported inside.
+
+`alerts_count` stays. "How many separate flare-ups" is a real question; it is
+simply not the question the column was being read as.
+
+**F115. The rationale defended a different quantity than the one rendered.**
+Both folds carried *the count errs in the direction that does not understate*.
+True of the alert state, false of the count, and the count is what a reader
+sees. The same wrong word had travelled: `docs/WEBAPP.md` described
+`recent_7d[]` as counting *declarations*, which is precisely the number F76 was
+logged for removing, and the consumer's caption and its `contract_fields`
+justification were copied from that row. One sentence in a contract document
+became three wrong sentences downstream, in two repositories, in front of
+readers. The consumer's half is F-S41 in its own log.
+
+**F113. The index that cannot drift read an entry's prose as its status.**
+`state_of` searched the whole status blob, which `ENTRY` extends to the first
+blank line, so four entries declaring `` `ready` `` and carrying the note
+*Moved from S8* were counted `moved` and rendered as closed. The backlog
+under-reported open work by four: **24 of 70 closed rather than 28**, tier 1 at
+eleven rather than ten, **S9 holding five tasks rather than three** and S11
+three rather than two. `--check` was green throughout because it compares the
+rendered block against the same classifier that produced it, and a
+self-consistency check is not a truth check.
+
+The first repair - reading only the first physical line - also moved T40 and
+T50 and was refused on the measurement rather than on taste. A fifth instance
+surfaced from the new regression: T61 declared `ready` and called itself a
+decision in the same sentence, and its token is corrected.
+
+**Fixtures, and why none of this was ever red.** `trailing_counts`' docstring
+already recorded of F76 that *the regression that should have caught it used
+one raion, so the mutation had nothing to bite*. That weakness was written down
+and never repaired: a single-raion fixture cannot express overlap, so no
+mutation of this fold could fail on it. Every fixture in
+`tests/test_trailing_duration.py` carries two raions of one oblast. Six
+regressions, five named mutations verified red, plus
+`tests/test_todo_index_state.py` with its own.
+
+500 tests, coverage 96.43% against a floor of 95.
+
 ## 0.38.0.2 - 2026-08-22
 
 **Re-read the whole of FEED-SPEC this time, not just the parts the last

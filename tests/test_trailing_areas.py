@@ -333,7 +333,7 @@ def test_the_item_carries_every_field_a_consumer_reads(table, west) -> None:
     assert set(item) == {
         "katottg", "area_name", "oblast", "oblast_name", "episodes",
         "last_active_at", "last_ended_at", "border_km_lower",
-        "border_km_upper", "west",
+        "border_km_upper", "west", "alert_seconds", "still_under_alert",
     }
     assert item["episodes"] >= 1
     assert "alerts_count" not in item, (

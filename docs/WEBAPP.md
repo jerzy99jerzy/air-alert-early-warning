@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.3 / 2026-08-21
+Version: 3.4 / 2026-08-23
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -151,7 +151,10 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `window_days` | The trailing window behind `recent_7d` | A count without its window is a number the reader has to guess about |
 | `nearest_7d` | The nearest **raion** under alert in the trailing window, or `null` | 0.33.0.0. Same granularity and same `border_km.csv` row as `areas[]`, so the weekly sentence and the live sentence are comparable by construction. `null` is unknown and must never render as "nothing near". The full block it reduces is `recent_7d_areas` in `feed.json` |
 | `feed.json: recent_7d_areas[]` | The trailing window per raion, nearest first, unknown distance last | Carries `episodes`, **not** `alerts_count`. Summing `episodes` across an oblast's areas does not give that oblast's `alerts_count` and must not be used as though it did: one western episode lights every raion at once, so the sum measures how finely the oblast is subdivided (F76). In `feed.json` rather than `state.json` because it is 10.2 KiB for the west and 35.5 KiB for every area the map knows, against a 13,150-byte `state.json` polled every thirty seconds [measured on `vm-mavo`, 2026-08-19] |
-| `recent_7d[]` | Per-**oblast** alert count over that window | Counts *declarations*, not days under alert: one six-day alert is one declaration, not six. **This block is at a different granularity from `areas[]`, which is per raion.** An oblast is the parent of the areas, not a coarser measurement of the same place, and the two lists share no key space: `areas[].area_id` is a KATOTTG code, `recent_7d[].oblast` is a slug. **It carries no distance, deliberately.** An oblast-level interval takes its lower bound from one raion and its upper from another, so it describes no single place while wearing the field names of the per-area interval that describes exactly one; a page printing both in adjacent sentences would print two quantities under one name. The weekly distance sentence comes from `nearest_7d` instead. Asserted by `tools/contract_check.py`, not left to this row |
+| `recent_7d[]` | Per-**oblast** episodes *and* time under alert over that window | **`alerts_count` counts unbroken stretches, not declarations, and it collapses.** It rises only when the oblast goes from no raion under alert to at least one, so an oblast whose raions overlap never falls wholly quiet and a week of alerts counts as one: measured at forty-to-one, and worst where attack is heaviest (F114). The word *declarations* stood in this row until F115 and was wrong in the direction that flatters the number; the consumer's own caption was copied from it. **Read `alert_seconds` for how bad a week was** and `alerts_count` only for how many separate flare-ups there were. **This block is at a different granularity from `areas[]`, which is per raion.** An oblast is the parent of the areas, not a coarser measurement of the same place, and the two lists share no key space: `areas[].area_id` is a KATOTTG code, `recent_7d[].oblast` is a slug. **It carries no distance, deliberately.** An oblast-level interval takes its lower bound from one raion and its upper from another, so it describes no single place while wearing the field names of the per-area interval that describes exactly one; a page printing both in adjacent sentences would print two quantities under one name. The weekly distance sentence comes from `nearest_7d` instead. Asserted by `tools/contract_check.py`, not left to this row |
+| `recent_7d[].alert_seconds` | Union of the seconds any raion of the oblast spent under alert, inside the window | The quantity that does not collapse. Clipped at both edges, so `alert_seconds / (window_days * 86400)` is a share bounded by one and is what a shading scale should read: no bucket edges chosen by eye, and no way to invert. A **union**, not a sum: two raions under alert for the same hour give the oblast one hour, or the figure would measure subdivision again (F76) in a new field. Asserted by `tools/contract_check.py` against its own window |
+| `recent_7d[].still_under_alert` | The oblast was still under alert when the picture was composed | `alert_seconds` is then a lower bound that is still growing, and a growing figure rendered as a total is the collapse this pair exists to remove. A consumer must not print it as a finished total |
+| `feed.json: recent_7d_areas[].alert_seconds` | The same quantity per raion, with `still_under_alert` beside it | Summing it across an oblast's areas is **not** that oblast's `alert_seconds`, for the same reason the counts do not sum: the oblast figure is a union over simultaneous raions |
 | `border_km_lower` / `_upper` | Interval to the border, may be `null` | A single number here would be false with a decimal point on it |
 | `kind` | `missile`, `drone`, `glide_bomb`, `artillery`, `unknown` | Five values, and the consumer currently labels three. See below |
 | `events` | The twenty-minute window, **always present** | An absent block and an empty one read alike to a careless reader. Empty means nothing happened, and the page must say so in words |
@@ -300,12 +303,17 @@ Since the kind tables cover roughly one alert in ten (F71), the iconless marker
 is the common case, which is why the legend says *alarm, typ nieznany* rather
 than leaving a reader to infer that a bare disc is something milder.
 
-**Shading is the trailing window.** Fill saturation is the count of alerts in
-that oblast over the last seven days, in five buckets, from `recent_7d` and
-`window_days` in the contract. An ongoing alert always beats the trailing
-layer: one oblast never carries two markers. The bucket edges (1, 3, 8, 20) are
-a display choice made by eye and labelled as such in the site's source; nobody
-has checked that they discriminate usefully on real data.
+**Shading is the trailing window, and it currently reads the wrong field.**
+Fill saturation is `alerts_count` over the last seven days in five buckets, from
+`recent_7d` and `window_days`. **That inverts** (F114): an oblast under
+continuous attack reports one stretch and renders paler than an oblast with six
+discrete, fully cleared episodes - measured, bucket 1 against bucket 2. It is
+F76's failure in a new direction, the shading now measuring how often an oblast
+fell completely silent. The bucket edges (1, 3, 8, 20) are a display choice made
+by eye and were chosen against a distribution this defect deflates. **The
+consumer should shade by `alert_seconds / (window_days * 86400)`**, which is
+bounded by one and needs no edges. An ongoing alert always beats the trailing
+layer: one oblast never carries two markers.
 
 **Animation carries liveness, never motion.** Ripples run on a five-second
 radar cadence, the marker breathes, rotor blades spin in place. **Nothing
