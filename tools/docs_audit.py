@@ -1000,6 +1000,201 @@ def check_the_holdout_boundary_survives_in_the_corpus_block(
     return problems
 
 
+#: Sentences in `docs/DEPLOYMENT.md` that name a unit, a directive or an
+#: environment variable without asserting its contents. Each entry carries the
+#: reason it is not an assertion; a line that stops matching is reported rather
+#: than skipped, so this list cannot silently cover a new claim.
+UNIT_PROSE_ALLOWED = (
+    "There is no daemon and the collector is not one.",
+    "A timer plus a `oneshot`",
+    "the unit file sets",
+    "systemd's default one-minute slack",
+)
+
+#: The tokens that make a sentence an assertion about a unit rather than a
+#: discussion of one. Directives carry `=` because a bare word like `User` is
+#: English and `User=` is a claim.
+UNIT_TOKENS = re.compile(
+    r"\b(?:ExecStart|OnUnitActiveSec|OnBootSec|AccuracySec|RandomizedDelaySec|"
+    r"Environment|EnvironmentFile|User|Group|Restart|RestartSec|StateDirectory|"
+    r"ReadWritePaths|UMask|WantedBy)=|"
+    r"\bMAVO_[A-Z_]+\b"
+)
+
+#: A directive is only this project's claim when the section is about this
+#: project's units. `Restart=always` inside a paragraph explaining systemd to a
+#: reader is a fact about systemd; the same string beside `mavo-collect.timer`
+#: is a claim about a file on our host. Naming a unit is not itself an
+#: assertion about its contents, which is why the unit pattern gates the
+#: section rather than flagging the line.
+UNIT_SCOPE = re.compile(r"mavo-[a-z]+\.(?:service|timer)\b|/etc/systemd")
+
+#: What counts as having quoted the machine. `systemctl cat` and
+#: `systemctl show` are readings; a fenced block holding unit text is the
+#: reading pasted. Nothing here can reach the host, so this checks that a claim
+#: was sourced, not that it was true (T64).
+UNIT_EVIDENCE = re.compile(r"systemctl\s+(?:cat|show)|^\[(?:Unit|Service|Timer|Install)\]$", re.M)
+
+
+def check_unit_claims_quote_the_unit() -> list[str]:
+    """A sentence asserting what a unit contains sits beside the reading of it.
+
+    T64, and it took three defects in one session to earn: F102, F104 and F106
+    are one mechanism, a conclusion about a file that was not opened drawn from
+    a file that was. F106 reached a tag and scheduled a deploy step that turned
+    out to be unnecessary. Two more arrived at 0.39.0.1: F116, a cadence stated
+    correctly from a unit and never compared to the loop it feeds, and F117,
+    four rows about the host that were false under a date the gate enforced.
+
+    **What this cannot do, stated so nobody mistakes it for more.** Nothing in
+    this tree can read `/etc/systemd/system`, so this does not check that a
+    claim is true. It checks that it is *sourced*: a paragraph asserting a unit
+    name, a directive or a `MAVO_` variable must sit within the same section as
+    a fenced block quoting `systemctl cat`, `systemctl show`, or unit text. The
+    same shape as `check_the_host_claim_is_no_older_than_the_release`, which
+    refuses an undated claim rather than a wrong one.
+
+    Sections are the unit of proximity rather than paragraphs, because the
+    reading is usually pasted once under a heading and referred to by several
+    sentences beneath it. That is the honest granularity and it is also the
+    loosest one this check has: a section carrying one quote licenses every
+    claim in it.
+    """
+    text = (ROOT / "docs" / "DEPLOYMENT.md").read_text(encoding="utf-8")
+    sections = re.split(r"^(#{2,4} .*)$", text, flags=re.M)
+    problems: list[str] = []
+    heading = "(before the first heading)"
+    for chunk in sections:
+        if chunk.startswith("#"):
+            heading = chunk.strip()
+            continue
+        if UNIT_EVIDENCE.search(chunk) or not UNIT_SCOPE.search(chunk):
+            continue
+        for line in chunk.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith(("|", ">", "```")):
+                continue
+            if not UNIT_TOKENS.search(stripped):
+                continue
+            if any(allowed in stripped for allowed in UNIT_PROSE_ALLOWED):
+                continue
+            problems.append(
+                f"docs/DEPLOYMENT.md section {heading!r} asserts a unit's contents "
+                f"with nothing quoted: {stripped[:70]!r} (T64)"
+            )
+    return problems
+
+
+def check_the_host_version_row_matches_the_pin(status: dict[str, object]) -> list[str]:
+    """The `main` row of the host table equals the version this release ships.
+
+    F117's due bill. That entry named this check as the part of the repair that
+    sits inside the gate perimeter, deferred it to the next release touching
+    this file, and said in as many words that a deferral without a due date is
+    a preference wearing a decision's clothes. This is that release.
+
+    The row went stale for two releases while the freshness line above it
+    passed, because that line checks a date and a date is cheap to bump. This
+    compares two files in the tree, which is the only half of the host table a
+    repository can enforce at all.
+    """
+    text = (ROOT / "docs" / "DEPLOYMENT.md").read_text(encoding="utf-8")
+    rows = re.findall(r"^\| `main` \| ([^|,]+)", text, re.M)
+    if not rows:
+        return ["docs/DEPLOYMENT.md has no '| `main` |' row for the gate to read"]
+    if len(rows) > 1:
+        return [f"docs/DEPLOYMENT.md carries {len(rows)} '| `main` |' rows; one table, one row"]
+    stated = rows[0].strip()
+    pinned = status["version"]
+    if stated != pinned:
+        return [f"docs/DEPLOYMENT.md `main` row says {stated}, STATUS.json pins {pinned}"]
+    return []
+
+
+#: Small numbers as English, because the host table is prose with a table's
+#: punctuation and "two releases" reads better than "2 releases". Beyond ten
+#: the distance is the finding rather than the wording.
+DISTANCE_WORDS = {
+    "no": 0, "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+}
+
+
+def check_the_host_release_distance_is_counted(status: dict[str, object]) -> list[str]:
+    """The `Behind by` row equals the releases between the host and `main`.
+
+    Added at 0.39.1.0 because the row went stale inside the release that logged
+    F117 for exactly this. The check written yesterday read the `main` row and
+    stopped there, so the row *beside* the one it enforced drifted on the very
+    next release - which is F117's own sentence about a freshness gate reading a
+    date and not the rows under it, one column further along.
+
+    Both inputs are in the tree: the installed version is stated in the table
+    above, and the release list is `CHANGELOG.md`. So this counts rather than
+    trusts, and the only thing left unenforceable is whether the *installed*
+    figure was read from the host, which no repository can check and which
+    `check_the_host_claim_is_no_older_than_the_release` bounds by date instead.
+    """
+    text = (ROOT / "docs" / "DEPLOYMENT.md").read_text(encoding="utf-8")
+    installed = re.search(r"\| Installed \| `air-alert-early-warning ([\d.]+)`", text)
+    stated = re.search(r"\| Behind by \| \**([A-Za-z]+|\d+)\**\s+releases?", text)
+    if installed is None:
+        return ["docs/DEPLOYMENT.md has no '| Installed |' row naming a version"]
+    if stated is None:
+        return ["docs/DEPLOYMENT.md has no '| Behind by |' row stating a release count"]
+    releases = re.findall(r"^## (\d[\d.]*) - ", (ROOT / "CHANGELOG.md")
+                          .read_text(encoding="utf-8"), re.M)
+    pinned = str(status["version"])
+    on_host = installed.group(1)
+    if pinned not in releases:
+        return [f"CHANGELOG.md has no heading for {pinned}, so the distance cannot be counted"]
+    if on_host not in releases:
+        return [f"CHANGELOG.md has no heading for the installed {on_host}"]
+    actual = releases.index(on_host) - releases.index(pinned)
+    word = stated.group(1).lower()
+    claimed = DISTANCE_WORDS.get(word)
+    if claimed is None:
+        claimed = int(word) if word.isdigit() else None
+    if claimed is None:
+        return [f"docs/DEPLOYMENT.md states a release distance of {stated.group(1)!r}, "
+                f"which is neither a small English number nor a digit"]
+    if claimed != actual:
+        return [f"docs/DEPLOYMENT.md says the host is {claimed} release(s) behind; "
+                f"CHANGELOG.md counts {actual} between {on_host} and {pinned}"]
+    return []
+
+
+def check_the_coverage_floor_stays_a_ratchet(status: dict[str, object]) -> list[str]:
+    """The floor follows the measurement instead of drifting below it.
+
+    T9, and its acceptance was a rule rather than a state: a commit raising
+    measured coverage by more than five points raises the floor in the same
+    commit. A rule with nobody to enforce it is a preference, so it is enforced
+    here instead of restated.
+
+    **The direction matters and only one way is checked.** A floor far below
+    the measurement enforces nothing, which is what the gap catches. A floor
+    *above* the measurement is caught already, and harder, by `--cov-fail-under`
+    failing the run. The ratchet's whole point is that it never becomes a
+    target: nothing here asks coverage to rise.
+    """
+    measured = status.get("measured")
+    if not isinstance(measured, dict):
+        return ["STATUS.json has no measured block"]
+    total = measured.get("coverage_percent")
+    floor = measured.get("coverage_floor_percent")
+    if not isinstance(total, int | float) or not isinstance(floor, int | float):
+        return ["coverage_percent or coverage_floor_percent is missing or not a number"]
+    slack = float(total) - float(floor)
+    if slack > 5.0:
+        return [
+            f"coverage_percent {total} is {slack:.2f} points above "
+            f"coverage_floor_percent {floor}; the floor is a ratchet and more "
+            f"than five points of slack means it enforces the past (T9)"
+        ]
+    return []
+
+
 def main() -> int:
     """Run every audit. Returns a process exit code."""
     status = _status()
@@ -1028,6 +1223,10 @@ def main() -> int:
         + check_the_host_claim_is_no_older_than_the_release(status)
         + check_badges_match_the_pins(status)
         + check_contents_anchors_resolve()
+        + check_unit_claims_quote_the_unit()
+        + check_the_host_version_row_matches_the_pin(status)
+        + check_the_host_release_distance_is_counted(status)
+        + check_the_coverage_floor_stays_a_ratchet(status)
     )
     for problem in problems:
         print(f"docs-audit: {problem}", file=sys.stderr)

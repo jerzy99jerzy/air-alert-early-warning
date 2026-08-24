@@ -196,9 +196,10 @@ def test_t38_a_store_from_an_older_version_is_refused(tmp_path: Path) -> None:
     then lies one row at a time.
     """
     import sqlite3
+    from contextlib import closing
 
     path = tmp_path / "old.sqlite"
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn, conn:
         conn.execute(
             "CREATE TABLE events (content_hash TEXT PRIMARY KEY, area_id TEXT NOT NULL, "
             "state TEXT NOT NULL, ts_source TEXT NOT NULL, ts_ingest TEXT NOT NULL, "

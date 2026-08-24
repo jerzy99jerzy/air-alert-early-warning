@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.7 / 2026-08-24
+Version: 1.8 / 2026-08-24
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -42,8 +42,8 @@ never a decision until D-031 wrote it down.
 | --- | --- |
 | Installed | `air-alert-early-warning 0.39.0.0`, `/opt/mavo/venv`, python3.11 |
 | Installed at | **2026-08-23 13:40:15 UTC**, the mtime of the installed `.dist-info` and of the newest module beside it, read on the host rather than taken from an install chain's own echo |
-| `main` | 0.39.0.1, the release this reading ships in |
-| Behind by | one release, this one, which changes documentation and the version constant and **no behaviour**, so the deploy is deferred and the history row below says so rather than leaving it inferred |
+| `main` | 0.39.1.0, the release this reading ships in |
+| Behind by | **two releases**, 0.39.0.1 and this one. Neither changes a behavioural line in `mavo/`: between them they move documentation, the gate's own tools, the suite, and the version constant in three files. The deploy is deferred and the history row below says so rather than leaving it inferred. **This row was stale when 0.39.1.0 was drafted** - it said one release, in the release that logged F117 - which is why the check below it now counts rather than reads |
 
 **An earlier version of this table carried two different answers in one
 document**: 0.32.2.0 here and 0.32.7.0 in the deploy record below, both under
@@ -109,12 +109,88 @@ deployed looks like from outside the code. **F98 bounded the cost of a failure
 and not its frequency**, and the withdrawn row above read the bound as the
 frequency (F109).
 
+### The timers, quoted rather than described
+
+**Every drop-in below existed only on this host until 0.39.1.0.** The base
+units ship nowhere: this repository has no `deploy/` directory, so four files
+that decide how often the instrument runs sat outside `git ls-files` while the
+gate's whole perimeter is `git ls-files`. Pasting them here does not put them
+under version control in the sense that a change to one would be noticed - only
+a re-reading does that - but it ends the state where the tree held no copy at
+all. `systemctl cat`, read 2026-08-24.
+
+```
+# /etc/systemd/system/mavo-collect.timer
+[Unit]
+Description=poll the channel every two minutes
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=120
+RandomizedDelaySec=18
+
+[Install]
+WantedBy=timers.target
+
+# /etc/systemd/system/mavo-collect.timer.d/description.conf
+[Unit]
+Description=poll the channel every thirty seconds (D-027)
+
+# /etc/systemd/system/mavo-collect.timer.d/interval.conf
+[Timer]
+OnUnitActiveSec=
+OnUnitActiveSec=30
+RandomizedDelaySec=5
+AccuracySec=1s
+
+# /etc/systemd/system/mavo-push.timer
+[Unit]
+Description=push state.json every two minutes
+
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=120
+RandomizedDelaySec=15
+
+[Install]
+WantedBy=timers.target
+
+# /etc/systemd/system/mavo-push.timer.d/interval.conf
+[Timer]
+OnUnitActiveSec=
+OnUnitActiveSec=30
+AccuracySec=1s
+```
+
+Effective values, `systemctl show`, same reading:
+
+```
+mavo-collect.timer  OnUnitActiveUSec=30s  AccuracyUSec=1s  RandomizedDelayUSec=5s
+mavo-push.timer     OnUnitActiveUSec=30s  AccuracyUSec=1s  RandomizedDelayUSec=15s
+```
+
+**Three things the paste says that no prose about it had.**
+
+`mavo-push.timer` still describes itself as running every two minutes. The
+collector carries a `description.conf` drop-in for exactly this reason and the
+delivery timer never got one, so its `Description` outlived its cadence by the
+same mechanism F116 describes, one layer down and inside F116's own repair.
+
+`RandomizedDelaySec` on the delivery timer is 15 s and D-033 declined to touch
+it without a reading. The reading exists now: the ceiling is 30 + 15 + 1 = 46 s
+against the collector's 36, so the jitter is half the interval where the
+collector's is a sixth. Under the consumer's 120 s threshold either way, which
+is why this is a consistency question and still not a correctness one.
+
+The service units are **not** reproduced here. `mavo-push.service` carries an
+internal address and a key path, and how much of the deployment a public
+repository publishes is a threat-model question rather than a documentation
+one. The two `mavo-report.service` drop-ins are quoted in the section below,
+because a defect there needs them.
+
 ### Cadence, measured over a full day
 
-`AccuracySec=1s` is in
-`/etc/systemd/system/mavo-collect.timer.d/interval.conf` with
-`OnUnitActiveSec=30` and `RandomizedDelaySec=5`. Start-to-start intervals over
-24 hours, 2026-08-16 to 2026-08-17:
+Start-to-start intervals over 24 hours, 2026-08-16 to 2026-08-17:
 
 ```
 n=2619   min=30.06   p50=33.00   p90=35.00   p99=35.01   max=36.06

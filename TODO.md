@@ -4,17 +4,16 @@
 
 ### Where the backlog stands
 
-**24 of 70 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**31 of 75 closed, 44 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
-| `done` | 20 | Finished, with the release that closed it named in the entry |
+| `done` | 27 | Finished, with the release that closed it named in the entry |
 | `moved` | 4 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 33 | Nothing external blocks it; it needs a session |
-| `decision` | 6 | Waiting on a judgement rather than on work |
+| `ready` | 35 | Nothing external blocks it; it needs a session |
+| `decision` | 4 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
-| `debt` | 2 | Known cost carried on purpose |
 
 ### Priority tiers
 
@@ -26,11 +25,11 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 11 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T66](#t66-attempt-completeness-as-its-own-instrument)
+**Tier 1, 11 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T66](#t66-attempt-completeness-as-its-own-instrument), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink)
 
-**Tier 2, 19 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink)
+**Tier 2, 17 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink)
 
-**Tier 3, 16 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise), [T70](#t70-which-side-drops-the-packets), [T72](#t72-warnings-are-not-errors-in-the-suite-and-the-suite-leaks-handles)
+**Tier 3, 16 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T76](#t76-a-tag-push-re-runs-the-same-bytes-through-ci), [T77](#t77-the-false-precision-counter-counts-version-numbers)
 
 ### By sprint
 
@@ -43,7 +42,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T4](#t4-executable-claim-behind-the-never-raise-parser-guarantee), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T9](#t9-keep-the-coverage-floor-a-ratchet), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T62](#t62-the-identifier-checks-cannot-see-a-suffixed-identifier), [T63](#t63-tags-are-annotated-and-unsigned-and-a-document-said-otherwise), [T64](#t64-a-claim-about-a-systemd-unit-quotes-the-unit), [T65](#t65-decide-what-a-successful-poll-with-no-state-change-should-render-as), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T72](#t72-warnings-are-not-errors-in-the-suite-and-the-suite-leaks-handles) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T76](#t76-a-tag-push-re-runs-the-same-bytes-through-ci), [T77](#t77-the-false-precision-counter-counts-version-numbers) |
 
 <!-- index:end -->
 
@@ -126,7 +125,7 @@ The conjunction's numbers are identical to R3, so the third conjunct is inert.
 differs from R3's, or R2 is removed and the README stops describing it.
 
 ## T4. Executable claim behind the never-raise parser guarantee
-Status: `ready` (narrowed after sprint 4) [tier 3]
+Status: `done` at 0.39.1.0 [tier 3]
 Sprint 4 delivered the suite for the Telegram adapter (F17, harness A9); the
 fixture source generates rather than parses, so hostile input does not apply to
 it. What remains is the rule for adapters that do not exist yet.
@@ -134,6 +133,15 @@ it. What remains is the rule for adapters that do not exist yet.
 its hostile suite in the same release, and a lint or convention makes an adapter
 without one visible. Malformed, truncated, oversized and hostile payloads; no
 exception escapes; unparseable records counted rather than dropped.
+
+**Closed at 0.39.1.0.** `tools/adapter_lint.py` is a gate step. It reports a
+module under `mavo/sources/` that parses external bytes and has no test module
+exercising hostile input. Keyed on *parsing*, not on `ThreatSource`: `rso.py`
+implements no protocol and parses a third party's JSON, so a protocol-shaped
+rule would have exempted the newest parser in the tree. Three adapters pass,
+two modules are exempt with written reasons, and the check is verified red
+against a planted adapter whose only test names a well-formed document.
+
 
 ## T5. Rolling feed-latency drift detection
 Status: `ready` [tier 3]
@@ -478,12 +486,21 @@ entry records why, so the question stops being reopened by enthusiasm.
 **Not blocked on anything external.** Both blockers are the project's own.
 
 ## T9. Keep the coverage floor a ratchet
-Status: `debt` [tier 3]
+Status: `done` at 0.39.1.0 [tier 3]
 The floor is set at 95, three points below the 98.3 measured in sprint 2. It
 rises when a sprint genuinely raises coverage and never as a target, because a
 target invites tests written for the number.
 **Acceptance:** any commit that raises measured coverage by more than five points
 raises the floor in the same commit.
+
+**Closed at 0.39.1.0.** The acceptance was a rule, and a rule with nobody to
+enforce it is a preference, so it is enforced instead of restated.
+`check_the_coverage_floor_stays_a_ratchet` in `tools/docs_audit.py` fails when
+`coverage_percent` runs more than five points above `coverage_floor_percent`.
+Only that direction: a floor *above* the measurement is `--cov-fail-under`'s
+business and catching it here would turn a ratchet into a target, which the
+entry warned against and a regression now asserts. Today: 96.43 against 95.
+
 
 ## T10. Find a history source deep enough to calibrate on
 Status: `blocked-external` (access) [tier 3]
@@ -1740,7 +1757,7 @@ incidents in the border voivodeships, which is the same shape of question as
 T8a and would be measured the same way.
 
 ## T62. The identifier checks cannot see a suffixed identifier
-Status: `ready`, follows D-030. [tier 2]
+Status: `done` at 0.39.1.0, closed on evidence [tier 2]
 
 `ENTRY` in `tools/todo_index.py` is `^## (T\d+)\. (.+?)$`, so `T8a` and `T8b`
 are not entries as far as this repository's tooling is concerned. Both are
@@ -1768,8 +1785,17 @@ check was: red against a planted suffixed collision before the widening,
 green after. The counts this release quotes change with it, which is why the
 work is separated from the release that found it rather than folded into it.
 
+**Closed at 0.39.1.0, and it was closed before it was closed.** Every clause of
+the acceptance already held in the tree: `ENTRY` is `^## (T\\d+[a-z]?)\\.`,
+`decision_entries` is `^## (D-\\d+[a-z]?)`, `cited_decisions` is
+`\\bD-\\d{3}[a-z]?\\b`, `T8a` and `T8b` are in the generated index and `D-012a`
+counts separately `[measured, from the tree]`. The entry sat `ready` through six
+releases over work that was finished. Logged as **F118**, with T72's stale file
+list as its second instance.
+
+
 ## T63. Tags are annotated and unsigned, and a document said otherwise
-Status: `decision` [tier 3]
+Status: `done` at 0.39.1.0 [tier 3]
 
 Measured 2026-08-17 across `v0.3.2.0`, `v0.20.0.0`, `v0.30.0.0`, `v0.32.0.0`
 and `v0.32.4.0`: all five are annotated and carry no PGP signature. No key
@@ -1793,8 +1819,17 @@ from which tags are signed and states explicitly that every earlier tag is
 not. Either answer closes this. What does not close it is a signed tag with no
 entry.
 
+**Closed at 0.39.1.0 by D-035**, which records signing as out of scope with
+three reopen conditions. One thing in the entry above did **not** carry into the
+decision: the claim that Software Heritage and OpenTimestamps already provide an
+authorship record. Nothing in this tree establishes that either exists, so a
+decision resting on it would be F100's shape again. D-035 rests only on the
+measured state of the tags, and the unverified claim becomes its own reopen
+condition.
+
+
 ## T64. A claim about a systemd unit quotes the unit
-Status: `ready`, follows F106 [tier 2]
+Status: `done` at 0.39.1.0 [tier 2]
 
 Three defects in one session share one mechanism: a conclusion about a file
 that was not opened, drawn from a file that was (F102, F104, F106). The third
@@ -1818,8 +1853,23 @@ targets encodes the instance rather than the class, which is F100's note. This
 one has three instances to generalise from, which is an argument for writing it
 soon rather than for writing it immediately.
 
+**Closed at 0.39.1.0.** `check_unit_claims_quote_the_unit` in
+`tools/docs_audit.py`, verified red against the 0.32.7.0 text the acceptance
+names. Scope rather than an allow-list of sentences: a directive fires only
+inside a section that also names one of our units or `/etc/systemd`, because
+`Restart=always` in a paragraph explaining systemd is a fact about systemd.
+
+**It found one thing on its first run and it was its own class.** The cadence
+section asserted the contents of `mavo-collect.timer.d/interval.conf` with
+nothing quoted. The assertion was **true** - the reading matched it to the
+character - which is the point: this check refuses an unsourced claim, not a
+wrong one. Repaired by quoting `systemctl cat` for both timers and their
+drop-ins, which also ends the state where four files deciding how often the
+instrument runs existed nowhere in the tree.
+
+
 ## T65. Decide what a successful poll with no state change should render as
-Status: `decision`, blocked by the S9 measurement (F107) [tier 1]
+Status: `done` at 0.39.1.0 [tier 1]
 
 Ten minutes without a change of alert state produces `feed=degraded` while the
 collector polls successfully every 33 seconds. A measured quiet is rendered as
@@ -1845,6 +1895,17 @@ is an anecdote and is labelled as one in F107.
 
 **Acceptance:** a decision entry naming the chosen option, the measured duty
 cycle it was chosen against, and a reopen condition. F107 closes with it.
+
+**Closed at 0.39.1.0 by D-034**, on 19,761 `publish.cycle` records:
+**20.5% `degraded`**, daily range 13.2 to 32.8 over six full days
+`[measured]`. Option 2 chosen and narrowed to one contract field, the age of
+the last successful poll, with T71 named as its prerequisite because
+`mavo collect` has no sink to read that age from.
+
+Option 3 was refused for a reason the entry could not have known: it is already
+implemented, by the consumer, as a heuristic on its own render age, and that
+heuristic failed silently for a fortnight under F116. **F107 closes with this.**
+
 
 ## T66. Attempt completeness, as its own instrument
 Status: `ready` [tier 1], **S9**
@@ -2054,7 +2115,7 @@ sink's own totals over the same window.
 
 
 ## T72. Warnings are not errors in the suite, and the suite leaks handles
-Status: `debt` [tier 3]
+Status: `done` at 0.39.1.0 [tier 3]
 
 `filterwarnings = error` is absent from `pyproject.toml`. Adding it today
 fails the suite on unclosed file handles in `tests/test_obs.py` and
@@ -2064,3 +2125,91 @@ suite currently carries rather than a switch to flip. Deferred knowingly at
 work, the flag is the receipt.
 
 **Acceptance:** `filterwarnings = ["error"]` in `pyproject.toml`, gate green.
+
+**Closed at 0.39.1.0.** `filterwarnings = ["error"]` is in `pyproject.toml` and
+the gate is green. The work was four sites writing `with sqlite3.connect(...)`,
+which commits and does not close: `tests/test_rso.py`, `tests/test_latency.py`,
+`tests/test_sprint8.py` and `tools/latency.py`. **Neither file this entry named
+was among them**, and the fourth is not a test, so the entry's own title was
+narrower than its subject. Logged as **F119**, with the stale file list as the
+second instance of **F118**.
+
+## T73. The delivery cadence has no record in this project's own sink
+Status: `ready` [tier 1], follows F116
+
+`run.jsonl` carries three event kinds and none of them names a delivery
+`[measured, 39,524 lines: `publish.interval`, `publish.cycle`, `sink.opened`].
+Every figure F116 rests on came from `sshd` in journald on the *consumer's*
+host, which records the channel by accident and under a retention nobody has
+measured on either machine.
+
+**Tier 1 because it is the last stage before a reader and the only one with no
+instrument.** T71 is the same shape at the collect stage, where the cost is
+diagnostic; here the cost is that a four-fold cadence error ran for weeks and
+was found by reading somebody else's log.
+
+**Acceptance:** one delivery on the host produces one record in `run.jsonl` with
+its outcome and the target, and the gap distribution F116 leaves outstanding is
+computed from that record rather than from `sshd`.
+
+## T74. The delivery timer describes a cadence it stopped running
+Status: `ready` [tier 3], follows F116
+
+`mavo-push.timer` still carries `Description=push state.json every two minutes`
+while `OnUnitActiveSec` is 30 `[measured, systemctl cat, 2026-08-24]`.
+`mavo-collect.timer` carries a `description.conf` drop-in for exactly this and
+the delivery timer never got one - including from the release that changed its
+cadence, which is F116's own mechanism reappearing inside F116's repair.
+
+**Acceptance:** the description matches the effective interval, read back with
+`systemctl cat` rather than asserted, and `docs/DEPLOYMENT.md` quotes the
+reading.
+
+## T75. A drop-in that has been dead since it was written
+Status: `ready` [tier 3]
+
+`mavo-report.service` carries two drop-ins and both reset `ExecStart=`.
+Drop-ins apply in lexical order, so `interval.conf` overrides `feed.conf`
+entirely and `feed.conf` contributes nothing `[measured, systemctl cat,
+2026-08-24]`. The effective command is the one in `interval.conf`, which happens
+to carry `--feed` as well, so **nothing is broken and the file is a decoy**: a
+reader looking for where `--feed` comes from finds it in a file that does not
+supply it.
+
+**Acceptance:** one drop-in, or two that do not both reset the same directive,
+and either way the reading pasted into `docs/DEPLOYMENT.md`.
+
+## T76. A tag push re-runs the same bytes through CI
+Status: `ready` [tier 3]
+
+`.github/workflows/ci.yml` triggers on `[push, pull_request]` with no branch
+filter, so pushing a tag seconds after the commit went green runs the whole
+matrix again over an identical tree. Measured on `v0.39.0.0`: two runs, 38 s and
+40 s, same commit `[measured, from the run list]`. The consumer refuses this
+deliberately under D-S57 and this repository does not, which makes the
+difference an accident rather than a position.
+
+**This repository is public, so the minutes are free**, and that is the reason
+it survived rather than a reason it is right: a second reading of the same bytes
+tells a reader nothing and appears in the history as if it did.
+
+**Acceptance:** either the trigger names branches, or a decision records why a
+tag run is worth taking here and not next door.
+
+## T77. The false-precision counter counts version numbers
+Status: `ready` [tier 3]
+
+`FIGURE` in `tools/precision_lint.py` excludes version strings, and the
+exclusion is `(?!\.\d)`, which only reaches the four-segment form this
+repository uses for itself. Two ceilings were raised at 0.39.1.0 for figures
+that are not measurements: `0.37.x` and `0.38.x` in prose, and `3.12` and
+`3.14` naming the interpreters a defect appeared and disappeared on.
+
+**A ceiling that rises for reasons the module is not about stops measuring the
+thing it was built for.** Each raise carries a written reason, so the record is
+honest and the trend is still upward for the wrong cause.
+
+**Acceptance:** either the pattern excludes an interpreter or truncated version
+by shape, verified red against `3.14` and green against a genuine `7.84`, or a
+decision records that version-shaped tokens are counted deliberately and the
+ceilings are read with that in mind. What does not close it is another raise.

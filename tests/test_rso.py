@@ -9,6 +9,7 @@ elements would edit the thing under test.
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -370,7 +371,7 @@ def test_a_store_predating_these_tables_is_refused_rather_than_migrated(
     silent about.
     """
     path = tmp_path / "old.sqlite3"
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn, conn:
         conn.execute("CREATE TABLE communiques (digest TEXT PRIMARY KEY, feed TEXT)")
     with pytest.raises(SchemaMismatch) as refusal:
         EventStore(path)

@@ -10,6 +10,7 @@ lag as the channel's own when a third of it may be our own poll interval.
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -30,7 +31,7 @@ BASE = datetime(2026, 8, 1, 12, 0, tzinfo=UTC)
 def _store(tmp_path: Path, lags_s: list[float], *, span_days: float = 8.0,
            table: str = "events", naive: bool = False) -> Path:
     path = tmp_path / "store.sqlite3"
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn, conn:
         conn.executescript(SCHEMA)
         step = timedelta(days=span_days / max(1, len(lags_s) - 1)) \
             if len(lags_s) > 1 else timedelta(0)

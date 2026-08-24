@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.34
+Document:  docs/METHODOLOGY.md, version 2.35
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -3720,3 +3720,105 @@ this paragraph is a preference wearing a decision's clothes.
 **Reopen condition:** the next time this section's date moves and a row under
 it does not; or the first release in which the `main` row and `STATUS.json`
 disagree.
+### F118, 0.39.1.0. Two backlog entries outlived the facts they asserted, and the index that cannot drift could not see it
+
+**T62 was closed by the tree and stayed open in the backlog.** Its acceptance
+was that both identifier parsers admit a letter suffix and the counts are
+re-derived. `ENTRY` in `tools/todo_index.py` is `^## (T\d+[a-z]?)\.`,
+`decision_entries` is `^## (D-\d+[a-z]?)` and `cited_decisions` is
+`\bD-\d{3}[a-z]?\b` `[measured, from the tree]`. `T8a` and `T8b` appear in the
+generated index and `D-012a` counts separately in a pin of 32. Every clause of
+the acceptance held, and the entry sat `ready` through six releases.
+
+**T72 asserted the wrong files.** It named `tests/test_obs.py` and
+`tests/test_store.py`, "about fifteen sites". The run that closed it found four
+sites and neither file was among them: `tests/test_rso.py`,
+`tests/test_latency.py`, `tests/test_sprint8.py` and `tools/latency.py`
+`[measured]`. The last is not a test at all, so the entry's own title -
+"the suite leaks handles" - was narrower than the defect.
+
+**Why the index could not catch either.** `tools/todo_index.py` reads the state
+each entry *declares* and says so in its own docstring: an entry that lies about
+itself is counted as it declares. That is a correct design and it bounds what
+the instrument is for. The consequence, which was not written down, is that the
+one thing the backlog is not gated against is **its own factual content**, and
+both halves of this defect are that: a completed task declaring itself open,
+and an open task describing a tree that had moved.
+
+**The generated block is not implicated and neither is the checker.** Both did
+exactly what they promise. This is the shape the consumer's `TODO.md` header
+anticipated in prose when it made provenance labels mandatory on load-bearing
+figures inside entries, and it is the same asymmetry as F115: the number is
+gated and the sentence beside it is not.
+
+**Remediation.** Both entries closed with the reading that closed them named.
+**No check is added**, and the reason is not cost: a checker that could verify
+an entry's factual claims would have to re-run the acceptance test of every
+open task on every build, which is the build. What is available instead is the
+discipline the closing of these two suggests - an entry's claims are re-read
+when the entry is next touched - and a discipline is not a gate, so this
+paragraph is a preference and is labelled one.
+
+**Reopen condition:** the next backlog entry found to be closable on evidence
+already in the tree, which would make three instances and an argument for
+sampling open entries against the tree on some cadence rather than none.
+
+### F119, 0.39.1.0. A context manager that commits and does not close, read as if it closed
+
+`with sqlite3.connect(path) as conn:` commits or rolls back the transaction on
+exit. **It does not close the connection.** Four sites in this tree used it as
+though it did: `tests/test_rso.py`, `tests/test_latency.py`,
+`tests/test_sprint8.py` and `tools/latency.py` `[measured, grep]`.
+
+**The correct pattern was already in the tree, seven times.** `mavo/store.py`
+wraps every connection in `contextlib.closing`, and `tests/test_store.py` even
+names that pattern in a docstring. So this was not a thing nobody knew; it was a
+thing that looked done at four call sites, in the shape of the guard rather
+than the guarantee.
+
+**How it surfaced, which is the part worth keeping.** It did not surface from
+reading. It surfaced because a release ran the suite on CPython 3.14, where the
+unclosed connections were reported as sixteen `ResourceWarning`s, against a
+build container on 3.12 where the same suite printed none `[measured, both
+runs, 2026-08-24]`. **The defect was interpreter-visible and environment-hidden,
+and the matrix is the only reason it was seen at all**, which is the argument
+for a version matrix stated as evidence rather than as policy.
+
+**Why it survived.** `filterwarnings` was absent from `pyproject.toml`, so
+warnings printed into a summary block below a green result. A warning nobody
+reads is a finding the suite discarded, and the suite discarded this one on
+every run for as long as the sites existed.
+
+**Remediation.** The four sites use `closing()`. `filterwarnings = ["error"]`
+is in `pyproject.toml`, which closes T72 and makes the next such warning a
+failure rather than a paragraph. The flag is the receipt; the handles were the
+work, which is what that entry said.
+
+**Two things the closing run taught that the finding did not.**
+
+**The failure names a file with no database in it.** With the flag on, 3.14
+fails `tests/test_obs.py::test_enabling_bodies_leaves_a_mark_in_the_record_it_weakened`
+with seven unraisable warnings. That module contains no `sqlite3` at all
+`[measured, grep]`. `pytest` attributes an unraisable to whichever test was
+running when the collector fired, not to the one that leaked, and the seven
+belong to `tools/latency.py` reached through `tests/test_latency.py`, which
+sorts immediately before `test_obs`. **A report that names a file is not a
+measurement of where the fault is**, and reading it as one would have sent the
+repair into the wrong module. Recorded because T72's own entry had already
+guessed at file names once and been wrong, and this is the mechanism that makes
+that guess easy to keep making.
+
+**Three of the four sites were repaired and the fourth was asserted to be.** The
+edit that fixed them ran as one script, the script raised on an unrelated
+assertion partway down, and `tools/latency.py` sat below the raise. On the
+build container - CPython 3.12 - the whole gate then ran green over an
+unrepaired site, and the drafts of this entry, of T72's closure and of the
+changelog all said four. **This is the release's own class committed inside the
+release that logs it**: a claim written from an intention rather than from a
+reading. It was caught by the 3.14 job, which is the second time in one release
+that the matrix rather than the author found the thing.
+
+**Reopen condition:** the next warning class the suite is found to be printing
+and passing over, or a `filterwarnings` entry added to silence one rather than
+to fix it; or the next edit script whose partial completion is reported as
+completion.

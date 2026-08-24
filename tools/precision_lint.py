@@ -94,7 +94,27 @@ FIGURE_PL = re.compile(r"(?<![\d,.])\d+,\d{2}(?!\d)")
 CEILINGS: dict[str, int] = {
     "ENGINEERING.md": 3,
     "README.md": 23,
-    "TODO.md": 28,
+    # Raised at 0.39.1.0, 28 to 35, and the shape of the raise is the argument
+    # for T77. **One of the seven is a measurement:** T9's closure quotes ``96.43``,
+    # which is
+    # `coverage_percent`: produced by pytest-cov, pinned in ``STATUS.json``,
+    # compared against ``.gate/coverage.json`` and against a badge. Rounding it
+    # here would create a fourth number rather than remove a third, which is the
+    # exemption this module's own docstring states for machine-generated pins.
+    # The two daily shares in the same entry were rounded to one decimal
+    # instead: a tenth of a point on a day's duty cycle changes nothing anybody
+    # does, which is the rule rather than the exemption.
+    #
+    # The other six are not measurements at all. **T77's own entry names the
+    # tokens it exists to be about** - two truncated release numbers, two
+    # interpreter versions quoted twice between the entry and its acceptance,
+    # and ``7.84``, this module's own docstring example of the thing it does
+    # want to catch - and an entry about tokens that cannot name them is not an
+    # entry. So this counter's ceiling rose by four
+    # to hold a task written because the counter counts the wrong things, which
+    # is the clearest statement of the problem available and is left standing
+    # here rather than tidied away.
+    "TODO.md": 35,
     "docs/BRIEF-PL.md": 6,
     "docs/BRIEF.md": 6,
     "docs/CHANNEL.md": 19,
@@ -106,7 +126,18 @@ CEILINGS: dict[str, int] = {
     "docs/FOUNDATIONS.md": 7,
     "docs/MANUAL.md": 19,
     "docs/MECHANISMS.md": 16,
-    "docs/METHODOLOGY.md": 82,
+    # Raised at 0.39.1.0, 82 to 87. F119's entry names the two interpreter
+    # versions the defect appeared and disappeared on, ``3.14`` and ``3.12``,
+    # five times between them, because the entry grew two paragraphs about
+    # which interpreter saw what and neither can be written without naming
+    # both.
+    # and the whole finding is that one of them saw it and the other did not.
+    # `FIGURE` excludes version strings only in the four-segment form this
+    # repository uses for itself, so a two-segment interpreter version reads as
+    # a figure with two decimals. **This is the second ceiling this release
+    # raised for a reason unrelated to precision** and the class is logged as
+    # T77 rather than absorbed here.
+    "docs/METHODOLOGY.md": 87,
     "docs/MVP.md": 2,
     "docs/OBSERVABILITY.md": 1,
 }

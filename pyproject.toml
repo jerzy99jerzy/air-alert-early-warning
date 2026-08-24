@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "air-alert-early-warning"
-version = "0.39.0.1"
+version = "0.39.1.0"
 description = "Cross-border early warning from Ukrainian air-alert feeds, with an explicit base-rate gate"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -29,6 +29,13 @@ mavo = ["../data/reference/*.csv"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--strict-markers"
+# T72, closed at 0.39.1.0. A warning the suite prints and nobody reads is a
+# finding the suite discarded. The debt this flag documented was four sites
+# writing `with sqlite3.connect(...)`, which commits the transaction and does
+# not close the connection: the shape of a guard without the guarantee (F119).
+# `mavo/store.py` had used `contextlib.closing` correctly throughout since it
+# was written, so the correct pattern was in the tree the whole time.
+filterwarnings = ["error"]
 
 [tool.coverage.run]
 source = ["mavo"]

@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.12
+Document:  docs/DECISIONS.md, version 2.13
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1241,3 +1241,85 @@ journald retention on either host turns out shorter than the window a
 post-mortem needs; or the report loop's cadence moves, in which case this timer
 moves with it rather than staying at 30 and re-earning the ratio this decision
 refuses.
+## D-034. The producer publishes whether it polled, instead of leaving the consumer to infer it
+
+**The measurement this was waiting for.** `feed_state` is computed from the age
+of the newest *event*, not of the newest successful poll, so a channel that is
+quiet ages into `degraded` while every component is healthy. T65 blocked on the
+duty cycle. It is **20.5% of cycles**: 4,051 `degraded` against 15,710 `ok`
+over 19,761 `publish.cycle` records, 2026-08-17 to 2026-08-24 `[measured]`. The
+daily spread is 13.2% to 32.8% over six full days, so no single figure
+describes it and any sentence quoting one is quoting a mean over a range that
+doubles.
+
+**Decision: option 2, narrowed to one field.** The contract gains the age of
+the last successful poll. Not a fourth feed state (option 1) and not poll
+outcomes as rows in the store (option 2 as originally posed, which grows the
+store by 2,861 rows a day and changes what the store is for).
+
+**Why not option 3, which is cheapest and which this project would normally
+take.** Option 3 was to leave the behaviour and change the sentence. It is
+already implemented, by the wrong party: the consumer's `headline()` splits
+`degraded` into "the source is quiet and our reading is fresh" and "something
+on our side is not working", and it decides which by measuring **its own render
+age** against a threshold. That is a heuristic reconstructing a fact the
+producer holds and does not publish. It also failed for a fortnight without
+anybody noticing, because the delivery cadence pushed the render age past the
+threshold on a healthy pipeline (F116), and the consumer logged its half as
+F-S45. **A downstream heuristic standing in for an upstream fact is the thing
+to remove, not the thing to bless**, and blessing it in a decision entry would
+make the accident permanent.
+
+**What it costs and what it blocks on.** The field is cheap; the value behind
+it is not, because `mavo collect` writes to `print` and has no sink, so nothing
+in this repository currently knows when the last successful poll was without
+grepping a journal (T71). **T71 is therefore a prerequisite and this decision
+schedules it rather than assuming it**, which is the sequencing D-032 used for
+the same shape. Adding an optional field to schema 3 does not break a consumer
+that ignores it, so the contract version does not move under D-020.
+
+**Reopen if:** the duty cycle falls below about 5%, which would make the whole
+question small enough that option 3's concession is honest; or T71 turns out to
+cost more than a fourth feed state would, in which case the two options are
+re-compared on measured effort rather than on the shape of the claim.
+
+**F107 closes with this**, having been the anecdote that opened it: eight
+minutes on 2026-08-17 gave 13 against 5, which is 27.8% and sits inside the
+measured daily range rather than outside it. The anecdote was directionally
+right and was labelled as an anecdote, which is the only reason it survives
+being quoted here.
+
+## D-035. Tags stay unsigned, and the record says so rather than the reader guessing
+
+**Decision.** Tag signing is out of scope. Every tag this repository has is
+annotated and unsigned, and every tag it makes next will be, until something in
+the reopen condition below changes.
+
+**The state, measured 2026-08-17** across `v0.3.2.0`, `v0.20.0.0`, `v0.30.0.0`,
+`v0.32.0.0` and `v0.32.4.0`: all annotated, none signed, no secret key on the
+operator's machine, `user.signingkey` unset. `v0.39.0.1` was cut on 2026-08-24
+under the same conditions.
+
+**Why not start now.** A signed tag in the middle of an unsigned series is a
+question a reader has to research rather than an assurance they can act on:
+they must establish whether the earlier tags are unsigned because the practice
+began later or because something failed. Starting badly is worse than not
+starting, and this is a single-maintainer repository where a signature attests
+to a key nobody has published or cross-signed.
+
+**One claim from T65's entry is not repeated here, deliberately.** That entry
+argued signing was unnecessary because "the authorship record this project
+already has, Software Heritage and OpenTimestamps", is independent of it.
+**Nothing in this tree establishes that either exists** - no archival
+identifier, no timestamp receipt, no check. It may well be true and it is not
+evidence, and a decision resting on it would be the shape of F100 again:
+believing a claim about this repository because a document about this
+repository made it. This decision therefore rests only on the measured state of
+the tags.
+
+**Reopen if:** a second maintainer can cut a release, which turns a signature
+from self-attestation into a distinction; or this project accepts recipients
+under T6 and T11, which changes what a reader is entitled to verify; or the
+Software Heritage and OpenTimestamps claim is checked and turns out to be
+false, which would leave the authorship record resting on nothing and make the
+cheap half worth taking.

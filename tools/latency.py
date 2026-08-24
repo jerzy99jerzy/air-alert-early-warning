@@ -53,6 +53,7 @@ import argparse
 import json
 import sqlite3
 import sys
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 
@@ -91,7 +92,7 @@ def _read_lags(store: Path) -> tuple[list[float], list[float], datetime, datetim
     negative: list[float] = []
     first: datetime | None = None
     last: datetime | None = None
-    with sqlite3.connect(f"file:{store}?mode=ro", uri=True) as conn:
+    with closing(sqlite3.connect(f"file:{store}?mode=ro", uri=True)) as conn:
         for table in ("events", "kinds"):
             try:
                 rows = conn.execute(

@@ -16,6 +16,71 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.39.1.0 - 2026-08-24
+
+**Seven backlog entries closed, two of them by reading rather than by working,
+and the gate grew four checks that each found something on their first run.**
+
+- **T65, tier 1, closed by D-034 on 19,761 cycles.** The duty cycle it waited
+  for is 20.5% `degraded`, daily range 13.2 to 32.8 over six full days. The
+  contract gains the age of the last successful poll rather than a fourth feed
+  state. Option 3, the cheap one, was refused because it is **already
+  implemented by the consumer as a heuristic on its own render age**, and that
+  heuristic failed silently for a fortnight under F116. A downstream guess
+  standing in for an upstream fact is the thing to remove. **F107 closes with
+  it**; T71 is named as the prerequisite.
+- **T64 closed, and its check found its own class on the first run.** A
+  sentence asserting a unit's contents must sit beside `systemctl cat` or
+  `systemctl show`. It fired on the cadence section, whose claim was **true**
+  and unsourced - which is what the check is for. Repaired by quoting both
+  timers and their drop-ins, so four files deciding how often the instrument
+  runs now exist somewhere other than the host.
+- **T62 closed on evidence.** Every clause of its acceptance already held. The
+  entry sat `ready` through six releases over finished work. **F118**, with
+  T72's wrong file list as the second instance: the backlog is gated on the
+  state each entry declares and on nothing it asserts.
+- **T72 closed, and the defect was not where the entry said.** Four sites wrote
+  `with sqlite3.connect(...)`, which commits and does not close; neither named
+  file was among them and one site is a tool, not a test. **F119.** It surfaced
+  only because CI runs 3.14, where the warnings appear that 3.12 prints none
+  of - the matrix as evidence rather than as policy.
+- **The first draft of that repair fixed three of the four and said four.** The
+  edit script raised partway down and `tools/latency.py` sat below the raise;
+  3.12 could not tell, and the gate ran green over it. The 3.14 job caught it,
+  and so did the fact that the failure it printed named a module containing no
+  database - `pytest` attributes an unraisable to whichever test triggers the
+  collector, not to the one that leaked. Both are recorded in F119 rather than
+  quietly corrected.
+- **T9 closed by enforcement rather than by restatement.** Its acceptance was a
+  rule, and a rule nobody can fail is a preference. The floor now fails the
+  gate when it drifts more than five points below the measurement, in that
+  direction only, so a ratchet cannot become a target.
+- **T4 closed.** `tools/adapter_lint.py` is a gate step, keyed on parsing
+  external bytes rather than on `ThreatSource` - which matters, because
+  `rso.py` implements no protocol and parses somebody else's JSON.
+- **T63 closed by D-035.** Tags stay unsigned, with reopen conditions. One
+  claim from the entry did not carry into the decision: nothing in this tree
+  establishes that the Software Heritage and OpenTimestamps record exists, so
+  resting on it would be F100 inward again.
+- **F117's deferred check came due and was paid.** That entry gave itself a
+  due date of the next release touching `tools/docs_audit.py`. The `main` row
+  of the host table is now compared against `STATUS.json`.
+- **And the row beside the one it enforced went stale on the next release.**
+  `Behind by` said one release while the host sat two behind, inside the release
+  that logged F117 for a freshness gate reading a date and not the rows under
+  it. The check now **counts** the distance from `CHANGELOG.md` instead of
+  reading a sentence, which is the difference between the repair and the class.
+- **Four entries added from this session's readings**: the delivery stage has
+  no record in our own sink (T73, tier 1), the delivery timer describes a
+  cadence it stopped running (T74), a drop-in dead since it was written (T75),
+  and a tag push re-running the same bytes through CI (T76).
+
+**Not a major release, and the version says so.** A review is one reading of a
+tree by somebody who does not know what they will find; `docs/reviews/README.md`
+defines a major release as a change to the second component precisely so that a
+release like this cannot buy itself a review document written from its own
+changelog.
+
 ## 0.39.0.1 - 2026-08-24
 
 **Four of every five composed pictures never reached a reader, and neither end
