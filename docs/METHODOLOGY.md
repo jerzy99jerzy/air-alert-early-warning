@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.33
+Document:  docs/METHODOLOGY.md, version 2.34
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -3621,3 +3621,102 @@ are corrected as F-S41 in its own log.
 **Reopen condition:** the next docstring that argues for a rule's direction
 without a test asserting that direction, or the next consumer string that
 paraphrases a producer contract row with no check joining them.
+### F116, 0.39.0.1. Delivery ran four times slower than composition, and neither end recorded it
+
+Three components pace this system. `mavo-collect.timer` and
+`mavo-report.service` both carry drop-ins taking them from the base 120 s to
+30 s. `mavo-push.timer` carried the base `OnUnitActiveSec=120` and no drop-in
+[measured on the host, 2026-08-24]. **Two thirds of the pipeline was tightened
+and the third was not, and the third is the only one a reader depends on.**
+
+**What it cost, from the two ends independently.** The report loop composed
+2,861 pictures a day: 19,760 `publish.cycle` records over 2026-08-17 to
+2026-08-24, median interval 30.2 s, p95 34.3 s, maximum 34.8 s, zero intervals
+above 120 s [measured, `/var/lib/mavo/run.jsonl`]. The site accepted 1,290
+`mavo-push` connections in 24 hours, and one delivery is two connections
+because `accept-state` takes one target per invocation, so **645 rounds against
+2,861 compositions** [measured, `sshd` in journald on `vm-site`, 2026-08-23
+09:01 to 2026-08-24 08:59]. Four of every five composed pictures never reached
+a reader. Zero failed pushes: the channel was reliable and rare, which is why
+nothing ever complained.
+
+**The gaps were wider than the nominal.** Median 139 s, p95 139 s, maximum
+162 s against `OnUnitActiveSec=120` [measured, 1,289 gaps]. This timer sets no
+`AccuracySec`, so systemd's default one-minute slack applies: the same
+mechanism D-027 named for `mavo-collect.timer` and repaired there and only
+there.
+
+**What it did downstream.** The consumer treats its own reading as current when
+the payload is under 120 s old. Payload age at render is report age at push
+plus time since the last delivery, so it reached roughly 190 s, and the page
+told a reader that something on our side was not working while every component
+was healthy. Logged there as F-S45; the cause is here.
+
+**Why it survived.** `run.jsonl` carries three event kinds and nothing else:
+`publish.interval`, `publish.cycle`, `sink.opened` [measured, 39,524 lines].
+**None of them names a delivery.** This repository instruments the work and not
+its effect, so the last stage before a reader is the one stage with no record,
+and a cadence nobody writes down is a cadence nobody can find wrong. T71 is
+this shape one stage earlier, where the cost is only diagnostic.
+
+`docs/DEPLOYMENT.md` stated the 120 s cadence accurately for every release
+since it was written. The document was not wrong; nothing compared it to the
+cadence of the loop it feeds. That is T64's shape: a claim about a unit,
+correct in isolation, load-bearing only in a comparison nobody makes.
+
+**Remediation.** A drop-in on the host takes `mavo-push.timer` to
+`OnUnitActiveSec=30` with `AccuracySec=1s`, confirmed through `systemctl show`
+as `OnUnitActiveUSec=30s` and `AccuracyUSec=1s`, with three service completions
+observed inside 80 s [measured, 2026-08-24]. **The resulting 24-hour
+distribution is not measured and is carried as outstanding** in
+`docs/DEPLOYMENT.md` rather than predicted here, the way D-027's own drop-in
+was carried until its evidence arrived. The instrumentation gap is not closed
+by this release and is not closed by the drop-in either.
+
+**Reopen condition:** the next timer whose interval is set without comparing it
+to the cadence of the stage it feeds; or any delivery cadence that changes
+again with no record of a delivery in `run.jsonl`.
+
+### F117, 0.39.0.1. A freshness gate on a date, over rows that nothing checks
+
+`docs/DEPLOYMENT.md` opens its host section with `Host state measured:` and a
+date, and `tools/docs_audit.py` fails the gate when that date falls more than
+fourteen days behind the release being cut. The check passed on 0.38.0.0 and on
+0.39.0.0.
+
+**Four rows under it were false.** `Installed` read 0.36.0.1 against a measured
+0.39.0.0; `Installed at` read 2026-08-21 08:52:36 against a measured 2026-08-23
+13:40:15; `main` read 0.37.0.0 against 0.39.0.0; `Behind by` read one release
+against zero [measured on the host, 2026-08-24, by importing the installed
+package through its own interpreter and reading the `.dist-info` mtime].
+
+**A deploy happened and was never recorded.** The history table below the
+first one ends at 0.36.0.1 marked `current`, and 0.39.0.0 went onto the host
+two days later. **Seven releases sit in that gap** [measured, from the
+changelog headings], and whether any of them was ever installed **cannot be
+recovered**: the filesystem keeps only the current install and nobody wrote the
+row at the time. It is marked `[unknown]` rather than reconstructed from the
+version numbers, on the same rule that keeps `CITED_DEFECTS_WITHOUT_AN_ENTRY`
+from growing invented entries.
+
+**Why it survived.** The gate checks the date and not the rows. A date is cheap
+to bump and rows are not, so enforcing freshness selects for updating the one
+thing the check reads, and the section's preamble names exactly the divergence
+it is meant to prevent (F102) while the protection against it is a timestamp.
+This is the consumer's `producer_version_read` shape - a pin only an odd read
+can move, going stale in bursts - inside the document that exists to describe
+the host.
+
+**Remediation, and what is deliberately not done.** The rows are re-measured
+with the commands that produced them, the history table gains its row, and the
+gap is named. **The gate is not extended in this release.** A check that reads
+the host is one this gate cannot run, by construction, and the section says so.
+What *is* inside the perimeter and is not built: comparing the `main` row in
+this table against `STATUS.json`'s `version`, which is a comparison between two
+files in the tree. Deferring it is only defensible with a due date, so it has
+one: **the next release that touches `tools/docs_audit.py`.** Without that,
+this paragraph is a preference wearing a decision's clothes.
+
+**Reopen condition:** the next time this section's date moves and a row under
+it does not; or the first release in which the `main` row and `STATUS.json`
+disagree.

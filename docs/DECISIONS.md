@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.11
+Document:  docs/DECISIONS.md, version 2.12
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1200,3 +1200,44 @@ that stated rather than left for a reader to infer.
 in which case the window restarts rather than the limit rising; or any restart
 turns out not to be visible in `run.jsonl`, which would make "named pause" an
 assertion rather than a record.
+## D-033. Delivery is paced to composition, not to a fraction of it
+
+**Decision.** `mavo-push.timer` runs at `OnUnitActiveSec=30` with
+`AccuracySec=1s`, matching `mavo-collect.timer` and the report loop rather than
+sitting at a multiple of them.
+
+**The alternative was 60 s and it was not obviously worse.** Worst-case payload
+age at the consumer would have been roughly 95 s, still under the 120 s the
+consumer uses to decide whether its own reading is current, and it would have
+doubled the connection count rather than quadrupling it.
+
+**Thirty wins on the shape of the claim, not on the margin.** At 30 s the
+property is an invariant a reader can check in one sentence: *every picture the
+producer composes reaches the site.* At 60 s the property is a ratio, and a
+ratio is a claim about two numbers that must both stay put. Either cadence
+moving breaks it silently, which is exactly how F116 happened: the ratio was
+one in four and nothing watched either side of it. An invariant survives a
+change to one side by failing loudly; a ratio survives it by drifting.
+
+**The cost, named rather than absorbed.** Accepted `mavo-push` connections go
+from about 1,290 a day to about 5,760, so journald on `vm-site` grows roughly
+fourfold. **Journald retention is unmeasured on both hosts**, which means this
+decision spends a budget nobody has counted. That is accepted here as a task
+rather than as an assumption; the sibling repository carries the same gap as
+TA-09.
+
+**What does not change.** The consumer's stream keys on the content of the
+picture rather than on the file's timestamp, so delivering an identical
+document does not wake a reader's tab, and the reload cost the consumer tracks
+does not rise with this.
+
+**What this decision does not touch.** `RandomizedDelaySec` on this timer. It
+was not read in the session that made the change, so it is neither restated as
+a fact nor adjusted on the strength of a document.
+
+**Reopen if:** the 24-hour distribution after this change shows a p99 above
+45 s, which would mean something other than the interval is pacing it; or
+journald retention on either host turns out shorter than the window a
+post-mortem needs; or the report loop's cadence moves, in which case this timer
+moves with it rather than staying at 30 and re-earning the ratio this decision
+refuses.

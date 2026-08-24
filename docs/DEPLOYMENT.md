@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.6 / 2026-08-14
+Version: 1.7 / 2026-08-24
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -10,7 +10,7 @@ written after the fact rather than before, and says so.
 
 ## What is installed on the hosts, and how far behind it is
 
-Host state measured: 2026-08-21
+Host state measured: 2026-08-24
 
 **This section is the state. The rest of this document is the shape**, and the
 two diverged silently once already (F102), which is why the line above exists
@@ -28,7 +28,7 @@ installed package read through its own interpreter.
 | Unit | Type | Cadence | What it does |
 | --- | --- | --- | --- |
 | `mavo-collect.service` | `oneshot`, `User=mavo` | `mavo-collect.timer`, 30 s + 5 s jitter, `AccuracySec=1s` | one poll into `/var/lib/mavo/events` |
-| `mavo-push.service` | `oneshot` | `mavo-push.timer`, 120 s + 15 s jitter | pushes `state.json` to the site |
+| `mavo-push.service` | `oneshot` | `mavo-push.timer`, 30 s with `AccuracySec=1s` since 2026-08-24 (F116); `RandomizedDelaySec` read as 15 s on 2026-08-21 and **not re-read since** | pushes `state.json` and `feed.json` to the site |
 | `mavo-report.service` | long-running | continuous | writes the report |
 | `mavo-adsb.service` | long-running | continuous | the sampler, `mavo-adsb` repository |
 
@@ -40,10 +40,10 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.36.0.1`, `/opt/mavo/venv` |
-| Installed at | **2026-08-21 08:52:36 UTC**, the `date -u` printed in the install chain itself |
-| `main` | 0.37.0.0, the release this reading ships in |
-| Behind by | one release - this one, which changes documentation and one CI line and **no executable line**; the deploy is deliberately deferred past T69's reading, because a reinstall inside a clean measurement window buys a version string and risks the window |
+| Installed | `air-alert-early-warning 0.39.0.0`, `/opt/mavo/venv`, python3.11 |
+| Installed at | **2026-08-23 13:40:15 UTC**, the mtime of the installed `.dist-info` and of the newest module beside it, read on the host rather than taken from an install chain's own echo |
+| `main` | 0.39.0.1, the release this reading ships in |
+| Behind by | one release, this one, which changes documentation and the version constant and **no behaviour**, so the deploy is deferred and the history row below says so rather than leaving it inferred |
 
 **An earlier version of this table carried two different answers in one
 document**: 0.32.2.0 here and 0.32.7.0 in the deploy record below, both under
@@ -59,13 +59,19 @@ rows.
 | 0.32.2.0 | 2026-08-14 18:13:09 | superseded |
 | 0.32.7.0 | 2026-08-17 11:02:06 | superseded; its restart opened the S9 window |
 | 0.36.0.0 | 2026-08-20 18:19:43 | **withdrawn after 14 hours.** F110: 168 polls died with a traceback and exit `1/FAILURE`, and the refusal line stopped being written |
-| 0.36.0.1 | 2026-08-21 08:52:36 | current |
+| 0.36.0.1 | 2026-08-21 08:52:36 | superseded |
+| the seven releases in between | `[unknown]` | whether any of them was ever installed cannot be recovered: the filesystem keeps only the current install and this table was not written at the time. Named rather than reconstructed from the version numbers (F117) |
+| 0.39.0.0 | 2026-08-23 13:40:15 | current; recorded on 2026-08-24, a day after the fact, by reading the host rather than by anyone remembering |
 
-**Verified by symbol and by digest, not by version string.**
-`resolve_stream` and `RETRYABLE` import on the host, and the installed
-`mavo/transport.py` has the same sha256 as the tree under the tag. The version
+**Verified by digest, not by version string.** The installed `mavo/report.py`
+and `mavo/transport.py` hash to `b05fadfb...` and `3e25974f...`, byte-identical
+to the same files in the tree at 0.39.0.0 [measured, 2026-08-24]. The version
 string alone has reported success against a host running different code once,
 and it cost an hour.
+
+**Four rows of this table were false for two releases while the freshness line
+above it passed the gate.** That is F117, and the rows are re-measured here
+rather than nudged.
 
 ### F98 on the wire, measured before and after
 
@@ -118,6 +124,51 @@ The configuration's theoretical ceiling is 36 s. The measured maximum is
 36.06 s over 2,619 observations, so the distribution is inside what the
 configuration promises. D-027's one-hour figure (n=107) is confirmed at
 twenty-four times the scale, and the caveat attached to it is discharged.
+
+### Delivery cadence, and the measurement this section is still owed
+
+**The collector's drop-in was applied to the collector and to nothing else.**
+`mavo-push.timer` sat at the base `OnUnitActiveSec=120` with no `AccuracySec`
+until 2026-08-24, while the loop it delivers composes every 30 s. Measured
+before the change: 645 delivery rounds against 2,861 compositions in a day, and
+start-to-start gaps of median 139 s, p95 139 s, maximum 162 s against a nominal
+120 [measured, `sshd` records on `vm-site`, 1,289 gaps, 2026-08-23 to
+2026-08-24]. That is **F116**, and its cost fell on the consumer rather than
+here.
+
+Applied 2026-08-24, `/etc/systemd/system/mavo-push.timer.d/interval.conf`:
+
+```
+[Timer]
+OnUnitActiveSec=
+OnUnitActiveSec=30
+AccuracySec=1s
+```
+
+Confirmed through `systemctl show mavo-push.timer` as `OnUnitActiveUSec=30s`
+and `AccuracyUSec=1s`, with three completions of `mavo-push.service` observed
+inside 80 s [measured, 2026-08-24].
+
+**Two figures this section does not have and will not invent.** The 24-hour gap
+distribution after the change, which is the only thing showing the ceiling
+actually fell; and `RandomizedDelaySec` on this timer, carried above from the
+2026-08-21 reading and not re-read, so the theoretical ceiling cannot be stated
+the way the collector's can. Both are outstanding in the sense D-027's
+`AccuracySec` was outstanding for a release: named with the command that closes
+them rather than estimated.
+
+```
+sudo journalctl -u ssh -u sshd --since "-24 hours" -o short-iso --no-pager
+```
+
+Count `Accepted publickey for mavo-push` and halve it, because one delivery is
+two connections: `accept-state` takes one target per invocation and the unit
+sends `state` and `feed`.
+
+**No delivery appears in `run.jsonl`.** This repository records that it composed
+a report and records nothing about handing one over, so every figure above came
+from `sshd` by accident rather than from this project by design. That is the
+open half of F116 and the drop-in does not touch it.
 
 ### The run log, and the claim about it that was wrong
 

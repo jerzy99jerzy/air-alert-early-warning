@@ -16,6 +16,46 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.39.0.1 - 2026-08-24
+
+**Four of every five composed pictures never reached a reader, and neither end
+of the channel recorded it.**
+
+- **F116. The delivery timer kept the base cadence while everything feeding it
+  was tightened.** `mavo-collect.timer` and `mavo-report.service` both carry
+  drop-ins taking them to 30 s; `mavo-push.timer` carried `OnUnitActiveSec=120`
+  and no `AccuracySec`. Measured: 645 delivery rounds against 2,861
+  compositions in a day, gaps of median 139 s and maximum 162 s against a
+  nominal 120. Zero failed pushes throughout, which is why nothing complained:
+  the channel was reliable and rare.
+- **The cost landed in the other repository.** Payload age at the consumer
+  reached roughly 190 s against a 120 s threshold, so a healthy pipeline
+  rendered the sentence saying something on our side is not working. Logged
+  there as F-S45; the cause is here.
+- **D-033. Delivery is paced to composition rather than to a fraction of it.**
+  Sixty seconds would also have cleared the consumer's threshold at half the
+  connection cost. Thirty is chosen because it makes the property an invariant
+  a reader can check in one sentence rather than a ratio between two numbers
+  that must both stay put, and F116 is what a ratio does when one of them
+  moves.
+- **F117. The host-state section's freshness gate reads its date, not its
+  rows.** Four of them were false across two releases while the gate passed:
+  the installed version, the install time, the `main` row and the release
+  distance. Re-measured here by importing the installed package through its own
+  interpreter. One deploy went unrecorded and is now unrecoverable, so it is
+  marked `[unknown]` rather than reconstructed.
+- **The instrumentation gap is named and not closed.** `run.jsonl` carries
+  `publish.interval`, `publish.cycle` and `sink.opened` and nothing naming a
+  delivery. Every delivery figure above came from `sshd` in journald, which
+  records the channel by accident. A delivery record belongs in this project's
+  own sink and is not in this release.
+- **No deploy.** Nothing changes but documentation and the version constant in
+  three files, so the host stays at 0.39.0.0 and the deploy history says so
+  rather than leaving it inferred. The version lives in `pyproject.toml`,
+  `STATUS.json` and `mavo/__init__.py`, and this release's first draft bumped
+  two of the three: `docs-audit` and `lint-hygiene` both caught it, which is
+  what having the same fact in three gated places is for.
+
 ## 0.39.0.0 - 2026-08-23
 
 **Kharkiv showed one alert for a week in which it was under alert almost
