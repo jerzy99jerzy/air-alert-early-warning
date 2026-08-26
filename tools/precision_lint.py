@@ -87,6 +87,14 @@ FIGURE_PL = re.compile(r"(?<![\d,.])\d+,\d{2}(?!\d)")
 #: * ``TODO.md`` 27 to 28. "Where the project is" quotes ``0.076``, the
 #:   withdrawn pin, beside the measured rate - the third site of the same
 #:   exception, and the same reason each time: the contrast is the record.
+#: * ``docs/DEPLOYMENT.md`` 13 to 14 at 0.40.0.0. The new figure is the
+#:   document's own version marker, ``1.10``, and the error message's first
+#:   option does not exist for it: an identifier cannot be rounded. The
+#:   pattern cannot tell a measurement from a version, and this is the
+#:   first marker in the tree to reach two digits after the dot. The
+#:   durable repair is to skip the marker line rather than to buy a slot,
+#:   which lowers counts across many documents and therefore owes a pass
+#:   tightening every ceiling to its new count - not a release-night edit.
 #: * ``docs/DEPLOYMENT.md`` 12 to 13. The S9 outcome paragraph quotes
 #:   ``0.076``, the withdrawn pin, beside the measured 9.9% - the contrast is
 #:   the finding and rounding the quote would soften the record, same
@@ -121,7 +129,7 @@ CEILINGS: dict[str, int] = {
     "docs/COMPUTATION.md": 20,
     "docs/DATA-FLOW.md": 6,
     "docs/DECISIONS.md": 32,
-    "docs/DEPLOYMENT.md": 13,
+    "docs/DEPLOYMENT.md": 14,
     "docs/FEED-SPEC.md": 6,
     "docs/FOUNDATIONS.md": 7,
     "docs/MANUAL.md": 19,

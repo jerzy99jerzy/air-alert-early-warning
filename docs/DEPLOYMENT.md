@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.9 / 2026-08-26
+Version: 1.10 / 2026-08-26
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -10,7 +10,7 @@ written after the fact rather than before, and says so.
 
 ## What is installed on the hosts, and how far behind it is
 
-Host state measured: 2026-08-24
+Host state measured: 2026-08-26
 
 **This section is the state. The rest of this document is the shape**, and the
 two diverged silently once already (F102), which is why the line above exists
@@ -40,10 +40,10 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.39.0.0`, `/opt/mavo/venv`, python3.11 |
-| Installed at | **2026-08-23 13:40:15 UTC**, the mtime of the installed `.dist-info` and of the newest module beside it, read on the host rather than taken from an install chain's own echo |
+| Installed | `air-alert-early-warning 0.40.0.0`, `/opt/mavo/venv`, python3.11 |
+| Installed at | **2026-08-26 19:39:24 UTC**, the mtime of the installed `.dist-info` and of the newest module beside it, read on the host rather than taken from an install chain's own echo |
 | `main` | 0.40.0.0, the release this reading ships in |
-| Behind by | **three releases**, 0.39.0.1, 0.39.1.0 and this one. The first two change no behavioural line in `mavo/`: between them they move documentation, the gate's own tools, the suite, and the version constant in three files. **This one changes two**, `mavo/report.py` and `mavo/backfill.py`, so the deploy stops being optional: F120 means the running host cannot report itself stale while a stamp sits ahead of its clock. The deploy is deferred and the history row below says so rather than leaving it inferred. **This row was stale when 0.39.1.0 was drafted** - it said one release, in the release that logged F117 - which is why the check below it now counts rather than reads |
+| Behind by | **no releases**. The host ran 0.39.0.0 and was three behind until this deploy: 0.39.0.1 and 0.39.1.0 changed no behavioural line in `mavo/`, and 0.40.0.0 changed two. F120 is why the deploy stopped being optional - the running host could not report itself stale while a stamp sat ahead of its clock, and a host that cannot go `degraded` is the founding defect of this project running in production |
 
 **An earlier version of this table carried two different answers in one
 document**: 0.32.2.0 here and 0.32.7.0 in the deploy record below, both under
@@ -61,13 +61,37 @@ rows.
 | 0.36.0.0 | 2026-08-20 18:19:43 | **withdrawn after 14 hours.** F110: 168 polls died with a traceback and exit `1/FAILURE`, and the refusal line stopped being written |
 | 0.36.0.1 | 2026-08-21 08:52:36 | superseded |
 | the seven releases in between | `[unknown]` | whether any of them was ever installed cannot be recovered: the filesystem keeps only the current install and this table was not written at the time. Named rather than reconstructed from the version numbers (F117) |
-| 0.39.0.0 | 2026-08-23 13:40:15 | current; recorded on 2026-08-24, a day after the fact, by reading the host rather than by anyone remembering |
+| 0.39.0.0 | 2026-08-23 13:40:15 | superseded; recorded on 2026-08-24, a day after the fact, by reading the host rather than by anyone remembering |
+| 0.40.0.0 | 2026-08-26 19:39:24 | current; recorded the same evening, from the host, during the deploy rather than after it |
 
-**Verified by digest, not by version string.** The installed `mavo/report.py`
-and `mavo/transport.py` hash to `b05fadfb...` and `3e25974f...`, byte-identical
-to the same files in the tree at 0.39.0.0 [measured, 2026-08-24]. The version
-string alone has reported success against a host running different code once,
-and it cost an hour.
+**Verified by content, not by version string** [measured, 2026-08-26]. The
+wheel was checked by `sha256sum -c` on the host before `pip` touched anything
+(`1b5b248b...`), and the *installed* source was then grepped for three strings
+the release added, with the counts fixed in advance rather than read
+afterwards: `clock_skew_s` and `SKEW_TOLERANCE_S` four times each in
+`mavo/report.py`, `_strip` five times in `mavo/backfill.py`. Identical counts
+were taken from inside the wheel before transfer, so a stale archive would have
+failed before reaching the machine. The version string alone has reported
+success against a host running different code once, and it cost an hour.
+
+**The proof that the new code is running is the contract, not the unit state**
+[measured, 2026-08-26]. `state.json` written at 19:41:03 carries
+`clock_skew_s: 0.0`, a field the previous release cannot produce, with
+`observation_age_s: 271` seconds against `source_last_message_at` at 19:36:32 - the
+subtraction agrees. 25 `publish.cycle` records were written in the eleven
+minutes after installation. The same field was read back over public HTTP from
+the site at 19:42:03, so it crossed the push path and the consumer at 4.58.0.0
+ignored it as an additive field should. `NRestarts=0`.
+
+**The report loop was restarted twice, at 19:40:09 and 19:40:37, and only one
+restart was intended.** Session 838 and session 839 each ran the same pair of
+commands, 28 seconds apart, from one invocation on the operator's side
+[measured, from `journalctl`]. Why the second session opened is
+**[nieustalone]**; the likely cause is `gcloud compute ssh --command` retrying
+a dropped tunnel and re-running the whole command, which would make **every
+step of this deploy path non-idempotent** - it cost a window here and would
+have run `pip install` twice as quietly. Recorded because D-032 counts planned
+restarts of this loop, and the count for this deploy is two.
 
 **Four rows of this table were false for two releases while the freshness line
 above it passed the gate.** That is F117, and the rows are re-measured here
