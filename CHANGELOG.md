@@ -16,6 +16,95 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.40.0.0 - 2026-08-26
+
+**Three defects fixed, one logged and deliberately left standing, and all four
+were found by running the code and comparing it against a document that
+described it.** None came from a failing test, because in each case the suite
+and the gate were green over the defect and had been for releases.
+
+- **F120, and it is the founding defect of this repository reached through a
+  clock.** `staleness_s` subtracted the newest source timestamp from `as_of`
+  and `feed_state` compared the result against `valid_for_s`; a negative age
+  passes that comparison. One event stamped in the future pinned the feed to
+  `ok`. Measured: a store dead for seven days plus one row stamped a year ahead
+  published `state: "ok"`, `observation_age_s: -31536000`, an empty `events`
+  block and `source_last_message_at` in 2027 - silence rendering as calm. The
+  realistic cause is not the channel but our own host: any backward drift of
+  the collector's clock puts every event in the future and makes `degraded`
+  unreachable. `trailing_counts` already clamped for durations, with a comment
+  recording that T40 measured the two clocks disagreeing in both directions, so
+  one module treated the skew as a hazard and the module deciding whether the
+  picture may be trusted treated it as evidence. The freshness basis is now the
+  newest stamp within `SKEW_TOLERANCE_S`, the age is floored at zero, a store
+  entirely past the tolerance is `blind` rather than fresh, and the
+  disagreement is published as `clock_skew_s` instead of being absorbed into
+  the sign of a number. The tolerance is 120 s and is **[assumption,
+  unmeasured]**; the measurement that replaces it is the negative tail of
+  `latency_s` on the host, which the store already carries and nothing has read
+  for this purpose. **T54 is still open**, and it is the instrument that would
+  have met this.
+- **F121: the corpus was read with a different text normalisation than the
+  channel.** `read_snapshot_messages` stripped tags and stopped; `_strip`, which
+  every live poll goes through, also turns `<br>` into a newline and decodes
+  entities. Measured on one message, the divergence runs both ways: the corpus
+  over-reads states, because a marker broken by `<br>` is rejoined with a
+  space, and under-reads areas, because an undecoded `&#39;` breaks the tag
+  pattern. They do not cancel. The reader was moved into the package at
+  0.31.0.0 under the argument that a copied reader is two readers that can
+  disagree, and its docstring has claimed "one reader, one answer" since: the
+  move fixed the duplication and left the divergence. **This release does not
+  correct the figures taken with the old normalisation, it invalidates them** -
+  `kind_coverage_1h`, `kind_join_coverage_1h`, the `unmapped_tags` pile, and
+  the near-miss review behind the current `KIND_MARKERS` table. T78 is the
+  re-run, with the difference recorded even when it is zero.
+- **F122: the manual's onboarding transcript came from a parser deleted
+  twenty-eight releases earlier.** Section 4.5 printed `parsed=2 unparsed=1`;
+  the tree produced `parsed=0 unparsed=3`. The fixture beside it was a page in
+  the pre-sprint-7 prose format, referenced by no test, and pointed at by the
+  manual as the offline smoke test - so the documented first run demonstrated a
+  pipeline understanding none of its input. The same section said the command
+  does not write to the store fifteen releases after `--store` shipped, and
+  four options had no row anywhere. **`manual-audit` had been a gate step for
+  nineteen releases and was green throughout**, because it audits the manual's
+  shape and not its contents. It now executes the fenced transcripts and fails
+  on an undocumented option. Execution is restricted to `mavo collect --stub`:
+  every other command reaches the network or constructs an `EventStore`, which
+  creates the directory it was pointed at, and a check with a side effect is a
+  check that changes its own answer.
+- **F123 is logged and not fixed, and the reason is sequencing.** `skipped` is
+  `unknown` on every poll the host has ever made: `_last_id` lives on a source
+  object, `_cmd_collect` builds a fresh one per invocation, and
+  `mavo-collect.service` is a `oneshot` under a timer, so no two polls have
+  ever met in one process. **T18 is recorded done on an acceptance production
+  never reaches.** F27 records that the post id is the only thing making a skip
+  observable, which is the defence against a mass alert overrunning the page
+  window - the one condition under which this project matters. The cursor has
+  to live where two invocations can both read it, which is the question D-034
+  raised for the age of the last successful poll and T66 answered the other way
+  for the same feed: `feed_attempts` holds exactly this for RSO, with a schema
+  comment calling it a debt owed to ourselves. T80 is the decision; the work is
+  one entry behind it. The acceptance test is written and held outside the
+  suite, because a permanently red gate is a gate nobody reads.
+- **A decision number was issued from memory and the miss is logged beside
+  F123.** T80's first draft cited D-035, inferred from `decisions_recorded` in
+  `STATUS.json` rather than read out of the log, which is the act D-030
+  forbids. D-035 was taken at this same release by the decision that tags stay
+  unsigned, so the citation pointed at a real entry about something else and
+  `make verify` was green over it. `docs_audit` fails on a cited `D-` number
+  with no entry and did fail the moment the citation was corrected to an
+  unissued one; it cannot fail on a number whose entry exists and is about
+  something else. **A referential check does not catch a semantic collision**,
+  and the repair is not a better check but not reserving numbers in advance.
+- **Contract**: `state.json` gains `clock_skew_s`, always present, `0.0` on a
+  healthy cycle, and `observation_age_s` can no longer be negative. Schema
+  stays at 3 under D-020: a consumer that ignores the field is unaffected.
+- **Backlog**: T78, T79, T80 and T81 opened. T81 is the asymmetry F120's
+  neighbour exposed - `mavo/kinds.py` expires an unlifted declaration with the
+  reason written out, and an alert episode has no expiry at all, so an ACTIVE
+  from 300 days ago is still published as `active`.
+- Tests 516 to 527, coverage 96.43% to 96.44%, defects logged 99 to 103.
+
 ## 0.39.1.0 - 2026-08-24
 
 **Seven backlog entries closed, two of them by reading rather than by working,

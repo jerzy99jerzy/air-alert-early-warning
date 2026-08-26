@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.8 / 2026-08-24
+Version: 1.9 / 2026-08-26
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -42,8 +42,8 @@ never a decision until D-031 wrote it down.
 | --- | --- |
 | Installed | `air-alert-early-warning 0.39.0.0`, `/opt/mavo/venv`, python3.11 |
 | Installed at | **2026-08-23 13:40:15 UTC**, the mtime of the installed `.dist-info` and of the newest module beside it, read on the host rather than taken from an install chain's own echo |
-| `main` | 0.39.1.0, the release this reading ships in |
-| Behind by | **two releases**, 0.39.0.1 and this one. Neither changes a behavioural line in `mavo/`: between them they move documentation, the gate's own tools, the suite, and the version constant in three files. The deploy is deferred and the history row below says so rather than leaving it inferred. **This row was stale when 0.39.1.0 was drafted** - it said one release, in the release that logged F117 - which is why the check below it now counts rather than reads |
+| `main` | 0.40.0.0, the release this reading ships in |
+| Behind by | **three releases**, 0.39.0.1, 0.39.1.0 and this one. The first two change no behavioural line in `mavo/`: between them they move documentation, the gate's own tools, the suite, and the version constant in three files. **This one changes two**, `mavo/report.py` and `mavo/backfill.py`, so the deploy stops being optional: F120 means the running host cannot report itself stale while a stamp sits ahead of its clock. The deploy is deferred and the history row below says so rather than leaving it inferred. **This row was stale when 0.39.1.0 was drafted** - it said one release, in the release that logged F117 - which is why the check below it now counts rather than reads |
 
 **An earlier version of this table carried two different answers in one
 document**: 0.32.2.0 here and 0.32.7.0 in the deploy record below, both under
