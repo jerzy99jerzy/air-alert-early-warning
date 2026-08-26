@@ -81,6 +81,26 @@ FEED_WINDOW_S = 86400
 #: than a daily artefact.
 STREAM_CAP = 5000
 
+#: How far ahead of our own clock a source timestamp may sit and still count as
+#: evidence that the pipeline is fresh (F120).
+#:
+#: Not a limit on what is stored, published or counted: a skewed row keeps its
+#: own timestamp everywhere else in this file. It bounds one question only -
+#: which observation the freshness of the picture may rest on - because a stamp
+#: in the future passes every `age > valid_for_s` comparison and pins the feed
+#: to `ok` while nothing arrives.
+#:
+#: Two seconds would be enough for the defect and would go blind on a healthy
+#: host; a day would tolerate the defect. 120 s is chosen between them and is
+#: **[assumption, unmeasured]**. The measurement that replaces it exists in
+#: the store already: `ThreatEvent.latency_s` is `ts_ingest - ts_source` and
+#: its *negative* tail is exactly this skew, so the number to set this to is a
+#: percentile of that tail over a week on the host. T40's instrument collects
+#: it and nothing has read it for this purpose. Until then the figure is a
+#: margin rather than a finding, and it is labelled here rather than in a
+#: document a reader of this module would not open.
+SKEW_TOLERANCE_S = 120
+
 # How long a report may be trusted after the observation it rests on. Chosen
 # rather than measured, and labelled as such: the poll interval that will
 # produce these observations is S9's work, and T39 has not yet measured the
@@ -406,6 +426,9 @@ class Report:
     """The composed picture at one moment, with its own blindness measured."""
 
     as_of: datetime
+    #: The observation the freshness of this picture rests on: the newest
+    #: source timestamp that is not further ahead of us than `SKEW_TOLERANCE_S`
+    #: (F120). None means there is no datable observation, which is `blind`.
     newest_observation: datetime | None
     valid_for_s: int
     areas: tuple[AreaPicture, ...]
@@ -427,18 +450,40 @@ class Report:
     #: keeps a twenty-minute window from being a keyhole: a quiet stream during
     #: a night the east is burning is a different fact from a quiet night.
     counts_24h: tuple[int, int] = (0, 0)
+    #: The newest source timestamp as the source wrote it, unfiltered. Separate
+    #: from `newest_observation` because the two answer different questions:
+    #: this one is "when did the source last speak", which stays reportable
+    #: even when the stamp is not usable as evidence of our own freshness.
+    #: Defaults to None so a `Report` built directly - a handful of tests and
+    #: tools predate this field - falls back to `newest_observation` rather
+    #: than losing the line.
+    newest_source_stamp: datetime | None = None
+    #: How far ahead of `as_of` the newest source timestamp sits, in seconds,
+    #: floored at zero. Published rather than absorbed: the reason the F120
+    #: behaviour was invisible for the life of the project is that nothing
+    #: recorded the disagreement between the two clocks. Zero is the ordinary
+    #: value and is written out, because an absent key and a zero read alike.
+    clock_skew_s: float = 0.0
 
     @property
     def staleness_s(self) -> float | None:
-        """Age of the newest observation, or None when there is none.
+        """Age of the newest usable observation, or None when there is none.
 
-        None means unknown and prints as "unknown". It is never zero: a store
-        with nothing in it is not a store that was updated this second, and
-        the difference is the whole product.
+        None means unknown and prints as "unknown". A store with nothing in it
+        is not a store that was updated this second, and the difference is the
+        whole product.
+
+        **Floored at zero (F120).** An observation inside the skew tolerance
+        can still sit a little ahead of our clock, and a negative age passes
+        every freshness comparison a consumer could write - including the one
+        in `feed_state` directly below. Zero here means "as fresh as this
+        pipeline can tell", and the amount by which the two clocks disagree is
+        published beside it as `clock_skew_s` rather than hidden in the sign of
+        this number.
         """
         if self.newest_observation is None:
             return None
-        return (self.as_of - self.newest_observation).total_seconds()
+        return max(0.0, (self.as_of - self.newest_observation).total_seconds())
 
     @property
     def feed_state(self) -> FeedState:
@@ -811,8 +856,27 @@ def compose(
                 area=area,
             )
         )
-    newest = max((e.ts_source for e in latest.values()), default=None)
     moment = as_of if as_of is not None else datetime.now(UTC)
+    # F120. Two quantities, deliberately not one. `raw_newest` is what the
+    # source said and is reported as such; `newest` is the newest stamp this
+    # pipeline may treat as evidence that it is not blind, which excludes
+    # anything further ahead of us than the tolerance. Folding them - which is
+    # what a single `max()` did until this release - lets one row stamped in
+    # the future hold `feed_state` at `ok` while nothing arrives, because a
+    # negative age passes `age > valid_for_s` forever.
+    #
+    # A store whose every row is past the horizon has no datable observation
+    # at all, and the answer is `blind`: taking the newest of them would be
+    # the same defect with a smaller number on it.
+    stamps = [event.ts_source for event in latest.values()]
+    raw_newest = max(stamps, default=None)
+    horizon = moment + timedelta(seconds=SKEW_TOLERANCE_S)
+    newest = max((stamp for stamp in stamps if stamp <= horizon), default=None)
+    skew = (
+        max(0.0, (raw_newest - moment).total_seconds())
+        if raw_newest is not None
+        else 0.0
+    )
     # Both windows come from one fold of one log, so the feed cannot describe
     # a moment the contract does not. Two compositions would be two pictures,
     # and a consumer rendering history that contradicts the present would have
@@ -847,6 +911,8 @@ def compose(
         # cannot drift. The cap can bind here in principle; when it does,
         # `feed.truncated` says so in the same payload.
         counts_24h=(west, len(feed.events) - west),
+        newest_source_stamp=raw_newest,
+        clock_skew_s=skew,
     )
 
 
@@ -902,7 +968,14 @@ def to_contract(report: Report) -> dict[str, object]:
     the producer's own gate; one inferred by the consumer breaks on a rename
     nobody flagged.
     """
-    newest = report.newest_observation
+    # F120. The raw stamp, falling back to the freshness basis for a `Report`
+    # constructed directly by a caller that predates the field. These are the
+    # same value on every healthy cycle and differ only when the two clocks do.
+    newest = (
+        report.newest_source_stamp
+        if report.newest_source_stamp is not None
+        else report.newest_observation
+    )
     return {
         "v": SCHEMA_VERSION,
         "generated_at": report.as_of.isoformat(timespec="seconds"),
@@ -916,6 +989,15 @@ def to_contract(report: Report) -> dict[str, object]:
         "source_last_message_at": (
             newest.isoformat(timespec="seconds") if newest is not None else None
         ),
+        # F120. How far ahead of us the source's newest stamp sits, in seconds,
+        # floored at zero and always present. A consumer needs it to explain
+        # the one case where `source_last_message_at` is later than
+        # `generated_at`, which without this field looks like a producer bug
+        # rather than a clock disagreement. Above `SKEW_TOLERANCE_S` the stamp
+        # stops counting as evidence of freshness and `state` says `blind`,
+        # so a large value here beside a `blind` state is the whole diagnosis
+        # in two fields.
+        "clock_skew_s": report.clock_skew_s,
         "window_days": report.trailing_days,
         "recent_7d": [
             {

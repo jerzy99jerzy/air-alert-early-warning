@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.4 / 2026-08-23
+Version: 3.5 / 2026-08-23
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -142,12 +142,13 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `generated_at` | When this picture was composed | Not when the source last spoke |
 | `valid_for_s` | How long it may be trusted | Currently 600, an assumption rather than a measurement |
 | `state` | `ok`, `degraded` or `blind` | The page's headline follows this, not the length of `areas` |
-| `observation_age_s` | Age of the newest observation, or `null` | `null` is unknown and must never render as fresh or as `0` |
+| `observation_age_s` | Age of the newest **usable** observation, or `null` | `null` is unknown and must never render as fresh or as `0`. **Never negative and never derived from a stamp more than 120 s ahead of us**: the basis is the newest source stamp inside that tolerance, so a row from the future cannot make a dead pipeline look fresh (F120). A store whose every row is past the tolerance has no datable observation and publishes `blind` |
 | `areas[]` | One entry per area not affirmatively cleared | An area missing from the list has been cleared; an area present with `alert: unknown` has not |
 | `katottg` | Register code, may be `""` | Empty means the map could not resolve it. Render as unknown, do not drop |
 | `oblast` | **ASCII slug** (`lviv`), or `""` | The join field. It carried the register's Cyrillic name until 0.19.0.0, and every area landed in the consumer's `unplaceable` bucket: measured at four of four (F74). **One pair does not join on equality**: this register holds a single `kyiv`, the consumer's geometry splits `kyiv-city` from `kyiv-oblast`, and the consumer resolves `kyiv` onto `kyiv-oblast` in `SLUG_ALIASES`. Named here because the divergence is a property of the contract and not of either implementation; the mapping belongs on the consumer's side, where the distinction is made [measured against `mavo-site` 4.27.1.1, 2026-08-17] |
 | `oblast_name` | Register name (`Львівська`) | For display. Never join on it |
 | `source_last_message_at` | When the source last spoke, may be `null` | Distinct from `generated_at`. A page showing only the latter tells a reader it is fresh while the feed behind it is hours old |
+| `clock_skew_s` | How far ahead of `generated_at` the newest source stamp sits, in seconds, floored at zero and **always present** | 0 on every healthy cycle. It is the only thing that explains a `source_last_message_at` later than `generated_at`, which without this field looks like a producer bug rather than two clocks disagreeing. Past 120 s the stamp stops counting as evidence of freshness and `state` goes `blind`, so a large value beside `blind` is the whole diagnosis in two fields. Until 0.39.1.0 a single future stamp held `state` at `ok` with a negative `observation_age_s`, and a negative age passes every freshness comparison a page can write (F120). Added to schema 3 without a version bump: a consumer that ignores it is unaffected, which is the D-020 test |
 | `window_days` | The trailing window behind `recent_7d` | A count without its window is a number the reader has to guess about |
 | `nearest_7d` | The nearest **raion** under alert in the trailing window, or `null` | 0.33.0.0. Same granularity and same `border_km.csv` row as `areas[]`, so the weekly sentence and the live sentence are comparable by construction. `null` is unknown and must never render as "nothing near". The full block it reduces is `recent_7d_areas` in `feed.json` |
 | `feed.json: recent_7d_areas[]` | The trailing window per raion, nearest first, unknown distance last | Carries `episodes`, **not** `alerts_count`. Summing `episodes` across an oblast's areas does not give that oblast's `alerts_count` and must not be used as though it did: one western episode lights every raion at once, so the sum measures how finely the oblast is subdivided (F76). In `feed.json` rather than `state.json` because it is 10.2 KiB for the west and 35.5 KiB for every area the map knows, against a 13,150-byte `state.json` polled every thirty seconds [measured on `vm-mavo`, 2026-08-19] |

@@ -1,1 +1,25 @@
-<div class="tgme_widget_message" data-post="air_alert_ua/501"><div class="tgme_widget_message_text js-message_text">🔴 Львівська область<br/>Повітряна тривога. Ракетна небезпека</div><a class="tgme_widget_message_date"><time datetime="2026-09-01T21:04:00+00:00"></time></a></div><div class="tgme_widget_message" data-post="air_alert_ua/502"><div class="tgme_widget_message_text js-message_text">🟢 Волинська область<br/>Відбій тривоги</div><a class="tgme_widget_message_date"><time datetime="2026-09-01T21:11:00+00:00"></time></a></div><div class="tgme_widget_message" data-post="air_alert_ua/503"><div class="tgme_widget_message_text js-message_text">Підтримати проєкт можна тут</div><a class="tgme_widget_message_date"><time datetime="2026-09-01T21:20:00+00:00"></time></a></div>
+<!--
+  A page in the shape the channel serves today, for `mavo collect --stub`.
+
+  Refreshed at F122. The version this replaces named oblasts in prose
+  (`Львівська область / Повітряна тривога`), which is the model F23 measured at
+  0 of 20 against real content and which sprint 7 replaced with hashtag
+  resolution. It parsed nothing, no test referenced it, and `docs/MANUAL.md`
+  pointed a first-time reader at it as the offline smoke test: the onboarding
+  command demonstrated a pipeline that understood none of its input.
+
+  Three properties are load-bearing and a rewrite must keep them:
+
+  - **Footer time order.** The `<time>` element sits after the text, which is
+    where the live page puts it. A fixture written in the opposite order is how
+    F50 survived: the fixture encoded the regex's assumption instead of the
+    channel's layout.
+  - **Real tags.** Every hashtag below resolves in `data/reference/tag_map.csv`.
+    An invented tag would exercise the unknown-tag path and report zero parsed
+    while looking like a parse failure.
+  - **One message that is not an alert.** The third block is the channel's own
+    housekeeping. It is counted as unparsed, which is the honest reading: that
+    number is the pattern-table drift indicator, and a fixture in which
+    everything parses cannot show what it looks like when something does not.
+-->
+<div class="tgme_widget_message" data-post="air_alert_ua/321501"><div class="tgme_widget_message_text js-message_text">🔴 Повітряна тривога<br/>#Львівський_район #Яворівський_район</div><a class="tgme_widget_message_date"><time datetime="2026-09-01T21:04:00+00:00"></time></a></div><div class="tgme_widget_message" data-post="air_alert_ua/321502"><div class="tgme_widget_message_text js-message_text">🟢 Відбій тривоги<br/>#Ковельський_район</div><a class="tgme_widget_message_date"><time datetime="2026-09-01T21:11:00+00:00"></time></a></div><div class="tgme_widget_message" data-post="air_alert_ua/321503"><div class="tgme_widget_message_text js-message_text">Підтримати проєкт можна тут</div><a class="tgme_widget_message_date"><time datetime="2026-09-01T21:20:00+00:00"></time></a></div>

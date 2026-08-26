@@ -53,8 +53,8 @@ WEBAPP = Path(__file__).resolve().parent.parent / "docs" / "WEBAPP.md"
 KNOWN_SLUGS = frozenset(OBLAST_SLUGS.values())
 
 REQUIRED_TOP = ("v", "generated_at", "valid_for_s", "state", "observation_age_s",
-                "source_last_message_at", "window_days", "recent_7d",
-                "nearest_7d", "areas", "events", "counts_24h")
+                "source_last_message_at", "clock_skew_s", "window_days",
+                "recent_7d", "nearest_7d", "areas", "events", "counts_24h")
 REQUIRED_STREAM = ("window_start", "window_s", "truncated", "items")
 REQUIRED_ITEM = ("area_id", "oblast", "oblast_name", "alert", "kind", "role",
                  "at", "west")
@@ -412,7 +412,53 @@ def check_contract() -> list[str]:
         problems.append("source_last_message_at must be null when the source never spoke")
     if blind.get("areas") != []:
         problems.append("a blind report must publish an empty area list")
+    if blind.get("clock_skew_s") != 0.0:
+        problems.append("a blind report has no stamp to be skewed against; skew is 0.0")
 
+    problems += _check_the_skew_field(table, now)
+    return problems
+
+
+def _check_the_skew_field(table: AreaTable, now: datetime) -> list[str]:
+    """F120. The freshness of the picture may not rest on a future stamp.
+
+    Asserted here rather than left to `mavo/report.py`, because this is the
+    file that speaks for the consumer: a negative `observation_age_s` passes
+    every freshness comparison a page could write, and `state` is the field the
+    headline follows. The three properties are one behaviour seen from the
+    consumer's side - the age never goes negative, a stamp past the tolerance
+    stops holding the feed at `ok`, and the disagreement between the two clocks
+    is published rather than absorbed into the sign of a number.
+    """
+    problems: list[str] = []
+    tags = list(table.tags)
+    first, second = table.resolve(tags[0]), table.resolve(tags[1])
+    assert first is not None and second is not None
+    # Two areas, deliberately. One area would put both rows through the
+    # last-write-per-area fold and the future one would simply replace the
+    # other, which tests the fold rather than the freshness basis. Negative
+    # minutes are how `_event` spells a stamp ahead of us.
+    stale = _event(first.code, AlertState.ACTIVE, 7 * 24 * 60, now)
+    ahead = _event(second.code, AlertState.ACTIVE, -365 * 24 * 60, now)
+    payload = to_contract(compose([stale, ahead], as_of=now, table=table))
+
+    age = payload.get("observation_age_s")
+    if not isinstance(age, float) or age < 0:
+        problems.append(
+            f"observation_age_s is {age!r}; a negative age passes every "
+            "freshness comparison a consumer can write"
+        )
+    if payload.get("state") != "degraded":
+        problems.append(
+            "a store whose only recent row is stamped in the future is not "
+            f"fresh; state is {payload.get('state')!r}"
+        )
+    skew = payload.get("clock_skew_s")
+    if not isinstance(skew, float) or skew <= 0:
+        problems.append(
+            f"clock_skew_s is {skew!r}; the disagreement between the two "
+            "clocks is the diagnosis and must be published, not absorbed"
+        )
     return problems
 
 

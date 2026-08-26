@@ -27,7 +27,15 @@ from datetime import datetime
 from pathlib import Path
 
 from mavo.errors import SourceUnavailable
-from mavo.sources.telegram import _BLOCK, _TEXT, _TIME, CHANNEL_URL, POST_ID, _parse_timestamp
+from mavo.sources.telegram import (
+    _BLOCK,
+    _TEXT,
+    _TIME,
+    CHANNEL_URL,
+    POST_ID,
+    _parse_timestamp,
+    _strip,
+)
 from mavo.transport import Transport
 
 # Measured, not assumed: the preview served exactly 20 posts per page on
@@ -378,6 +386,23 @@ def read_snapshot_messages(directory: Path) -> list[tuple[datetime, str]]:
     not in the tree, so no gate here can confirm it. `test_backfill_reader`
     pins the behaviour against a synthetic snapshot so a future edit cannot
     change it silently, which is the part that is checkable.
+
+    **F121, and "one reader, one answer" was two thirds true until this
+    release.** The move made one reader out of two copies and left two
+    *normalisations*: this function stripped tags and stopped, while every live
+    poll goes through `_strip`, which also turns `<br>` into a newline and
+    decodes HTML entities. The corpus was therefore read as a text the
+    classifier never sees, and the divergence ran in both directions - a marker
+    broken by `<br>` was rejoined here and matched, an undecoded `&#39;` broke
+    the tag pattern here and did not. It calls `_strip` now, so the claim is a
+    property of the code rather than of this paragraph.
+
+    **This changes numbers, and that is the point rather than a side effect.**
+    Every figure taken with the old normalisation - `kind_coverage_1h`,
+    `kind_join_coverage_1h`, the `unmapped_tags` pile, the near-miss review
+    behind the `KIND_MARKERS` table - was taken against the wrong text. They
+    are not quietly corrected by this edit; they are invalidated by it, and the
+    re-run with the difference recorded either way is T78.
     """
     seen: dict[str, tuple[datetime, str]] = {}
     for snapshot in sorted(directory.glob("page-*.html")):
@@ -394,5 +419,7 @@ def read_snapshot_messages(directory: Path) -> list[tuple[datetime, str]]:
             ts = _parse_timestamp(time_match.group(1))
             if ts is None:
                 continue
-            seen[post.group(1)] = (ts, re.sub(r"<[^>]+>", " ", text_match.group(1)))
+            # F121. `_strip`, not a local tag strip: `<br>` becomes a newline and
+            # entities are decoded, so the corpus reads as the classifier reads.
+            seen[post.group(1)] = (ts, _strip(text_match.group(1)))
     return sorted(seen.values())

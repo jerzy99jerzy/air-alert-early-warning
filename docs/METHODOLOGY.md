@@ -3822,3 +3822,183 @@ that the matrix rather than the author found the thing.
 and passing over, or a `filterwarnings` entry added to silence one rather than
 to fix it; or the next edit script whose partial completion is reported as
 completion.
+
+### F120, 0.39.1.0. One timestamp ahead of our clock disables the staleness machine
+
+`Report.staleness_s` subtracted the newest source timestamp from `as_of`, and
+`feed_state` compared the result against `valid_for_s`. **A negative age passes
+that comparison**, so one event stamped in the future pinned the feed to `ok`
+for as long as it stayed the newest row.
+
+**Measured on a scratch store before the repair** `[measured, 2026-08-26]`:
+
+| store | published state | `observation_age_s` |
+| --- | --- | --- |
+| real traffic, newest row 6 h old | `degraded` | 21,600 |
+| the same store plus one row stamped +1 min | `ok` | -60 |
+| dead 7 days plus one row stamped +1 year | `ok` | -31,536,000 |
+
+The third line also published `source_last_message_at` in 2027 and an empty
+`events` block, because `event_window` has always excluded stamps after
+`as_of`. **Two readings of one row, one line apart in the same file**: the
+window treated it as not yet real and the freshness basis treated it as
+evidence.
+
+**The realistic cause is our own host, not the channel.** The stamp comes from
+the page's `<time datetime=...>` attribute, so any backward drift of the
+collector's clock puts *every* event in the future and makes `degraded`
+unreachable. `trailing_counts` already clamps `ts_source` against `as_of` for
+durations, with a comment recording that T40 measured the two clocks
+disagreeing **in both directions**. One module treated the skew as a hazard,
+the module that decides whether the picture may be trusted treated it as
+evidence, and neither knew about the other.
+
+**Why it survived.** Every fixture in `test_sprint10.py` and
+`test_trailing_duration.py` stamps its events at or before `as_of`, which is
+what a well-behaved source does. A guard that only fires outside the
+well-behaved case cannot be seen by fixtures drawn from inside it - the same
+shape as F76 and F114, one field over. T54, *observe the staleness machine
+crossing once on a real host*, is tier 1 and still open: the one instrument
+that would have met this has not been run.
+
+**The repair.** The freshness basis is the newest stamp no further ahead than
+`SKEW_TOLERANCE_S`, the age is floored at zero, a store whose every row is past
+the tolerance is `blind` rather than fresh, and the disagreement is published
+as `clock_skew_s` instead of being absorbed into the sign of a number. The
+tolerance is 120 s and is **[assumption, unmeasured]**; the measurement that
+replaces it is the negative tail of `ThreatEvent.latency_s` over a week on the
+host, which the store already carries and nothing has read for this purpose.
+
+**Not repaired here, and named so it is not mistaken for repaired.** The
+content fold is untouched: an area whose newest row is a future event still
+publishes that row's state. Whether the picture may call itself fresh and what
+the picture says are different questions, and fixing them in one commit would
+have left neither pinned.
+
+### F121, 0.39.1.0. The corpus is read with a different text normalisation than the channel
+
+`read_snapshot_messages` stripped tags and stopped. `_strip`, which every live
+poll goes through, additionally turns `<br>` into a newline and decodes HTML
+entities. **So every published corpus measurement was taken against a text the
+classifier never sees**, and the divergence runs in both directions on a single
+message `[measured, 2026-08-26]`:
+
+```
+corpus reader : '&#33; Відбій тривоги в #Кам&#39;янець-Подільський_район'
+live reader   : "! Відбій\nтривоги в #Кам'янець-Подільський_район"
+state         : CLEAR   /  None
+tags          : ()      /  ("Кам'янець-Подільський_район",)
+```
+
+The corpus **over-reads states**, because a marker broken by `<br>` is rejoined
+with a space, and **under-reads areas**, because an undecoded entity breaks the
+tag pattern at the apostrophe. They do not cancel: they bias different
+measurements in different directions.
+
+**What rests on it.** `kind_coverage_1h`, `kind_join_coverage_1h`, the
+`unmapped_tags` pile, and the near-miss review that produced the current
+`KIND_MARKERS` table under F71. Three of the 127 rows in `tag_map.csv` carry an
+apostrophe `[measured]`; whether the channel serves those as `&#39;` is
+**[nieustalone]** and is the frequency question T78 exists to answer.
+
+**Why it survived.** The reader was moved into the package at 0.31.0.0 under
+the argument that a copied reader is two readers that can disagree, and its
+docstring has said "one reader, one answer" ever since. The move fixed the
+duplication and left the divergence, and the tree still holds six page-walking
+loops split across two normalisations: `consistency_check`, `label_sample`,
+`register_probe`, `threshold_sweep` and `west_activity` use `_strip`;
+`kind_coverage`, `unmapped_tags` and `vocab_gaps` did not.
+`tests/test_backfill_reader.py` pinned the reader against a fixture carrying no
+entities and no `<br>` - **a fixture written by the implementation rather than
+against it**, which is the recurrent class in this register.
+
+**Consequence to state plainly:** this repair does not correct the affected
+figures, it invalidates them. The re-run with the difference recorded either
+way, including a zero difference, is T78.
+
+### F122, 0.39.1.0. The manual's onboarding transcript, from a parser deleted twenty-eight releases earlier
+
+`docs/MANUAL.md` section 4.5 printed `messages=3 parsed=2 unparsed=1` for
+`mavo collect --stub tests/fixtures/channel.html`. The tree produced
+`messages=3 parsed=0 unparsed=3` `[measured, 2026-08-26]`. The transcript was a
+run of the pre-sprint-7 parser, which read oblast names out of prose; the
+fixture beside it was a page in that same dead format, and F23 measured that
+model at 0 of 20 against real content.
+
+**The fixture was referenced by no test.** Eight test modules build their own
+page inline through a local `_page()` helper. The only thing pointing at
+`tests/fixtures/channel.html` was the manual, which pointed a first-time reader
+at it as the offline smoke test - so the documented first run demonstrated a
+pipeline that understood none of its input.
+
+Two more errors in the same section: it said the command "does not yet write to
+the store; that lands with continuous collection in sprint 6", fifteen releases
+after `--store` shipped under F96, and its option table did not list `--store`
+either. Four options across the CLI had no row in the manual at all
+`[measured]`: `rso --category`, `rso --page`, `report --feed`,
+`report --interval`.
+
+**Why it survived: the gate audits the manual's shape and not its contents.**
+`manual-audit` has been a `verify` step for nineteen releases and checks that
+every subcommand has a section, that every section declares a kind, and that
+the three gate thresholds are quoted. All three were green throughout. A manual
+that falls behind is worse than none because it is believed, and the first
+thing a reader believes is the output block - the one artefact nothing compared
+against anything.
+
+**The repair.** `manual-audit` executes the fenced transcripts and compares the
+first line, with `latency=` and timestamps masked as varying; and it fails when
+a CLI option has no row. Execution is restricted to `mavo collect --stub`,
+because every other command either reaches the network or constructs an
+`EventStore`, which creates the directory it was pointed at: **a check with a
+side effect is a check that changes its own answer.** The fixture is a page in
+the current channel format, and the transcript the manual has always printed is
+now the transcript the command produces.
+
+### F123, 0.39.1.0. The skipped-window measurement cannot fire on the deployed path
+
+T18 is recorded as done, sprint 5, with the acceptance "consecutive polls
+compare post ids and report the skipped count". `_last_id` lives on the
+`TelegramChannelSource` instance; `_cmd_collect` builds a fresh source on every
+invocation; and `mavo-collect.service` is a `oneshot` under a 30 s timer. **No
+two polls have ever met in one process on the host.** Three consecutive
+invocations against one stub `[measured, 2026-08-26]`:
+
+```
+poll 1: messages=3 parsed=2 unparsed=1 skipped=unknown
+poll 2: messages=3 parsed=2 unparsed=1 skipped=unknown
+poll 3: messages=3 parsed=2 unparsed=1 skipped=unknown
+```
+
+F27 records that the post id is *the only thing that makes a skip observable*,
+and this is the defence against a mass alert overrunning the twenty-message
+window - which is the one condition under which the whole product matters. It
+has been unmeasurable since deployment.
+
+**Why it survived.** The acceptance was met, by a class that production never
+instantiates. `_cmd_collect` even prints a note explaining that a single poll
+has no baseline "under continuous collection, which holds the source open", and
+continuous collection is not what runs: the note describes an architecture the
+deployment does not have and reads as a caveat rather than as an outage.
+
+**Not repaired in this release**, and the reason is sequencing rather than
+effort. The cursor has to live where two invocations can both reach it, which
+is the same question D-034 raised for the age of the last successful poll and
+T66 answered differently for the same feed: the store holds `feed_attempts` for
+RSO with a comment calling it a debt this project owes itself, and T66 records
+that attempt completeness for the channel "lives in journald and in
+`run.jsonl`, not in the store". **Two answers to one question in one tree.**
+A decision settles it and the work is one entry behind it; the number is
+issued when that entry is written, by reading the log. The acceptance test is
+written and held outside the suite until then, because a permanently red gate
+is a gate nobody reads.
+
+**This entry reserved D-035 in its first draft**, a number taken at the same
+release by the decision that tags stay unsigned. It was inferred from
+`decisions_recorded` in `STATUS.json` instead of read out of the decision log,
+which is the act D-030 forbids. **`make verify` was green over it**, and that
+is the part worth logging: `docs_audit` fails on a cited `D-` number with no
+entry, and it did fail the moment the citation was corrected to the next
+unissued number. It cannot fail on a number whose entry exists and is about
+something else. **A referential check does not catch a semantic collision**, and the
+repair is not a better check but not reserving numbers in advance.

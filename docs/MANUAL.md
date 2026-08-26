@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.2
+Document:  docs/MANUAL.md, version 3.3
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -39,7 +39,7 @@ Note:      every constant, exit code and output line here was read out of the
    2. [`mavo gate`](#42-mavo-gate---built)
    3. [`mavo policy`](#43-mavo-policy---built)
    4. [`mavo backfill`](#44-mavo-backfill---built)
-   5. [`mavo collect`](#45-mavo-collect---partial)
+   5. [`mavo collect`](#45-mavo-collect---built)
    6. [`mavo rso`](#46-mavo-rso---built)
    7. [`mavo watch`](#47-mavo-watch---not-built-sprint-7)
    8. [`mavo report`](#48-mavo-report---built)
@@ -256,14 +256,20 @@ last one is the most common in practice and was not one of the five until
 pages did not say so. Do not read a short run as a
 short history without reading the `stopped:` line.
 
-### 4.5 `mavo collect` - PARTIAL
+### 4.5 `mavo collect` - BUILT
 
-Polls the public Telegram channel once and reports what it understood. It does
-not yet write to the store; that lands with continuous collection in sprint 6.
+Polls the public Telegram channel once, reports what it understood, and with
+`--store` appends both streams to the event store.
+
+**The sentence this replaces said the command does not write to the store and
+that writing lands in sprint 6.** It shipped at 0.24.0.0 under F96, and the
+paragraph stayed for fifteen releases beside an option table that did not list
+`--store` either. It was `PARTIAL` for the same reason.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--stub` | none | Read a saved page from disk instead of the network. Use this to test the pattern table offline |
+| `--store` | none | Append the parsed alerts **and** the threat-kind declarations to this store. Both or neither: they are separate events with separate lifetimes (T16), and a caller that stored one would produce a store whose kind coverage silently reads zero. Exit code 7 if the write fails, so a wrapper reading stdout cannot mistake a lost write for an empty sky |
 | `--save-raw` | none | Write the fetched page verbatim into this directory before parsing, as `channel-<UTC timestamp>.html`. For building the corpus use `mavo backfill` instead, which reaches history rather than only the present; this option remains useful for capturing a live moment exactly as served. Point it at `data/raw/`, which is git-ignored |
 
 ```
@@ -271,13 +277,17 @@ mavo collect --stub tests/fixtures/channel.html
 messages=3 parsed=2 unparsed=1 skipped=unknown latency=0.001s
 ```
 
-**`skipped` is unknown, not zero, and the difference is the point.** The channel
-page serves a window of roughly the last twenty messages, so during a mass alert
-more than twenty can pass between two polls and the extras leave no trace. Post
-ids make a skip observable, and consecutive polls of the same source report how
-many passed unseen. This command builds a fresh source on every invocation, so
-it has no previous poll to compare against and says so; the count becomes a
-measurement under continuous collection, which holds the source open.
+**`skipped` is unknown, not zero, and it is unknown on every poll this project
+makes.** The channel page serves a window of roughly the last twenty messages,
+so during a mass alert more than twenty can pass between two polls and the
+extras leave no trace. Post ids make a skip observable, and consecutive polls
+*of one source object* report how many passed unseen. This command builds a
+fresh source on every invocation and `mavo-collect.service` is a `oneshot`
+under a timer, so there is no process in which two polls meet: the count is
+`unknown` on the host, has been since deployment, and will stay so until the
+last post id is written somewhere both invocations can read. **T18 is recorded
+as done on an acceptance that production never reaches** (F123), and that
+sentence stays here until the cursor exists.
 
 **`unparsed` is the number to watch.** Messages that match no pattern are counted
 and printed, never dropped. A rising count means the pattern table is drifting
@@ -323,6 +333,14 @@ mavo rso --stub tests/fixtures/rso_page.xml --store /tmp/mavo.sqlite3
 
 Without `--stub` it fetches the list endpoint TVP's integration page publishes.
 `--url` overrides it to reach one voivodeship, one category, or a later page.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--category` | all five | One published category. Omitted, the command walks all five, which is the only way to read the whole feed: the endpoint's own `wszystkie` scope returned 156 of 461 communiques and said nothing about the 305 it dropped `[measured 2026-08-22]` |
+| `--page` | 0 | Page number, or 0 for the unpaged reading. Pages are 1-based and the stop condition is an empty page, never a count derived from the feed's own `totalItems`, which reports the page rather than the total |
+| `--url` | none | Read this exact address instead, bypassing category selection |
+| `--stub` | none | Read a saved page from disk instead of the network |
+| `--store` | none | Append the communiques and log the attempt, successful or not |
 
 **Communiques land in their own table, never beside the Ukrainian alerts.** A
 communique has a different author, a different scope and a different lifetime
@@ -381,6 +399,16 @@ purpose.
 The exit code exists so that a cron wrapper reading only the status cannot
 treat blindness as calm. The report is printed in every case: a blind report
 is an output, not an error.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--store` | required | The event store to read |
+| `--json` | none | Also write the `state.json` contract to this path, atomically |
+| `--feed` | none | Also write `feed.json`: the day-long event window and the trailing window per raion. A second file rather than a longer window inside `state.json`, because that one is re-read on every cycle and this one is fetched when a reader opens the panel |
+| `--valid-for` | 600 | Seconds a report may be trusted after its newest observation. An assumption rather than a measurement, and labelled as one in `mavo/report.py` |
+| `--watch` | off | Publish on an interval until stopped. Needs `--json`: the loop exists to write the contract, and a loop that only prints is a heartbeat nobody can read |
+| `--interval` | 30.0 | Seconds between cycles under `--watch`, drawn with 15% jitter per cycle. A fixed period is a beacon profile to anyone watching the traffic and a perfectly regular load on an upstream with which there is no agreement |
+| `--max-cycles` | none | Stop after this many cycles. Omit to run until interrupted |
 
 **What appears in the list, and what does not.** An area affirmatively cleared
 by the source leaves the list. An area whose state is unknown stays on it and
