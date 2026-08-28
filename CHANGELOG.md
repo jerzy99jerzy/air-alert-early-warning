@@ -16,6 +16,42 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.40.0.1 - 2026-08-28
+
+**Documents only, and all three were found by reading the one document that has
+left this repository against its own section 2.** None came from a failing
+test. `docs/FEED-SPEC.md` is the file linked in institutional correspondence,
+so a claim it makes about itself is checkable by its reader in the same
+sitting.
+
+- **The header described an apparatus the body does not have.** It said that
+  the Polish sources other than the RSO stream rest on `[reported]` rows and
+  are marked as such. Section 2's table has five rows and carried one marker.
+  Sirens, the RCB message, the CAP interface and the announced application
+  carried no marking of any kind, so a reader checking the header against the
+  table thirty lines below finds the document wrong about itself. The header
+  now says what is true, the table says it underneath, and neither promises a
+  scheme that is not there.
+
+- **Two totals for one corpus, three hundred lines apart, in one file.**
+  Section 2 gave 60,680 messages and property Twelve gave 61,041. Both are
+  real collections: 60,680 is the corpus retrieved and lost on 2026-08-09,
+  61,041 the re-collection inventoried the next day, and the internal
+  documents citing 60,680 are describing the design split correctly. The
+  external document used the superseded total in a present-tense claim about
+  what this project holds, and nothing in it reconciled the two. The remaining
+  question, which total belongs in a sentence about the measurement basis
+  rather than about the corpus held, is recorded rather than closed.
+
+- **Provenance carried by a bracket rather than by a sentence.** Fourteen
+  sites in a document written for readers who have no reason to know the
+  convention, and the distinction those brackets carry is the one thing in it
+  that must survive contact with a reader. It moved into the sentences: a
+  measurement now says who made it and when, a relayed claim names whose
+  description it is and states that this project did not measure it. No
+  bracket remains, no claim changed owner, and the fifteen properties of
+  section 4a keep the counterweight their own preamble says they need.
+
 ## 0.40.0.0 - 2026-08-26
 
 **Three defects fixed, one logged and deliberately left standing, and all four

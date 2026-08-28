@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.10 / 2026-08-26
+Version: 1.11 / 2026-08-28
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -42,8 +42,8 @@ never a decision until D-031 wrote it down.
 | --- | --- |
 | Installed | `air-alert-early-warning 0.40.0.0`, `/opt/mavo/venv`, python3.11 |
 | Installed at | **2026-08-26 19:39:24 UTC**, the mtime of the installed `.dist-info` and of the newest module beside it, read on the host rather than taken from an install chain's own echo |
-| `main` | 0.40.0.0, the release this reading ships in |
-| Behind by | **no releases**. The host ran 0.39.0.0 and was three behind until this deploy: 0.39.0.1 and 0.39.1.0 changed no behavioural line in `mavo/`, and 0.40.0.0 changed two. F120 is why the deploy stopped being optional - the running host could not report itself stale while a stamp sat ahead of its clock, and a host that cannot go `degraded` is the founding defect of this project running in production |
+| `main` | 0.40.0.1, the release this reading ships in |
+| Behind by | **one release**, and it is documents only: 0.40.0.1 changed no line in `mavo/`, so the host runs this release's behaviour under the previous label and no deploy is owed. Before the 0.40.0.0 deploy the host ran 0.39.0.0 and was three behind: 0.39.0.1 and 0.39.1.0 changed no behavioural line in `mavo/`, and 0.40.0.0 changed two. F120 is why the deploy stopped being optional - the running host could not report itself stale while a stamp sat ahead of its clock, and a host that cannot go `degraded` is the founding defect of this project running in production |
 
 **An earlier version of this table carried two different answers in one
 document**: 0.32.2.0 here and 0.32.7.0 in the deploy record below, both under

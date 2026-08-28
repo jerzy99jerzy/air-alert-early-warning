@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 2.1 / 2026-08-22
+Version: 2.2 / 2026-08-28
 A specification, written from the position of someone who tried to build against
 one and found there was nothing to build against. The Ukrainian equivalent was
 consumed and measured over a corpus of 118 days; the work of building against it
@@ -9,10 +9,11 @@ Both facts are stated because the argument below rests on the second: what the
 convention enables is cheap to exploit, and that is the point. Companion:
 [`docs/CHANNEL.md`](CHANNEL.md), which is the measurement this rests on, and
 T8a in [`../TODO.md`](../TODO.md), which is where the gap was first recorded.
-T8a is the survey this document argues from. Its first source-level
-verdict, for the RSO stream, was measured on 2026-08-22 and is folded into
-sections 2 and 4a below; the remaining Polish sources still rest on
-`[reported]` rows rather than on a reading, and are marked as such.
+T8a is the survey this document argues from. Its first source-level verdict,
+for the RSO stream, comes from reading the stream on 2026-08-22 and is folded
+into sections 2 and 4a below. The other Polish sources in section 2 have not
+been read by this project; they are described from what their operators
+publish about them, and each sentence says which of the two it is.
 
 ```
 Note: this document describes a feed that does not yet exist. Poland's nearest
@@ -71,9 +72,13 @@ institution.
 | --- | --- | --- |
 | Sirens | People within earshot | No, and cannot be |
 | RCB alert (SMS) | Phones across the country | No. Free text to a phone |
-| RSO stream (XML and JSON) | Anyone who finds the address | Yes `[measured 2026-08-22]` - with the gaps recorded in section 4a |
+| RSO stream (XML and JSON) | Anyone who finds the address | Yes. Read on 2026-08-22, with the gaps recorded in section 4a |
 | RSO CAP interface | Holders of an access token | In format, yes. Access is by writing to the system's administrator |
 | The announced MSWiA application | Not yet released | Unknown |
+
+Only the RSO row comes from reading the source. The other four are described
+from what their operators publish about them, and no claim below rests on a
+reading this project has not made.
 
 **A correction to earlier editions, measured 2026-08-22.** This document used
 to describe the RSO stream as closed. It is not. The service behind the RSO
@@ -138,7 +143,7 @@ attempted against it, and each inherits every gap in section 4a with no
 contract underneath.
 
 This project hit that wall directly. The Ukrainian side of the border is
-measured down to the raion, 118 days of it, 60,680 messages. The Polish side
+measured down to the raion, 118 days of it, 61,041 messages. The Polish side
 is one evening old, and it cannot be built backwards: the stream's own
 retention keeps a thin file, and the week of the July cruise-missile impact
 survives in it as a handful of rows for the whole country. The asymmetry is
@@ -284,7 +289,8 @@ was added at 1.9 and withdrawn at 2.0. The stub below says why, because a
 withdrawal recorded openly is part of the same discipline these properties ask
 of a publisher.
 
-**Six. A cap, published, and a flag saying when it bound.** [measured]
+**Six. A cap, published, and a flag saying when it bound.** Learned in
+production.
 
 The producer here caps its event window at 5,000 and publishes a `truncated`
 flag. Building the consumer showed why both halves are necessary. Without the
@@ -300,7 +306,8 @@ and did not check it, and the two are deployed separately by hand. A limit
 that lives only on the publishing side is a limit that holds until the day the
 two versions differ.
 
-**Seven. The window's left edge, published rather than derived.** [measured]
+**Seven. The window's left edge, published rather than derived.** Learned in
+production.
 
 A feed carrying "here are the transitions in the last twenty minutes" is not
 enough. The consumer needs the timestamp the window starts at, because a
@@ -315,7 +322,7 @@ Cost to the producer: one field. Value to the consumer: the difference between
 invariant applied to the reader rather than to the system.
 
 **Eight. A version policy that says what happens during the changeover.**
-[measured, and it cost a deployment window]
+Learned in production, and it cost a deployment window.
 
 The fourth property asks for a versioned schema. That is necessary and not
 sufficient. When this project moved its own contract from v2 to v3 the payload
@@ -333,8 +340,8 @@ in its backlog as the unfinished half of the task that introduced v3. The
 omission is survivable here because there is one consumer and the same author
 controls it. That is exactly the circumstance a public feed does not have.
 
-**Nine. If there is no heartbeat, the consumer owes one to itself.**
-[measured, and the repair was built before this was written down]
+**Nine. If there is no heartbeat, the consumer owes one to itself.** Learned
+in production, and the repair was built before this was written down.
 
 The fifth property is the publisher's. A consumer facing a feed that does not
 have it is not excused from section 4's invariant, and the consumer-side
@@ -364,7 +371,7 @@ This one generalises furthest of the ten. It costs one table and it is owed by
 any consumer of any feed without a heartbeat, including this project's own.
 
 **Ten. A stated access budget, if there is one, and a statement if there is
-not.** [measured]
+not.** Learned in production.
 
 A feed that meters access makes the consumer's **coverage** a function of the
 consumer's quota. A consumer polling on a schedule against a daily allowance
@@ -393,8 +400,8 @@ party to and may not be granted. The Ukrainian channel's measurements in
 section 1 are checkable by anyone. The ones resting on a keyed interface are
 checkable by whoever holds the key.
 
-**Eleven. A category must say what it does not distinguish.** [measured, by
-getting it wrong]
+**Eleven. A category must say what it does not distinguish.** Learned in
+production, by getting it wrong.
 
 A feed that labels an alert with a category invites every consumer to treat
 the category as a description of the threat. It usually is not one, and the
@@ -439,7 +446,7 @@ consumer's defect log rather than here because the decision is the consumer's;
 what belongs in a specification is the property that made it necessary.
 
 **Twelve. A classification ceiling belongs in the specification, because it is
-a property of the source and not of the reader.** [measured]
+a property of the source and not of the reader.** Learned in production.
 
 Over 61,041 messages across 118 days, this channel carried an alert state in
 52,589 of them and a means-of-attack marker in 7,428. Eight stems resolve
@@ -480,7 +487,7 @@ same feed cannot buy what the feed does not contain.
 
 
 **Thirteen. One null, one meaning - and where absence is a second fact, it
-needs a second field.** [measured]
+needs a second field.** Learned in production.
 
 This project's feed carries `last_alert_ended_at` per oblast inside a trailing
 window. Null there means *no episode closed inside the window*, which is not
@@ -508,7 +515,7 @@ one costs a script: walk the payload, and require every key to be either read
 or explicitly listed as tolerated with a reason.
 
 **Fourteen. A number publishes its denominator as a field, beside it.**
-[measured]
+Learned in production.
 
 The same feed publishes a count of alerts over a trailing window, and the
 window length as `window_days`. That is right, and the reason is visible in
@@ -526,7 +533,7 @@ that will eventually recover the wrong one.
 
 
 **Fifteen. A category is a property of the record, or it does not exist.**
-[measured, 2026-08-22]
+Learned by reading the RSO stream on 2026-08-22.
 
 The Polish RSO feed publishes five categories. They are real: they partition
 the data, they appear in the address, and the publisher's own documentation
@@ -539,10 +546,11 @@ consumer knows what a row is, is to remember which URL returned it.
 The same holds for the author. Since April 2024 the Government Centre for
 Security has published into this feed, and the system's owner names it, with
 the ministry, as responsible for the nationwide messages, while the
-voivodeship crisis centres publish the rest `[reported: the owner's own
-description of the system]`. **No field distinguishes them.** A consumer that
-wants to label a warning with who issued it cannot, and a consumer that labels
-the whole block with one issuer's name is wrong about most of it.
+voivodeship crisis centres publish the rest. That division is the owner's own
+description of the system rather than something this project measured.
+**No field distinguishes them.** A consumer that wants to label a warning with
+who issued it cannot, and a consumer that labels the whole block with one
+issuer's name is wrong about most of it.
 
 This is not a request for a rich taxonomy. It is the observation that a
 publisher which already classifies, already routes by that classification, and
@@ -574,7 +582,8 @@ rather than here: the name resolving is not the host answering, and in a log
 the two look the same.
 
 **Seventeen. A parameter the server does not honour must be refused, not
-accepted.** [measured, 2026-08-22, and it is three findings wearing one shape]
+accepted.** Learned by reading the RSO stream on 2026-08-22, and it is three
+findings wearing one shape.
 
 Three ways this feed returned a partial answer indistinguishable from a
 complete one, in a single evening of reading it:
