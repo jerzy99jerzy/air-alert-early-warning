@@ -44,6 +44,7 @@ from mavo.sources.rso import FEED as RSO_FEED
 from mavo.sources.rso import page_url as rso_page_url
 from mavo.sources.rso import poll_once as rso_poll_once
 from mavo.sources.telegram import CHANNEL_URL, poll_once
+from mavo.sources.telegram import FEED as CHANNEL_FEED
 from mavo.store import EventStore
 from mavo.transport import StubTransport, Transport, UrllibTransport
 
@@ -147,8 +148,34 @@ def _cmd_backfill(args: argparse.Namespace) -> int:
 
 
 def _cmd_collect(args: argparse.Namespace) -> int:
+    """Poll the channel once, and leave a record that the poll happened.
+
+    **The store is opened before the fetch, and the ordering is the point
+    (D-036).** Until 0.41.0.0 it was opened after, so a refusal returned 3
+    having written nothing: an hour the collector was blind and an hour the
+    channel was quiet were the same empty set of rows, recoverable afterwards
+    at no cost because the information was never written. That is the failure
+    `_cmd_rso` was already written to avoid, in the command that polls the
+    only source this project has.
+
+    A store that cannot be opened is exit 7 whether or not the poll would have
+    succeeded, because a poll nobody can record is not a poll this project can
+    claim to have made.
+    """
     transport: Transport = StubTransport(Path(args.stub).read_text(encoding="utf-8")) \
         if args.stub else UrllibTransport()
+    store = None
+    if args.store:
+        try:
+            store = EventStore(Path(args.store))
+        except Exception as failure:  # noqa: BLE001
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+        for column in store.migrations_applied:
+            # Once, at the moment it happens, in the journal a person greps.
+            # A schema change that leaves no trace is the silent repair this
+            # project refuses everywhere else (F124).
+            print(f"[STORE-MIGRATED] added {column}, NULL for every earlier row")
     started = datetime.now(UTC)
     try:
         body = transport.fetch(CHANNEL_URL)
@@ -165,6 +192,18 @@ def _cmd_collect(args: argparse.Namespace) -> int:
         # one bounds the whole attempt.
         waited = (datetime.now(UTC) - started).total_seconds()
         print(f"[UNREACHABLE] {unreachable} (attempt {waited:.2f}s)")
+        if store is not None:
+            try:
+                store.record_refusal(
+                    CHANNEL_FEED, CHANNEL_URL, started, str(unreachable), waited
+                )
+            except Exception as failure:  # noqa: BLE001
+                # Printed and not swallowed, and the exit code stays 3. Two
+                # things went wrong and the caller can only be told one; the
+                # more urgent is that the sky was not observed. A 7 here would
+                # report a broken store to a wrapper whose next decision is
+                # about the channel.
+                print(f"[ATTEMPT-UNLOGGED] {failure}")
         return 3
     fetch_s = (datetime.now(UTC) - started).total_seconds()
     if args.save_raw:
@@ -188,7 +227,7 @@ def _cmd_collect(args: argparse.Namespace) -> int:
     print(f"messages={report.messages} parsed={report.parsed} "
           f"unparsed={report.unparsed_count} {report.window_line()} "
           f"latency={fetch_s:.3f}s")
-    if args.store:
+    if store is not None:
         # F96. Until 0.24.0.0 this command polled the channel, printed what it
         # understood, and dropped the events. There was no path in the product
         # from the live channel into the store: `fixture` writes a synthetic
@@ -200,8 +239,21 @@ def _cmd_collect(args: argparse.Namespace) -> int:
         # are separate events with separate lifetimes (T16), and a caller that
         # stored one and forgot the other would produce a store whose kind
         # coverage silently read zero.
+        #
+        # The attempt row is written in the same block and before the events,
+        # so a poll that read a page and then failed to store it still leaves
+        # the record that it read a page. `items` is the message count on the
+        # page and `unreadable` the count the parser refused, which are the
+        # two figures `record_read` already means for RSO.
         try:
-            store = EventStore(Path(args.store))
+            store.record_read(
+                CHANNEL_FEED,
+                CHANNEL_URL,
+                started,
+                report.messages,
+                report.unparsed_count,
+                fetch_s,
+            )
             appended = store.append(events)
             kinds = store.append_kinds(source.kind_events)
         except Exception as failure:  # noqa: BLE001

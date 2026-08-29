@@ -16,6 +16,86 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.41.0.0 - 2026-08-29
+
+**A decision, an instrument, and a guard that would have deleted the evidence
+it was guarding.** Not sprint work, and calling it that would be the drift
+`TODO.md` was rewritten at 0.37.0.0 to prevent: the open tier-1 items are
+counsel, conversations, a population that has not appeared and measurements on
+a host, and none of them shortens by writing code here.
+
+- **The collector left no record either invocation could read, and the tree
+  held two answers about where one should live.** `feed_attempts` has held
+  polls for the RSO feed since 0.38.0.0 with a schema comment calling it a debt
+  this project owes itself; T66 recorded that attempt completeness for the
+  channel lives in journald and in `run.jsonl`, **not in the store**. One
+  question, one tree, two answers, decided per feed by which sprint wrote the
+  collector. **D-036** settles it: one row per attempt in the store, for every
+  feed, and the discriminator is whether anything in the product reads the
+  record back rather than which feed it came from. `mavo collect` now opens the
+  store before the fetch and writes a row on both paths, so an hour this
+  collector was blind and an hour the channel was quiet stop being the same
+  empty set of rows. **D-034's rejection of poll outcomes in the store is
+  reversed there against a measured cost** - 146 bytes a row, 372 KiB a day at
+  the 33 s cadence - rather than the asserted one it was rejected on.
+
+- **The schema guard prescribed a repair that destroys what it was
+  protecting.** `_refuse_an_older_schema` refused a store missing a column from
+  any of four tables and named one remedy for all four: rebuild from the raw
+  corpus (D-013). That restores `events` and `kind_events`, which are derived,
+  and **deletes `feed_attempts` and `communiques`**, which are not derivable
+  from anything - a poll attempt is a record of a moment that will not come
+  again. Adding one column to the attempts table in this release would have
+  made the production store unopenable and the documented fix would have thrown
+  away every poll record on the host. **F124.** Derived tables are still
+  refused, with the scope of the remedy stated; recorded tables gain the
+  missing column, nullable and without a default, so a row written earlier
+  reads NULL rather than a number nobody observed. The migration names itself
+  on stdout, because a silent repair is the same class as the guard that does
+  not guard.
+
+- **Attempt completeness has an instrument.** `tools/attempts.py` reports, for
+  a window, the attempts made, the attempts that refused, and the stretches
+  with neither, counted separately. It refuses to infer the cadence from the
+  data it is judging, and it prints the window edges as outside the table
+  rather than folding them into covered time. **T66 closes on a premise it got
+  wrong**: its own sentence about the store is exact for the `events` table and
+  false for a table with a row per attempt. The tool has never been run against
+  a window with rows in it, which is a host measurement and belongs to T40.
+
+- **A backlog entry cited a check that does not say what it was cited for.**
+  T80 rested its argument on `tests/lint_domain.py` asserting that the pipeline
+  never reads its own reader; that lint forbids `mavo/` importing
+  `tools.progress` and nothing more. The conclusion holds on other grounds and
+  was reached by citing a check that does not support it. **F125**, class
+  three, and the cheapest instance of it in the register.
+
+- **Two of T47's three criteria are met and one of them had been met for
+  releases.** `check_every_kind_is_documented` was in the gate and green while
+  the task read `ready` - the third instance of **F118** after T62 and T72.
+  What was missing is the assertion that naming a kind is a reporting change
+  and never an alarm one: a glide-bomb or artillery night with everything an
+  alarm needs except the kind reaches no rule, verified red against a missile
+  conjunct with its kind test removed. Item 2 is the consumer's and this entry
+  stays open for it.
+
+**Deploy owed, and the order matters.** This release changes `mavo/` and the
+store schema. The first `mavo collect` after installation migrates
+`feed_attempts` in place and prints `[STORE-MIGRATED]`; that line appearing
+exactly once is the check that the migration ran, and its appearing on every
+poll would mean it did not. **Nothing in the contract changes**, so no consumer
+coordination is needed and no schema version moves.
+
+**Not in this release, deliberately, with the sequencing stated.** D-034's
+`state.json` field is not published: it composes from rows the host does not
+have until this release runs there, and shipping the field and its first
+production value in one step would put an unread number on a public page. The
+attempt *count* is not recorded either - it exists only inside the text of a
+refusal message, and surfacing it is a `Transport` protocol change that does
+not belong in the same release as a store schema change (F110 is what that
+costs). T18's cursor still has nowhere two invocations can both reach it, so
+`skipped` remains `unknown` on every poll (F123).
+
 ## 0.40.0.1 - 2026-08-28
 
 **Documents only, and all three were found by reading the one document that has

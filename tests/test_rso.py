@@ -360,15 +360,21 @@ def test_a_naive_timestamp_cannot_enter_the_attempt_log(tmp_path: Path) -> None:
         store.record_read(FEED, "u", datetime(2026, 8, 22, 14, 0), 1, 0)
 
 
-def test_a_store_predating_these_tables_is_refused_rather_than_migrated(
+def test_a_recorded_table_missing_an_unknown_column_is_refused(
     tmp_path: Path,
 ) -> None:
-    """D-013: a migration would invent values no row ever carried.
+    """A column this version cannot type is a refusal, not a silent accept.
 
     Built by hand rather than by an older version of this class, because there
     is no older version to run. The shape is what matters: a `communiques`
     table exists and lacks a column, which `CREATE TABLE IF NOT EXISTS` is
     silent about.
+
+    **The remedy in the message is not D-013's.** `communiques` is a recorded
+    table, so "rebuild from the raw corpus" would delete rows nothing can
+    reconstruct (F124). The message says to copy the file aside, and this
+    assertion holds it to that: the older wording asserted `Rebuild` here and
+    was wrong about which table it was talking to.
     """
     path = tmp_path / "old.sqlite3"
     with closing(sqlite3.connect(path)) as conn, conn:
@@ -376,4 +382,82 @@ def test_a_store_predating_these_tables_is_refused_rather_than_migrated(
     with pytest.raises(SchemaMismatch) as refusal:
         EventStore(path)
     assert "communiques.source_id" in str(refusal.value)
-    assert "Rebuild" in str(refusal.value), "the refusal names the remedy"
+    assert "copy the file aside" in str(refusal.value), "the refusal names the remedy"
+    assert "Rebuild" not in str(refusal.value), (
+        "a recorded table is not rebuilt from the corpus; naming that remedy here "
+        "prescribes deleting the only copy of the evidence (F124)"
+    )
+
+
+def test_a_derived_table_predating_this_version_is_refused_and_named_as_derived(
+    tmp_path: Path,
+) -> None:
+    """D-013 survives for the tables it was written about.
+
+    `events` is derived: every row is reproducible from the raw corpus, so a
+    rebuild restores the store and an in-place migration would invent values
+    no row ever carried. The refusal keeps that remedy and now says which
+    tables it covers, because the previous wording offered it for all four.
+    """
+    path = tmp_path / "derived.sqlite3"
+    with closing(sqlite3.connect(path)) as conn, conn:
+        conn.execute("CREATE TABLE events (content_hash TEXT PRIMARY KEY, area_id TEXT)")
+    with pytest.raises(SchemaMismatch) as refusal:
+        EventStore(path)
+    assert "Rebuild" in str(refusal.value)
+    assert "events, kind_events" in str(refusal.value), (
+        "the refusal states the scope of the remedy it prescribes"
+    )
+
+
+def test_a_recorded_table_gains_a_known_column_instead_of_losing_its_rows(
+    tmp_path: Path,
+) -> None:
+    """F124, and the case that would have bricked the production host.
+
+    A `feed_attempts` table written before 0.41.0.0 has every column but
+    `elapsed_s`. Under the previous guard that store was unopenable and the
+    documented repair - rebuild from the raw corpus - would have deleted every
+    poll record on the machine, none of which is derivable from anything.
+
+    Three assertions, and the row count is the one that matters: the migration
+    is additive, the pre-existing row survives, and its new column reads NULL
+    rather than a plausible number.
+    """
+    path = tmp_path / "attempts.sqlite3"
+    with closing(sqlite3.connect(path)) as conn, conn:
+        conn.execute(
+            "CREATE TABLE feed_attempts (started_at TEXT NOT NULL, feed TEXT NOT NULL, "
+            "url TEXT NOT NULL, outcome TEXT NOT NULL, items INTEGER, "
+            "unreadable INTEGER, detail TEXT)"
+        )
+        conn.execute(
+            "INSERT INTO feed_attempts (started_at, feed, url, outcome, items, "
+            "unreadable, detail) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            ("2026-08-20T18:19:43+00:00", FEED, "u/old", "read", 4, 0, None),
+        )
+
+    store = EventStore(path)
+    assert store.migrations_applied == ("feed_attempts.elapsed_s",), (
+        "a migration that leaves no trace is the silent repair this project refuses"
+    )
+    rows = store.attempts(FEED)
+    assert len(rows) == 1, "the row written before the column existed survives"
+    assert rows[0]["elapsed_s"] is None, (
+        "a row that predates the column was never timed; NULL is the honest value "
+        "and any number here would be indistinguishable from a measurement"
+    )
+
+
+def test_an_ordinary_open_reports_no_migration(tmp_path: Path) -> None:
+    """The trace is empty when nothing was changed.
+
+    Without this the previous assertion passes against an implementation that
+    reports a migration on every open, which would make the line in the
+    journal noise and teach a reader to skip it.
+    """
+    store = EventStore(tmp_path / "fresh.sqlite3")
+    assert store.migrations_applied == ()
+    assert EventStore(store.path).migrations_applied == (), (
+        "re-opening a store this version wrote changes nothing"
+    )

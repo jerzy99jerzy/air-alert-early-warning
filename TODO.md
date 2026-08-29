@@ -4,14 +4,14 @@
 
 ### Where the backlog stands
 
-**31 of 79 closed, 48 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**33 of 79 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
-| `done` | 27 | Finished, with the release that closed it named in the entry |
+| `done` | 29 | Finished, with the release that closed it named in the entry |
 | `moved` | 4 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 37 | Nothing external blocks it; it needs a session |
-| `decision` | 6 | Waiting on a judgement rather than on work |
+| `ready` | 36 | Nothing external blocks it; it needs a session |
+| `decision` | 5 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 
@@ -25,7 +25,7 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 14 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T66](#t66-attempt-completeness-as-its-own-instrument), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T80](#t80-the-collector-leaves-no-record-either-invocation-can-read), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does)
+**Tier 1, 12 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does)
 
 **Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree)
 
@@ -38,11 +38,11 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | Sprint | Open tasks |
 | --- | --- |
 | **S7** | [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record) |
-| **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T66](#t66-attempt-completeness-as-its-own-instrument) |
+| **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T47](#t47-two-threat-kinds-the-consumer-cannot-name) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T76](#t76-a-tag-push-re-runs-the-same-bytes-through-ci), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T80](#t80-the-collector-leaves-no-record-either-invocation-can-read), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T76](#t76-a-tag-push-re-runs-the-same-bytes-through-ci), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does) |
 
 <!-- index:end -->
 
@@ -1350,8 +1350,31 @@ same run: two changes, one measurement, no attribution.
 
 
 ## T47. Two threat kinds the consumer cannot name
-Status: `ready`, **S9** [tier 1]
+Status: `ready`, **two of three met, and the third is the consumer's** [tier 1], **S9**
 *Moved from S8 at 0.32.9.0, when S8 closed.*
+
+**Item 1 was met before this entry was read, and the entry did not know.**
+`check_every_kind_is_documented` is in `tools/contract_check.py`, is called
+from its `main`, and fails when a `ThreatKind` member is not named in
+`docs/WEBAPP.md`. It has been in the gate and green. This is an instance of
+**F118** - a task closed before it was closed - and it is the third in the
+register, after T62 and T72. Nothing prompts anybody to look for good news.
+
+**Item 3 shipped at 0.41.0.0.**
+`test_a_glide_bomb_or_artillery_night_reaches_no_alarm_rule` builds the
+hardest case rather than an easy one: active alerts in a border oblast, a
+westward vector across three oblasts inside the escalation window, nothing
+suppressed as implausible breadth - everything an alarm needs except the kind.
+Verified red against a `r3_border_missile` with its kind test removed.
+`test_the_alarm_tier_serves_exactly_two_regimes` holds the direction the first
+test cannot: a third `Regime` member fails the suite on the day it is added
+rather than being absorbed by an enumeration of what exists today.
+
+**Item 2 is the consumer's and stays open**, which is why this entry does not
+close. A label and a glyph for `glide_bomb` and `artillery`, or a legend
+stating that they render as unknown on purpose. Neither is work this
+repository can do, and the producer's half of the contract is now enforced
+from here.
 
 MAVO classifies four kinds. The consumer knows three strings and maps
 everything else onto one label:
@@ -1908,7 +1931,31 @@ heuristic failed silently for a fortnight under F116. **F107 closes with this.**
 
 
 ## T66. Attempt completeness, as its own instrument
-Status: `ready` [tier 1], **S9**
+Status: `done` at 0.41.0.0, **on a premise this entry got wrong** [tier 1], **S9**
+
+**Closed by `tools/attempts.py`**, which reports, for a window: the attempts
+made, the attempts that refused, and the stretches with neither, counted
+separately, with unknown printed as unknown. Eleven regressions, four of them
+verified red against a plausible wrong implementation - a gap detector at one
+cadence that reports jitter as blindness, one that reports 0% refusals over
+zero attempts, one that folds the window edges into the covered time.
+
+**It reads the store, and the sentence below says it cannot.** That sentence
+is exact about the `events` table and false about a table holding one row per
+attempt, which is what `feed_attempts` became for the channel under D-036. The
+premise changed; the conclusion drawn from the old premise did not survive it.
+Recorded rather than edited away, because a backlog that repairs its own false
+premises stops being evidence about how the work is done (T20's rule).
+
+**What this does not close.** The tool has never been run against a window
+with rows in it, because the collector writes its first row on the deploy of
+this release. The first run is a host measurement and it belongs to T40, whose
+`docs/CHANNEL.md` 8a row is what needed the attribution in the first place. An
+instrument that exists and has not been read is not a measurement, and this
+project has shipped that mistake before (T40's own latency tool, built at
+0.30.0.0 and unread for nine releases).
+
+*Original entry below.*
 
 `tools/latency.py` reads the store, and the store by construction cannot tell
 silence from blindness: a poll that never returned writes nothing, and a quiet
@@ -2090,7 +2137,33 @@ Refusal at the far end and loss on the path look different on the wire even
 though they look identical from inside the process.
 
 ## T71. The collect path writes to journald only, and journald is not a sink
-Status: `ready` [tier 2]
+Status: `ready`, **re-scoped at 0.41.0.0 by D-036** [tier 2]
+
+**The half that mattered has shipped somewhere else.** This entry justified
+itself on diagnostics that were greppable prose - attempts, refusals,
+latencies - and on unblocking D-034. Both now come from `feed_attempts`: one
+row per poll with its outcome and its duration, queryable by window, read by
+`tools/attempts.py`. D-036 records why the store rather than the sink, and the
+short version is that the report path reads the store and only the store, so a
+fact the contract must publish cannot live in a log.
+
+**What is left is smaller and blocks nothing.** Whether `mavo collect` should
+also open the sink for run-level lines - the same `sink.opened` and provenance
+records `mavo report` writes - is a question about the collect path's own
+diagnostics with no decision waiting behind it. It is not tier 1 and it is not
+a prerequisite for anything named in this file.
+
+**One thing this entry asked for is still not delivered and is named rather
+than rounded off:** the attempt *count*, which distinguishes a poll that
+connected first try from one the retry rescued. That figure exists only inside
+the text of a `SourceUnavailable` message and is discarded entirely on the
+success path, so surfacing it is a change to the `Transport` protocol. It was
+deliberately not made in the same release as a store schema change: F110 is
+what a transport change made alongside something else costs, and T46's rule -
+two changes, one measurement, no attribution - applies to a protocol as much
+as to a marker table.
+
+*Original entry below.*
 
 `mavo report` has `run.jsonl` through `mavo.obs` - rotation, retention,
 provenance fields, a schema with one owner. `mavo collect` has `print`. Every
@@ -2262,7 +2335,31 @@ records which loops are deliberately separate and why. The lint is the half
 that survives an editor in a hurry.
 
 ## T80. The collector leaves no record either invocation can read
-Status: `decision` [tier 1], **blocks the D-034 field**
+Status: `done` at 0.41.0.0 by **D-036** [tier 1]
+
+**The decision is D-036**, and the number was issued by reading
+`docs/DECISIONS.md` rather than by inferring it from `decisions_recorded`,
+which is what the last paragraph of this entry says and what the entry itself
+got wrong once. The record is a row per attempt in `feed_attempts`, for every
+feed, and the discriminator is whether anything in the product reads it back
+rather than which sprint wrote the collector. What it costs T66 and D-034 is
+stated in the entry, and D-034's rejection of "poll outcomes as rows in the
+store" is reversed there against a measured storage cost rather than an
+asserted one.
+
+**One argument in this entry was wrong and the register says so.** It cited
+`tests/lint_domain.py` as asserting that the pipeline never reads its own
+reader. That lint forbids `mavo/` importing `tools.progress` and nothing else.
+The conclusion holds on other grounds - two processes sharing only the store -
+and it was reached by citing a check that does not support it. **F125.**
+
+**Still open behind it and not closed by this**, because they are the work
+rather than the decision: T18's cursor still has nowhere to live that two
+invocations can both reach, so `skipped` remains `unknown` on every poll
+(F123); and D-034's contract field is not published yet. Both are named in the
+release note with their sequencing.
+
+*Original entry below.*
 
 F123: `skipped` is `unknown` on every poll the host has ever made, because
 `_last_id` lives on a source object and `mavo-collect.service` is a `oneshot`.

@@ -8,6 +8,7 @@ import pytest
 
 from mavo.cli import main
 from mavo.store import EventStore
+from mavo.transport import FailingTransport
 
 
 def test_fixture_command_writes_a_store(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -232,3 +233,73 @@ def test_rso_exits_three_when_any_category_refused(
     assert len(attempts) == 5
     assert all(a["outcome"] == "refused" for a in attempts)
     assert all(a["items"] is None for a in attempts)
+
+
+def test_collect_records_the_poll_it_made(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """T71 under D-036: a successful poll leaves a row saying it happened.
+
+    The counts are the page's, not the store's: `items` is what the channel
+    served and `unreadable` what the parser refused, so a page that arrived
+    and was half-understood is distinguishable from a short page. `elapsed_s`
+    is present rather than NULL, because this caller does time itself.
+    """
+    fixture = Path("tests/fixtures/channel.html").read_text(encoding="utf-8")
+    stub = tmp_path / "page.html"
+    stub.write_text(fixture, encoding="utf-8")
+    store_path = tmp_path / "s.sqlite3"
+    assert main(["collect", "--stub", str(stub), "--store", str(store_path)]) == 0
+
+    attempts = EventStore(store_path).attempts("channel")
+    assert len(attempts) == 1, "one poll, one row"
+    row = attempts[0]
+    assert row["outcome"] == "read"
+    assert row["items"] is not None and row["items"] > 0
+    assert row["unreadable"] is not None, (
+        "a page read and not fully understood is not a page that was not read"
+    )
+    assert row["elapsed_s"] is not None, "this caller times itself"
+
+
+def test_collect_records_a_refusal_before_it_exits_three(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The row that separates blindness from a quiet sky.
+
+    Until 0.41.0.0 this path returned 3 having written nothing, so an hour the
+    collector could not reach the channel and an hour the channel said nothing
+    were the same empty set of rows. `items` stays NULL: we did not find out,
+    which is a different fact from the publisher having had nothing.
+    """
+    store_path = tmp_path / "s.sqlite3"
+    # `--stub` reads a file eagerly, so it cannot express an unreachable
+    # source; the transport is replaced instead, which is the same
+    # `SourceUnavailable` the network raises and needs no network to raise it.
+    monkeypatch.setattr("mavo.cli.UrllibTransport", FailingTransport)
+    code = main(["collect", "--store", str(store_path)])
+    assert code == 3
+    out = capsys.readouterr().out
+    assert "[UNREACHABLE]" in out
+    assert "[ATTEMPT-UNLOGGED]" not in out
+
+    attempts = EventStore(store_path).attempts("channel")
+    assert len(attempts) == 1, "a refusal is an attempt and leaves a row"
+    assert attempts[0]["outcome"] == "refused"
+    assert attempts[0]["items"] is None, (
+        "NULL is not zero: zero means the channel said nothing, NULL means we "
+        "did not find out"
+    )
+    assert attempts[0]["elapsed_s"] is not None, "T55, in the table as in the line"
+
+
+def test_collect_without_a_store_records_nothing_and_still_polls(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`--store` is what turns a poll into a record, and it stays optional."""
+    fixture = Path("tests/fixtures/channel.html").read_text(encoding="utf-8")
+    stub = tmp_path / "page.html"
+    stub.write_text(fixture, encoding="utf-8")
+    assert main(["collect", "--stub", str(stub)]) == 0
+    assert "messages=" in capsys.readouterr().out

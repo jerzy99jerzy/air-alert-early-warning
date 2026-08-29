@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.13
+Document:  docs/DECISIONS.md, version 2.14
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1323,3 +1323,81 @@ under T6 and T11, which changes what a reader is entitled to verify; or the
 Software Heritage and OpenTimestamps claim is checked and turns out to be
 false, which would leave the authorship record resting on nothing and make the
 cheap half worth taking.
+
+## D-036. The collector's record is a row per attempt in the store, and the sink keeps the run
+Date: 2026-08-29. Status: adopted
+
+**The question, and it had two answers in one tree.** T80: `mavo collect`
+leaves nothing either invocation can read, so `skipped` is `unknown` on every
+poll the host has ever made and D-034's field has no value to compose from.
+Where the record lives was answered twice, differently, and the answer taken
+depended on which sprint wrote the collector. `mavo/store.py` holds
+`feed_attempts` for the RSO feed - outcome, url, item count, NULL for a
+refusal - and its schema comment calls it FEED-SPEC property nine, owed by
+this project to itself. T66 records that attempt completeness for the channel
+"lives in journald and in `run.jsonl`, **not in the store**". One question,
+one tree, two answers.
+
+**Decision.** Every poll of an external feed writes one row to
+`feed_attempts`, whichever feed it is. The channel joins RSO in the table it
+already has rather than getting a second mechanism next to it. `run.jsonl`
+keeps what it holds today, which is the *run*: cycles, intervals, the sink's
+own provenance. The discriminator is not the feed and not the sprint. It is
+**whether anything in the product reads the record back**. The report path
+reads the store and only the store, so a fact the contract must publish lives
+in the store; a fact only a person greps lives in the sink.
+
+**What this costs T66, stated rather than absorbed.** T66's sentence is that
+attempt completeness cannot live in the store, and its reason is exact: "a
+poll that never returned writes nothing, and a quiet channel writes nothing,
+and the two are the same row count". That reasoning is about the `events`
+table and it is correct about it. It is false of a table with a row per
+attempt, which is what `feed_attempts` is and what the `events` table is not.
+The premise changes; the conclusion drawn from the old premise does not
+survive it. T66's instrument therefore reads the store, and the entry is
+corrected with this reason rather than quietly re-pointed.
+
+**What this costs D-034.** That decision names T71 - a `collect.attempt`
+record in `run.jsonl` - as its prerequisite, and T80 showed T71 as scoped
+cannot deliver it: the field is composed by `mavo report --watch`, which reads
+the store. So the prerequisite moves rather than the decision. D-034's chosen
+option is unchanged, its field is unchanged, and what it waits on is now a
+`feed_attempts` row from the channel. **D-034 also rejected "poll outcomes as
+rows in the store" and this entry adopts it**, which is a reversal and is
+recorded as one. The rejection rested on two grounds. The first was row
+growth, asserted at 2,861 a day and never costed: measured here at **146
+bytes a row, 372 KiB a day, 133 MiB a year** at the 33 s cadence with one
+refusal in eight `[measured, 2026-08-29, on a synthetic store in a container,
+not on the host - the host figure is a deployment reading and is owed]`.
+Against a store the host has been filling since 2026-08-11, that is a cost
+worth naming and not one worth a second mechanism. The second ground was that
+it "changes what the store is for", and that had already happened: T67 put
+`feed_attempts` and `communiques` in this file at 0.38.0.0 and nothing
+reopened the question.
+
+**What this costs T71.** Re-scoped, not closed. `sink_from_environment()` in
+`_cmd_collect` is no longer the route to D-034, and whether the collect path
+wants run-level lines in `run.jsonl` for its own sake is a separate and
+smaller question with no decision blocked behind it.
+
+**One consequence was found by taking this decision and is worse than the
+decision.** Adding one column to `feed_attempts` makes every store written by
+an earlier version unopenable, and the remedy `_refuse_an_older_schema` prints
+is D-013's: rebuild from the raw corpus. That remedy restores `events` and
+`kind_events` and **deletes `communiques` and `feed_attempts`**, neither of
+which is derived from anything - a poll attempt is a record of what this
+program did at a moment that will not come again. The guard's prescribed
+repair destroys the evidence the guard was protecting, and it would have run
+on the production host in this release. F124. The tables are now split:
+derived tables are refused with D-013's remedy and its scope stated, recorded
+tables gain the missing column, nullable and without a default, so a row
+written before the column reads NULL. A column this version cannot type is
+still a refusal, with a remedy that does not begin by deleting the file.
+
+**Reopen if:** the attempts table outgrows what a person can read on the host
+- the measurement above says when, and the answer is retention rather than a
+second mechanism, which is what `mavo-adsb` already does; or a second consumer
+appears for the run-level record, which would make `run.jsonl` a product
+surface rather than a diagnostic one and move the discriminator; or the report
+path acquires a reason to read a log, which would be a change to "one writer,
+one record, one direction" and belongs in its own entry rather than here.

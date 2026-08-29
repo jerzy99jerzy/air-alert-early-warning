@@ -48,6 +48,12 @@ from mavo.transport import Transport
 
 CHANNEL_URL = "https://t.me/s/air_alert_ua"
 
+#: The name this feed carries in `feed_attempts` (D-036). Beside
+#: `mavo.sources.rso.FEED`, and defined here for the same reason: the
+#: string that keys a table of attempts belongs with the adapter that
+#: makes them, not with the command that happens to call it today.
+FEED = "channel"
+
 # F27. The page serves a window of roughly twenty messages, so a poll interval
 # that is comfortable at rest can skip messages during a mass alert. The post id
 # is the only thing that makes a skip observable; without it a gap and a quiet

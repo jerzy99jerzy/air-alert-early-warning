@@ -31,6 +31,20 @@ from mavo.schema import (
 # rebuilding from the raw corpus, so an in-place migration would invent values
 # for columns the old rows never carried and the invented value would be
 # indistinguishable from a measured one.
+#
+# **That rule holds for two of the four tables and destroys the other two
+# (F124).** `events` and `kind_events` are derived: D-013 calls the store a
+# derived artefact and the remedy - rebuild from the raw corpus - restores
+# every row. `communiques` and `feed_attempts` are not derived from anything.
+# A poll attempt is a record of what this program did at a moment that will
+# not come again, and no corpus, endpoint or re-read reconstructs it. Refusing
+# a store because a *recorded* table lacks a column names a remedy whose
+# execution deletes the only copy of the evidence, which is the opposite of
+# what a guard is for. The two lists below are therefore separate, and
+# `_refuse_an_older_schema` treats them differently: see D-036.
+DERIVED_TABLES = ("events", "kind_events")
+RECORDED_TABLES = ("communiques", "feed_attempts")
+
 EXPECTED_KIND_COLUMNS = (
     "content_hash", "area_id", "oblast", "kind", "state",
     "ts_source", "ts_ingest", "source_id", "raw_fields",
@@ -44,7 +58,19 @@ EXPECTED_COMMUNIQUE_COLUMNS = (
 )
 EXPECTED_ATTEMPT_COLUMNS = (
     "started_at", "feed", "url", "outcome", "items", "unreadable", "detail",
+    "elapsed_s",
 )
+
+#: Column definitions for the recorded tables, so a column missing from an
+#: older store can be added rather than refused. Every one of them is nullable
+#: and none carries a default: a row written before the column existed gets
+#: NULL, which reads as "not measured" everywhere in this project and is the
+#: only honest value. A migration that supplied a default would be inventing
+#: the measurement the refusal was written to prevent.
+RECORDED_COLUMN_TYPES: dict[str, dict[str, str]] = {
+    "communiques": {},
+    "feed_attempts": {"elapsed_s": "REAL"},
+}
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS events (
@@ -109,6 +135,14 @@ CREATE TABLE IF NOT EXISTS communiques (
 -- representable differently or the distinction collapses at the first
 -- timeout. The two writers below exist so that the wrong combination cannot
 -- be expressed by a caller.
+--
+-- `elapsed_s` is how long the attempt took, added at 0.41.0.0 under D-036.
+-- T55 put the same figure in the refusal line for the reason it is here: a
+-- stall that hit the ten-second ceiling and a rejection that bounced in
+-- twenty milliseconds are different failures, and a table of attempts that
+-- cannot tell them apart answers no question the journal could not already
+-- answer worse. NULL where the caller did not time itself, never 0.0: a
+-- fetch that took no time is not a fetch nobody timed.
 CREATE TABLE IF NOT EXISTS feed_attempts (
     started_at TEXT NOT NULL,
     feed       TEXT NOT NULL,
@@ -116,7 +150,8 @@ CREATE TABLE IF NOT EXISTS feed_attempts (
     outcome    TEXT NOT NULL,
     items      INTEGER,
     unreadable INTEGER,
-    detail     TEXT
+    detail     TEXT,
+    elapsed_s  REAL
 );
 """
 
@@ -154,25 +189,46 @@ def _stored_form(ts: datetime, label: str) -> str:
 class EventStore:
     """SQLite-backed append-only log with idempotent writes."""
 
+    #: Columns added to a recorded table when this store was opened, newest
+    #: caller last. Empty on every ordinary open. It is an attribute rather
+    #: than a log line because this module prints nothing, and a migration
+    #: that leaves no trace is the silent repair this project refuses: the
+    #: commands that open a store read this and say so on stdout, once, at the
+    #: moment it happens.
+    migrations_applied: tuple[str, ...]
+
     def __init__(self, path: Path) -> None:
         self.path = path
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.migrations_applied = ()
         with closing(self._connect()) as conn:
             conn.executescript(_SCHEMA)
             conn.commit()
             self._refuse_an_older_schema(conn)
+            self.migrations_applied = self._extend_the_recorded_tables(conn)
             conn.executescript(_INDEXES)
             conn.commit()
 
     @staticmethod
     def _refuse_an_older_schema(conn: sqlite3.Connection) -> None:
-        """Refuse a store whose columns predate this version.
+        """Refuse a store whose *derived* tables predate this version.
 
         ``CREATE TABLE IF NOT EXISTS`` is silent about a table that already
         exists with fewer columns, so without this check an older store would
         open cleanly and then fail one row at a time, or worse, read back events
         with fields that were never written. The refusal names the missing
         columns and the remedy, which is a rebuild rather than a migration.
+
+        **Narrowed to the derived tables at 0.41.0.0 (F124).** Until then this
+        method refused on all four, and the remedy it named - rebuild from the
+        raw corpus - restores `events` and `kind_events` and deletes
+        `communiques` and `feed_attempts`, which no corpus can reconstruct. A
+        guard whose prescribed repair destroys the evidence it was protecting
+        is not a guard, and it would have fired on this very release: adding
+        one column to the attempts table would have made the production store
+        unopenable and the documented fix would have thrown away every poll
+        record on the host. D-036 records the split; recorded tables are
+        extended below instead.
         """
         found = tuple(row[1] for row in conn.execute("PRAGMA table_info(events)"))
         missing = [column for column in EXPECTED_COLUMNS if column not in found]
@@ -182,18 +238,51 @@ class EventStore:
             for column in EXPECTED_KIND_COLUMNS
             if column not in kind_found
         ]
+        if missing:
+            raise SchemaMismatch(
+                f"store is missing column(s) {', '.join(missing)}; it was written by an "
+                "older version. Rebuild it from the raw corpus rather than migrating "
+                "it, so no row carries a value that was never observed (D-013). This "
+                f"applies to the derived tables {', '.join(DERIVED_TABLES)} only"
+            )
+
+    @staticmethod
+    def _extend_the_recorded_tables(conn: sqlite3.Connection) -> tuple[str, ...]:
+        """Add a missing column to a recorded table, and say which.
+
+        A recorded table holds what this program did, not what it derived, so
+        the D-013 remedy does not apply to it (F124). The migration is
+        additive and nothing else: a column named in ``RECORDED_COLUMN_TYPES``
+        and absent from the table is appended, nullable, with no default, so
+        every row written before this release reads NULL rather than a value
+        nobody observed.
+
+        **A column this version does not know how to add is still a refusal.**
+        Silently accepting a recorded table that lacks a column would put the
+        store back in the state the refusal exists to prevent, one table over.
+        """
+        added: list[str] = []
         for table, expected in (
             ("communiques", EXPECTED_COMMUNIQUE_COLUMNS),
             ("feed_attempts", EXPECTED_ATTEMPT_COLUMNS),
         ):
             present = tuple(row[1] for row in conn.execute(f"PRAGMA table_info({table})"))
-            missing += [f"{table}.{column}" for column in expected if column not in present]
-        if missing:
-            raise SchemaMismatch(
-                f"store is missing column(s) {', '.join(missing)}; it was written by an "
-                "older version. Rebuild it from the raw corpus rather than migrating "
-                "it, so no row carries a value that was never observed (D-013)"
-            )
+            for column in expected:
+                if column in present:
+                    continue
+                declared = RECORDED_COLUMN_TYPES[table].get(column)
+                if declared is None:
+                    raise SchemaMismatch(
+                        f"store is missing {table}.{column} and this version has no "
+                        f"column type for it, so it cannot be added without inventing "
+                        f"one; {table} holds records that cannot be rebuilt, so copy "
+                        "the file aside before doing anything else (D-036)"
+                    )
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {declared}")
+                added.append(f"{table}.{column}")
+        if added:
+            conn.commit()
+        return tuple(added)
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.path)
@@ -471,7 +560,13 @@ class EventStore:
             }
 
     def record_read(
-        self, feed: str, url: str, started_at: datetime, items: int, unreadable: int
+        self,
+        feed: str,
+        url: str,
+        started_at: datetime,
+        items: int,
+        unreadable: int,
+        elapsed_s: float | None = None,
     ) -> None:
         """Log a poll that returned a page. `items` may legitimately be zero.
 
@@ -479,16 +574,26 @@ class EventStore:
         refusal carrying `items=0`. That single confusion is the one this
         table exists to prevent, and a shared writer with optional arguments
         would leave it one keyword away.
-        """
-        self._record(feed, url, started_at, "read", items, unreadable, None)
 
-    def record_refusal(self, feed: str, url: str, started_at: datetime, detail: str) -> None:
+        ``elapsed_s`` defaults to None rather than to 0.0 because a caller
+        that does not time itself has not measured a duration of zero.
+        """
+        self._record(feed, url, started_at, "read", items, unreadable, None, elapsed_s)
+
+    def record_refusal(
+        self,
+        feed: str,
+        url: str,
+        started_at: datetime,
+        detail: str,
+        elapsed_s: float | None = None,
+    ) -> None:
         """Log a poll that returned nothing readable. `items` stays NULL.
 
         NULL is not zero here and the distinction is the property: zero means
         the publisher said there is nothing, NULL means we did not find out.
         """
-        self._record(feed, url, started_at, "refused", None, None, detail)
+        self._record(feed, url, started_at, "refused", None, None, detail, elapsed_s)
 
     def _record(
         self,
@@ -499,6 +604,7 @@ class EventStore:
         items: int | None,
         unreadable: int | None,
         detail: str | None,
+        elapsed_s: float | None,
     ) -> None:
         row = (
             _stored_form(started_at, "started_at"),
@@ -508,27 +614,48 @@ class EventStore:
             items,
             unreadable,
             detail,
+            elapsed_s,
         )
         with closing(self._connect()) as conn:
             conn.execute(
                 "INSERT INTO feed_attempts (started_at, feed, url, outcome, items, "
-                "unreadable, detail) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "unreadable, detail, elapsed_s) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 row,
             )
             conn.commit()
 
-    def attempts(self, feed: str) -> tuple[dict[str, Any], ...]:
+    def attempts(
+        self,
+        feed: str,
+        since: datetime | None = None,
+        until: datetime | None = None,
+    ) -> tuple[dict[str, Any], ...]:
         """Every poll logged for one feed, oldest first.
 
         Returned whole rather than streamed: this table holds one row per poll
         and is read by a person asking what the collector was doing, not by
         the report path.
+
+        ``since`` is inclusive and ``until`` exclusive, so two adjacent
+        windows partition the rows between them instead of both claiming the
+        row on the boundary. Both are compared in stored form - ISO text
+        normalised to UTC - because that is what the column holds and what
+        `ORDER BY` on it means.
         """
+        clauses = ["feed = ?"]
+        values: list[Any] = [feed]
+        if since is not None:
+            clauses.append("started_at >= ?")
+            values.append(_stored_form(since, "since"))
+        if until is not None:
+            clauses.append("started_at < ?")
+            values.append(_stored_form(until, "until"))
         with closing(self._connect()) as conn:
             rows = conn.execute(
-                "SELECT started_at, url, outcome, items, unreadable, detail "
-                "FROM feed_attempts WHERE feed = ? ORDER BY started_at, rowid",
-                (feed,),
+                "SELECT started_at, url, outcome, items, unreadable, detail, elapsed_s "
+                f"FROM feed_attempts WHERE {' AND '.join(clauses)} "
+                "ORDER BY started_at, rowid",
+                tuple(values),
             ).fetchall()
         return tuple(
             {
@@ -538,6 +665,7 @@ class EventStore:
                 "items": row[3],
                 "unreadable": row[4],
                 "detail": row[5],
+                "elapsed_s": row[6],
             }
             for row in rows
         )

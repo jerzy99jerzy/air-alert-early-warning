@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.35
+Document:  docs/METHODOLOGY.md, version 2.36
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4002,3 +4002,96 @@ entry, and it did fail the moment the citation was corrected to the next
 unissued number. It cannot fail on a number whose entry exists and is about
 something else. **A referential check does not catch a semantic collision**, and the
 repair is not a better check but not reserving numbers in advance.
+
+### F124, 0.41.0.0. The schema guard prescribes a repair that deletes the evidence
+
+`EventStore._refuse_an_older_schema` refused a store that was missing a column
+from any of its four tables, and the refusal named one remedy for all four:
+rebuild from the raw corpus rather than migrate, per D-013. That is correct for
+`events` and `kind_events`, which are derived - every row is reproducible from
+the pages on disk, and an in-place migration would invent values no row ever
+carried.
+
+**It is destructive for the other two.** `feed_attempts` is a record of what
+this program did at moments that will not come again, and `communiques` holds
+a third party's messages from an endpoint that pages away. Neither is
+derivable from the corpus or from anything else, so executing the prescribed
+remedy on a store refused for their sake **deletes the only copy**. The guard's
+instruction is the loss it exists to prevent, one table over.
+
+**It was about to fire.** D-036 adds `elapsed_s` to `feed_attempts`. Under the
+old guard the production store on `vm-mavo` becomes unopenable on the first
+poll after the deploy, `mavo collect` exits 7 every 33 seconds, and the
+documented fix throws away every attempt record the host holds. The defect was
+found by writing the release that would have triggered it, which is the only
+reason it was found at all: nothing in the gate can see a store it has never
+opened, and no test in the tree had ever built a `feed_attempts` table one
+column short.
+
+**Class two, and the fifth instance in the register.** A mechanism shaped like
+a guard whose guarantee runs the wrong way. The three earlier ones failed to
+protect; this one protects and then instructs the caller to do the damage
+itself, which is worse, because a reader following the message believes they
+are recovering.
+
+**Repair.** `DERIVED_TABLES` and `RECORDED_TABLES` are separate lists with the
+reasoning beside them. A derived table missing a column is still refused, and
+the message now states which tables its remedy covers. A recorded table gains
+the column: `ALTER TABLE ... ADD COLUMN`, nullable, no default, so every row
+written before the column reads NULL - the value that means "not measured"
+everywhere else in this project and the only one that is not an invention. A
+column this version has no type for is still a refusal, with a remedy that does
+not begin by deleting the file.
+
+**The migration is not silent.** `EventStore.migrations_applied` names what was
+added and the commands print it once, at the moment it happens. A repair that
+leaves no trace is the same class as the guard that does not guard: the next
+reader cannot tell a store that was migrated from one that was always this
+shape. `test_an_ordinary_open_reports_no_migration` holds the other half, so
+the line is information rather than noise.
+
+**What is still unenforceable.** No check here can open the store on the host.
+The three regressions build the three shapes by hand - a derived table one
+column short, a recorded table missing a column this version knows, a recorded
+table missing one it does not - because there is no older version of this class
+to run and constructing the shape is the closest a repository gets to the
+machine it cannot reach.
+
+### F125, 0.41.0.0. A backlog entry attributed to a lint a claim the lint does not make
+
+T80 argued that `mavo report --watch` cannot compose D-034's field from
+`run.jsonl`, and gave as its authority: "`tests/lint_domain.py` asserts that
+the pipeline never reads its own reader, 'one writer, one record, one
+direction'". Read on 2026-08-29, the function is
+`check_the_pipeline_does_not_import_its_reader` and what it asserts is that no
+module under `mavo/` imports `tools.progress`. That is a ban on one import of
+one module. It says nothing about the report path reading a sink, and it would
+pass a `mavo/report.py` that opened `run.jsonl` directly.
+
+**The conclusion survives; the citation does not.** The report path genuinely
+cannot read the log, because `mavo collect` is a `oneshot` and `mavo report
+--watch` is a separate long-running process, so the only state they share is
+the store and the filesystem - and because "one writer, one record, one
+direction" is a real principle in `docs/OBSERVABILITY.md` section 6 that the
+lint enforces one instance of. The entry reached a true conclusion by citing a
+check that does not support it.
+
+**Class three, and this is the register's cheapest instance of it.** The
+conclusion was drawn from the file that was open - the entry's author knew the
+principle and knew a lint enforced something in that family - rather than from
+the file the conclusion was about. Nothing failed, nothing broke, and the cost
+is entirely to a later reader who follows the citation to check the argument
+and finds it does not say that.
+
+**Why it is logged rather than corrected in place.** T80's sentence is being
+rewritten this release anyway, as the task closes. An entry that quietly
+repairs its own false premise stops being evidence about how the work is done,
+which is the rule T20 established when its own gating assumption turned out to
+be false. The correction is in the task; the record that the argument rested on
+a misread check is here.
+
+**No repair is proposed, and that is a position.** Widening the lint to forbid
+`mavo/` reading `run.jsonl` would encode the instance rather than the class,
+which is F100's note, and nothing is currently trying to do it. What would
+change that is a second reason to want the report path reading a log, at which
+point the principle is worth a check rather than a sentence.

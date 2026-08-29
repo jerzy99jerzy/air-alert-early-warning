@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.11 / 2026-08-28
+Version: 1.12 / 2026-08-29
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -42,8 +42,27 @@ never a decision until D-031 wrote it down.
 | --- | --- |
 | Installed | `air-alert-early-warning 0.40.0.0`, `/opt/mavo/venv`, python3.11 |
 | Installed at | **2026-08-26 19:39:24 UTC**, the mtime of the installed `.dist-info` and of the newest module beside it, read on the host rather than taken from an install chain's own echo |
-| `main` | 0.40.0.1, the release this reading ships in |
-| Behind by | **one release**, and it is documents only: 0.40.0.1 changed no line in `mavo/`, so the host runs this release's behaviour under the previous label and no deploy is owed. Before the 0.40.0.0 deploy the host ran 0.39.0.0 and was three behind: 0.39.0.1 and 0.39.1.0 changed no behavioural line in `mavo/`, and 0.40.0.0 changed two. F120 is why the deploy stopped being optional - the running host could not report itself stale while a stamp sat ahead of its clock, and a host that cannot go `degraded` is the founding defect of this project running in production |
+| `main` | 0.41.0.0 |
+| Behind by | **two releases**, and this one is not documents. 0.41.0.0 changes `mavo/` and the store schema, so a deploy is owed rather than optional: until it lands, the collector on this host writes no attempt row and every hour it was blind stays indistinguishable from an hour the channel was quiet. 0.40.0.1 before it was documents only |
+
+**The first poll after installing 0.41.0.0 changes the store, in place, and
+says so.** `feed_attempts` gains `elapsed_s`; the column is added by
+`ALTER TABLE`, nullable, so every row this host wrote earlier reads NULL rather
+than a duration nobody measured. `mavo collect` prints
+
+```
+[STORE-MIGRATED] added feed_attempts.elapsed_s, NULL for every earlier row
+```
+
+**once**, on the first invocation. That line appearing on every poll would mean
+the migration is not sticking and the store is being reopened one column short
+each time, which is a different failure with the same symptom. The reading to
+take after the deploy is therefore the count of that line over a window, not
+its presence.
+
+**Why the store is not rebuilt instead**, which is what `docs/DECISIONS.md`
+D-013 says to do and what this guard used to print: `feed_attempts` and
+`communiques` are not derived from the corpus and a rebuild deletes them. F124.
 
 **An earlier version of this table carried two different answers in one
 document**: 0.32.2.0 here and 0.32.7.0 in the deploy record below, both under
