@@ -1,5 +1,21 @@
 name: CI
-on: [push, pull_request]
+# Named rather than defaulted (T76, D-037). `[push, pull_request]` with no
+# filter runs the matrix on every branch and on every tag, which made a tag
+# push a second reading of bytes that had just been read - an accident rather
+# than a position, in a repository whose consumer refuses the same thing
+# deliberately under D-S57.
+#
+# The tag run is kept, and that is the decision rather than the leftover.
+# `actions/checkout` resolves the ref it was given, so a tag run asks a
+# question the commit run cannot: does the tree this tag points at pass. Under
+# a release procedure whose rule is "tag on the full commit hash, never HEAD",
+# a tag on the wrong commit is the failure that run catches, and it is the only
+# check in this project that can catch it.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
 
 jobs:
   verify:

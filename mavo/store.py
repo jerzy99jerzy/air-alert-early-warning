@@ -58,7 +58,7 @@ EXPECTED_COMMUNIQUE_COLUMNS = (
 )
 EXPECTED_ATTEMPT_COLUMNS = (
     "started_at", "feed", "url", "outcome", "items", "unreadable", "detail",
-    "elapsed_s",
+    "elapsed_s", "first_id", "last_id",
 )
 
 #: Column definitions for the recorded tables, so a column missing from an
@@ -69,7 +69,11 @@ EXPECTED_ATTEMPT_COLUMNS = (
 #: the measurement the refusal was written to prevent.
 RECORDED_COLUMN_TYPES: dict[str, dict[str, str]] = {
     "communiques": {},
-    "feed_attempts": {"elapsed_s": "REAL"},
+    "feed_attempts": {
+        "elapsed_s": "REAL",
+        "first_id": "INTEGER",
+        "last_id": "INTEGER",
+    },
 }
 
 _SCHEMA = """
@@ -143,6 +147,18 @@ CREATE TABLE IF NOT EXISTS communiques (
 -- cannot tell them apart answers no question the journal could not already
 -- answer worse. NULL where the caller did not time itself, never 0.0: a
 -- fetch that took no time is not a fetch nobody timed.
+--
+-- `first_id` and `last_id` are the post-id bounds of the page that was read,
+-- added at 0.42.0.0 to close F123. They are the cursor two invocations can
+-- both reach: `mavo collect` is a `oneshot`, so the in-process `_last_id` on
+-- the source object was never carried from one poll to the next on the host
+-- and `skipped` read `unknown` on every poll the machine has ever made. The
+-- bounds live here rather than in a cursor file because a cursor records only
+-- where we are and this records where we have been, which is the difference
+-- between resuming and auditing.
+--
+-- NULL on a refusal and on a page carrying no ids, which is what a hostile or
+-- restructured page looks like. A zero would claim the channel is at post 0.
 CREATE TABLE IF NOT EXISTS feed_attempts (
     started_at TEXT NOT NULL,
     feed       TEXT NOT NULL,
@@ -151,7 +167,9 @@ CREATE TABLE IF NOT EXISTS feed_attempts (
     items      INTEGER,
     unreadable INTEGER,
     detail     TEXT,
-    elapsed_s  REAL
+    elapsed_s  REAL,
+    first_id   INTEGER,
+    last_id    INTEGER
 );
 """
 
@@ -567,6 +585,8 @@ class EventStore:
         items: int,
         unreadable: int,
         elapsed_s: float | None = None,
+        first_id: int | None = None,
+        last_id: int | None = None,
     ) -> None:
         """Log a poll that returned a page. `items` may legitimately be zero.
 
@@ -578,7 +598,8 @@ class EventStore:
         ``elapsed_s`` defaults to None rather than to 0.0 because a caller
         that does not time itself has not measured a duration of zero.
         """
-        self._record(feed, url, started_at, "read", items, unreadable, None, elapsed_s)
+        self._record(feed, url, started_at, "read", items, unreadable, None,
+                     elapsed_s, first_id, last_id)
 
     def record_refusal(
         self,
@@ -593,7 +614,11 @@ class EventStore:
         NULL is not zero here and the distinction is the property: zero means
         the publisher said there is nothing, NULL means we did not find out.
         """
-        self._record(feed, url, started_at, "refused", None, None, detail, elapsed_s)
+        # No id bounds on a refusal: there was no page to bound. They stay NULL
+        # rather than repeating the previous poll's, which would make a run of
+        # refusals look like a run of identical pages.
+        self._record(feed, url, started_at, "refused", None, None, detail,
+                     elapsed_s, None, None)
 
     def _record(
         self,
@@ -605,6 +630,8 @@ class EventStore:
         unreadable: int | None,
         detail: str | None,
         elapsed_s: float | None,
+        first_id: int | None,
+        last_id: int | None,
     ) -> None:
         row = (
             _stored_form(started_at, "started_at"),
@@ -615,11 +642,14 @@ class EventStore:
             unreadable,
             detail,
             elapsed_s,
+            first_id,
+            last_id,
         )
         with closing(self._connect()) as conn:
             conn.execute(
                 "INSERT INTO feed_attempts (started_at, feed, url, outcome, items, "
-                "unreadable, detail, elapsed_s) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "unreadable, detail, elapsed_s, first_id, last_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 row,
             )
             conn.commit()
@@ -652,7 +682,8 @@ class EventStore:
             values.append(_stored_form(until, "until"))
         with closing(self._connect()) as conn:
             rows = conn.execute(
-                "SELECT started_at, url, outcome, items, unreadable, detail, elapsed_s "
+                "SELECT started_at, url, outcome, items, unreadable, detail, elapsed_s, "
+                "first_id, last_id "
                 f"FROM feed_attempts WHERE {' AND '.join(clauses)} "
                 "ORDER BY started_at, rowid",
                 tuple(values),
@@ -666,6 +697,31 @@ class EventStore:
                 "unreadable": row[4],
                 "detail": row[5],
                 "elapsed_s": row[6],
+                "first_id": row[7],
+                "last_id": row[8],
             }
             for row in rows
         )
+
+    def newest_page_id(self, feed: str) -> int | None:
+        """The highest post id this feed has ever been observed to serve.
+
+        The cursor `mavo collect` seeds itself from, and the reason F123 could
+        not be fixed inside the source object: a `oneshot` process has no
+        previous poll, so the baseline has to survive the process that measured
+        it.
+
+        **Highest, not most recent.** A page that came back short or out of
+        order must not move the cursor backwards, because a cursor that
+        retreats reports the messages between as newly skipped and counts the
+        same window twice. `MAX` over the column is one expression and cannot
+        drift from that sentence.
+
+        None when no attempt for this feed has ever carried ids, which is the
+        first poll and is genuinely unknown rather than zero.
+        """
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT MAX(last_id) FROM feed_attempts WHERE feed = ?", (feed,)
+            ).fetchone()
+        return int(row[0]) if row and row[0] is not None else None

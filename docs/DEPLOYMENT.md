@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.12 / 2026-08-29
+Version: 1.13 / 2026-08-29
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -42,8 +42,8 @@ never a decision until D-031 wrote it down.
 | --- | --- |
 | Installed | `air-alert-early-warning 0.40.0.0`, `/opt/mavo/venv`, python3.11 |
 | Installed at | **2026-08-26 19:39:24 UTC**, the mtime of the installed `.dist-info` and of the newest module beside it, read on the host rather than taken from an install chain's own echo |
-| `main` | 0.41.0.0 |
-| Behind by | **two releases**, and this one is not documents. 0.41.0.0 changes `mavo/` and the store schema, so a deploy is owed rather than optional: until it lands, the collector on this host writes no attempt row and every hour it was blind stays indistinguishable from an hour the channel was quiet. 0.40.0.1 before it was documents only |
+| `main` | 0.42.0.0 |
+| Behind by | **three releases**, and two of them change `mavo/` and the store schema. Until the deploy lands, the collector on this host writes no attempt row and `skipped` stays `unknown` on every poll, which is F123 still running in production |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -52,9 +52,12 @@ than a duration nobody measured. `mavo collect` prints
 
 ```
 [STORE-MIGRATED] added feed_attempts.elapsed_s, NULL for every earlier row
+[STORE-MIGRATED] added feed_attempts.first_id, NULL for every earlier row
+[STORE-MIGRATED] added feed_attempts.last_id, NULL for every earlier row
 ```
 
-**once**, on the first invocation. That line appearing on every poll would mean
+**once**, on the first invocation, three lines from 0.40.0.0 and the last two
+only from 0.41.0.0. That line appearing on every poll would mean
 the migration is not sticking and the store is being reopened one column short
 each time, which is a different failure with the same symptom. The reading to
 take after the deploy is therefore the count of that line over a window, not

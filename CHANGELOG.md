@@ -16,6 +16,77 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.42.0.0 - 2026-08-29
+
+**The cursor that could not survive a process.** 0.41.0.0 decided where the
+collector's record lives; this release spends that decision on the thing it
+unblocked. One defect closed that had been open since deployment, one found
+while closing it, and one decision that was overdue and is topical because two
+pushes are about to happen.
+
+- **`skipped` had read `unknown` on every poll the host has ever made.**
+  `TelegramChannelSource._last_id` lives on the source object,
+  `mavo-collect.service` is a `oneshot`, and no two polls have ever met in one
+  process on that machine. T18 was recorded done in sprint 5 at tier 3 against
+  an acceptance production does not reach - and the thing it guards is the one
+  failure with no error code, the twenty-message window overrunning during a
+  mass alert, which is the single condition under which this product matters.
+  **F123 closes.** `feed_attempts` gains `first_id` and `last_id`, `mavo
+  collect` seeds itself from `newest_page_id` before the fetch, and two
+  separate `main()` invocations against one store now measure the window
+  between them. **The cursor is the highest id observed, not the newest row's**,
+  so a refusal between two reads does not lose the window and a short page
+  cannot move it backwards - a retreating cursor re-counts a window it has
+  already reported and looks like a measurement while doing it.
+
+- **One note asserted one cause for three states.** The `NOTE: skipped is
+  unknown` line said "a single poll has no baseline" whether there was no
+  store, no earlier bound, or a page carrying no post ids at all with a
+  baseline sitting right there. The third is what a restructured or hostile
+  page looks like and is the only one worth waking up for, and a reader could
+  not tell it from the other two. **F126**, F44's class in the diagnostics
+  rather than in the schedule. Three branches now, and the third quotes the
+  baseline it has.
+
+- **The workflow triggered on everything by accident.** `on: [push,
+  pull_request]` with no filter runs the matrix on every branch and every tag;
+  measured on `v0.39.0.0`, two runs over one commit. `mavo-site` refuses the
+  same duplication under D-S57 and this repository did not, which made the
+  difference an accident rather than a position. **D-037** names the triggers
+  and **keeps the tag run on purpose**: `actions/checkout` resolves the ref it
+  is given, so a tag run asks whether the tree *this tag points at* passes,
+  which is the failure the "tag on the full commit hash, never `HEAD`" rule
+  exists to prevent and which nothing else here can catch. **T76 closes on
+  both halves of its acceptance.**
+
+- **`tools/attempts.py` gained the count the bounds made possible.** Messages
+  that passed between two pages we did read, which is a different quantity from
+  seconds in which we were not looking, and it is reported beside rather than
+  added to it. Pairs whose bounds are missing on either side - every row
+  written before this release - are counted as uncomparable and printed, so a
+  total over half the pairs cannot read as a total over all of them.
+
+**One expression was rewritten and it was not a defect.** `_window` set its
+cursor with `max(last, self._last_id or last)`. The `or` reads as a guard
+against a falsy cursor and guards nothing: every input already produced the
+same value. It is written out because the field is now seeded from outside the
+process. Checked before rewriting rather than claimed afterwards, and recorded
+in `docs/METHODOLOGY.md` under F126 as a non-defect, because a release that
+quietly claims a defect number for a tidy-up is padding the register.
+
+**Deploy owed, and it is the second migration in two releases.** A host at
+0.41.0.0 gains `first_id` and `last_id` and prints two `[STORE-MIGRATED]`
+lines; a host still at 0.40.0.0 gains all three at once. Either way the line
+appears on the first poll and never again, and its appearing on every poll
+means the migration is not sticking. **The first poll after the deploy will
+report `skipped=unknown`** with the "no earlier page bound" wording, because
+the store has no bound yet; the second will carry a number. A first poll that
+reports a large number instead would mean the cursor was seeded from something
+older than the deploy, which cannot happen and is worth checking once.
+
+**Still not in the contract.** D-034's field waits on a host reading, for the
+reason 0.41.0.0 gave and this release does not overturn.
+
 ## 0.41.0.0 - 2026-08-29
 
 **A decision, an instrument, and a guard that would have deleted the evidence

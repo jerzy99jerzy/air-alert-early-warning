@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.36
+Document:  docs/METHODOLOGY.md, version 2.37
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4095,3 +4095,52 @@ a misread check is here.
 which is F100's note, and nothing is currently trying to do it. What would
 change that is a second reason to want the report path reading a log, at which
 point the principle is worth a check rather than a sentence.
+
+### F126, 0.42.0.0. One note asserted one cause for three different states
+
+`mavo collect` printed, on every poll whose skipped count was unmeasurable:
+
+```
+NOTE: skipped is unknown, not zero. A single poll has no baseline to measure a
+skipped window against.
+```
+
+There are three ways to reach that branch and the note asserts one of them.
+**No store**, so nothing could have kept a baseline. **A store with no earlier
+page bound**, which is a first poll and resolves itself on the next one.
+**A page carrying no post ids at all**, with a baseline sitting right there -
+which is what a restructured page, a changed markup, or a hostile response
+looks like, and is the only one of the three worth waking up for.
+
+**F44's class, in the diagnostics rather than in the schedule**: a line whose
+outcomes do not separate its hypotheses. A reader seeing this note could not
+tell a healthy first poll from the channel having stopped serving post ids, and
+the second is the failure F27 named as the one with no error code. The note was
+also written as a permanent property of the command - "a single poll has no
+baseline" reads as an architectural fact rather than as a state - which is how
+it survived F123 being logged against the same branch without anybody reading
+it as a defect.
+
+**Found while repairing F123 and not by it.** The cursor work made the second
+case resolvable and the third case newly distinguishable, and the note went on
+saying the same sentence for all three. Logged separately because the repairs
+are separate: F123 is a cursor that could not survive a process, this is a
+diagnostic that could not distinguish its own causes, and fixing one does not
+fix the other.
+
+**Repair.** Three branches, three sentences, and the third quotes the baseline
+it has: `the baseline is post 301 and this page carried no post ids at all`.
+`test_a_page_with_no_post_ids_says_which_unknown_it_is` builds exactly that
+state - a good page, then an id-less one - and asserts the note names the
+right cause.
+
+**One thing rewritten in the same release is not a defect and says so.**
+`_window` set its cursor with `max(last, self._last_id or last)`. The `or`
+reads as a guard against a falsy cursor and guards nothing: it substitutes
+`last` when the cursor is `None` or `0`, and `max(last, last)` equals
+`max(last, 0)` for every positive post id, so every input produced the same
+value. It is written out because the field is now seeded from outside the
+process, where a reader has more reason to ask what a zero would do. Checked
+before rewriting rather than claimed afterwards, and recorded here because a
+release that quietly rewrites an expression under a defect number it does not
+deserve is padding the register.

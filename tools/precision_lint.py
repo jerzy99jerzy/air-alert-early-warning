@@ -101,7 +101,17 @@ FIGURE_PL = re.compile(r"(?<![\d,.])\d+,\d{2}(?!\d)")
 #:   exception as the F109 entry itself.
 CEILINGS: dict[str, int] = {
     "ENGINEERING.md": 3,
-    "README.md": 23,
+    # 23 -> 22 at 0.42.0.0, and the first attempt at this line said 20 for a
+    # reason that turned out to be wrong. `coverage_percent` is 96.6, one
+    # decimal, so the *table row* dropped a figure - but the badge is written
+    # by `check_badges_match_the_pins` as `:.2f` and its alt text has to match
+    # the badge, so `96.60` still appears twice. Measured after the README was
+    # in its final shape rather than predicted from the pin: 22.
+    #
+    # Lowered rather than left, which is what makes this a ratchet. T77 is the
+    # same observation from the other direction: a ceiling that only ever rises
+    # stops measuring the thing it was built for.
+    "README.md": 22,
     # Raised at 0.39.1.0, 28 to 35, and the shape of the raise is the argument
     # for T77. **One of the seven is a measurement:** T9's closure quotes ``96.43``,
     # which is

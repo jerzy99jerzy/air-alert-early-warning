@@ -176,6 +176,11 @@ def _cmd_collect(args: argparse.Namespace) -> int:
             # A schema change that leaves no trace is the silent repair this
             # project refuses everywhere else (F124).
             print(f"[STORE-MIGRATED] added {column}, NULL for every earlier row")
+    # F123. The baseline for `skipped`, read from the store before the fetch
+    # because a `oneshot` has no previous poll of its own. None on the very
+    # first poll against a fresh store, and that case stays `unknown` rather
+    # than becoming zero.
+    last_seen_id = store.newest_page_id(CHANNEL_FEED) if store is not None else None
     started = datetime.now(UTC)
     try:
         body = transport.fetch(CHANNEL_URL)
@@ -222,7 +227,7 @@ def _cmd_collect(args: argparse.Namespace) -> int:
             print(f"[SNAPSHOT-FAILED] {failure}")
             return 4
         print(f"snapshot={snapshot}")
-    source, events, _ = poll_once(StubTransport(body))
+    source, events, _ = poll_once(StubTransport(body), last_seen_id=last_seen_id)
     report = source.report
     print(f"messages={report.messages} parsed={report.parsed} "
           f"unparsed={report.unparsed_count} {report.window_line()} "
@@ -253,6 +258,8 @@ def _cmd_collect(args: argparse.Namespace) -> int:
                 report.messages,
                 report.unparsed_count,
                 fetch_s,
+                report.first_id,
+                report.last_id,
             )
             appended = store.append(events)
             kinds = store.append_kinds(source.kind_events)
@@ -266,11 +273,22 @@ def _cmd_collect(args: argparse.Namespace) -> int:
               f"(seen={len(events)}/{len(source.kind_events)}; the difference is "
               "idempotence, not loss)")
     if not report.gap_is_known:
-        # One-shot by construction: this command builds a fresh source, so there
-        # is no previous poll to compare ids against. Continuous collection holds
-        # the source open and the count becomes a measurement (sprint 6).
-        print("NOTE: skipped is unknown, not zero. A single poll has no baseline "
-              "to measure a skipped window against.")
+        # Two ways to get here now, and they are different facts. Without a
+        # store there is nowhere to have kept a baseline; with one, an unknown
+        # means either the first poll this store has seen or a page carrying no
+        # post ids at all, which is what a restructured or hostile page looks
+        # like. The old text asserted the first cause for every case and read
+        # as a permanent property of the command rather than as a state (F123).
+        if store is None:
+            print("NOTE: skipped is unknown, not zero. Without --store there is "
+                  "no baseline to measure a skipped window against.")
+        elif last_seen_id is None:
+            print("NOTE: skipped is unknown, not zero. This store has no earlier "
+                  "page bound to measure against; the next poll will have one.")
+        else:
+            print(f"NOTE: skipped is unknown, not zero. The baseline is post "
+                  f"{last_seen_id} and this page carried no post ids at all, "
+                  "which is what a restructured page looks like.")
     for sample in report.unparsed[:5]:
         print(f"  unparsed: {sample}")
     if report.unparsed_count:

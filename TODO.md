@@ -4,13 +4,13 @@
 
 ### Where the backlog stands
 
-**33 of 79 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**34 of 79 closed, 45 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
-| `done` | 29 | Finished, with the release that closed it named in the entry |
+| `done` | 30 | Finished, with the release that closed it named in the entry |
 | `moved` | 4 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 36 | Nothing external blocks it; it needs a session |
+| `ready` | 35 | Nothing external blocks it; it needs a session |
 | `decision` | 5 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -29,7 +29,7 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 
 **Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree)
 
-**Tier 3, 16 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T76](#t76-a-tag-push-re-runs-the-same-bytes-through-ci), [T77](#t77-the-false-precision-counter-counts-version-numbers)
+**Tier 3, 15 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T77](#t77-the-false-precision-counter-counts-version-numbers)
 
 ### By sprint
 
@@ -42,7 +42,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T76](#t76-a-tag-push-re-runs-the-same-bytes-through-ci), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does) |
 
 <!-- index:end -->
 
@@ -595,7 +595,37 @@ continues. `AlertState` has no member for it.
 never resolves to CLEAR.
 
 ## T18. Detect a skipped message window
-Status: `done` (sprint 5, 0.4.0.0) [tier 3]
+Status: `done`, **and it was recorded done for eighteen releases against an
+acceptance production never reached** [tier 1]
+
+**Re-closed at 0.42.0.0.** The 0.4.0.0 acceptance was met by
+`TelegramChannelSource._last_id`, which lives on the source object.
+`mavo-collect.service` is a `oneshot`, so no two polls have ever met in one
+process on the host and `skipped` read `unknown` on every poll the machine has
+made since deployment (**F123**). The tier was 3, on a task guarding the one
+failure with no error code: the twenty-message window overrunning during a mass
+alert, which is the single condition under which this whole product matters.
+
+**What closes it now.** `feed_attempts` carries the page bounds, D-036 having
+settled that the collector's record lives in the store, and `mavo collect`
+seeds the cursor from `newest_page_id` before the fetch.
+`test_two_collect_invocations_measure_the_window_between_them` runs `main()`
+twice against two stubs and one store, and asserts the second poll reports
+`skipped=5` where the first reported `unknown`. Verified red against a collect
+path that does not seed.
+
+**The cursor is the highest id observed, not the last row's**, so a refusal
+between two reads does not lose the window and a short page cannot move it
+backwards. Both have their own regression, and the second exists because a
+retreating cursor is worse than an unknown one: it re-counts a window it has
+already reported and looks like a measurement.
+
+**Still not measurable from the store alone for the pages that predate this**,
+and `tools/attempts.py` says so rather than assuming: pairs whose bounds are
+missing on either side are counted as uncomparable and printed beside the
+total.
+
+*Original entry below.*
 **Acceptance met:** consecutive polls compare post ids and report the skipped
 count; where it cannot be measured, on a first poll or a page without ids, it is
 reported as unknown rather than zero. MT12 and harness A11.
@@ -2253,7 +2283,22 @@ supply it.
 and either way the reading pasted into `docs/DEPLOYMENT.md`.
 
 ## T76. A tag push re-runs the same bytes through CI
-Status: `ready` [tier 3]
+Status: `done` at 0.42.0.0 by **D-037** [tier 3]
+
+**Both halves of the acceptance, because taking only one leaves the same
+accident with better manners.** The trigger names branches - `main`, tags
+`v*`, and pull requests - and the decision records why the tag run is kept
+rather than dropped: `actions/checkout` resolves the ref it is given, so the
+tag run asks whether the tree *this tag points at* passes, which the commit run
+cannot ask and which is the failure the "tag on the full commit hash, never
+`HEAD`" rule exists to prevent.
+
+**The disagreement with `mavo-site` is now on the record rather than by
+default.** That repository refuses the duplicate under D-S57 because its
+minutes are metered; this one is public and keeps it for a check the other
+buys differently. Two repositories, two answers, one stated reason each.
+
+*Original entry below.*
 
 `.github/workflows/ci.yml` triggers on `[push, pull_request]` with no branch
 filter, so pushing a tag seconds after the commit went green runs the whole

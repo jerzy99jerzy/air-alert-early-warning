@@ -303,3 +303,105 @@ def test_collect_without_a_store_records_nothing_and_still_polls(
     stub.write_text(fixture, encoding="utf-8")
     assert main(["collect", "--stub", str(stub)]) == 0
     assert "messages=" in capsys.readouterr().out
+
+
+def _page(ids: tuple[int, ...]) -> str:
+    """A minimal channel page carrying the given post ids and one message each."""
+    blocks = "".join(
+        f'<div class="tgme_widget_message" data-post="air_alert_ua/{post}">'
+        f'<div class="tgme_widget_message_text">Повітряна тривога '
+        f'#Львівський_район</div>'
+        f'<time datetime="2026-08-29T20:0{index}:00+00:00"></time></div>'
+        for index, post in enumerate(ids)
+    )
+    return f"<html><body>{blocks}</body></html>"
+
+
+def test_two_collect_invocations_measure_the_window_between_them(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """F123, and it is the acceptance production could never reach.
+
+    `mavo-collect.service` is a `oneshot`, so the cursor on the source object
+    died with every process and `skipped` read `unknown` on every poll the host
+    has ever made. T18 was recorded done against an in-process baseline that
+    production does not have.
+
+    Two separate `main()` calls, two separate sources, one store. The second
+    page starts eight posts past the end of the first, so five went unseen.
+    """
+    store_path = tmp_path / "s.sqlite3"
+    first = tmp_path / "p1.html"
+    first.write_text(_page((100, 101, 102)), encoding="utf-8")
+    second = tmp_path / "p2.html"
+    second.write_text(_page((108, 109)), encoding="utf-8")
+
+    assert main(["collect", "--stub", str(first), "--store", str(store_path)]) == 0
+    out = capsys.readouterr().out
+    assert "skipped=unknown" in out, "the first poll has no baseline and says so"
+    assert "no earlier page bound" in out
+
+    assert main(["collect", "--stub", str(second), "--store", str(store_path)]) == 0
+    out = capsys.readouterr().out
+    assert "skipped=5" in out, (
+        "posts 103 to 107 passed between the two polls and were never seen"
+    )
+    assert "skipped=unknown" not in out
+
+    rows = EventStore(store_path).attempts("channel")
+    assert [(row["first_id"], row["last_id"]) for row in rows] == [(100, 102), (108, 109)]
+
+
+def test_a_refusal_between_two_reads_does_not_break_the_window(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The count is messages unseen, not messages unseen since the last attempt.
+
+    A refusal carries no page and no bounds, so the baseline has to survive it.
+    Reading the most recent row instead of the highest observed id would find
+    NULL here and report `unknown`, turning one refusal into a permanently
+    lost window.
+    """
+    store_path = tmp_path / "s.sqlite3"
+    first = tmp_path / "p1.html"
+    first.write_text(_page((200, 201)), encoding="utf-8")
+    third = tmp_path / "p3.html"
+    third.write_text(_page((205,)), encoding="utf-8")
+
+    assert main(["collect", "--stub", str(first), "--store", str(store_path)]) == 0
+    monkeypatch.setattr("mavo.cli.UrllibTransport", FailingTransport)
+    assert main(["collect", "--store", str(store_path)]) == 3
+    monkeypatch.undo()
+    capsys.readouterr()
+    assert main(["collect", "--stub", str(third), "--store", str(store_path)]) == 0
+    assert "skipped=3" in capsys.readouterr().out, "202, 203 and 204 went unseen"
+
+
+def test_a_page_with_no_post_ids_says_which_unknown_it_is(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Three causes of `unknown`, and a note that names only one is a claim.
+
+    The old text asserted "a single poll has no baseline" on every unknown,
+    including the case where a baseline exists and the page arrived without
+    ids - which is what a restructured or hostile page looks like and is the
+    one worth waking up for.
+    """
+    store_path = tmp_path / "s.sqlite3"
+    good = tmp_path / "p1.html"
+    good.write_text(_page((300, 301)), encoding="utf-8")
+    idless = tmp_path / "p2.html"
+    idless.write_text("<html><body><div>nothing this parser knows</div></body></html>",
+                      encoding="utf-8")
+
+    assert main(["collect", "--stub", str(good), "--store", str(store_path)]) == 0
+    capsys.readouterr()
+    assert main(["collect", "--stub", str(idless), "--store", str(store_path)]) == 0
+    out = capsys.readouterr().out
+    assert "skipped=unknown" in out
+    assert "carried no post ids at all" in out
+    assert "the baseline is post 301" in out.lower()
+
+    row = EventStore(store_path).attempts("channel")[-1]
+    assert (row["first_id"], row["last_id"]) == (None, None)

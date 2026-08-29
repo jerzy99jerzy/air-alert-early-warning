@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.14
+Document:  docs/DECISIONS.md, version 2.15
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1401,3 +1401,45 @@ appears for the run-level record, which would make `run.jsonl` a product
 surface rather than a diagnostic one and move the discriminator; or the report
 path acquires a reason to read a log, which would be a change to "one writer,
 one record, one direction" and belongs in its own entry rather than here.
+
+## D-037. The workflow names its triggers, and the tag run is kept on purpose
+Date: 2026-08-29. Status: adopted
+
+**Decision.** `.github/workflows/ci.yml` triggers on pushes to `main`, on tags
+matching `v*`, and on pull requests. The tag run stays.
+
+**What was there.** `on: [push, pull_request]`, no filter, which runs the
+matrix on every branch and every tag. Measured on `v0.39.0.0`: two runs, 38 s
+and 40 s, over one commit `[measured, from the run list]`. `mavo-site` refuses
+the same duplication deliberately under its D-S57 and this repository did not,
+which made the difference between the two an accident rather than a position -
+T76's actual complaint, and it is answered by naming the triggers whichever way
+they are named.
+
+**Why the tag run is kept rather than removed, which is the half T76 left
+open.** `actions/checkout` resolves the ref it is given, so the tag run asks a
+question the commit run cannot: *does the tree this tag points at pass*. The
+release procedure here says to tag on the full commit hash and never on `HEAD`
+or `HEAD~n`, and a tag placed on the wrong commit is precisely the failure that
+rule exists to prevent. Nothing else in this project can catch it: the local
+gate runs before the tag exists, and `make manifest` on the commit push reads
+the commit. **The duplicated bytes are the ordinary case and the run is not for
+the ordinary case.**
+
+**What it costs.** A second matrix run per release, free here because the
+repository is public, and not free in the consumer - which is why D-S57 goes
+the other way there and why the two repositories now disagree on the record
+rather than by accident. And branch pushes other than `main` stop being built:
+this is a single-maintainer repository that works on `main`, pull requests
+still run, and a branch that wants a run gets a pull request.
+
+**What this does not do.** It does not make the tag run *verify* anything the
+commit run did not, in the case where the tag is correct, and no reader should
+take a green tag run as independent evidence about the code. It is a check on
+the pointer, not on the tree.
+
+**Reopen if:** this repository stops being public, which makes the second run
+cost money and re-weighs it against a check that fires on a mistake nobody has
+yet made here; or a release procedure lands that verifies the tag's target
+locally before pushing, which would move the check inside the gate where it is
+cheaper and earlier.

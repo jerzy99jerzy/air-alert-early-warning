@@ -473,6 +473,7 @@ class TelegramChannelSource:
         transport: Transport,
         url: str = CHANNEL_URL,
         areas: AreaTable | None = None,
+        last_seen_id: int | None = None,
     ) -> None:
         self.transport = transport
         self.url = url
@@ -487,7 +488,12 @@ class TelegramChannelSource:
         # stream rather than inside it. Empty until the first poll, like report.
         self.kind_events: tuple[KindEvent, ...] = ()
         self.report = ParseReport()
-        self._last_id: int | None = None
+        # F123. Seeded by the caller when a previous poll's bound is known.
+        # `mavo-collect.service` is a `oneshot`, so without a seed this field
+        # is None on every invocation the host has ever made and `skipped`
+        # reads `unknown` forever - which it did, from deployment until
+        # 0.42.0.0. The value comes from `feed_attempts` (D-036).
+        self._last_id: int | None = last_seen_id
 
     def _window(self, body: str) -> tuple[int | None, int | None, int | None]:
         """Post-id bounds of this page and how many messages were skipped.
@@ -504,7 +510,15 @@ class TelegramChannelSource:
         skipped: int | None = None
         if self._last_id is not None:
             skipped = max(0, first - self._last_id - 1)
-        self._last_id = max(last, self._last_id or last)
+        # Written as `max(last, self._last_id or last)` until 0.42.0.0.
+        # **That expression is not wrong and this is not a defect fix**: `or`
+        # substitutes `last` when the cursor is None or 0, and `max(last, last)`
+        # equals `max(last, 0)` for any positive id, so every input produced the
+        # same value. It is rewritten because the `or` reads as a guard against
+        # a falsy cursor and guards nothing, and this field is now seeded from
+        # outside the process, where a reader has more reason to ask what a
+        # zero would do. Checked before rewriting rather than claimed after.
+        self._last_id = last if self._last_id is None else max(last, self._last_id)
         return first, last, skipped
 
     def poll(self) -> Sequence[ThreatEvent]:
@@ -588,7 +602,9 @@ class TelegramChannelSource:
 
 
 def poll_once(
-    transport: Transport, url: str = CHANNEL_URL
+    transport: Transport,
+    url: str = CHANNEL_URL,
+    last_seen_id: int | None = None,
 ) -> tuple[TelegramChannelSource, Sequence[ThreatEvent], float]:
     """One fetch, returning the source, its events and how long it took.
 
@@ -603,7 +619,7 @@ def poll_once(
     from the warning budget: in the missile regime the whole budget is about six
     minutes.
     """
-    source = TelegramChannelSource(transport, url)
+    source = TelegramChannelSource(transport, url, last_seen_id=last_seen_id)
     started = datetime.now(UTC)
     events = source.poll()
     elapsed = (datetime.now(UTC) - started).total_seconds()

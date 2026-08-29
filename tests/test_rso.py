@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import sqlite3
 from contextlib import closing
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -438,14 +438,21 @@ def test_a_recorded_table_gains_a_known_column_instead_of_losing_its_rows(
         )
 
     store = EventStore(path)
-    assert store.migrations_applied == ("feed_attempts.elapsed_s",), (
-        "a migration that leaves no trace is the silent repair this project refuses"
-    )
+    assert store.migrations_applied == (
+        "feed_attempts.elapsed_s",
+        "feed_attempts.first_id",
+        "feed_attempts.last_id",
+    ), "a migration that leaves no trace is the silent repair this project refuses"
     rows = store.attempts(FEED)
     assert len(rows) == 1, "the row written before the column existed survives"
     assert rows[0]["elapsed_s"] is None, (
         "a row that predates the column was never timed; NULL is the honest value "
         "and any number here would be indistinguishable from a measurement"
+    )
+    assert rows[0]["last_id"] is None, "and it bounded no window either"
+    assert EventStore(path).newest_page_id(FEED) is None, (
+        "a store with no observed ids has no cursor, and 0 would claim the "
+        "channel is at post zero"
     )
 
 
@@ -461,3 +468,45 @@ def test_an_ordinary_open_reports_no_migration(tmp_path: Path) -> None:
     assert EventStore(store.path).migrations_applied == (), (
         "re-opening a store this version wrote changes nothing"
     )
+
+
+def test_a_store_at_the_previous_release_gains_only_what_it_lacks(
+    tmp_path: Path,
+) -> None:
+    """The migration is additive per column, not per release.
+
+    A host that took 0.41.0.0 has `elapsed_s` and not the id bounds. It must
+    gain two columns and not three, or the trace stops being a record of what
+    changed and becomes a restatement of what this version wants.
+    """
+    path = tmp_path / "at041.sqlite3"
+    with closing(sqlite3.connect(path)) as conn, conn:
+        conn.execute(
+            "CREATE TABLE feed_attempts (started_at TEXT NOT NULL, feed TEXT NOT NULL, "
+            "url TEXT NOT NULL, outcome TEXT NOT NULL, items INTEGER, "
+            "unreadable INTEGER, detail TEXT, elapsed_s REAL)"
+        )
+    store = EventStore(path)
+    assert store.migrations_applied == (
+        "feed_attempts.first_id",
+        "feed_attempts.last_id",
+    )
+
+
+def test_the_cursor_is_the_highest_id_seen_not_the_most_recent(
+    tmp_path: Path,
+) -> None:
+    """A page that came back short must not move the cursor backwards.
+
+    A retreating cursor reports the messages between as newly skipped and
+    counts the same window twice, which is worse than reporting unknown: it is
+    a measurement that is confidently wrong.
+    """
+    store = EventStore(tmp_path / "cursor.sqlite3")
+    when = datetime(2026, 8, 29, 12, 0, tzinfo=UTC)
+    store.record_read(FEED, "u/1", when, 20, 0, 0.3, first_id=100, last_id=120)
+    store.record_refusal(FEED, "u/2", when + timedelta(seconds=33), "timed out", 10.0)
+    store.record_read(FEED, "u/3", when + timedelta(seconds=66), 5, 0, 0.3,
+                      first_id=101, last_id=105)
+    assert store.newest_page_id(FEED) == 120
+    assert store.newest_page_id("nothing-polled-this") is None

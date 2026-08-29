@@ -94,6 +94,16 @@ class Completeness:
     unknown_tail_s: float | None
     durations: tuple[float, ...]
     untimed: int
+    #: Messages that passed between two consecutive read pages without being
+    #: seen, summed over the window. Added at 0.42.0.0, once `feed_attempts`
+    #: began carrying page bounds (F123). It is a different quantity from
+    #: `unobserved_s`: a stretch with no attempt in it is time we were not
+    #: looking, and this is traffic that moved while we were.
+    unseen_messages: int
+    #: Consecutive read pairs whose bounds could not be compared, because one
+    #: side carried no ids. Counted rather than skipped, so a total computed
+    #: over half the pairs cannot read as a total over all of them.
+    uncomparable_pairs: int
 
     @property
     def reads(self) -> int:
@@ -163,6 +173,15 @@ class Completeness:
                 f"attempt duration: n={len(ordered)} median={median(ordered):.3f}s "
                 f"max={ordered[-1]:.3f}s"
             )
+        lines.append(
+            f"unseen messages={self.unseen_messages}"
+            + (
+                f"  uncomparable pairs={self.uncomparable_pairs} (bounds missing "
+                "on one side, not counted as zero)"
+                if self.uncomparable_pairs
+                else ""
+            )
+        )
         if self.untimed:
             lines.append(
                 f"untimed={self.untimed} attempt(s) carry no duration and are "
@@ -202,6 +221,16 @@ def measure(
     durations = tuple(
         float(row["elapsed_s"]) for row in rows if row["elapsed_s"] is not None
     )
+    # Only pages count here. A refusal carries no bounds and is not a pair
+    # whose comparison failed; it is not a page at all.
+    pages = [row for row in rows if row["outcome"] == "read"]
+    unseen = 0
+    uncomparable = 0
+    for earlier, later in zip(pages, pages[1:], strict=False):
+        if earlier["last_id"] is None or later["first_id"] is None:
+            uncomparable += 1
+            continue
+        unseen += max(0, int(later["first_id"]) - int(earlier["last_id"]) - 1)
     first = stamps[0] if stamps else None
     last = stamps[-1] if stamps else None
     return Completeness(
@@ -220,6 +249,8 @@ def measure(
         ),
         durations=durations,
         untimed=len(rows) - len(durations),
+        unseen_messages=unseen,
+        uncomparable_pairs=uncomparable,
     )
 
 

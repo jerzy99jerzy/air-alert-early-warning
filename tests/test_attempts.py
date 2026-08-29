@@ -202,3 +202,68 @@ def test_a_missing_store_is_refused_rather_than_created(tmp_path: Path) -> None:
     assert attempts_tool.main(
         ["--store", str(tmp_path / "absent.sqlite3"), "--cadence-s", "33"]
     ) == 2
+
+
+def test_traffic_that_moved_while_we_watched_is_its_own_count(tmp_path: Path) -> None:
+    """Unseen messages and unobserved seconds are different quantities.
+
+    A stretch with no attempt in it is time we were not looking. This is
+    traffic that moved between two pages we did read, which is the failure F27
+    named as the only one with no error code: the twenty-message window
+    overrunning during a mass alert.
+    """
+    store = _store(tmp_path)
+    store.record_read(FEED, URL, T0, 20, 0, 0.3, first_id=100, last_id=119)
+    store.record_read(FEED, URL, T0 + timedelta(seconds=CADENCE), 20, 0, 0.3,
+                      first_id=125, last_id=144)
+    measured = attempts_tool.measure(store, FEED, CADENCE)
+    assert measured.unseen_messages == 5, "120 to 124 passed unseen"
+    assert measured.unobserved_s == 0.0, "both polls happened; no time was unwatched"
+    assert measured.uncomparable_pairs == 0
+    assert "unseen messages=5" in measured.render()
+
+
+def test_overlapping_pages_are_not_negative_unseen(tmp_path: Path) -> None:
+    """The ordinary case: a twenty-message page every 33 s overlaps heavily."""
+    store = _store(tmp_path)
+    store.record_read(FEED, URL, T0, 20, 0, 0.3, first_id=100, last_id=119)
+    store.record_read(FEED, URL, T0 + timedelta(seconds=CADENCE), 20, 0, 0.3,
+                      first_id=102, last_id=121)
+    assert attempts_tool.measure(store, FEED, CADENCE).unseen_messages == 0
+
+
+def test_a_pair_with_no_bounds_is_counted_not_skipped(tmp_path: Path) -> None:
+    """A total over half the pairs must not read as a total over all of them.
+
+    Rows written before 0.42.0.0 carry NULL bounds, and a page that arrived
+    without post ids carries them too. Treating either as zero unseen would
+    report a clean window over data that cannot support the claim.
+    """
+    store = _store(tmp_path)
+    store.record_read(FEED, URL, T0, 20, 0, 0.3, first_id=100, last_id=119)
+    store.record_read(FEED, URL, T0 + timedelta(seconds=CADENCE), 20, 0, 0.3)
+    store.record_read(FEED, URL, T0 + timedelta(seconds=2 * CADENCE), 20, 0, 0.3,
+                      first_id=130, last_id=149)
+    measured = attempts_tool.measure(store, FEED, CADENCE)
+    assert measured.uncomparable_pairs == 2
+    assert measured.unseen_messages == 0, (
+        "nothing comparable, so nothing counted - and the pair count says so"
+    )
+    assert "uncomparable pairs=2" in measured.render()
+
+
+def test_a_refusal_is_not_an_uncomparable_pair(tmp_path: Path) -> None:
+    """A refusal is not a page whose bounds went missing; it is not a page.
+
+    Counting it as uncomparable would inflate the caveat and, worse, would
+    break the comparison between the pages either side of it, which is exactly
+    the window a refusal makes most worth measuring.
+    """
+    store = _store(tmp_path)
+    store.record_read(FEED, URL, T0, 20, 0, 0.3, first_id=100, last_id=119)
+    store.record_refusal(FEED, URL, T0 + timedelta(seconds=CADENCE), "timed out", 10.0)
+    store.record_read(FEED, URL, T0 + timedelta(seconds=2 * CADENCE), 20, 0, 0.3,
+                      first_id=125, last_id=144)
+    measured = attempts_tool.measure(store, FEED, CADENCE)
+    assert measured.uncomparable_pairs == 0
+    assert measured.unseen_messages == 5
