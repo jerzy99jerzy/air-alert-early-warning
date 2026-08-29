@@ -16,9 +16,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tools import attempts as attempts_tool  # noqa: E402
-
-from mavo.store import EventStore  # noqa: E402  isort: skip
+from mavo import attempts as attempts_tool  # noqa: E402
+from mavo.store import EventStore  # noqa: E402
 
 FEED = "channel"
 URL = "https://t.me/s/air_alert_ua"
@@ -267,3 +266,65 @@ def test_a_refusal_is_not_an_uncomparable_pair(tmp_path: Path) -> None:
     measured = attempts_tool.measure(store, FEED, CADENCE)
     assert measured.uncomparable_pairs == 0
     assert measured.unseen_messages == 5
+
+
+def test_the_reader_the_instrument_uses_is_a_stream(tmp_path: Path) -> None:
+    """`iter_attempts` yields; it does not materialise the window (D-038).
+
+    The materialising reader was measured at 3.6 s and ~248 MiB of dicts over
+    one synthetic year, on a table with no retention. A generator is the shape
+    that cannot regress that way, and this asserts the shape: a mutation that
+    quietly rebuilds the list inside would stop being one.
+    """
+    import inspect
+
+    store = _store(tmp_path)
+    _poll(store, 0)
+    stream = store.iter_attempts(FEED)
+    assert inspect.isgenerator(stream), "a list here re-buys the 248 MiB"
+    assert next(stream)["outcome"] == "read"
+    stream.close()
+
+
+def test_the_cursor_read_uses_the_covering_index(tmp_path: Path) -> None:
+    """`newest_page_id` runs before every fetch, inside the warning budget.
+
+    Without `idx_attempts_feed_last` the MAX walks every row of the feed:
+    112 ms over one synthetic year, added to every poll, growing with a table
+    that has no retention. The plan is asserted rather than the timing,
+    because a timing test is a flake and a plan is a fact about the query.
+    """
+    import sqlite3
+    from contextlib import closing
+
+    store = _store(tmp_path)
+    _poll(store, 0)
+    with closing(sqlite3.connect(store.path)) as conn:
+        plan = " ".join(
+            str(row[3]) for row in conn.execute(
+                "EXPLAIN QUERY PLAN SELECT MAX(last_id) FROM feed_attempts "
+                "WHERE feed = ?", (FEED,),
+            )
+        )
+    assert "idx_attempts_feed_last" in plan, plan
+
+
+def test_the_cli_subcommand_reaches_the_instrument(
+    tmp_path: Path, capsys
+) -> None:
+    """`mavo attempts` is how the host runs this (D-038).
+
+    The tools/ path was never installed, so the instrument built to read the
+    production table could not run on the only machine that has one. This
+    exercises the wiring end to end: subcommand, delegation, render.
+    """
+    from mavo.cli import main as cli_main
+
+    store = _store(tmp_path)
+    _poll(store, 0)
+    _poll(store, CADENCE)
+    assert cli_main([
+        "attempts", "--store", str(store.path), "--cadence-s", "33",
+    ]) == 0
+    out = capsys.readouterr().out
+    assert "attempts=2" in out and "feed=channel" in out

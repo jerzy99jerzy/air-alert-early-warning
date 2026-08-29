@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.37
+Document:  docs/METHODOLOGY.md, version 2.38
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4144,3 +4144,44 @@ process, where a reader has more reason to ask what a zero would do. Checked
 before rewriting rather than claimed afterwards, and recorded here because a
 release that quietly rewrites an expression under a defect number it does not
 deserve is padding the register.
+
+
+### F127, 0.43.0.0. The manual carried two claims their own text had dated
+
+`docs/MANUAL.md` 4.5, the operator's page for the one command production runs,
+stated on 2026-08-29:
+
+1. *"this command currently reports `parsed=0` against live content ... the
+   redesign is sprint 6 ... `--stub` against the bundled fixture is the only
+   path that parses anything."* The host had been measuring `parsed=19` of 20
+   against live content every 33 seconds since 2026-08-11 - eighteen days,
+   roughly 47,000 polls, each one a counterexample in the journal.
+2. *"the count is `unknown` on the host ... and that sentence stays here until
+   the cursor exists."* The cursor shipped in 0.42.0.0 and `skipped=0` was
+   read from the host journal the same afternoon. The sentence stayed.
+
+**The class: a claim that names its own expiry has nobody watching the date.**
+Both sentences were written honestly and both told the reader when they would
+stop being true - "the redesign is sprint 6", "until the cursor exists" - and
+that is precisely what let them survive: a dated claim reads as self-limiting,
+so no task tracks it and no check reads it. F102 is this shape aimed at a host
+document; this is the same shape in the manual, one shelf closer to the
+operator.
+
+**Why the gate held green over it.** `manual_audit` checks that transcripts
+reproduce and options are documented - shape, not truth. The 4.5 transcript
+(`--stub` against the fixture) reproduces perfectly and always will, because
+it exercises the one path the false paragraph said works. A transcript that
+reproduces is evidence about the transcript.
+
+**Repair.** Both paragraphs rewritten to the measured present, each keeping
+one line of its history with the F-number, so the correction is visible
+rather than silent; the exit-code table gains code 7, which the `--store`
+option row had carried alone since 0.40.0.0; and 4.5 now documents what
+`--store` does on the write path since D-036: the attempt row, the migration
+line, and the cursor. The class already has its guard elsewhere in this
+repository - `docs_audit` reads `DEPLOYMENT.md`'s dated host claims - and the
+honest note is that no equivalent reads the manual's prose, and none is added
+here: a truth-checker for free text is a claim this project knows better than
+to make. What is added is the smaller thing that was missing: `mavo attempts`
+is documented in a new 4.9, so the audit at least knows the section exists.

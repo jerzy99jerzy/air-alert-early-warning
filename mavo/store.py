@@ -184,6 +184,12 @@ CREATE INDEX IF NOT EXISTS idx_events_ts_source ON events (ts_source);
 CREATE INDEX IF NOT EXISTS idx_events_area ON events (area_id, ts_source);
 CREATE INDEX IF NOT EXISTS idx_communiques_feed ON communiques (feed, ts_ingest);
 CREATE INDEX IF NOT EXISTS idx_attempts_feed ON feed_attempts (feed, started_at);
+-- 0.43.0.0. `newest_page_id` runs once per poll, before the fetch, so its cost
+-- is inside the warning budget. Without this index `MAX(last_id) WHERE feed=?`
+-- walks every row of the feed: measured at 112 ms over one synthetic year
+-- (955,570 rows) against ~0 ms with it. Covering, so the read never touches
+-- the table at all.
+CREATE INDEX IF NOT EXISTS idx_attempts_feed_last ON feed_attempts (feed, last_id);
 """
 
 
@@ -660,11 +666,12 @@ class EventStore:
         since: datetime | None = None,
         until: datetime | None = None,
     ) -> tuple[dict[str, Any], ...]:
-        """Every poll logged for one feed, oldest first.
+        """Every poll logged for one feed, oldest first, materialised.
 
-        Returned whole rather than streamed: this table holds one row per poll
-        and is read by a person asking what the collector was doing, not by
-        the report path.
+        For callers that want the whole window in hand - the RSO tests, a
+        five-row day. `iter_attempts` is the same query streamed, and it is
+        what `mavo attempts` reads, because "read by a person" stopped
+        implying "small" the day the channel joined this table (D-036).
 
         ``since`` is inclusive and ``until`` exclusive, so two adjacent
         windows partition the rows between them instead of both claiming the
@@ -702,6 +709,53 @@ class EventStore:
             }
             for row in rows
         )
+
+    def iter_attempts(
+        self,
+        feed: str,
+        since: datetime | None = None,
+        until: datetime | None = None,
+    ) -> Iterator[dict[str, Any]]:
+        """Every poll logged for one feed, oldest first, one row at a time.
+
+        The streaming half of ``attempts`` (0.43.0.0). That method materialises
+        the window as a tuple of dicts, which was written for RSO at five rows
+        a run and is the wrong shape for the channel at 2,618 rows a day:
+        measured at 3.6 s and ~248 MiB of dicts over one synthetic year. This
+        yields instead, so `mavo attempts` over an unbounded window costs one
+        row of memory however old the store grows. `attempts` remains for
+        callers that want the tuple and says so.
+
+        Same window semantics: ``since`` inclusive, ``until`` exclusive.
+        """
+        clauses = ["feed = ?"]
+        values: list[Any] = [feed]
+        if since is not None:
+            clauses.append("started_at >= ?")
+            values.append(_stored_form(since, "since"))
+        if until is not None:
+            clauses.append("started_at < ?")
+            values.append(_stored_form(until, "until"))
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT started_at, url, outcome, items, unreadable, detail, elapsed_s, "
+                "first_id, last_id "
+                f"FROM feed_attempts WHERE {' AND '.join(clauses)} "
+                "ORDER BY started_at, rowid",
+                tuple(values),
+            )
+            for row in rows:
+                yield {
+                    "started_at": row[0],
+                    "url": row[1],
+                    "outcome": row[2],
+                    "items": row[3],
+                    "unreadable": row[4],
+                    "detail": row[5],
+                    "elapsed_s": row[6],
+                    "first_id": row[7],
+                    "last_id": row[8],
+                }
 
     def newest_page_id(self, feed: str) -> int | None:
         """The highest post id this feed has ever been observed to serve.

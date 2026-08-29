@@ -111,7 +111,14 @@ CEILINGS: dict[str, int] = {
     # Lowered rather than left, which is what makes this a ratchet. T77 is the
     # same observation from the other direction: a ceiling that only ever rises
     # stops measuring the thing it was built for.
-    "README.md": 22,
+    # 22 -> 23 at 0.43.0.0, and this ceiling has now moved 23 -> 22 -> 23 in
+    # three releases without a single new claim of false precision: it tracks
+    # how many decimals the *coverage pin itself* happens to carry (96.48 ->
+    # 96.6 -> 96.11), and the badge, its alt text and the table row all quote
+    # the pin. A ceiling that follows a checked figure's formatting is
+    # measuring noise; noted in the 0.43.0.0 review as a candidate for
+    # excluding pin-quoted figures from this count rather than chasing them.
+    "README.md": 23,
     # Raised at 0.39.1.0, 28 to 35, and the shape of the raise is the argument
     # for T77. **One of the seven is a measurement:** T9's closure quotes ``96.43``,
     # which is
@@ -138,11 +145,16 @@ CEILINGS: dict[str, int] = {
     "docs/CHANNEL.md": 19,
     "docs/COMPUTATION.md": 20,
     "docs/DATA-FLOW.md": 6,
-    "docs/DECISIONS.md": 32,
+    # 32 -> 33 at 0.43.0.0: D-039 quotes the measured poll latency, 0.26 s,
+    # because the no-lock arithmetic rests on it and rounding a load-bearing
+    # figure to "fast" is how arithmetic becomes hope.
+    "docs/DECISIONS.md": 33,
     "docs/DEPLOYMENT.md": 14,
     "docs/FEED-SPEC.md": 6,
     "docs/FOUNDATIONS.md": 7,
-    "docs/MANUAL.md": 19,
+    # 19 -> 20 at 0.43.0.0: the rewritten 4.5 (F127) quotes the channel's
+    # hashtag coverage, 99.34%, the figure the sprint-7 redesign stands on.
+    "docs/MANUAL.md": 20,
     "docs/MECHANISMS.md": 16,
     # Raised at 0.39.1.0, 82 to 87. F119's entry names the two interpreter
     # versions the defect appeared and disappeared on, ``3.14`` and ``3.12``,

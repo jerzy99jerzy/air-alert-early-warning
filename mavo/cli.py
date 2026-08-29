@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from mavo import __version__
+from mavo.attempts import main as attempts_main
 from mavo.backfill import (
     DirectoryBusy,
     DirectoryLock,
@@ -298,6 +299,23 @@ def _cmd_collect(args: argparse.Namespace) -> int:
 
 
 
+def _cmd_attempts(args: argparse.Namespace) -> int:
+    """Delegate to the instrument. The parsing above is the one owned here.
+
+    `mavo.attempts.main` carries its own parser so the tools/ shim and older
+    command lines keep working; this wrapper rebuilds the argv it expects
+    rather than reaching into its internals, so the two stay honest about
+    which one owns the option surface a caller sees.
+    """
+    argv = ["--store", args.store, "--feed", args.feed,
+            "--cadence-s", str(args.cadence_s)]
+    if args.since:
+        argv += ["--since", args.since]
+    if args.until:
+        argv += ["--until", args.until]
+    return attempts_main(argv)
+
+
 def _cmd_rso(args: argparse.Namespace) -> int:
     """Poll the Polish civil-warning feed and record what happened.
 
@@ -531,6 +549,27 @@ def build_parser() -> argparse.ArgumentParser:
              "collector is indistinguishable from a quiet country",
     )
     rso.set_defaults(func=_cmd_rso)
+
+    attempts = subparsers.add_parser(
+        "attempts",
+        help="attempt completeness for one feed: polls made, polls refused, "
+             "stretches with neither, and messages that passed unseen (T66, D-038)",
+    )
+    attempts.add_argument("--store", required=True, help="path to the event store")
+    attempts.add_argument(
+        "--feed", default="channel",
+        help="feed name in feed_attempts: `channel` or `rso`",
+    )
+    attempts.add_argument(
+        "--cadence-s", type=float, required=True,
+        help="the timer interval, in seconds. Required, never inferred: this "
+             "command cannot read the timer, and deriving the interval from "
+             "the data would calibrate the gap detector on the gaps it is "
+             "looking for",
+    )
+    attempts.add_argument("--since", help="ISO timestamp with an offset, inclusive")
+    attempts.add_argument("--until", help="ISO timestamp with an offset, exclusive")
+    attempts.set_defaults(func=_cmd_attempts)
 
     report_cmd = subparsers.add_parser(
         "report", help="render the current picture from a store"

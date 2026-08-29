@@ -16,6 +16,77 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.43.0.0 - 2026-08-29
+
+**Deploy day's homework.** 0.42.0.0 was installed on the host the afternoon it
+shipped, and the deploy produced its own findings: an instrument that could
+not reach the only machine that matters, two readers that would not survive
+the table they read growing old, a manual asserting the live path parses
+nothing, and nine hours of channel silence nobody can place in a
+distribution. This release is those five things and no feature.
+
+- **`mavo attempts` - the instrument moved to where its input lives (D-038).**
+  `tools/attempts.py` read the store, `pip` installs the package and not
+  `tools/`, and the first attempt to run it on `vm-mavo` - one command after
+  `feed_attempts` gained its first production rows - found it absent and
+  undocumented. Instruments that read the **store** now ship in the wheel as
+  `mavo` subcommands, where the manual audit polices their documentation
+  (4.9); instruments that read the **tree** stay in `tools/`, where the gate
+  runs them. The old path remains as a one-screen forwarding shim.
+
+- **Both store readers repaired against a table with no retention.**
+  `newest_page_id` runs before every fetch, inside the warning budget, and
+  walked every row of the feed: 112 ms over one synthetic year. A covering
+  index (`feed`, `last_id`) takes it to 0.7 ms, asserted by query plan rather
+  than by timing. The measurement pass streams one row at a time
+  (`iter_attempts`, latency vector aside) instead of materialising the window:
+  3.6 s and ~248 MiB of dicts over the same year becomes 2.1 s, and the memory
+  now scales with the latency vector rather than the row count. Both verified
+  red: index removed from the schema, stream rebuilt as a list.
+
+- **`collect` takes no lock, and now that is a decision (D-039).** The
+  arithmetic - 10 s fetch deadline against a 30 s timer, `systemd`
+  serialising the unit, `MAX` cursor and content-hash idempotence making the
+  manual-beside-timer overlap benign - is recorded with its reopen conditions,
+  so a reader who goes looking for the lock finds the reason instead.
+
+- **F127: the manual carried two claims their own text had dated.** 4.5 said
+  `parsed=0` against live content and `--stub` is the only path that parses
+  anything - beside eighteen days of the host measuring `parsed=19` of 20
+  every 33 seconds. Two paragraphs down, a sentence promised to stay "until
+  the cursor exists", and stayed one release past the cursor. The class: a
+  claim that names its own expiry has nobody watching the date; `manual_audit`
+  checks transcripts and options, and a transcript that reproduces is evidence
+  about the transcript. Both rewritten to the measured present with the
+  history kept, exit code 7 added to a table that had been complete for every
+  reader who did not use the one option production uses.
+
+- **The flow diagram catches up two releases (DATA-FLOW 1.1).** The kind
+  stream (T16) had been beside the alert stream since sprint 7 while the
+  picture showed one stream; the attempt row (D-036) and the dashed
+  cursor back-edge (F123) - the one exception to the diagram's
+  left-to-right flow - are drawn and named, and the loss table gains the
+  attempt log's row.
+
+- **The host document reads today's host (DEPLOYMENT 1.14).** Installed
+  0.42.0.0, behind by one, deploy history extended, and the migration
+  paragraph converted from prediction to reading: three `[STORE-MIGRATED]`
+  lines, once, no row lost, `skipped` unknown-then-zero, with the pre-install
+  copy's checksum as the point of return. The dist-info mtime is owed and its
+  command is in the file.
+
+- **T82 opened: nine hours of silence with no base rate.** The 2026-08-29 gap
+  was verified from three vantage points and reported correctly by the
+  pipeline; whether it is the tail of the channel's ordinary distribution or
+  an event, nothing can currently say. T54's declined window is on the record
+  in its entry, so the deferral is a decision rather than drift.
+
+**Store schema unchanged** - the new index is created by the store itself on
+first open, silently and idempotently, on any release at or above this one.
+No migration line is printed for an index, deliberately: `[STORE-MIGRATED]`
+announces new *columns*, places where NULL now means "before my time", and an
+index changes no answer to any query.
+
 ## 0.42.0.0 - 2026-08-29
 
 **The cursor that could not survive a process.** 0.41.0.0 decided where the

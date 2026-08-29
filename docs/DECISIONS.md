@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.15
+Document:  docs/DECISIONS.md, version 2.16
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1443,3 +1443,62 @@ cost money and re-weighs it against a check that fires on a mistake nobody has
 yet made here; or a release procedure lands that verifies the tag's target
 locally before pushing, which would move the check inside the gate where it is
 cheaper and earlier.
+
+
+## D-038. An instrument that reads the store ships in the package
+Date: 2026-08-29. Status: adopted
+
+**Decision.** Diagnostic instruments whose input is the event store are `mavo`
+subcommands, installed by the wheel and documented in the manual, which the
+manual audit polices. Instruments whose input is the tree stay in `tools/`,
+where the gate runs them. The discriminator is where the input lives, and it
+mirrors D-036's: that decision asked *who reads the record back*, this one
+asks *where must the reader stand to read it*.
+
+**Found on deploy day, one command after it mattered.** 0.41.0.0 shipped
+`tools/attempts.py` to read `feed_attempts`; 0.42.0.0 gave that table its
+first production rows; and the first attempt to read them on `vm-mavo` found
+that `pip` installs the package and not `tools/`, so the instrument built for
+the production table could not run on the only machine that has one. It was
+also in no operator document, because `manual_audit` covers `mavo` commands
+and nothing covers `tools/` - two absences with one cause, which is that the
+instrument was filed by what it is instead of by where it runs.
+
+**What it costs.** The package gains an import of no runtime weight and the
+CLI gains a subcommand; the wheel stays dependency-free. `tools/attempts.py`
+remains as a one-screen forwarding shim so a written-down command line keeps
+working, and prints where the instrument went.
+
+**Reopen if:** an instrument turns up that reads both the store and the tree,
+which this discriminator cannot file; or the host gains a repository checkout
+for some other reason, which would make `tools/` reachable and the move
+merely aesthetic.
+
+## D-039. `collect` takes no lock, on arithmetic rather than on hope
+Date: 2026-08-29. Status: adopted
+
+**Decision.** `mavo collect` does not serialise against a concurrent
+invocation of itself. `backfill` keeps its `DirectoryLock`; `collect` runs
+bare, and this entry is the reason a reader will not find one.
+
+**The arithmetic.** The timer fires every 30 s with 1 s accuracy; the fetch
+deadline is 10 s (F98) and the store writes are milliseconds on the measured
+path (0.26 s total poll latency on the host, 2026-08-29). For two invocations
+to overlap, one poll would have to outlive the interval, and the deadline
+forbids it by a factor of three. `systemd` additionally serialises starts of
+the same `oneshot` unit, so overlap requires a *manual* invocation beside the
+timer - which deploy day produces, and which is why this entry exists.
+
+**Why the overlap is benign when it happens anyway.** Both invocations read
+`newest_page_id`, which is `MAX(last_id)` and cannot be moved backwards by
+either writer; both append attempt rows, which do not collide; and event
+writes are idempotent by content hash. The worst measured outcome is the same
+window's `skipped` computed twice and printed twice, two journal lines for
+one fact - noise, not loss. A `DirectoryLock` here would convert that noise
+into a refused poll, and T26 records that the lock's liveness check reads pids
+through a namespace it does not verify, so the cure carries its own defect
+into the one path that matters.
+
+**Reopen if:** the fetch deadline is ever configured at or above the timer
+interval, which deletes the arithmetic; or a second writer to the same store
+appears that is not this command.

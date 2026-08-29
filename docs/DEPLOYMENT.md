@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.13 / 2026-08-29
+Version: 1.14 / 2026-08-29
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -10,7 +10,7 @@ written after the fact rather than before, and says so.
 
 ## What is installed on the hosts, and how far behind it is
 
-Host state measured: 2026-08-26
+Host state measured: 2026-08-29
 
 **This section is the state. The rest of this document is the shape**, and the
 two diverged silently once already (F102), which is why the line above exists
@@ -40,10 +40,10 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.40.0.0`, `/opt/mavo/venv`, python3.11 |
-| Installed at | **2026-08-26 19:39:24 UTC**, the mtime of the installed `.dist-info` and of the newest module beside it, read on the host rather than taken from an install chain's own echo |
-| `main` | 0.42.0.0 |
-| Behind by | **three releases**, and two of them change `mavo/` and the store schema. Until the deploy lands, the collector on this host writes no attempt row and `skipped` stays `unknown` on every poll, which is F123 still running in production |
+| Installed | `air-alert-early-warning 0.42.0.0`, `/opt/mavo/venv`, python3.11 |
+| Installed at | **2026-08-29, between 14:38 and 14:39:05 UTC**: bounded below by the wheel's sha256 verification on the host and above by the first post-install poll in the journal. The `.dist-info` mtime this row's method calls for has not been read yet; the command is in the deploy record below and the exact minute is owed to the next revision of this file |
+| `main` | 0.43.0.0 |
+| Behind by | **one** release, 0.43.0.0, which changes no store schema and no collect behaviour: it moves the attempts instrument into the package (`mavo attempts`, D-038), adds a covering index the store creates for itself on first open, and repairs documents. Deploy when the instrument is wanted on the host; nothing on the host is wrong meanwhile |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -57,7 +57,20 @@ than a duration nobody measured. `mavo collect` prints
 ```
 
 **once**, on the first invocation, three lines from 0.40.0.0 and the last two
-only from 0.41.0.0. That line appearing on every poll would mean
+only from 0.41.0.0.
+
+Read from the host, 2026-08-29 14:39:05 UTC, exactly as predicted and exactly
+once: all three lines on the first post-install poll, none on the second, no
+row lost (the pre-install copy `events.pre-0.42.0.0`, sha256 `2490e966…d2892`,
+is the point of return and stays on the host). The same first poll printed
+`skipped=unknown` with `no earlier page bound`; the second printed
+`skipped=0`, which closed F123 in production - eighteen days after deployment
+first made it observable. Zero is correct there, not suspicious: the channel
+had been silent since 04:55 UTC, nine and a half hours the state machine spent
+in `degraded` with `observation_age_s` 34,214 - D-034's argument, live, in its
+extreme form. The dist-info mtime read owed above:
+
+    sudo stat -c %y /opt/mavo/venv/lib/python3.11/site-packages/air_alert_early_warning-0.42.0.0.dist-info That line appearing on every poll would mean
 the migration is not sticking and the store is being reopened one column short
 each time, which is a different failure with the same symptom. The reading to
 take after the deploy is therefore the count of that line over a window, not
@@ -78,13 +91,14 @@ rows.
 
 | Version | Installed at (UTC) | Fate |
 | --- | --- | --- |
+| 0.42.0.0 | 2026-08-29 ~14:38 (see the Installed-at bound above) | **current** |
 | 0.32.2.0 | 2026-08-14 18:13:09 | superseded |
 | 0.32.7.0 | 2026-08-17 11:02:06 | superseded; its restart opened the S9 window |
 | 0.36.0.0 | 2026-08-20 18:19:43 | **withdrawn after 14 hours.** F110: 168 polls died with a traceback and exit `1/FAILURE`, and the refusal line stopped being written |
 | 0.36.0.1 | 2026-08-21 08:52:36 | superseded |
 | the seven releases in between | `[unknown]` | whether any of them was ever installed cannot be recovered: the filesystem keeps only the current install and this table was not written at the time. Named rather than reconstructed from the version numbers (F117) |
 | 0.39.0.0 | 2026-08-23 13:40:15 | superseded; recorded on 2026-08-24, a day after the fact, by reading the host rather than by anyone remembering |
-| 0.40.0.0 | 2026-08-26 19:39:24 | current; recorded the same evening, from the host, during the deploy rather than after it |
+| 0.40.0.0 | 2026-08-26 19:39:24 | superseded 2026-08-29; recorded the same evening, from the host, during the deploy rather than after it |
 
 **Verified by content, not by version string** [measured, 2026-08-26]. The
 wheel was checked by `sha256sum -c` on the host before `pip` touched anything

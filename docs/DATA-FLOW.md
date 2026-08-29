@@ -6,7 +6,7 @@ the companion document and answers the other question, which components exist
 and what may talk to what.
 
 ```
-Document:  docs/DATA-FLOW.md, version 1.0
+Document:  docs/DATA-FLOW.md, version 1.1
 Audience:  a contributor about to change a transformation, a schema field, or
            anything that decides what is kept and what is dropped
 Companion: ARCHITECTURE (components and boundaries), MECHANISMS (why each
@@ -40,10 +40,14 @@ flowchart TD
     CH["channel page<br/>HTML, 20 posts"]
     CH -->|"transport.fetch"| BODY["body: str<br/>capped at 4 MB"]
     BODY -->|"POST_ID regex"| WIN["window: first_id, last_id<br/>skipped or unknown"]
+    STORE -. "newest_page_id seeds the baseline (F123)" .-> WIN
+    WIN -->|"one row per poll (D-036)"| ATT[("feed_attempts<br/>bounds, counts, latency")]
     BODY -->|"_BLOCK per data-post"| MSG["(timestamp, text) pairs<br/>paired inside one block"]
     MSG -->|"classify"| CLS{"area and state<br/>both matched"}
     CLS -->|"no"| UNP["unparsed<br/>counted, kept as text"]
     CLS -->|"yes"| EV["ThreatEvent<br/>area, state, kind, ts_source, ts_ingest, provenance"]
+    CLS -->|"declaration (T16)"| KE["KindEvent<br/>the kind stream, beside the alerts"]
+    KE -->|"content hash"| STORE
     EV -->|"content hash"| STORE[("EventStore<br/>append-only")]
     STORE -->|"replay"| NIGHT["Night<br/>events grouped by evening"]
     NIGHT --> RULES["rules<br/>R1 R2 R3 R4, two conjunctions"]
@@ -56,6 +60,16 @@ flowchart TD
     GATE -->|"fails any"| OBS["observation tier<br/>NOT BUILT"]
     GATE -->|"clears all"| ALARM["alarm tier<br/>NOT BUILT"]
 ```
+
+Three edges were added at 0.43.0.0 and the diagram was wrong to a reader for
+two releases without them: the **kind stream** (T16), which had lived beside
+the alert stream since sprint 7 while the picture showed one stream; the
+**attempt row**, one per poll whatever happens (D-036); and the dashed
+back-edge, which is the one exception to this diagram's left-to-right flow -
+`collect` reads exactly one scalar from its own record, the highest page bound
+ever seen, so `skipped` can be a measurement across processes (F123). The
+attempt row is also written on a **refusal**, when no page exists to window;
+the diagram shows the read path and this sentence carries the other one.
 
 Two things about this diagram are load-bearing. The `unparsed` branch is a
 destination, not an error path: unparsed messages are counted and kept, because
@@ -359,6 +373,7 @@ project exists to attack.**
 | Classifier | Any wording the table lacks | `unparsed` count, kept as text | A stale table would read as a quiet channel (F23) |
 | State layer | The difference between silence and contradiction | `UNKNOWN` against `PARTIAL_CLEAR` | An ambiguous all-clear would read as an all-clear (F26) |
 | Store | Nothing | | |
+| Attempt log | The page itself: only bounds, counts and latency survive the poll | one row per poll, read by `mavo attempts` | A refusal would be indistinguishable from a quiet timer, and a dead collector from a quiet channel (T66, D-036) |
 | Night grouping | Events across a midnight boundary | **Not currently measured** | This one is a known blind spot, stated rather than closed |
 | Policy | Crossing kinds no regime serves | `COVERAGE GAP`, printed | An unserved kind would leave the denominator (MT6) |
 | Gate | Nothing. It reports, it does not filter | | |

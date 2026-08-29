@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.3
+Document:  docs/MANUAL.md, version 3.4
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -277,17 +277,23 @@ mavo collect --stub tests/fixtures/channel.html
 messages=3 parsed=2 unparsed=1 skipped=unknown latency=0.001s
 ```
 
-**`skipped` is unknown, not zero, and it is unknown on every poll this project
-makes.** The channel page serves a window of roughly the last twenty messages,
-so during a mass alert more than twenty can pass between two polls and the
-extras leave no trace. Post ids make a skip observable, and consecutive polls
-*of one source object* report how many passed unseen. This command builds a
-fresh source on every invocation and `mavo-collect.service` is a `oneshot`
-under a timer, so there is no process in which two polls meet: the count is
-`unknown` on the host, has been since deployment, and will stay so until the
-last post id is written somewhere both invocations can read. **T18 is recorded
-as done on an acceptance that production never reaches** (F123), and that
-sentence stays here until the cursor exists.
+**`skipped` is a measurement across invocations since 0.42.0.0 (F123).** The
+channel page serves a window of roughly the last twenty messages, so during a
+mass alert more than twenty can pass between two polls and the extras leave no
+trace - the one failure in this pipeline with no error code. Post ids make a
+skip observable, and the baseline now survives the process: with `--store`,
+the command reads the highest page bound this store has ever seen
+(`newest_page_id`, `MAX` so a short page cannot move it backwards) and seeds
+the comparison before the fetch. The count is `unknown` in exactly three
+states, and the note under the summary line names which one you are in: no
+store to have kept a baseline; a store with no earlier bound, which is a first
+poll and resolves itself; or a page carrying no post ids at all against a
+baseline that exists, which is what a restructured or hostile page looks like
+and is the only one worth waking up for (F126). Read from the host on deploy
+day, 2026-08-29: first poll `skipped=unknown` with `no earlier page bound`,
+second poll `skipped=0`. The paragraph this replaces said the count *"stays
+unknown until the cursor exists"* and then outlived its own condition by a
+release (F127).
 
 **`unparsed` is the number to watch.** Messages that match no pattern are counted
 and printed, never dropped. A rising count means the pattern table is drifting
@@ -303,16 +309,25 @@ area, or a name has drifted between the channel and the state register, which
 has already happened once. A non-empty list is a finding and belongs in the
 defect log, not in a silent fallback.
 
-**Measured, and it failed.** On 2026-08-08 the shipped pattern table was run
-against twenty real messages from the channel. It classified **none of them**.
-The state markers were correct (15 of 20), the means markers partly correct (4 of
-20), and the area table matched nothing at all, because the channel names raions
-and hromadas while the table was keyed on oblasts.
+**Measured against live content, and it works - this paragraph said the
+opposite for twenty releases (F127).** The history it kept repeating was real:
+on 2026-08-08 the pre-redesign table classified 0 of 20 live messages, because
+the channel names raions and hromadas while the table was keyed on oblasts
+(F23 to F27). Sprint 7 rebuilt classification around the channel's own
+hashtags - 99.34% of messages carry one, `docs/CHANNEL.md` - and production
+has measured `parsed=19` of 20 every 33 seconds since 2026-08-11, eighteen
+days and roughly 47,000 polls of counterexample to the sentence that stood
+here [measured, host journal read 2026-08-29]. The stable unparsed one is a
+wording variant, counted and printed rather than dropped, which is the number
+the previous paragraph tells you to watch.
 
-So this command currently reports `parsed=0` against live content, and that is
-the honest state rather than a bug to be surprised by. The redesign is sprint 6;
-see F23 to F27 in `docs/METHODOLOGY.md`. Until then, `--stub` against the bundled
-fixture is the only path that parses anything.
+**With `--store`, the command also logs itself.** Every invocation writes one
+row to `feed_attempts` - read or refusal, with latency and the page's id
+bounds (D-036) - so a dead collector is distinguishable from a quiet channel
+after the fact, and `mavo attempts` (4.9) can audit the record. On the first
+run against a store from an older release it prints one `[STORE-MIGRATED]`
+line per column it appends, once, and never again; the same line on every
+poll means the migration is not sticking and is worth stopping for.
 
 Exit codes:
 
@@ -321,6 +336,7 @@ Exit codes:
 | 0 | fetched and parsed, whatever the unparsed count |
 | 3 | the source was unreachable. Distinct from reachable and quiet |
 | 4 | `--save-raw` was requested and the snapshot could not be written. Loud rather than silent, because a snapshot that quietly fails to land is a quiet loss of exactly the evidence the redesign needs |
+| 7 | the write to `--store` failed after a successful fetch and parse. In the table since 0.43.0.0; the `--store` option row above had carried it alone since 0.40.0.0, which made the table complete for every reader who did not use the one option production uses (F127) |
 
 ### 4.6 `mavo rso` - BUILT
 
@@ -445,6 +461,41 @@ exists to publish.
 seconds is five times the two-minute polling requirement derived from the page
 window arithmetic (T39). Neither the poll interval nor the rate the source
 tolerates has been measured yet, which is S9's work.
+
+### 4.9 `mavo attempts` - BUILT
+
+Attempt completeness for one feed: how many polls were made, how many were
+refused, which stretches of the window contain neither, and how many messages
+passed between two read pages without being seen. It exists because the
+attempt record (D-036) is only as good as the ability to read it, and it ships
+inside the package rather than in `tools/` because its input is the store, and
+the store lives on the host (D-038) - discovered the hard way, one command
+after the production table gained its first rows.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--store` | required | Path to the event store whose `feed_attempts` to read |
+| `--feed` | `channel` | Which feed's record: `channel` or `rso` |
+| `--cadence-s` | required | The timer interval in seconds. Required, never inferred: this command cannot read the timer, and deriving the interval from the data would calibrate the gap detector on the gaps it is looking for |
+| `--since` | none | ISO timestamp with an offset, inclusive |
+| `--until` | none | ISO timestamp with an offset, exclusive |
+
+What the numbers refuse to claim: the window edges are reported as unknown,
+because nothing before the first row or after the last is observed; rows
+without a latency read `untimed` rather than zero; and pairs of pages whose id
+bounds are missing on either side - every row written before 0.42.0.0 - are
+counted as `uncomparable` and printed beside the unseen total, so a total over
+half the pairs cannot read as a total over all of them. Unseen messages and
+unobserved time are different quantities and are never added together: one is
+traffic that moved while we watched, the other is time nobody was watching.
+
+On the host the store belongs to the service user, so the invocation is:
+
+    sudo -u mavo /opt/mavo/venv/bin/mavo attempts --store /var/lib/mavo/events --cadence-s 33
+
+The reader streams one row at a time (the latency vector aside, kept whole for
+the median), so the command's memory does not grow with the age of a store
+that currently has no retention.
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)
 
