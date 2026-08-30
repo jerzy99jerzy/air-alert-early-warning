@@ -358,7 +358,17 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
         # written to the attempts table: nothing was attempted.
         print(f"[NO-KEY] {missing}")
         return 2
-    source = UkrainealarmSource(key)
+    if args.store and not args.snapshot:
+        # The invocation shaped like production, missing the one flag that
+        # lets production ever clear. Loud on every run, because the failure
+        # it names is invisible on the map: alerts raise normally and simply
+        # never end.
+        print("[NO-SNAPSHOT] every run is a first poll and no alert this "
+              "source raises will ever clear; a timer-driven deployment "
+              "needs --snapshot")
+    source = UkrainealarmSource(
+        key, snapshot=Path(args.snapshot) if args.snapshot else None
+    )
     started = datetime.now(UTC)
     try:
         events = source.poll()
@@ -376,8 +386,17 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
     fetch_s = (datetime.now(UTC) - started).total_seconds()
     active = sum(1 for event in events if event.state is AlertState.ACTIVE)
     cleared = len(events) - active
+    aged = (f"({source.snapshot_age_s:.0f}s)"
+            if source.snapshot_age_s is not None else "")
     print(f"active={active} cleared={cleared} "
-          f"unresolved={len(source.unresolved)} latency={fetch_s:.3f}s")
+          f"unresolved={len(source.unresolved)} latency={fetch_s:.3f}s "
+          f"snapshot={source.snapshot_state}{aged}")
+    if source.snapshot_state in ("stale", "corrupt"):
+        # Withheld, and said so. Silently withholding clears would put a calm
+        # face on a degraded reading, which is the one rendering this project
+        # exists to refuse.
+        print(f"  snapshot {source.snapshot_state}: clears withheld this "
+              "run; a gap in observation is not an all-clear")
     for name in source.unresolved:
         # Named, not counted only. A region the map cannot resolve is a finding
         # about the map, and a number alone cannot be acted on.
@@ -394,6 +413,18 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
             return 7
         print(f"stored={appended} new events (seen={len(events)}; "
               "the difference is idempotence, not loss)")
+    # After the append, deliberately: a failed store keeps the old snapshot
+    # standing, so the next run derives the same clears again rather than
+    # losing them. The duplicate that retry can produce only nudges an
+    # episode's recorded end by one cycle; a lost clear freezes it open.
+    try:
+        source.save_snapshot()
+    except OSError as failure:
+        # Loud but not fatal: the events are stored, and the degradation this
+        # leaves behind - the next run withholding clears - points the safe
+        # way. Invisible it must not be, because persistent write failure
+        # here recreates the never-clearing map this flag exists to end.
+        print(f"[SNAPSHOT-UNWRITTEN] {failure}")
     return 0
 
 def _cmd_rso(args: argparse.Namespace) -> int:
@@ -608,6 +639,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="file holding the API key, 0600 and owned by the polling user. "
              "Omit to read MAVO_UKRAINEALARM_KEY, which is visible in "
              "/proc/<pid>/environ to anything running as the same user",
+    )
+    collect_api.add_argument(
+        "--snapshot",
+        help="file carrying the previous snapshot across runs. A oneshot "
+             "deployment without it never observes an area leaving the "
+             "snapshot, so no alert it raised ever clears",
     )
     collect_api.set_defaults(func=_cmd_collect_api)
 

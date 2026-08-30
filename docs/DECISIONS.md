@@ -1502,3 +1502,66 @@ into the one path that matters.
 **Reopen if:** the fetch deadline is ever configured at or above the timer
 interval, which deletes the arithmetic; or a second writer to the same store
 appears that is not this command.
+
+## D-040. `api.ukrainealarm.com` becomes the primary source, immediately
+Date: 2026-08-30. Status: adopted
+
+**Decision.** `mavo collect-api` is the production collector from the 0.44.0.0
+deploy onward. There is no waiting period and no fallback threshold: the
+switch happens the moment the deploy does. The channel collector's timer
+stays running beside it - as the watchman for the publisher's return, not as
+a source of anything while the channel is silent.
+
+**What forced a decision at all.** The Telegram channel, the only signal
+source in use since the project began, stopped publishing on 2026-08-29 at
+04:55 UTC on post 334744 and stayed silent through an attack ISW measured at
+over 28 hours. Three independent readers (the `/s/` web preview, TGStat,
+telemetr.io) see the same last post; the host, the link, the parser and the
+cache are each excluded by measurement; the sky was not quiet. The publisher
+stopped publishing mid-wave, gave no announcement, and the cause is
+unestablished. Meanwhile the official API was measured live on 2026-08-30:
+authenticated, answering in about a quarter of a second, carrying 62 alerts begun after the channel
+fell silent. A working upstream behind a dead output.
+
+**Why immediately, with the 72-hour window considered and rejected.** A
+fallback threshold of 72 hours from the last post (2026-09-01 ~05:00 UTC) was
+proposed and had one honest property: it was a calendar convenience aligned
+with the CI budget reset, not an epistemic requirement. Every criterion that
+would make the switch safe is already met and measured - the API observed
+live and authenticated, the adapter through the full gate, all-clear
+synthesis closed by tests, the persistence that a `oneshot` deployment needs
+shipped in the same release. The threshold's passage would have added no
+information about either pipe. This project's own rule says a rule without a
+gate check is a preference; a wait without a criterion is the same defect
+with a clock on it. And the cost of waiting is not neutral: each cycle spent
+polling a dead output while a live path stands measured is manufactured
+blindness, the exact condition - silence rendered as something other than
+what it is - the project exists to refuse.
+
+**What this is not.** Not a second source. MT9 stands in full: the API and
+the channel draw on one upstream, agreement between them is agreement between
+two views of one origin, and no sentence anywhere may read "two sources
+confirm". The switch buys delivery-path resilience, not observational
+independence. `source_id` on every event keeps the pipes distinguishable in
+the store, which is also what makes the switch reversible by data rather than
+by memory if the channel returns.
+
+**The cost, named.** Three, all bounded and pointing the safe way. *One:* the
+all-clear degrades from an announced transition to an inference dated at
+observation - the API stops listing an alert rather than ending it, so every
+`CLEAR` this source emits carries `Provenance.INFERENCE` and the moment we
+saw the absence, not the moment it happened. *Two:* channel episodes still
+open at 04:55 that the first API snapshot does not list stay open - the API
+cannot close what it never saw. The pre-switch `mavo report` reading in
+`docs/DEPLOYMENT.md` establishes whether that set is empty; if it is not,
+reconciling it is a named follow-up, never a silent one. *Three:* if the
+channel returns while the API collects, both pipes write the same
+transitions with skewed timestamps; event writes are idempotent by content
+hash, the episode builder treats a duplicate as a no-op, and the store's
+labels keep the union's provenance statable - a union of two delivery paths
+of one upstream, deduplicated by content, is a sentence someone can say.
+
+**Reopen if:** the API's terms change to forbid this use; its measured
+latency or availability degrades below what the channel provided; or a
+genuinely independent observation path appears, at which point the question
+is no longer which pipe but whether "two sources" can finally be said.

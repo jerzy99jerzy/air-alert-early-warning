@@ -16,6 +16,56 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.44.0.0 - 2026-08-30
+
+**The publisher stopped and the project switches pipes.** The channel this
+project was built on went silent on 2026-08-29 at 04:55 UTC, mid-attack,
+through 28+ hours of measured strikes, and the collector could not tell a
+dead publisher from a quiet sky because it had one pipe. This release is the
+second pipe made primary (D-040), and the defects that stood between the
+adapter and being deployable.
+
+- **The adapter could never clear an alert in production, and the failure was
+  invisible.** `UkrainealarmSource` held the previous snapshot in process
+  memory; production runs collectors as `oneshot` units under timers, so
+  every poll would have been a first poll, `cleared` zero forever, and every
+  episode the API opened would have stayed open - the frozen-episode
+  pathology this project refuses from the channel, manufactured locally, on
+  a map that looks normal while it never goes dark. The snapshot now
+  persists with the moment it describes and is read back only while younger
+  than 360 s (three timer cycles); stale, missing, corrupt, or stamped by a
+  clock that ran backwards, it licenses nothing, and the summary line says
+  which. Written atomically through a `.partial` name, because a half-written
+  file under the target's name is the artefact the 0.43.0.0 deploy's failed
+  `scp` demonstrated. Persisted after the store accepts the events, so a
+  failed append re-derives the same clears next run rather than losing them.
+
+- **The invocation shaped like production did not name its own defect.**
+  `--store` without `--snapshot` is exactly the unit file someone writes
+  from the old manual, and it raises alerts that never end while printing
+  nothing wrong. `[NO-SNAPSHOT]` now prints on every such run, and
+  `[SNAPSHOT-UNWRITTEN]` when persistence fails - loud, not fatal, because
+  the degradation left behind points the safe way.
+
+- **The manual argued for the defect.** `docs/MANUAL.md` 4.7 stated that a
+  restart forgets the previous snapshot *deliberately*, which was true of
+  the in-process design and would have been read as licence to deploy it.
+  The paragraph now carries the ceiling argument instead, and the option
+  table carries the flag.
+
+- **A dead constant shipped with the adapter.** `_UNIT_WORD` in
+  `ukrainealarm_source.py` inverted a mapping `areas.py` already owns and
+  was referenced by nothing. Removed; the review records how it got in.
+
+- **The documents said the channel was the only source in use, and since
+  04:55 on the 29th that sentence described a corpse.** README's source
+  table, the module docstrings, and `docs/DEPLOYMENT.md` now carry the
+  D-040 state: API primary, channel collector running as the watchman for
+  the publisher's return, one upstream either way, and no sentence anywhere
+  reading "two sources confirm". The switchover procedure is written into
+  DEPLOYMENT before its deploy, with stop conditions, so the deploy can be
+  checked against it rather than remembered.
+
 ## 0.43.0.0 - 2026-08-29
 
 **Deploy day's homework.** 0.42.0.0 was installed on the host the afternoon it

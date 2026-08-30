@@ -1,21 +1,29 @@
-"""The API as a feed, for when the channel this project was built on stops.
+"""The API as the primary feed, adopted the day the channel died (D-040).
 
 **This is the switch the probe module refuses to be, and it is deliberate.**
 `mavo/sources/ukrainealarm.py` states that it must never become an input to
-`state.json`, and that stands: mixing a second view of one upstream into a
-contract carrying one observation would produce a picture whose provenance
-nobody could state. This module does not mix. It *replaces*: when it runs, the
-channel source does not, and every event carries `source_id="ukrainealarm"` so
-the store says which pipe an observation came down. Two views are still never
-two sources, and nothing here licenses the sentence "two sources confirm".
+`state.json`, and for that module it stands: the prohibition guarded against
+*mixing* a second view of one upstream into a contract carrying one
+observation, producing a picture whose provenance nobody could state. This
+module does not mix, it replaces the primary: every event carries
+`source_id="ukrainealarm"`, so the store says which pipe each observation came
+down. The channel collector keeps running beside it - not as a second source
+but as the watchman for the publisher's return, and should the channel come
+back, its events land labelled and distinguishable rather than remembered.
+Two views are still never two sources, and nothing here licenses the sentence
+"two sources confirm".
 
-**Why it exists.** On 2026-08-29 at 04:55 UTC the Telegram channel stopped
-publishing, and stayed silent through an attack that ISW measured at over 28
-hours. The collector polled normally throughout and could not tell a dead
-publisher from a quiet sky, because it had one pipe and no second one to ask.
-The API was measured live that day: it carried 62 alerts begun after the
-channel fell silent, which is what "the upstream is alive and the output is
-dead" looks like when it is a number rather than a hunch.
+**Why it is primary now rather than a fallback later.** On 2026-08-29 at
+04:55 UTC the Telegram channel stopped publishing, and stayed silent through
+an attack that ISW measured at over 28 hours. The collector polled normally
+throughout and could not tell a dead publisher from a quiet sky, because it
+had one pipe and no second one to ask. The API was measured live the next
+day: authenticated, ~0.25 s to answer, carrying 62 alerts begun after the
+channel fell silent - a working upstream behind a dead output, as a number. A
+waiting period before switching was considered and rejected: its passage
+would have added no information, and every hour spent polling a dead output
+while a live path stood measured is an hour of manufactured blindness. D-040
+records the argument in full.
 
 **The model differs from the channel's and that is the whole difficulty.** The
 channel is a log: it announces a transition and this project records it. The
@@ -24,15 +32,18 @@ about the ones that stopped. An all-clear therefore has to be synthesised from
 the difference between two polls, and the rule that makes that safe is the one
 this project already holds everywhere else - an absence is only evidence when
 the observation succeeded. A poll that fails yields nothing rather than
-clearing the map, and the first poll of a process yields no clears at all,
-because a snapshot compared against no previous snapshot cannot say what ended.
+clearing the map, and the first poll of a process yields no clears unless a
+persisted snapshot young enough to trust stands in for the previous one,
+because a snapshot compared against nothing cannot say what ended.
 """
 
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Sequence
 from datetime import UTC, datetime
+from pathlib import Path
 
 from mavo.areas import AreaTable
 from mavo.errors import SourceUnavailable
@@ -50,8 +61,54 @@ _KIND = {
     "URBAN_FIGHTS": ThreatKind.UNKNOWN,
 }
 
-#: The unit word as prose spells it, keyed to the code the area map stores.
-_UNIT_WORD = {"P": "район", "H": "громада", "O": "область"}
+#: How old a persisted snapshot may be, in seconds, and still license clears.
+#: Three cycles of the 120 s cadence the `collect-api` timer runs at
+#: (`docs/DEPLOYMENT.md`, the D-040 switchover): one missed run survives it,
+#: a real gap does not. The
+#: asymmetry is deliberate and points the safe way - a ceiling set too low
+#: delays an all-clear by one cycle, a ceiling set too high lets a host that
+#: was down for an evening come back and clear everything that ended while
+#: nothing observed.
+SNAPSHOT_MAX_AGE_S = 360.0
+
+_Snapshot = dict[tuple[str, ThreatKind], datetime]
+
+
+def _load_snapshot(
+    path: Path, max_age_s: float, now: datetime
+) -> tuple[str, float | None, _Snapshot | None, dict[tuple[str, ThreatKind], str]]:
+    """`(state, age_s, previous, oblasts)` from a persisted snapshot.
+
+    Every way this can go wrong resolves to "license nothing": a missing file
+    is a cold start, an unreadable or malformed one is a broken cache, and a
+    stale one - including one stamped in the future, because a clock that ran
+    backwards is not a clock to trust - means the observation had a gap. None
+    of those may clear an alert, and none of those may stop collection either,
+    so nothing here raises.
+    """
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return "missing", None, None, {}
+    except OSError:
+        return "corrupt", None, None, {}
+    try:
+        payload = json.loads(raw)
+        saved_at = datetime.fromisoformat(payload["saved_at"])
+        if saved_at.tzinfo is None:
+            raise ValueError("saved_at carries no timezone")
+        previous: _Snapshot = {}
+        oblasts: dict[tuple[str, ThreatKind], str] = {}
+        for entry in payload["areas"]:
+            key = (str(entry["area"]), ThreatKind[str(entry["kind"])])
+            previous[key] = datetime.fromisoformat(entry["began"])
+            oblasts[key] = str(entry["oblast"])
+    except (ValueError, KeyError, TypeError):
+        return "corrupt", None, None, {}
+    age = (now - saved_at).total_seconds()
+    if age < 0 or age > max_age_s:
+        return "stale", age, None, {}
+    return "fresh", age, previous, oblasts
 
 
 def _resolve(areas: AreaTable, alert: ApiAlert) -> tuple[str, str] | None:
@@ -73,11 +130,20 @@ def _resolve(areas: AreaTable, alert: ApiAlert) -> tuple[str, str] | None:
 class UkrainealarmSource:
     """Snapshot feed presented as the transitions the collector expects.
 
-    Holds the previous snapshot in memory, which is the honest scope: a process
-    that restarts has no previous snapshot and issues no clears until it has
-    polled twice. The alternative, persisting the snapshot so a restart can
-    clear areas against a reading from before the gap, would let a restart
-    announce all-clears for a window nothing observed.
+    The previous snapshot may outlive the process, and the ceiling on its age
+    is what makes that safe. Production runs collectors as `oneshot` units
+    under timers, so every poll is a new process; a previous snapshot held
+    only in memory would never exist there, `cleared` would stay zero forever,
+    and every episode the API opened would stay open - the frozen-episode
+    pathology this project refuses from the channel, manufactured locally.
+    Persisted without a ceiling, the opposite failure appears: a host down for
+    an evening would come back and clear everything that ended while nothing
+    observed. So the snapshot is written with the moment it describes and read
+    back only while younger than `SNAPSHOT_MAX_AGE_S`; older, and the gap
+    licenses nothing, because silence is not an all-clear on either side of a
+    restart. `snapshot_state` says which of these happened, so the caller can
+    put it on stdout rather than leaving a withheld clear looking like a calm
+    reading.
     """
 
     source_id = "ukrainealarm"
@@ -88,19 +154,36 @@ class UkrainealarmSource:
         areas: AreaTable | None = None,
         base: str = API_BASE,
         transport: Transport | None = None,
+        snapshot: Path | None = None,
+        snapshot_max_age_s: float = SNAPSHOT_MAX_AGE_S,
     ) -> None:
         self._key = key
         self._areas = areas if areas is not None else AreaTable.from_csv()
         self._base = base.rstrip("/")
         self._transport = transport or UrllibTransport(timeout_s=TIMEOUT_S)
+        self._snapshot = snapshot
         #: `(area_id, kind)` seen alerting on the previous successful poll, to
         #: the timestamp the API gave. None until the first one succeeds, and
         #: distinct from an empty dict: "nothing observed yet" and "observed,
-        #: nothing alerting" differ by exactly the clears they license.
-        self._previous: dict[tuple[str, ThreatKind], datetime] | None = None
+        #: nothing alerting" differ by exactly the clears they license. Seeded
+        #: from the persisted snapshot when one exists and is young enough.
+        self._previous: _Snapshot | None = None
         #: The oblast last seen for an area, so a clear can name the oblast the
         #: area sits in after the API has stopped mentioning it at all.
         self._oblast_seen: dict[tuple[str, ThreatKind], str] = {}
+        #: Why the persisted snapshot did or did not seed `_previous`:
+        #: `disabled` (no path given), `missing`, `corrupt`, `stale`, `fresh`.
+        #: Every state but `fresh` withholds clears, and the caller is expected
+        #: to say so rather than let the withholding read as a calm sky.
+        self.snapshot_state: str = "disabled"
+        self.snapshot_age_s: float | None = None
+        if snapshot is not None:
+            self.snapshot_state, self.snapshot_age_s, loaded, oblasts = (
+                _load_snapshot(snapshot, snapshot_max_age_s, datetime.now(UTC))
+            )
+            if loaded is not None:
+                self._previous = loaded
+                self._oblast_seen = oblasts
         #: Regions the map could not resolve on the last poll, for the caller
         #: to report. A count that rises means the two vocabularies are drifting.
         self.unresolved: tuple[str, ...] = ()
@@ -189,3 +272,41 @@ class UkrainealarmSource:
         self._oblast_seen.update(oblast_of)
         self._previous = current
         return tuple(events)
+
+    def save_snapshot(self) -> None:
+        """Persist the current snapshot for the next process to clear against.
+
+        Atomic by rename: the payload lands on a `.partial` name first and
+        takes the real one only whole, because a half-written file with the
+        target's name is exactly the artefact the 0.43.0.0 deploy's failed
+        `scp` left behind, and a loader finding one would read it as corrupt
+        and withhold clears for a cycle nothing required. The caller decides
+        *when* - after the store accepted the events, so a failed append
+        leaves the old snapshot standing and the same clears are derived
+        again next run rather than lost. A no-op without a path or before a
+        successful poll: there is nothing to persist, and writing an empty
+        claim would be a claim.
+        """
+        if self._snapshot is None or self._previous is None:
+            return
+        payload = {
+            "saved_at": datetime.now(UTC).isoformat(),
+            "areas": [
+                {
+                    "area": area_id,
+                    "kind": kind.name,
+                    "began": began.isoformat(),
+                    "oblast": self._oblast_seen.get((area_id, kind), ""),
+                }
+                for (area_id, kind), began in sorted(
+                    self._previous.items(), key=lambda item: (item[0][0], item[0][1].name)
+                )
+            ],
+        }
+        self._snapshot.parent.mkdir(parents=True, exist_ok=True)
+        partial = self._snapshot.with_name(self._snapshot.name + ".partial")
+        partial.write_text(
+            json.dumps(payload, ensure_ascii=False, sort_keys=True),
+            encoding="utf-8",
+        )
+        os.replace(partial, self._snapshot)

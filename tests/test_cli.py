@@ -461,9 +461,15 @@ def test_collect_api_stores_events_and_the_attempt(
     class _Stub:
         source_id = "ukrainealarm"
         unresolved: tuple[str, ...] = ()
+        snapshot_state = "disabled"
+        snapshot_age_s: float | None = None
 
-        def __init__(self, key: str) -> None:
+        def __init__(self, key: str, snapshot: Path | None = None) -> None:
             self.key = key
+            self.snapshot = snapshot
+
+        def save_snapshot(self) -> None:
+            return None
 
         def poll(self) -> tuple[ThreatEvent, ...]:
             return (ThreatEvent(
@@ -484,6 +490,10 @@ def test_collect_api_stores_events_and_the_attempt(
     out = capsys.readouterr().out
     assert "active=1 cleared=0" in out
     assert "stored=1 new events" in out
+    # The production-shaped invocation - a store, no snapshot - names its own
+    # defect on every run. The failure it warns about is invisible on the map,
+    # which is exactly why the warning cannot be.
+    assert "[NO-SNAPSHOT]" in out
     assert EventStore(store).newest_page_id("ukrainealarm") is None
 
 
@@ -496,8 +506,10 @@ def test_collect_api_records_a_refusal_and_says_the_source_was_unreachable(
 
     class _Refusing:
         unresolved: tuple[str, ...] = ()
+        snapshot_state = "disabled"
+        snapshot_age_s: float | None = None
 
-        def __init__(self, key: str) -> None:
+        def __init__(self, key: str, snapshot: Path | None = None) -> None:
             pass
 
         def poll(self) -> tuple[ThreatEvent, ...]:
@@ -522,9 +534,14 @@ def test_collect_api_reads_the_key_from_a_file(
 
     class _Capturing:
         unresolved: tuple[str, ...] = ()
+        snapshot_state = "disabled"
+        snapshot_age_s: float | None = None
 
-        def __init__(self, key: str) -> None:
+        def __init__(self, key: str, snapshot: Path | None = None) -> None:
             seen["key"] = key
+
+        def save_snapshot(self) -> None:
+            return None
 
         def poll(self) -> tuple[ThreatEvent, ...]:
             return ()

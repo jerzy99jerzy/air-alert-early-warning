@@ -25,7 +25,10 @@ messages the parser reads.
 one observation of the world, and mixing a second view of the same upstream
 into it would produce a picture whose provenance nobody could state. The
 adapter has no `poll()` and does not implement `ThreatSource`, deliberately:
-it cannot be dropped into the collector by accident.
+it cannot be dropped into the collector by accident. Since D-040 a sibling
+module, `ukrainealarm_source.py`, *does* feed the contract - as the labelled
+primary that replaced the dead channel, not as a second view mixed in - and
+that is this prohibition being honoured, not broken.
 
 **The key is a secret**, unlike the maps key. It identifies this project to
 the provider and lives in an environment variable or a file the process reads,

@@ -3,8 +3,8 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 570](https://img.shields.io/badge/tests-570-brightgreen)](tests/)
-[![coverage 95.75%](https://img.shields.io/badge/coverage-95.75%25-brightgreen)](Makefile)
+[![tests 579](https://img.shields.io/badge/tests-579-brightgreen)](tests/)
+[![coverage 95.72%](https://img.shields.io/badge/coverage-95.72%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
 [![defects logged 107](https://img.shields.io/badge/defects%20logged-107-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
@@ -416,17 +416,22 @@ look.
 
 | Source | What it gives | Access | Standing |
 | --- | --- | --- | --- |
-| **t.me/s/air_alert_ua**, the public web preview of the official Ukrainian air-alert channel | Every alert and all-clear, tagged with the area and its unit type, within seconds of publication | Public page, no token, no account, no agreement. It can be withdrawn at any time and nothing obliges anyone to keep it | **The only signal source in use.** ~20 messages per page, ~514 messages a day measured over the corpus |
-| **alerts.in.ua** and **api.ukrainealarm.com** | The same alerts, through APIs | Tokens, one applied for and unanswered | **Not independent.** Both draw from the channel above (D-010). Two feeds, one dependency, and treating them as two would be the kind of false redundancy that reads as robustness right up until the day it matters |
+| **api.ukrainealarm.com**, the official alerting API | A snapshot of every area alerting now, with type and start time; all-clears are synthesised as the difference between two snapshots | Key granted 2026-08-13 under a signed offer agreement (TOV STFALCON); about a quarter of a second to answer, measured live | **The primary signal source since 0.44.0.0 (D-040).** Same upstream as the channel below - a delivery path, never a second observation |
+| **t.me/s/air_alert_ua**, the public web preview of the official Ukrainian air-alert channel | Every alert and all-clear, tagged with the area and its unit type, within seconds of publication - while the publisher publishes | Public page, no token, no account, no agreement. It can be withdrawn at any time and nothing obliges anyone to keep it - **and on 2026-08-29 at 04:55 UTC it was**: the channel went silent mid-attack, through 28+ hours of measured strikes, cause unestablished | **The primary until it died; its collector still runs as the watchman for the publisher's return.** ~20 messages per page, ~514 messages a day measured over the corpus, when it published |
+| **alerts.in.ua** | The same alerts, through another API | Token applied for 2026-08-06, unanswered | **Not independent.** Draws from the same upstream (D-010). Two feeds, one dependency, and treating them as two would be the kind of false redundancy that reads as robustness right up until the day it matters |
 | **KATOTTG**, the Ukrainian state register of administrative units | The code, oblast and hierarchy behind every area the channel names | A file, published as open data under Creative Commons Attribution | Used offline, versioned in the tree, never called at runtime (D-016). No API key in the warning path, no rate limit where latency is the product, and no third party learning which raions a Polish user asks about at three in the morning |
 | **OpenSky Network** (ADS-B) | A second, physically different kind of observation: aircraft that broadcast their own position | Registered 2026-08-10, 4,000 credits a day, one credit per call over the western box [measured] | **Not a drone-tier source, and the premise that it was is recorded as false.** Transponders are carried by aircraft that choose to be seen; Shahed-type munitions and missiles carry none. What it can measure is **the operating intensity of the Rzeszow-Jasionka hub**, which has potential diagnostic value during a war and is reported rather than scored (D-019, T42) |
 | A Polish-side feed | Would close the loop | Unresolved (T8) | **None found that is machine-readable and timely.** RSO and NOTAM are readable; RCB and the announced government application are not, as far as anyone here has established |
 
 **What follows from that table.** Everything this tool says about Ukraine is
-`reported`: it is what the channel claims, not what the sky contains, and no
-amount of processing upgrades that label. There is exactly one signal source,
-its loss would be total, and the correct response to losing it is to say so
-loudly rather than to go quiet.
+`reported` or weaker: it is what the operator's system claims, not what the
+sky contains, and no amount of processing upgrades that label - the API's
+synthesised all-clears carry `inference`, one step weaker still. There is
+exactly one *upstream*, its loss would be total, and the sentence this
+section used to carry - that the correct response to losing the delivery
+path is to say so loudly rather than to go quiet - was tested on 2026-08-29
+and held: the loss was measured, named, and answered by switching pipes
+within a day, not by a map that quietly stopped changing.
 
 **On the ADS-B row specifically.** Counting transmitting military aircraft over
 the Jasionka hub is a lower bound and never a measurement of activity: an
@@ -755,10 +760,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 22 | 7,643 |
-| Tests | 56 | 10,784 |
+| Package `mavo/` | 22 | 7,804 |
+| Tests | 56 | 10,990 |
 | Tools | 25 | 6,884 |
-| Documentation | 62 | 25,077 |
+| Documentation | 63 | 25,407 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -769,12 +774,12 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 570, of which 13 are scripted attacks |
-| Coverage | 95.75% against a floor of 95, a ratchet that is never lowered |
+| Tests | 579, of which 13 are scripted attacks |
+| Coverage | 95.72% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 107, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 38, counted from the log itself |
+| Decisions recorded with reopen conditions | 39, counted from the log itself |
 | Releases | 41 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 

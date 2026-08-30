@@ -40,10 +40,14 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.42.0.0`, `/opt/mavo/venv`, python3.11 |
-| Installed at | **2026-08-29, between 14:38 and 14:39:05 UTC**: bounded below by the wheel's sha256 verification on the host and above by the first post-install poll in the journal. The `.dist-info` mtime this row's method calls for has not been read yet; the command is in the deploy record below and the exact minute is owed to the next revision of this file |
-| `main` | 0.43.0.0 |
-| Behind by | **one** release, 0.43.0.0, which changes no store schema and no collect behaviour: it moves the attempts instrument into the package (`mavo attempts`, D-038), adds a covering index the store creates for itself on first open, and repairs documents. Deploy when the instrument is wanted on the host; nothing on the host is wrong meanwhile |
+| Installed | `air-alert-early-warning 0.43.0.0`, `/opt/mavo/venv`, python3.11 |
+| Installed at | **2026-08-30 08:40:44 UTC**, the `.dist-info` mtime, read during the deploy rather than owed to the next revision. The reading the previous revision owed for 0.42.0.0 is paid in the history below |
+| Wheel | sha256 `beb58d06…40b699`, 149,203 B, verified by `sha256sum -c` on the host before `pip` touched anything; transferred by base64 through the SSH control channel after `scp` stalled twice (see the stall note below) |
+| Discriminators | 2 / 1 / 2 / 301, counts fixed in advance, identical inside the wheel and on the installed source |
+| Point of return | `events.pre-0.43.0.0`, 18,456,576 B, sha256 `ab8f3232…1ebb56`, on the host |
+| First post-install polls | no `[STORE-MIGRATED]` line, correctly - the covering index does not announce itself the way a column does; `skipped=0` on the first poll, so F123 survives a package swap; `NRestarts=0` on one negative reading, no double session; collection gap 169 s, 08:39:03-08:41:52 |
+| `main` | 0.44.0.0 |
+| Behind by | **one** release, 0.44.0.0 - and unlike the row it replaces, this one is not an option to exercise when convenient. 0.44.0.0 is the D-040 switchover: the channel died as an output on 2026-08-29 04:55 UTC and the release carries the API collector, the snapshot persistence that lets a `oneshot` deployment clear, and the decision itself. The switchover procedure below is written before its deploy so the deploy can be checked against it rather than remembered |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -91,7 +95,8 @@ rows.
 
 | Version | Installed at (UTC) | Fate |
 | --- | --- | --- |
-| 0.42.0.0 | 2026-08-29 ~14:38 (see the Installed-at bound above) | **current** |
+| 0.43.0.0 | 2026-08-30 08:40:44, the `.dist-info` mtime | **current** |
+| 0.42.0.0 | 2026-08-29 14:38:38, the `.dist-info` mtime read on 2026-08-30, paying the reading the previous revision of this file owed | superseded |
 | 0.32.2.0 | 2026-08-14 18:13:09 | superseded |
 | 0.32.7.0 | 2026-08-17 11:02:06 | superseded; its restart opened the S9 window |
 | 0.36.0.0 | 2026-08-20 18:19:43 | **withdrawn after 14 hours.** F110: 168 polls died with a traceback and exit `1/FAILURE`, and the refusal line stopped being written |
@@ -735,6 +740,98 @@ section 7 replaces them and most of this document becomes background.
 Deciding this changes what M0 costs by more than any other open item here, and
 it is recorded as T25 rather than left to be settled by whichever machine was
 convenient on the day.
+
+## The `scp` stall, and the workaround that is now a documented path
+
+Twice during the 0.43.0.0 deploy, `gcloud compute scp` over the IAP tunnel
+stalled at 0%, and the first attempt left a **zero-byte file under the full
+destination name** - an artefact shaped exactly like a delivered wheel, one
+`sha256sum -c` away from being installed as one. The control channel was
+healthy throughout; the fault sits in `scp`'s data channel (the SFTP
+subsystem), cause `[unestablished]`, and it is not bandwidth: the workaround
+moved the same bytes through the same tunnel immediately after.
+
+The workaround, now the fallback of record: base64 the wheel through the SSH
+control channel, write to a `.partial` name on the host, verify sha256, and
+rename atomically. ~199 KB crossed without incident. Two rules follow. A
+transfer that can fail must never write under the destination name - the
+rename comes after the digest agrees, never before. And a zero-byte file
+where an artefact should be is a finding, not a retry: name it before
+deleting it.
+
+## Switching the primary source (D-040) - the 0.44.0.0 deploy, written before it runs
+
+The channel died as an output on 2026-08-29 04:55 UTC; the API was measured
+live the next day; D-040 adopts it as the primary immediately, with no
+waiting period, and keeps the channel collector running as the watchman for
+the publisher's return. This section is the order of that deploy. Each step
+carries its stop condition; a step whose reading disagrees stops the
+switchover, and the readings marked `[to be read]` are owed to the revision
+of this file that follows the deploy.
+
+**1. The key onto the host.** `/etc/mavo/ukrainealarm.key`, mode `0600`,
+owner `mavo:mavo`, typed interactively - never through the clipboard, which
+has already overwritten this key once with 262 characters of unrelated
+buffer, and never through shell history, which the key has already crossed
+once (rotation is a named follow-up, not a blocker). Validate **before**
+anything reads it, not after: byte count 41 and shape
+`^[0-9a-f]{8}:[0-9a-f]{32}$`. Stop if either disagrees.
+
+**2. The pre-switch reading.** `mavo report --store /var/lib/mavo/events` as
+`mavo`, and record which areas the contract currently holds ACTIVE - the
+channel's frozen legacy, open since it fell silent mid-wave. This set is
+what D-040's second named cost is about, and it must be read *before* the
+API writes anything, because afterwards the two pipes' contributions can
+only be separated by `source_id`, not by memory. `[to be read]`
+
+**3. First poll by hand**, as `mavo`, with the full production flags:
+
+```
+mavo collect-api --key-file /etc/mavo/ukrainealarm.key \
+  --store /var/lib/mavo/events \
+  --snapshot /var/lib/mavo/ukrainealarm.snapshot.json
+```
+
+Expected: `snapshot=missing` (a cold start, correctly), `cleared=0`, an
+`unresolved` list that is entirely eastern names outside the area table.
+Stop if any western area appears unresolved, or if `[NO-SNAPSHOT]` prints -
+the latter means the flag was dropped and the deployment would raise alerts
+that never end. `[to be read]`
+
+**4. The frozen set, established.** Areas from step 2 absent from step 3's
+snapshot ended at an unverifiable moment during the channel's silence; the
+API cannot close what it never saw, and they will not close themselves
+(T81). If the set is empty, this cost never materialised and the row saying
+so goes here. If it is not, reconciling it becomes a named task before the
+next release - never a silent one, and never by editing the store by hand.
+`[to be read]`
+
+**5. The unit and the timer.** A separate pair, deliberately - the channel's
+`mavo-collect.timer` is not touched and not stopped:
+
+```
+[Unit]
+Description=poll the alerting API
+
+[Service]
+Type=oneshot
+User=mavo
+ExecStart=/opt/mavo/venv/bin/mavo collect-api --key-file /etc/mavo/ukrainealarm.key --store /var/lib/mavo/events --snapshot /var/lib/mavo/ukrainealarm.snapshot.json
+```
+
+with `OnUnitActiveSec=120` and `AccuracySec=1s` on the timer. 120 s is the
+cadence the snapshot's 360 s freshness ceiling was set against - three
+cycles, so one missed run survives and a real gap does not - and it sits an
+order of magnitude inside the provider's rate terms. Changing the cadence
+means revisiting `SNAPSHOT_MAX_AGE_S`, and that coupling is written at the
+constant rather than remembered.
+
+**6. The reading that proves the repair.** Within the first day the journal
+must show `cleared=` greater than zero at least once, with
+`snapshot=fresh(…)` on the same line - the property no amount of polling
+on the previous release could ever produce, and the reason 0.44.0.0 exists. Absence of that
+line after a day of real alert traffic reopens the bloker, whatever the
+exit codes say. `[to be read]`
 
 ## The release order, and why the obvious one cannot run
 

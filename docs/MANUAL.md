@@ -389,18 +389,21 @@ different facts and the schema keeps them apart.
 ### 4.7 `mavo collect-api` - BUILT
 
 Polls `api.ukrainealarm.com` once, appends what changed, and logs that it tried.
+**The production collector since 0.44.0.0 (D-040).**
 
 ```
-mavo collect-api --key-file /etc/mavo/ukrainealarm.key --store /var/lib/mavo/events
+mavo collect-api --key-file /etc/mavo/ukrainealarm.key --store /var/lib/mavo/events --snapshot /var/lib/mavo/ukrainealarm.snapshot.json
 ```
 
-**Why a second collector exists.** On 2026-08-29 at 04:55 UTC the Telegram
-channel stopped publishing and stayed silent for over a day, through an attack
-ISW measured at more than 28 hours. The collector polled normally throughout
-and could not tell a dead publisher from a quiet sky, because it had one pipe.
+**Why the primary changed.** On 2026-08-29 at 04:55 UTC the Telegram channel
+stopped publishing and stayed silent for over a day, through an attack ISW
+measured at more than 28 hours. The collector polled normally throughout and
+could not tell a dead publisher from a quiet sky, because it had one pipe.
 The API was measured live the next day and carried 62 alerts begun after the
-channel fell silent `[measured 2026-08-30]`, which is what a working upstream
-behind a dead output looks like when it is a number.
+channel fell silent `[measured 2026-08-30]` - a working upstream behind a
+dead output. D-040 records why the switch was immediate rather than gated on
+a waiting period, and why the channel collector's timer keeps running beside
+this one as the watchman for the publisher's return.
 
 **This is not a second source and no reading here confirms another.** The API
 and the channel draw on the same upstream, so agreement between them is
@@ -411,18 +414,32 @@ independent *delivery path*, and that is the failure it addresses.
 | --- | --- | --- |
 | `--key-file` | none | File holding the API key, `0600` and owned by the polling user. Omitted, the key is read from `MAVO_UKRAINEALARM_KEY`, which anything running as the same user can read from `/proc/<pid>/environ` |
 | `--store` | none | Append the events and log the attempt, successful or not |
+| `--snapshot` | none | File carrying the previous snapshot across runs. Production runs this command as a `oneshot` under a timer, so every poll is a new process; without this flag every poll is a first poll, and an alert this source raises never clears |
 
 **All-clears are synthesised, and the rule that makes that safe is the one this
 project holds everywhere else.** The API lists what is alerting now and says
 nothing about what stopped, so an area leaving the snapshot is the only signal
 that its alert ended. An absence therefore counts as evidence only when the
 observation succeeded: a refused or malformed poll clears nothing and leaves
-the previous snapshot standing, and the first poll of a process issues no
-clears at all, because a snapshot with no predecessor cannot say what ended.
+the previous snapshot standing, and a poll with no previous snapshot issues no
+clears, because a snapshot compared against nothing cannot say what ended.
 
-**A restart forgets the previous snapshot deliberately.** Persisting it so a
-restart could clear areas against a reading from before the gap would let a
-restart announce all-clears covering a window nothing observed.
+**The previous snapshot survives a restart only while it is young.** The
+`--snapshot` file is written after each poll the store accepted, atomically,
+with the moment it describes; the next process reads it back only while it is
+younger than 360 seconds - three cycles of the timer. Older, missing,
+unreadable, or stamped by a clock that ran backwards, it licenses nothing:
+the gap means the observation was interrupted, and a gap is not an all-clear
+on either side of a restart. Which of those happened is printed, not
+swallowed - the summary line carries `snapshot=fresh(118s)`, `stale`,
+`missing`, `corrupt` or `disabled`, and a stale or corrupt snapshot adds a
+line saying clears were withheld this run. Two more lines to know:
+`[NO-SNAPSHOT]` on every run shaped like production (`--store` without
+`--snapshot`), because the failure it names is invisible on the map - alerts
+raise normally and simply never end; and `[SNAPSHOT-UNWRITTEN]` when the
+snapshot could not be persisted, loud but not fatal, because the events are
+already stored and the degradation it leaves - the next run withholding
+clears - points the safe way.
 
 **A region the area map cannot resolve is named on stdout and counted, never
 dropped.** The API publishes region names in prose where the map is keyed on
