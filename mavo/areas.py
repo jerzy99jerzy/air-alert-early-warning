@@ -104,6 +104,11 @@ CONTINUES = re.compile(r"тривога\s+ще\s+трива[єе]|ще\s+три�
 # like a place is the guess sprint 7 replaced (F59): `район` is also an ordinary
 # noun, and `район старої частини` is the old town, not an administrative unit.
 UNIT = re.compile(r"\b(район|громад[аи]|област[ьі])\b")
+
+#: The unit word as prose spells it, mapped to the code the map stores. Keyed
+#: on the first five characters so the inflected forms the regex already allows
+#: (`громади`, `області`) land on one entry rather than needing a row each.
+_UNIT_CODE = {"район": "P", "грома": "H", "облас": "O"}
 TOKEN = re.compile(r"[\w\u0400-\u04FF’'-]+")
 
 # Nominative, underscores for spaces, unit word explicit. No stemming, because
@@ -207,10 +212,20 @@ class AreaTable:
         # prose name resolves to nothing rather than to whichever row came
         # first. That is the F59 defect, and it is not being repeated one
         # sprint later in a different function.
+        # Both spellings of a row, because the two vocabularies drift apart in
+        # this direction too: `ВолодимирВолинський_район` keeps the name the
+        # channel still tags, while `register_name` carries the one the state
+        # register adopted in 2021. Indexing the tag stem alone left that
+        # border raion reachable by tag and invisible to prose, which is the
+        # only path an API publishing prose can use at all.
         self._by_code: dict[str, AreaRef] | None = None
         self._by_name: dict[str, list[AreaRef]] = {}
         for area in rows.values():
-            self._by_name.setdefault(normalise_name(area.tag.rsplit("_", 1)[0]), []).append(area)
+            keys = {normalise_name(area.tag.rsplit("_", 1)[0])}
+            if area.name:
+                keys.add(normalise_name(area.name))
+            for key in keys:
+                self._by_name.setdefault(key, []).append(area)
 
     @classmethod
     def from_csv(
@@ -331,8 +346,19 @@ class AreaTable:
                 matches = self._by_name.get(candidate)
                 if matches is None:
                     continue
-                if len(matches) == 1:
-                    found.setdefault(matches[0].code, matches[0])
+                # The unit word is standing right there and carries exactly the
+                # distinction two same-named areas differ by: Zaporizhzhia is
+                # both an oblast and a hromada, and the register gives both the
+                # name `Запорізька`. Narrowing by unit resolves that pair the
+                # way a reader does, and leaves F59 to the names that stay
+                # ambiguous after it.
+                if len(matches) > 1:
+                    wanted = _UNIT_CODE.get(unit.group(0)[:5])
+                    narrowed = [m for m in matches if m.unit == wanted]
+                    if len(narrowed) == 1:
+                        found.setdefault(narrowed[0].code, narrowed[0])
+                    break
+                found.setdefault(matches[0].code, matches[0])
                 break
         return tuple(found.values())
 

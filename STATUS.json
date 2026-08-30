@@ -76,8 +76,8 @@
   "threat_model_rows": 14,
   "harness_attacks": 13,
   "measured": {
-    "tests_passing": 558,
-    "coverage_percent": 96.11,
+    "tests_passing": 570,
+    "coverage_percent": 95.75,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 1,
     "policy_combined_alarms_per_week": 1.96,
@@ -153,13 +153,13 @@
     "taken_at": "2026-08-11"
   },
   "statistics": {
-    "package_lines": 7333,
-    "package_files": 21,
-    "test_lines": 10435,
-    "test_files": 55,
+    "package_lines": 7643,
+    "package_files": 22,
+    "test_lines": 10784,
+    "test_files": 56,
     "tool_lines": 6884,
     "tool_files": 25,
-    "documentation_lines": 25026,
+    "documentation_lines": 25077,
     "documentation_files": 62,
     "runtime_dependencies": 0
   },

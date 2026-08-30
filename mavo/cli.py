@@ -39,6 +39,7 @@ from mavo.report import (
     write_feed,
 )
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
+from mavo.schema import AlertState
 from mavo.sources.fixture import FixtureSource, generate_history
 from mavo.sources.rso import CATEGORIES as RSO_CATEGORIES
 from mavo.sources.rso import FEED as RSO_FEED
@@ -46,6 +47,8 @@ from mavo.sources.rso import page_url as rso_page_url
 from mavo.sources.rso import poll_once as rso_poll_once
 from mavo.sources.telegram import CHANNEL_URL, poll_once
 from mavo.sources.telegram import FEED as CHANNEL_FEED
+from mavo.sources.ukrainealarm import API_BASE, read_key
+from mavo.sources.ukrainealarm_source import UkrainealarmSource
 from mavo.store import EventStore
 from mavo.transport import StubTransport, Transport, UrllibTransport
 
@@ -147,6 +150,11 @@ def _cmd_backfill(args: argparse.Namespace) -> int:
     print("\nCONTIGUITY: no gaps in what is on disk")
     return 0
 
+
+#: Feed name for the attempts table. Its own, so a store holding both pipes can
+#: say which one an observation came down and `mavo attempts` can read either.
+API_FEED = "ukrainealarm"
+API_URL = f"{API_BASE}/alerts"
 
 def _cmd_collect(args: argparse.Namespace) -> int:
     """Poll the channel once, and leave a record that the poll happened.
@@ -315,6 +323,78 @@ def _cmd_attempts(args: argparse.Namespace) -> int:
         argv += ["--until", args.until]
     return attempts_main(argv)
 
+
+
+def _cmd_collect_api(args: argparse.Namespace) -> int:
+    """Poll the API once and record both the attempt and what it observed.
+
+    A second command rather than a flag on `collect`, and the separation is
+    deliberate. `collect` is written against a page: it reads `newest_page_id`,
+    carries `first_id` and `last_id`, and counts messages the parser refused.
+    None of those exist for a snapshot API, and threading a second shape
+    through that function would put the feed this project currently runs on at
+    risk to add one it does not yet run on.
+
+    The feed name is its own, so `mavo attempts --feed ukrainealarm` reads this
+    path's cadence without mixing it into the channel's, and so a store holding
+    both can say which pipe each observation came down.
+
+    Exit codes match `collect` because a wrapper should not have to learn two
+    vocabularies: 3 unreachable, 7 the store failed, 0 otherwise.
+    """
+    store = None
+    if args.store:
+        try:
+            store = EventStore(Path(args.store))
+        except Exception as failure:  # noqa: BLE001
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+        for column in store.migrations_applied:
+            print(f"[STORE-MIGRATED] added {column}, NULL for every earlier row")
+    try:
+        key = read_key(path=Path(args.key_file) if args.key_file else None)
+    except (SourceUnavailable, OSError) as missing:
+        # A missing key is a configuration fault, not an outage, and it is not
+        # written to the attempts table: nothing was attempted.
+        print(f"[NO-KEY] {missing}")
+        return 2
+    source = UkrainealarmSource(key)
+    started = datetime.now(UTC)
+    try:
+        events = source.poll()
+    except SourceUnavailable as unreachable:
+        waited = (datetime.now(UTC) - started).total_seconds()
+        print(f"[UNREACHABLE] {unreachable} (attempt {waited:.2f}s)")
+        if store is not None:
+            try:
+                store.record_refusal(
+                    API_FEED, API_URL, started, str(unreachable), waited
+                )
+            except Exception as failure:  # noqa: BLE001
+                print(f"[ATTEMPT-UNLOGGED] {failure}")
+        return 3
+    fetch_s = (datetime.now(UTC) - started).total_seconds()
+    active = sum(1 for event in events if event.state is AlertState.ACTIVE)
+    cleared = len(events) - active
+    print(f"active={active} cleared={cleared} "
+          f"unresolved={len(source.unresolved)} latency={fetch_s:.3f}s")
+    for name in source.unresolved:
+        # Named, not counted only. A region the map cannot resolve is a finding
+        # about the map, and a number alone cannot be acted on.
+        print(f"  unresolved: {name}")
+    if store is not None:
+        try:
+            store.record_read(
+                API_FEED, API_URL, started, active + cleared,
+                len(source.unresolved), fetch_s,
+            )
+            appended = store.append(events)
+        except Exception as failure:  # noqa: BLE001
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+        print(f"stored={appended} new events (seen={len(events)}; "
+              "the difference is idempotence, not loss)")
+    return 0
 
 def _cmd_rso(args: argparse.Namespace) -> int:
     """Poll the Polish civil-warning feed and record what happened.
@@ -517,6 +597,19 @@ def build_parser() -> argparse.ArgumentParser:
              "(builds the sprint-5 corpus; the page is a ~20-message window, F27)",
     )
     collect.set_defaults(func=_cmd_collect)
+
+    collect_api = subparsers.add_parser(
+        "collect-api",
+        help="poll api.ukrainealarm.com once and record the attempt",
+    )
+    collect_api.add_argument("--store", help="event store to append to")
+    collect_api.add_argument(
+        "--key-file",
+        help="file holding the API key, 0600 and owned by the polling user. "
+             "Omit to read MAVO_UKRAINEALARM_KEY, which is visible in "
+             "/proc/<pid>/environ to anything running as the same user",
+    )
+    collect_api.set_defaults(func=_cmd_collect_api)
 
     rso = subparsers.add_parser(
         "rso", help="poll the Polish civil-warning feed once and record the attempt"

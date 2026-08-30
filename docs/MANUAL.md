@@ -41,8 +41,9 @@ Note:      every constant, exit code and output line here was read out of the
    4. [`mavo backfill`](#44-mavo-backfill---built)
    5. [`mavo collect`](#45-mavo-collect---built)
    6. [`mavo rso`](#46-mavo-rso---built)
-   7. [`mavo watch`](#47-mavo-watch---not-built-sprint-7)
-   8. [`mavo report`](#48-mavo-report---built)
+   7. [`mavo collect-api`](#47-mavo-collect-api---built)
+   8. [`mavo watch`](#48-mavo-watch---not-built-sprint-7)
+   9. [`mavo report`](#49-mavo-report---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -385,12 +386,62 @@ different facts and the schema keeps them apart.
 | 3 | the source was unreachable. The attempt is logged first, then the code is returned |
 | 7 | the store could not be opened or written |
 
-### 4.7 `mavo watch` - NOT BUILT (sprint 7)
+### 4.7 `mavo collect-api` - BUILT
+
+Polls `api.ukrainealarm.com` once, appends what changed, and logs that it tried.
+
+```
+mavo collect-api --key-file /etc/mavo/ukrainealarm.key --store /var/lib/mavo/events
+```
+
+**Why a second collector exists.** On 2026-08-29 at 04:55 UTC the Telegram
+channel stopped publishing and stayed silent for over a day, through an attack
+ISW measured at more than 28 hours. The collector polled normally throughout
+and could not tell a dead publisher from a quiet sky, because it had one pipe.
+The API was measured live the next day and carried 62 alerts begun after the
+channel fell silent `[measured 2026-08-30]`, which is what a working upstream
+behind a dead output looks like when it is a number.
+
+**This is not a second source and no reading here confirms another.** The API
+and the channel draw on the same upstream, so agreement between them is
+agreement between two views of one origin. What the API provides is an
+independent *delivery path*, and that is the failure it addresses.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--key-file` | none | File holding the API key, `0600` and owned by the polling user. Omitted, the key is read from `MAVO_UKRAINEALARM_KEY`, which anything running as the same user can read from `/proc/<pid>/environ` |
+| `--store` | none | Append the events and log the attempt, successful or not |
+
+**All-clears are synthesised, and the rule that makes that safe is the one this
+project holds everywhere else.** The API lists what is alerting now and says
+nothing about what stopped, so an area leaving the snapshot is the only signal
+that its alert ended. An absence therefore counts as evidence only when the
+observation succeeded: a refused or malformed poll clears nothing and leaves
+the previous snapshot standing, and the first poll of a process issues no
+clears at all, because a snapshot with no predecessor cannot say what ended.
+
+**A restart forgets the previous snapshot deliberately.** Persisting it so a
+restart could clear areas against a reading from before the gap would let a
+restart announce all-clears covering a window nothing observed.
+
+**A region the area map cannot resolve is named on stdout and counted, never
+dropped.** The API publishes region names in prose where the map is keyed on
+the channel's hashtags, and a rising count means the two vocabularies are
+drifting apart. Dropping such a region silently would hide that drift inside
+the feed and produce a quiet map for an area nobody could name.
+
+**Exit codes match `mavo collect`**, so a wrapper does not have to learn two
+vocabularies: 2 when no key was configured and nothing was attempted, 3 when
+the source was unreachable, 7 when the store could not be written, 0 otherwise.
+A missing key writes no attempt row: nothing reached the sky, so nothing is
+recorded as having failed to observe it.
+
+### 4.8 `mavo watch` - NOT BUILT (sprint 7)
 
 Will run the decision policy continuously and emit to an output channel. Until
 shadow mode has run its full window, this command will refuse to send anything.
 
-### 4.8 `mavo report` - BUILT
+### 4.9 `mavo report` - BUILT
 
 Renders the current picture from a store, and optionally writes the
 `state.json` contract a separate web application consumes.

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from mavo.cli import main
+from mavo.errors import SourceUnavailable
+from mavo.schema import AlertState, ThreatEvent
 from mavo.store import EventStore
 from mavo.transport import FailingTransport
 
@@ -405,3 +408,131 @@ def test_a_page_with_no_post_ids_says_which_unknown_it_is(
 
     row = EventStore(store_path).attempts("channel")[-1]
     assert (row["first_id"], row["last_id"]) == (None, None)
+
+
+def _api_body(*names: str) -> str:
+    """An API snapshot listing each name as one active AIR alert."""
+    import json
+
+    return json.dumps([
+        {
+            "regionId": str(i),
+            "regionType": "District",
+            "regionName": name,
+            "lastUpdate": "2026-08-30T13:19:40Z",
+            "activeAlerts": [{
+                "regionId": str(i), "regionType": "District",
+                "type": "AIR", "lastUpdate": "2026-08-30T13:19:40Z",
+            }],
+        }
+        for i, name in enumerate(names, start=1)
+    ])
+
+
+def test_collect_api_without_a_key_attempts_nothing(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A missing key is a configuration fault, not an outage.
+
+    Its own exit code, and no attempt row: writing a refusal here would put a
+    line in the table saying the sky was not observed, when in fact nothing
+    reached the sky at all. The two are different and the table is the one
+    place that must not confuse them.
+    """
+    monkeypatch.delenv("MAVO_UKRAINEALARM_KEY", raising=False)
+
+    assert main(["collect-api"]) == 2
+    assert "[NO-KEY]" in capsys.readouterr().out
+
+
+def test_collect_api_stores_events_and_the_attempt(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A poll that reads leaves both the events and the record that it read.
+
+    The attempt row carries this feed's own name, so a store holding the
+    channel and the API can say which pipe an observation came down rather
+    than presenting one cadence for two.
+    """
+    from mavo import cli
+    from mavo.store import EventStore
+
+    class _Stub:
+        source_id = "ukrainealarm"
+        unresolved: tuple[str, ...] = ()
+
+        def __init__(self, key: str) -> None:
+            self.key = key
+
+        def poll(self) -> tuple[ThreatEvent, ...]:
+            return (ThreatEvent(
+                area_id="UA46060000000000000",
+                state=AlertState.ACTIVE,
+                ts_source=datetime(2026, 8, 30, 13, 19, tzinfo=UTC),
+                ts_ingest=datetime(2026, 8, 30, 13, 20, tzinfo=UTC),
+                source_id="ukrainealarm",
+                oblast="Львівська",
+            ),)
+
+    monkeypatch.setenv("MAVO_UKRAINEALARM_KEY", "k")
+    monkeypatch.setattr(cli, "UkrainealarmSource", _Stub)
+    store = tmp_path / "events"
+
+    assert main(["collect-api", "--store", str(store)]) == 0
+
+    out = capsys.readouterr().out
+    assert "active=1 cleared=0" in out
+    assert "stored=1 new events" in out
+    assert EventStore(store).newest_page_id("ukrainealarm") is None
+
+
+def test_collect_api_records_a_refusal_and_says_the_source_was_unreachable(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An unreachable API is exit 3 and leaves a refusal row, never a quiet poll."""
+    from mavo import cli
+
+    class _Refusing:
+        unresolved: tuple[str, ...] = ()
+
+        def __init__(self, key: str) -> None:
+            pass
+
+        def poll(self) -> tuple[ThreatEvent, ...]:
+            raise SourceUnavailable("api: injected failure")
+
+    monkeypatch.setenv("MAVO_UKRAINEALARM_KEY", "k")
+    monkeypatch.setattr(cli, "UkrainealarmSource", _Refusing)
+
+    assert main(["collect-api", "--store", str(tmp_path / "e")]) == 3
+    assert "[UNREACHABLE]" in capsys.readouterr().out
+
+
+def test_collect_api_reads_the_key_from_a_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A file is offered because an environment variable is readable from
+    `/proc/<pid>/environ` by anything running as the same user."""
+    from mavo import cli
+
+    seen: dict[str, str] = {}
+
+    class _Capturing:
+        unresolved: tuple[str, ...] = ()
+
+        def __init__(self, key: str) -> None:
+            seen["key"] = key
+
+        def poll(self) -> tuple[ThreatEvent, ...]:
+            return ()
+
+    monkeypatch.delenv("MAVO_UKRAINEALARM_KEY", raising=False)
+    monkeypatch.setattr(cli, "UkrainealarmSource", _Capturing)
+    key_file = tmp_path / "key"
+    key_file.write_text("secret-from-file\n", encoding="utf-8")
+
+    assert main(["collect-api", "--key-file", str(key_file)]) == 0
+    assert seen["key"] == "secret-from-file"

@@ -174,3 +174,67 @@ def test_f63_a_duplicate_tag_in_the_map_is_refused(tmp_path: Path) -> None:
     )
     with pytest.raises(DuplicateTag):
         AreaTable.from_csv(path)
+
+
+def test_prose_resolves_an_area_whose_register_name_differs_from_its_tag() -> None:
+    """A renamed raion must be findable by the name the register carries.
+
+    ``_by_name`` was built from the hashtag stem alone, so an area whose tag
+    keeps a former name and whose ``register_name`` carries the current one was
+    reachable by tag and unreachable by prose. Volodymyr-Volynskyi raion became
+    Volodymyr in 2021 and the map records both: tag
+    ``ВолодимирВолинський_район``, register name ``Володимирський``. It is a
+    border raion in Volyn, which is to say one of the areas this project exists
+    to watch, and prose naming it resolved to nothing.
+
+    The channel writes its continuation list in prose (T37), and an API that
+    publishes only prose makes this the sole path to a name. Either way the
+    failure is silent: an area nobody can resolve is an area nobody is told
+    about.
+    """
+    areas = AreaTable.from_csv()
+    by_tag = areas.resolve("ВолодимирВолинський_район")
+    assert by_tag is not None, "fixture assumes the map still carries this tag"
+
+    found = areas.resolve_prose("Володимирський район")
+
+    assert [ref.code for ref in found] == [by_tag.code]
+
+
+def test_prose_still_refuses_a_name_two_areas_share(tmp_path: Path) -> None:
+    """F59 holds after the register name joins the index.
+
+    Indexing a second string per row is a chance to reintroduce the defect the
+    first index was written to avoid: a name reachable from two rows must
+    resolve to neither, whether the collision arrives through the tag stem or
+    through the register name.
+    """
+    path = tmp_path / "clash.csv"
+    path.write_text(
+        "tag,count,unit,register_name,oblast,katottg_code,status,note\n"
+        "Перший_район,1,P,Спільний,Львівська,UA0001,ok,\n"
+        "Другий_район,1,P,Спільний,Волинська,UA0002,ok,\n",
+        encoding="utf-8",
+    )
+    areas = AreaTable.from_csv(path)
+
+    assert areas.resolve_prose("Спільний район") == ()
+
+
+def test_prose_tells_an_oblast_from_a_hromada_of_the_same_name() -> None:
+    """Zaporizhzhia is two areas with one register name, and prose says which.
+
+    Indexing the register name put ``Запорізька`` on both the oblast and the
+    hromada, which F59 would refuse as ambiguous and so lose an oblast that
+    resolved before. The unit word sits beside the name in the prose and is
+    exactly the distinction the two rows differ by, so it decides between them
+    rather than the pair being dropped.
+    """
+    areas = AreaTable.from_csv()
+
+    oblast = areas.resolve_prose("Запорізька область")
+    hromada = areas.resolve_prose("Запорізька громада")
+
+    assert [ref.unit for ref in oblast] == ["O"]
+    assert [ref.unit for ref in hromada] == ["H"]
+    assert oblast[0].code != hromada[0].code
