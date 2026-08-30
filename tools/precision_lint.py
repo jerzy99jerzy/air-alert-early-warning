@@ -154,7 +154,9 @@ CEILINGS: dict[str, int] = {
     "docs/FOUNDATIONS.md": 7,
     # 19 -> 20 at 0.43.0.0: the rewritten 4.5 (F127) quotes the channel's
     # hashtag coverage, 99.34%, the figure the sprint-7 redesign stands on.
-    "docs/MANUAL.md": 20,
+    # 20 -> 21 at 0.47.0.0: section ordinal 4.10 reads to this lint as a
+    # two-decimal figure; a heading number is not a precision claim.
+    "docs/MANUAL.md": 21,
     "docs/MECHANISMS.md": 16,
     # Raised at 0.39.1.0, 82 to 87. F119's entry names the two interpreter
     # versions the defect appeared and disappeared on, ``3.14`` and ``3.12``,

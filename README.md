@@ -3,8 +3,8 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 591](https://img.shields.io/badge/tests-591-brightgreen)](tests/)
-[![coverage 95.58%](https://img.shields.io/badge/coverage-95.58%25-brightgreen)](Makefile)
+[![tests 595](https://img.shields.io/badge/tests-595-brightgreen)](tests/)
+[![coverage 95.45%](https://img.shields.io/badge/coverage-95.45%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
 [![defects logged 111](https://img.shields.io/badge/defects%20logged-111-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
@@ -760,10 +760,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 22 | 7,894 |
-| Tests | 57 | 11,174 |
-| Tools | 26 | 7,108 |
-| Documentation | 65 | 25,801 |
+| Package `mavo/` | 22 | 8,032 |
+| Tests | 58 | 11,288 |
+| Tools | 26 | 7,110 |
+| Documentation | 66 | 25,913 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -774,8 +774,8 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 591, of which 13 are scripted attacks |
-| Coverage | 95.58% against a floor of 95, a ratchet that is never lowered |
+| Tests | 595, of which 13 are scripted attacks |
+| Coverage | 95.45% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 111, the count pinned against the log itself |

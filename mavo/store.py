@@ -451,6 +451,26 @@ class EventStore:
                     role=AreaRole(row[9]),
                 )
 
+
+    def newest_by_area(self) -> tuple[ThreatEvent, ...]:
+        """The newest event per area, by the fold's own ordering.
+
+        Reuses `replay` and the exact comparison `compose` folds with -
+        `(ts_source, ts_ingest)`, later wins, ties to the later ingest - so a
+        caller asking "what does the picture stand on for this area" gets the
+        same answer the picture gives. A second ordering here would be a
+        second opinion about the same log, and the two would drift (D-041's
+        reconcile is the caller this was written for).
+        """
+        latest: dict[str, ThreatEvent] = {}
+        for event in self.replay():
+            current = latest.get(event.area_id)
+            if current is None or (event.ts_source, event.ts_ingest) >= (
+                current.ts_source, current.ts_ingest
+            ):
+                latest[event.area_id] = event
+        return tuple(latest[area] for area in sorted(latest))
+
     def count(self) -> int:
         """Number of stored events."""
         with closing(self._connect()) as conn:

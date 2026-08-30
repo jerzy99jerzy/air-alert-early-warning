@@ -16,6 +16,44 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.47.0.0 - 2026-08-30
+
+**`mavo reconcile`: the closures a fresh snapshot licenses, and the census it
+refuses to touch.** Twelve areas were rendering as active on 2026-08-30 from
+channel-era rows - Kherson, Kirovohrad, Dnipropetrovsk, Mykolaiv, Zaporizhzhia
+- for areas the API's two-minute full-state snapshots had not mentioned once
+since the switchover and which were absent from the current snapshot. The API
+never saw those episodes alive, so it will never emit their clears; nothing in
+the store would ever end them.
+
+- **D-041, executed, with one condition retired on a measurement.** The
+  snapshot must be `fresh` or the command examines nothing: a stale or missing
+  snapshot is a gap in observation and a gap licenses no closure, on either
+  side of a restart. Membership in the fresh snapshot protects every live
+  alarm from closure. The third condition - no parent area mentioned - is
+  retired: its premise, that the API names the oblast and never the raions,
+  was measured false on 2026-08-30, when one payload named eight Donetsk
+  raions individually, each resolving.
+- **Closures are rows, not edits.** `source_id="reconcile"`,
+  `provenance=INFERENCE`, `ts_source` = the snapshot's own `saved_at` - the
+  observation that licensed the closure - the ghost's kind and oblast carried
+  over, the opener recorded in `raw_fields`. Idempotent by the store's content
+  hash: a second `--apply` stores nothing, and the tests hold it to that.
+  Dry-run is the default and prints exactly the rows `--apply` would write.
+- **The mirror direction is named and never written.** Areas the snapshot
+  holds whose newest stored row is *not* an API ACTIVE would be a live alarm
+  the fold renders as something else - calm during an alarm, the worse
+  direction. The command prints them as `MASKED` and refuses to act: the
+  repair there is a decision about the fold, not a row from this command. The
+  same reading that found the twelve also found 53 areas in the snapshot
+  against 33 whose newest row is an API ACTIVE, and whether that gap is
+  census double-counting or a real masked population is exactly what the
+  first dry-run on the host will print.
+- **`EventStore.newest_by_area` reuses the fold's own ordering** -
+  `(ts_source, ts_ingest)`, later wins - so the command reasons about the
+  picture with the picture's comparison rather than a second opinion that
+  would drift from it.
+
 ## 0.46.0.0 - 2026-08-30
 
 **Two defects in prose resolution, found by measuring the live payload instead

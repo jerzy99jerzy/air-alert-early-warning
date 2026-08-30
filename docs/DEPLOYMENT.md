@@ -47,8 +47,8 @@ never a decision until D-031 wrote it down.
 | Point of return | `events.pre-0.45.0.0`, 18,714,624 B, sha256 `69daf1fb…1bba64`, taken with both timers stopped and no `-wal` or `-shm` beside it |
 | First post-install polls | collection gap **46 s**, 16:45:48-16:46:34, both timers. First run under the timer `active=32 cleared=26 unresolved=5 snapshot=fresh(121s)`, latency 0.1 s - `unresolved` down from 9, the F128 repair measured on production, and the five names remaining are genuinely outside the table |
 | Earlier deploy the same day | 0.44.0.0 at 15:02:10 UTC: wheel `0f918299…856259` 157,554 B, return point `events.pre-0.44.0.0` `bf08808e…946929`, gap 184 s, first poll `snapshot=missing`, second `snapshot=fresh(31s)` - the property 0.43.0.0 could not produce. The contract left `degraded` at 34 hours, `feed=ok` at 15:13 |
-| `main` | 0.46.0.0 |
-| Behind by | **one** release, 0.46.0.0. Internal rather than reader-visible: prose resolution refuses wrong-level forms instead of resolving them silently (F130), the register's refusals print apart from absences (F131), and the region-levels probe joins `tools/`. Nothing in it is live-wrong on the host; deploy at convenience, with the release that adds the missing rows if one follows quickly |
+| `main` | 0.47.0.0 |
+| Behind by | **two** releases, 0.46.0.0 and 0.47.0.0, and the second is reader-visible in the worst direction: twelve channel-era rows are rendering as active for areas the API's snapshots have not mentioned since the switchover [measured 2026-08-30 18:21 UTC], and only 0.47.0.0's `mavo reconcile` can end them. 0.46.0.0 rides along (F130, F131, the region-levels probe). Deploy sooner rather than at convenience, then run `reconcile --dry-run` before `--apply` |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

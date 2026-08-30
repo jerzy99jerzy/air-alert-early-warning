@@ -8,6 +8,7 @@ somebody who has neither.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -39,7 +40,7 @@ from mavo.report import (
     write_feed,
 )
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
-from mavo.schema import AlertState
+from mavo.schema import AlertState, Provenance, ThreatEvent
 from mavo.sources.fixture import FixtureSource, generate_history
 from mavo.sources.rso import CATEGORIES as RSO_CATEGORIES
 from mavo.sources.rso import FEED as RSO_FEED
@@ -48,7 +49,11 @@ from mavo.sources.rso import poll_once as rso_poll_once
 from mavo.sources.telegram import CHANNEL_URL, poll_once
 from mavo.sources.telegram import FEED as CHANNEL_FEED
 from mavo.sources.ukrainealarm import API_BASE, read_key
-from mavo.sources.ukrainealarm_source import UkrainealarmSource
+from mavo.sources.ukrainealarm_source import (
+    SNAPSHOT_MAX_AGE_S,
+    UkrainealarmSource,
+    _load_snapshot,
+)
 from mavo.store import EventStore
 from mavo.transport import StubTransport, Transport, UrllibTransport
 
@@ -433,6 +438,104 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
         print(f"[SNAPSHOT-UNWRITTEN] {failure}")
     return 0
 
+
+def _cmd_reconcile(args: argparse.Namespace) -> int:
+    """Close channel-era episodes the API's fresh snapshot licenses closing.
+
+    D-041's three conditions, executed: the area is in the table (candidates
+    are read with their table names and anything outside would print as such);
+    the API resolved and did not mention it - membership in the current
+    snapshot is the test, and the snapshot must be `fresh`, because a stale or
+    missing one is a gap in observation and a gap licenses nothing; and the
+    parent condition is retired, its premise measured false on 2026-08-30,
+    when the payload named eight Donetsk raions individually.
+
+    **What this closes and what it only names.** Closed: rows whose newest
+    event for their area is `telegram`/ACTIVE and whose area is absent from
+    the fresh snapshot - an ended episode the API never saw alive and so will
+    never clear (the true ghosts; twelve on 2026-08-30). Named, not touched:
+    areas the snapshot holds whose newest row is *not* an API ACTIVE - the
+    mirror population, a live alarm the fold may be rendering as calm, which
+    is the worse direction and needs its own decision before any write.
+
+    Dry-run is the default and prints exactly what `--apply` would write.
+    Closures carry `source_id="reconcile"`, `provenance=INFERENCE`,
+    `ts_source` = the snapshot's own `saved_at` (the observation that licensed
+    the closure), and the ghost row's kind and oblast, so the episode ends as
+    the thing it was. Idempotent by the store's content hash: a second apply
+    stores nothing.
+    """
+    try:
+        store = EventStore(Path(args.store))
+    except Exception as failure:  # noqa: BLE001
+        print(f"[STORE-FAILED] {failure}")
+        return 7
+    snapshot_path = Path(args.snapshot)
+    state, age_s, previous, _oblasts = _load_snapshot(
+        snapshot_path, SNAPSHOT_MAX_AGE_S, datetime.now(UTC)
+    )
+    if state != "fresh" or previous is None:
+        aged = f" ({age_s:.0f}s)" if age_s is not None else ""
+        print(f"[SNAPSHOT-{state.upper()}]{aged} a gap in observation licenses "
+              "no closure; nothing examined, nothing written")
+        return 3
+    raw = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    saved_at = datetime.fromisoformat(str(raw["saved_at"]))
+    live_areas = {area_id for (area_id, _kind) in previous}
+    newest = store.newest_by_area()
+    ghosts = [
+        event for event in newest
+        if event.source_id == "telegram"
+        and event.state is AlertState.ACTIVE
+        and event.area_id not in live_areas
+    ]
+    masked = [
+        event for event in newest
+        if event.area_id in live_areas
+        and not (event.source_id == "ukrainealarm" and event.state is AlertState.ACTIVE)
+    ]
+    now = datetime.now(UTC)
+    closures = [
+        ThreatEvent(
+            area_id=ghost.area_id,
+            state=AlertState.CLEAR,
+            ts_source=saved_at,
+            ts_ingest=now,
+            source_id="reconcile",
+            kind=ghost.kind,
+            provenance=Provenance.INFERENCE,
+            raw_fields={"reason": "absent from fresh snapshot", "opened_by": ghost.source_id,
+                        "opened_at": ghost.ts_source.isoformat()},
+            oblast=ghost.oblast,
+        )
+        for ghost in ghosts
+    ]
+    mode = "apply" if args.apply else "dry-run"
+    print(f"reconcile {mode}: ghosts={len(closures)} masked={len(masked)} "
+          f"snapshot_areas={len(live_areas)} saved_at={saved_at.isoformat()}")
+    for closure in closures:
+        print(f"  close {closure.area_id} kind={closure.kind.value} "
+              f"oblast={closure.oblast or 'unknown'} "
+              f"opened_at={closure.raw_fields['opened_at']}")
+    for event in masked:
+        # Named and never written: an area the API says is alerting now whose
+        # newest stored row says otherwise. Closing has no business here; the
+        # danger runs the other way, calm rendered during an alarm, and the
+        # repair is a decision about the fold, not a row from this command.
+        print(f"  MASKED {event.area_id} newest={event.source_id}/{event.state.value} "
+              f"ts={event.ts_source.isoformat()}")
+    if not args.apply:
+        print("nothing written (pass --apply to write the closures above)")
+        return 0
+    try:
+        appended = store.append(closures)
+    except Exception as failure:  # noqa: BLE001
+        print(f"[STORE-FAILED] {failure}")
+        return 7
+    print(f"stored={appended} closures (seen={len(closures)}; the difference "
+          "is idempotence, not loss)")
+    return 0
+
 def _cmd_rso(args: argparse.Namespace) -> int:
     """Poll the Polish civil-warning feed and record what happened.
 
@@ -738,6 +841,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="stop after this many cycles; omit to run until interrupted",
     )
     report_cmd.set_defaults(func=_cmd_report)
+
+    reconcile_cmd = subparsers.add_parser(
+        "reconcile",
+        help="close channel-era episodes a fresh API snapshot licenses closing",
+    )
+    reconcile_cmd.add_argument("--store", required=True, help="path to the event store")
+    reconcile_cmd.add_argument(
+        "--snapshot", required=True,
+        help="the collector's persisted snapshot; must be fresh, a gap licenses nothing",
+    )
+    reconcile_cmd.add_argument(
+        "--apply", action="store_true",
+        help="write the closures; without it every planned row is printed and none lands",
+    )
+    reconcile_cmd.set_defaults(func=_cmd_reconcile)
 
     return parser
 

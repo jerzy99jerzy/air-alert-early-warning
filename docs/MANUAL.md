@@ -44,6 +44,7 @@ Note:      every constant, exit code and output line here was read out of the
    7. [`mavo collect-api`](#47-mavo-collect-api---built)
    8. [`mavo watch`](#48-mavo-watch---not-built-sprint-7)
    9. [`mavo report`](#49-mavo-report---built)
+   10. [`mavo reconcile`](#410-mavo-reconcile---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -564,6 +565,42 @@ On the host the store belongs to the service user, so the invocation is:
 The reader streams one row at a time (the latency vector aside, kept whole for
 the median), so the command's memory does not grow with the age of a store
 that currently has no retention.
+
+### 4.10 `mavo reconcile` - BUILT
+
+Closes channel-era episodes a fresh API snapshot licenses closing, and names
+the ones it refuses to touch. Exists because on 2026-08-30 twelve areas were
+rendering as active from rows the dead channel opened - Kherson, Kirovohrad,
+Dnipropetrovsk, Mykolaiv, Zaporizhzhia - which the API had not mentioned once
+since the switchover and would never clear, having never seen them alive.
+
+```
+mavo reconcile --store /var/lib/mavo/events --snapshot /var/lib/mavo/ukrainealarm.snapshot.json
+```
+
+Dry-run by default: every planned closure is printed and nothing lands.
+`--apply` writes the same rows and nothing else.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--store` | none | The event store to read the newest-per-area picture from, and to append closures into under `--apply` |
+| `--snapshot` | none | The collector's persisted snapshot. It must read back `fresh` (younger than 360 s); `stale`, `missing` or `corrupt` and the command examines nothing and exits 3, because a gap in observation licenses no closure |
+| `--apply` | off | Write the closures. Idempotent by the store's content hash: a second `--apply` stores zero |
+
+**What a closure is.** A row, not an edit: `source_id="reconcile"`,
+`provenance=INFERENCE`, `ts_source` set to the snapshot's own `saved_at` - the
+observation that licensed it - with the ghost's kind and oblast carried over
+and the opener recorded in `raw_fields`. D-041's conditions, executed; the
+parent-area condition is retired, its premise measured false on 2026-08-30
+when one payload named eight Donetsk raions individually.
+
+**What it refuses.** Areas the snapshot holds whose newest stored row is not
+an API ACTIVE print as `MASKED` and are never written: that direction is a
+live alarm possibly rendered as something else, and its repair is a decision
+about the fold, not a row from this command.
+
+Exit codes match the collectors: 3 when the snapshot licenses nothing, 7 when
+the store fails, 0 otherwise.
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)
 
