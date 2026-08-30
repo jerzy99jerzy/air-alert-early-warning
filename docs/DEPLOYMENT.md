@@ -40,14 +40,15 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.44.0.0`, `/opt/mavo/venv`, python3.11 |
-| Installed at | **2026-08-30 15:02:10 UTC**, the `.dist-info` mtime, read during the deploy |
-| Wheel | sha256 `0f918299…856259`, 157,554 B, verified on the host before `pip` touched anything; transferred by base64 through the SSH control channel, `scp` skipped rather than retried after its two stalls the same morning |
-| Discriminators | `SNAPSHOT_MAX_AGE_S` 0/3, `save_snapshot` 1/1, `snapshot_state` 3/3, `NO-SNAPSHOT` 1/0, counts fixed before transfer, identical inside the wheel and on the installed source |
-| Point of return | `events.pre-0.44.0.0`, 18,620,416 B, sha256 `bf08808e…946929`, taken with the timer stopped and no `-wal` or `-shm` beside it, so the copy is consistent rather than merely present |
-| First post-install polls | collection gap **184 s**, 14:59:48-15:02:52, `NRestarts=0`. First manual API poll `active=20 cleared=0 unresolved=9 snapshot=missing`, latency a tenth of a second; the second, in a new process, `snapshot=fresh(31s)` - the property 0.43.0.0 could not produce at any number of polls. First timer-driven run `snapshot=fresh(95s)`. The contract left `degraded` at 34 hours and read `feed=ok` at 15:13 |
-| `main` | 0.45.0.0 |
-| Behind by | **one** release, 0.45.0.0, and this one is visible to readers rather than internal: it stops every API alert from claiming to be a missile (F129, D-042) and makes four alerting areas resolvable from prose again (F128). Both defects are live on the host right now. Deploy sooner rather than at convenience |
+| Installed | `air-alert-early-warning 0.45.0.0`, `/opt/mavo/venv`, python3.11 |
+| Installed at | **2026-08-30 16:46:13 UTC**, the `.dist-info` mtime, read during the deploy |
+| Wheel | sha256 `de25b736…d06728`, 158,127 B, verified on the host before `pip` touched anything; base64 through the SSH control channel, as at 0.44.0.0 |
+| Discriminators | `_FILLER` 2, `територіальна` 3, `ThreatKind.UNKNOWN` 3, `D-042` 1, `ThreatKind.MISSILE` **0**, identical inside the wheel and on the installed source |
+| Point of return | `events.pre-0.45.0.0`, 18,714,624 B, sha256 `69daf1fb…1bba64`, taken with both timers stopped and no `-wal` or `-shm` beside it |
+| First post-install polls | collection gap **46 s**, 16:45:48-16:46:34, both timers. First run under the timer `active=32 cleared=26 unresolved=5 snapshot=fresh(121s)`, latency 0.1 s - `unresolved` down from 9, the F128 repair measured on production, and the five names remaining are genuinely outside the table |
+| Earlier deploy the same day | 0.44.0.0 at 15:02:10 UTC: wheel `0f918299…856259` 157,554 B, return point `events.pre-0.44.0.0` `bf08808e…946929`, gap 184 s, first poll `snapshot=missing`, second `snapshot=fresh(31s)` - the property 0.43.0.0 could not produce. The contract left `degraded` at 34 hours, `feed=ok` at 15:13 |
+| `main` | 0.46.0.0 |
+| Behind by | **one** release, 0.46.0.0. Internal rather than reader-visible: prose resolution refuses wrong-level forms instead of resolving them silently (F130), the register's refusals print apart from absences (F131), and the region-levels probe joins `tools/`. Nothing in it is live-wrong on the host; deploy at convenience, with the release that adds the missing rows if one follows quickly |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

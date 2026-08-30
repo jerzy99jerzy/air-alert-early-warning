@@ -16,6 +16,52 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.46.0.0 - 2026-08-30
+
+**Two defects in prose resolution, found by measuring the live payload instead
+of trusting a constructed one, and the instrument that found them.** A reading
+of `/alerts` on 2026-08-30 (52 regions, 42 raion-level) showed the API pipe
+resolving 45 of 52 and carrying no wrong-level rows -- and showed that both of
+the defects below are real and latent rather than firing, which is exactly the
+distinction a constructed input cannot make.
+
+- **The unit word filtered nothing unless two rows shared a name (F130).**
+  `resolve_prose` read `район/громада/область`, mapped it, and used it only to
+  break a tie -- which exists for one name in 132. For the other 131 the word
+  was discarded, so `Харківська область` resolved to the Kharkiv city hromada
+  with the city's 853-874 km border interval, and `Донецька область` resolved
+  correctly by luck. The word now filters every match. Measured over the
+  table's whole domain, 132 names by 3 unit words: 262 resolutions removed,
+  every one at the wrong level, none correct, the Zaporizhzhia tie unchanged.
+  583 tests passed identically on both sides of the old behaviour; the sweep
+  is now pinned in `tests/test_prose_unit_filter.py` so it cannot drift back.
+
+- **A name the register declines printed identically to a name it has never
+  held (F131, W3 made live).** Rows marked `ambiguous_*` or codeless are
+  dropped from the name index at load, so `Покровська територіальна громада`
+  -- alerting with artillery in the same reading, present in the file as
+  `ambiguous_4` -- reported with the same `unresolved` word as Vovchansk,
+  which is absent. The two have different repairs: settle an ambiguity versus
+  add a row. `from_csv` now retains the declined names,
+  `resolve_prose_detail` returns them beside the resolutions, and
+  `mavo collect-api` prints `declined by register:` as its own line. The
+  attempts row counts both populations, as before.
+
+- **`tools/region_levels.py` joins the tree.** The probe that took the
+  reading: raw-JSON key inventory before interpretation, `regionType` and
+  alert-type histograms, and a five-cell join (`ok`, `LEVEL` as a negative
+  control that fired on a stub and read 0 on production, `declined`, `miss`,
+  `ambig`). It reads `/alerts` once, writes nothing, and never prints the
+  key. Its figures are readings of one moment, dated by hand where recorded,
+  never pinned as properties of the system.
+
+**What the reading refuses to license.** Seven misses decompose into four
+causes: three plain gaps (Vovchansk, Lyptsi, Samarivskyi raion), one missing
+oblast (Luhansk, the register's own row to be read, not invented), two
+deliberate absences (Crimea, Kyiv city), one F131. The rows themselves are not
+in this release, because their codes must come off the KATOTTG register, and
+writing them from pattern or memory is F129 committed in a data file.
+
 ## 0.45.0.0 - 2026-08-30
 
 **The switchover's own homework, found by looking at the page.** 0.44.0.0 made

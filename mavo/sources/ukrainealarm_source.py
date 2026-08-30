@@ -123,7 +123,13 @@ def _load_snapshot(
 
 
 def _resolve(areas: AreaTable, alert: ApiAlert) -> tuple[str, str] | None:
-    """`(area_id, oblast)` for an API region, or None when the map lacks it.
+    """`(area_id, oblast)`, or `("", "")` when the register declines, or None.
+
+    Three answers rather than two (F131). `("", "")` means the register knows
+    a name in this region and will not resolve it: ambiguous, codeless, or held
+    only at another level. None means the vocabulary is absent. The caller
+    reports the two differently, because they have different repairs: a
+    declined name needs a disambiguation, an absent one needs a row.
 
     The API names regions in prose and the map is keyed on the channel's
     hashtags, so this goes through `resolve_prose`, which reaches both the
@@ -131,9 +137,9 @@ def _resolve(areas: AreaTable, alert: ApiAlert) -> tuple[str, str] | None:
     the caller counts it: a region the map does not know is a finding about the
     map, and silently dropping it would hide the finding inside the feed.
     """
-    refs = areas.resolve_prose(alert.region_name)
+    refs, declined = areas.resolve_prose_detail(alert.region_name)
     if len(refs) != 1:
-        return None
+        return None if not declined else ("", "")
     ref = refs[0]
     return ref.code, ref.oblast
 
@@ -198,6 +204,11 @@ class UkrainealarmSource:
         #: Regions the map could not resolve on the last poll, for the caller
         #: to report. A count that rises means the two vocabularies are drifting.
         self.unresolved: tuple[str, ...] = ()
+        #: Regions the register knows and will not resolve (F131): a different
+        #: population from `unresolved`, with a different repair. Reported
+        #: separately so an operator reading the journal can tell "add a row"
+        #: from "settle an ambiguity" without opening the table.
+        self.declined: tuple[str, ...] = ()
 
     def poll(self) -> Sequence[ThreatEvent]:
         """Transitions since the previous successful poll.
@@ -221,6 +232,7 @@ class UkrainealarmSource:
         current: dict[tuple[str, ThreatKind], datetime] = {}
         oblast_of: dict[tuple[str, ThreatKind], str] = {}
         unresolved: list[str] = []
+        declined: list[str] = []
         for alert in parse_alerts(payload):
             if alert.alert_type == "unparsed":
                 continue
@@ -229,11 +241,15 @@ class UkrainealarmSource:
                 unresolved.append(alert.region_name)
                 continue
             area_id, oblast = resolved
+            if not area_id:
+                declined.append(alert.region_name)
+                continue
             kind = _KIND.get(alert.alert_type, ThreatKind.UNKNOWN)
             key = (area_id, kind)
             current[key] = alert.started_at or now
             oblast_of[key] = oblast
         self.unresolved = tuple(dict.fromkeys(unresolved))
+        self.declined = tuple(dict.fromkeys(declined))
 
         previous = self._previous
         events: list[ThreatEvent] = []

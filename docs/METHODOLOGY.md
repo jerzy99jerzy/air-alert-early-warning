@@ -4247,3 +4247,36 @@ not classified, an artillery alert keeps the kind the API states.
 
 **Reopen condition:** the next field this project translates from a source
 vocabulary into its own without writing down what the source actually claims.
+
+
+### F130, 0.46.0.0. The unit word in prose resolution filtered nothing unless two rows shared a name
+
+`resolve_prose` matched `район/громад(а|и)/област(ь|і)`, mapped the word through
+`_UNIT_CODE`, and consulted it only inside the `len(matches) > 1` branch. One
+name in 132 has two rows; for the remaining 131 the word was discarded, so a
+prose form at the wrong level resolved to whatever single row carried the name.
+`Харківська область` returned the Kharkiv city hromada, `UA63120270000028556`,
+with the city's border interval; `Донецька область` returned the oblast row for
+a reason that was no reason. Latent, not firing: the live payload of 2026-08-30
+sends the register's full hromada form for Kharkiv and was measured to carry no
+form that hit this defect. Every instrument in the gate passed on both sides of
+the behaviour, because the defect is internally consistent; the comment beside
+the branch described the one pair it handled and read as a property of the
+function. Repaired by making the word filter every match; measured over the
+table's domain, 132 names by 3 unit words, the change removes 262 resolutions,
+all at the wrong level, and no correct one. Pinned by
+`tests/test_prose_unit_filter.py`.
+
+### F131, 0.46.0.0. A name the register declines was indistinguishable from a name it has never held
+
+`from_csv` drops rows marked `ambiguous_*` or lacking a code from the name
+index, keeping only their tags in `unresolved`. Prose resolution therefore
+answered a declined name and an absent name with the same empty tuple, and
+`mavo collect-api` printed both as `unresolved:`. W3 named the conflation in
+review; the reading of 2026-08-30 made it live: `Покровська територіальна
+громада`, alerting with artillery, present in the file as `ambiguous_4`,
+reported in the same word as Vovchansk, which is not in the file. The repairs
+differ -- settle an ambiguity versus add a row -- and an operator reading the
+journal could not tell which was owed. `from_csv` now retains the normalised
+register names it declines, `resolve_prose_detail` returns `(resolved,
+declined)`, and the collector prints `declined by register:` as its own line.

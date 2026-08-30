@@ -212,9 +212,22 @@ class AreaTable:
     table a person can check is a different artifact from a model they cannot.
     """
 
-    def __init__(self, rows: dict[str, AreaRef], unresolved: frozenset[str]) -> None:
+    def __init__(
+        self,
+        rows: dict[str, AreaRef],
+        unresolved: frozenset[str],
+        unresolved_names: frozenset[str] = frozenset(),
+    ) -> None:
         self._rows = rows
         self.unresolved = unresolved
+        #: Normalised register names of the rows behind ``unresolved``: names
+        #: the file holds and deliberately does not resolve (ambiguous, or
+        #: carrying no code). Kept so prose resolution can answer "the register
+        #: knows this name and declines" instead of the same silence it gives a
+        #: name nobody has seen. F131: Pokrovska hromada was alerting, sat in
+        #: the file as ``ambiguous_4``, and printed identically to Vovchansk,
+        #: which is not in the file at all.
+        self.unresolved_names = unresolved_names
         # T37. Normalised tag stem to the areas carrying it. A list rather than
         # a value: a stem shared by two areas is ambiguous, and an ambiguous
         # prose name resolves to nothing rather than to whichever row came
@@ -249,6 +262,7 @@ class AreaTable:
         distances = _load_distances(distance_path or DEFAULT_DISTANCES)
         rows: dict[str, AreaRef] = {}
         unresolved: set[str] = set()
+        unresolved_names: set[str] = set()
         with source.open(encoding="utf-8") as handle:
             for row in csv.DictReader(handle):
                 tag = row["tag"]
@@ -260,6 +274,8 @@ class AreaTable:
                     raise DuplicateTag(f"{source}: tag {tag!r} appears more than once")
                 if not row.get("katottg_code") or row.get("status", "").startswith("ambiguous"):
                     unresolved.add(tag)
+                    if row.get("register_name"):
+                        unresolved_names.add(normalise_name(row["register_name"]))
                     continue
                 centre, lower, upper = distances.get(row["katottg_code"], (None, None, None))
                 rows[tag] = AreaRef(
@@ -272,7 +288,7 @@ class AreaTable:
                     border_lower_km=lower,
                     border_upper_km=upper,
                 )
-        return cls(rows, frozenset(unresolved))
+        return cls(rows, frozenset(unresolved), frozenset(unresolved_names))
 
     def __len__(self) -> int:
         return len(self._rows)
@@ -329,17 +345,43 @@ class AreaTable:
     def resolve_prose(self, text: str) -> tuple[AreaRef, ...]:
         """Areas named in prose, verified against names the register knows.
 
+        `resolve_prose_detail` with the second element dropped, for the callers
+        that only act on resolutions.
+        """
+        return self.resolve_prose_detail(text)[0]
+
+    def resolve_prose_detail(self, text: str) -> tuple[tuple[AreaRef, ...], tuple[str, ...]]:
+        """``(resolved, declined)``: what the register answered, both halves.
+
         Up to four tokens before each unit word are joined longest-first and the
         first join the register knows wins. Four covers the longest real form,
         ``м. Харків та Харківська територіальна громада``, and stops well short
         of swallowing a sentence. A unit word with no known name before it is
-        ignored, and a name shared by two areas resolves to neither: an
-        ambiguous name is unknown, not a coin toss (F59).
+        ignored.
+
+        **The unit word filters every match, not only a tie (F130).** It used to
+        be read only when two rows shared a name, which is one name in the
+        table; for the other 131 it was matched and discarded, so ``Харківська
+        область`` resolved to the Kharkiv city hromada and carried the city's
+        border interval, silently. Now a name whose only rows sit at a different
+        level resolves to nothing, and the miss prints. Measured over the
+        table's whole domain, 132 names by 3 unit words: the change removes 262
+        resolutions, every one of them at the wrong level, and no correct one.
+
+        ``declined`` carries the normalised candidates the register knows and
+        did not resolve: a name held only at another level, a name two areas
+        share at the asked level (F59), or a row the file marks ambiguous or
+        codeless (F131). A caller reporting misses can therefore say "the
+        register knows this name and declines" instead of rendering it the same
+        as a name nobody has seen. Empty ``declined`` with empty ``resolved``
+        means the vocabulary is genuinely absent.
 
         Used for the continuation list, which the channel writes in prose rather
-        than as tags, so the tag path cannot see it at all (T37).
+        than as tags (T37), and by the API adapter, for which prose is the only
+        path there is.
         """
         found: dict[str, AreaRef] = {}
+        declined: dict[str, None] = {}
         tokens = [(match.group(0), match.end()) for match in TOKEN.finditer(text)]
         ends = {end: index for index, (_word, end) in enumerate(tokens)}
         for unit in UNIT.finditer(text):
@@ -358,22 +400,24 @@ class AreaTable:
                 candidate = normalise_name("".join(word for word, _e in tokens[start:index]))
                 matches = self._by_name.get(candidate)
                 if matches is None:
+                    if candidate in self.unresolved_names:
+                        # The register's own answer: this name it holds and
+                        # will not resolve. That is a finding, not a gap, and
+                        # trying shorter spans past it would resolve a fragment
+                        # of a name the file already recognised whole.
+                        declined.setdefault(candidate, None)
+                        break
                     continue
-                # The unit word is standing right there and carries exactly the
-                # distinction two same-named areas differ by: Zaporizhzhia is
-                # both an oblast and a hromada, and the register gives both the
-                # name `Запорізька`. Narrowing by unit resolves that pair the
-                # way a reader does, and leaves F59 to the names that stay
-                # ambiguous after it.
-                if len(matches) > 1:
-                    wanted = _UNIT_CODE.get(unit.group(0)[:5])
-                    narrowed = [m for m in matches if m.unit == wanted]
-                    if len(narrowed) == 1:
-                        found.setdefault(narrowed[0].code, narrowed[0])
-                    break
-                found.setdefault(matches[0].code, matches[0])
+                wanted = _UNIT_CODE.get(unit.group(0)[:5])
+                narrowed = [m for m in matches if m.unit == wanted]
+                if len(narrowed) == 1:
+                    found.setdefault(narrowed[0].code, narrowed[0])
+                else:
+                    # Known name, no resolution at this level: held only at
+                    # another level, or shared by two areas at this one (F59).
+                    declined.setdefault(candidate, None)
                 break
-        return tuple(found.values())
+        return tuple(found.values()), tuple(declined)
 
     def western(self, text: str) -> tuple[AreaRef, ...]:
         """Only the areas a Polish reader has reason to be told about."""

@@ -389,7 +389,8 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
     aged = (f"({source.snapshot_age_s:.0f}s)"
             if source.snapshot_age_s is not None else "")
     print(f"active={active} cleared={cleared} "
-          f"unresolved={len(source.unresolved)} latency={fetch_s:.3f}s "
+          f"unresolved={len(source.unresolved)} "
+          f"declined={len(source.declined)} latency={fetch_s:.3f}s "
           f"snapshot={source.snapshot_state}{aged}")
     if source.snapshot_state in ("stale", "corrupt"):
         # Withheld, and said so. Silently withholding clears would put a calm
@@ -401,11 +402,16 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
         # Named, not counted only. A region the map cannot resolve is a finding
         # about the map, and a number alone cannot be acted on.
         print(f"  unresolved: {name}")
+    for name in source.declined:
+        # Also named, and separately (F131): the register holds this name and
+        # declines it. The repair is a disambiguation or a level, not a row,
+        # and folding the two populations into one word hid a live one.
+        print(f"  declined by register: {name}")
     if store is not None:
         try:
             store.record_read(
                 API_FEED, API_URL, started, active + cleared,
-                len(source.unresolved), fetch_s,
+                len(source.unresolved) + len(source.declined), fetch_s,
             )
             appended = store.append(events)
         except Exception as failure:  # noqa: BLE001
