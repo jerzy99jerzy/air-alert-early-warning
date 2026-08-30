@@ -4185,3 +4185,65 @@ honest note is that no equivalent reads the manual's prose, and none is added
 here: a truth-checker for free text is a claim this project knows better than
 to make. What is added is the smaller thing that was missing: `mavo attempts`
 is documented in a new 4.9, so the audit at least knows the section exists.
+
+### F128, 0.45.0.0. Four areas the table already held were unreachable from prose
+
+**The register writes a hromada as `X територіальна громада` and the channel's
+hashtag drops the middle word.** `resolve_prose` builds a candidate as a run of
+tokens ending at the unit word, so the filler landed inside every name it
+preceded: the candidate for `Нікопольська територіальна громада` was
+`нікопольськатериторіальна`, which nothing in the register ever wrote down.
+
+The defect was harmless while the channel was the source, and became live the
+moment the API replaced it: the API publishes region names in prose and nothing
+else. Four areas the table already holds - Nikopol, Marhanets,
+Chervonohryhorivka and the Kharkiv hromada - were alerting on the switchover
+day and reported as `unresolved`, which is to say the map was silent about
+areas it knew.
+
+**How it survived.** `resolve_prose` had no test at all before 0.44.0.0
+(recorded in that release's session notes), and the round-trip probe added
+there feeds each row back as `f"{name} {unit_word}"` - the short form. A probe
+built from the table's own spelling cannot find a defect that only appears in
+somebody else's spelling, which is the fixture-shape failure this project has
+now logged five times.
+
+**Repair.** A single filler word directly before the unit word is stepped over
+rather than spanned. Deliberately a closed set of two spellings and not a
+general "skip unknown tokens": the second would turn a miss into a loose match
+and start resolving names the table does not hold, which is F59 with extra
+steps.
+
+**The measurement that bounds it.** Five of the nine unresolved names on the
+switchover day stay unresolved after this repair, and correctly: Volchansk,
+Lypetska, Pokrovska, Luhansk and Crimea are not in the table. A name the map
+does not know remains a finding about coverage rather than a candidate to be
+matched approximately.
+
+**Reopen condition:** the next register form the API publishes and the table
+cannot read. The honest expectation is that there is one.
+
+### F129, 0.45.0.0. Every alert from the new source claimed to be a missile
+
+The adapter shipped one release earlier mapped the API's `AIR` to
+`ThreatKind.MISSILE`, and `kind` crosses the contract, so from 15:11 on
+2026-08-30 the consumer drew a missile icon over every alert the operator had
+called only "air". The reasoning is in D-042 and is not repeated here; what
+belongs in this register is how it got in and why nothing caught it.
+
+**How it got in.** The mapping was written by reading `ThreatKind`'s members
+and choosing the closest one, rather than by reading what the API asserts. The
+same class as the fixture failures above, one artefact over: the shape of the
+destination decided the answer instead of the content of the source.
+
+**Why the gate was green.** An internally consistent mistranslation is
+invisible to every check this repository owns. Tests asserted the mapping the
+adapter implemented, `mypy` saw a valid member, the mutation runner had nothing
+to flip. The only instrument that could have caught it is a reader looking at
+the legend on the page, which is how it was in fact caught.
+
+**Repair.** `AIR` is UNKNOWN, and two tests hold both halves: an air alert is
+not classified, an artillery alert keeps the kind the API states.
+
+**Reopen condition:** the next field this project translates from a source
+vocabulary into its own without writing down what the source actually claims.

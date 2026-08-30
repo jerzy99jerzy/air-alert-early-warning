@@ -87,7 +87,7 @@ def test_first_poll_reports_alerts_and_clears_nothing() -> None:
     events = source.poll()
 
     assert [event.state for event in events] == [AlertState.ACTIVE]
-    assert events[0].kind is ThreatKind.MISSILE
+    assert events[0].kind is ThreatKind.UNKNOWN
     assert events[0].oblast == "Львівська"
 
 
@@ -288,7 +288,7 @@ def test_save_is_atomic_and_round_trips(tmp_path: Path) -> None:
     assert path.exists()
     assert not path.with_name(path.name + ".partial").exists()
     payload = json.loads(path.read_text(encoding="utf-8"))
-    assert [entry["kind"] for entry in payload["areas"]] == ["MISSILE"]
+    assert [entry["kind"] for entry in payload["areas"]] == ["UNKNOWN"]
     assert payload["areas"][0]["oblast"] == "Львівська"
 
 
@@ -341,3 +341,35 @@ def test_save_before_a_successful_poll_writes_nothing(tmp_path: Path) -> None:
     source.save_snapshot()
 
     assert not path.exists()
+
+
+def test_an_air_alert_is_not_classified_as_a_missile() -> None:
+    """The API has one type for everything that flies, and it is not a claim.
+
+    The channel named the means of attack because it wrote it in prose:
+    ballistic, drone, glide bomb. `AIR` says only that something is in the air.
+    Mapping it to MISSILE would put a classification on the reader's page that
+    the operator never made - a missile icon over an alert nobody called a
+    missile - and would hand `r3_border_missile` a match it has no evidence
+    for. Unknown is a state here, not a gap to fill with the likeliest guess
+    (D-042).
+    """
+    source = _source(SequenceTransport([_snapshot((LVIV, "AIR"))]))
+
+    events = source.poll()
+
+    assert events[0].kind is ThreatKind.UNKNOWN
+
+
+def test_an_artillery_alert_keeps_the_kind_the_api_states() -> None:
+    """The refusal is about what the source does not say, not about all kinds.
+
+    `ARTILLERY` is named by the API, so it survives as itself. A blanket
+    UNKNOWN would discard a classification the source did make, which is the
+    same defect as inventing one, pointing the other way.
+    """
+    source = _source(SequenceTransport([_snapshot((LVIV, "ARTILLERY"))]))
+
+    events = source.poll()
+
+    assert events[0].kind is ThreatKind.ARTILLERY

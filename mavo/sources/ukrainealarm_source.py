@@ -51,12 +51,23 @@ from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind
 from mavo.sources.ukrainealarm import API_BASE, TIMEOUT_S, ApiAlert, parse_alerts
 from mavo.transport import Transport, UrllibTransport
 
-#: The API's `type` to this project's classification. `URBAN_FIGHTS` maps to
-#: UNKNOWN rather than gaining a member: it is ground combat, it carries no
-#: timing regime that could reach the Polish border, and inventing a kind for
-#: it would put a word in the schema that no rule can act on.
+#: The API's `type` to this project's classification, and the mapping is
+#: mostly a refusal to classify (D-042).
+#:
+#: **`AIR` is UNKNOWN, not MISSILE.** The channel named the means of attack -
+#: ballistic, drone, glide bomb - because it wrote them in prose. The API has
+#: one type for everything that flies and says nothing about what it is. Mapping
+#: it to MISSILE would put a classification on the page that the source never
+#: made: the reader would see a missile icon over an alert the operator called
+#: only "air". This project has a kind for exactly this case and a legend entry
+#: explaining it, and the schema's rule is that unknown is a state rather than a
+#: gap to be filled with the likeliest guess.
+#:
+#: `URBAN_FIGHTS` maps to UNKNOWN for a different reason: it is ground combat,
+#: it carries no timing regime that could reach the Polish border, and inventing
+#: a kind for it would put a word in the schema that no rule can act on.
 _KIND = {
-    "AIR": ThreatKind.MISSILE,
+    "AIR": ThreatKind.UNKNOWN,
     "ARTILLERY": ThreatKind.ARTILLERY,
     "URBAN_FIGHTS": ThreatKind.UNKNOWN,
 }

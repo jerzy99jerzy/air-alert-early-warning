@@ -238,3 +238,39 @@ def test_prose_tells_an_oblast_from_a_hromada_of_the_same_name() -> None:
     assert [ref.unit for ref in oblast] == ["O"]
     assert [ref.unit for ref in hromada] == ["H"]
     assert oblast[0].code != hromada[0].code
+
+
+def test_the_full_register_form_of_a_hromada_resolves_from_prose() -> None:
+    """`X територіальна громада` is the form the API publishes (F128).
+
+    A candidate is a run of tokens ending at the unit word, so the filler in
+    the middle landed inside every name it preceded and four areas the table
+    already holds were unreachable from prose - Nikopol, Marhanets,
+    Chervonohryhorivka and the Kharkiv hromada, all of them alerting on the
+    day the API became the primary source. The tag path never saw this because
+    the channel's hashtag drops the middle word.
+    """
+    table = AreaTable.from_csv()
+
+    for prose, oblast in (
+        ("м. Нікополь та Нікопольська територіальна громада", "Дніпропетровська"),
+        ("м. Харків та Харківська територіальна громада", "Харківська"),
+        ("Червоногригорівська територіальна громада", "Дніпропетровська"),
+    ):
+        resolved = table.resolve_prose(prose)
+        assert len(resolved) == 1, prose
+        assert resolved[0].oblast == oblast
+
+
+def test_a_name_the_table_does_not_hold_stays_unresolved() -> None:
+    """Stepping over the filler must not turn a miss into a guess.
+
+    Volchansk and Luhansk are outside the table by design, and the repair for
+    the form must leave them exactly as unresolvable as they were: a name the
+    map does not know is a finding about coverage, not a candidate to be
+    matched loosely.
+    """
+    table = AreaTable.from_csv()
+
+    assert table.resolve_prose("Вовчанська територіальна громада") == ()
+    assert table.resolve_prose("Луганська область") == ()

@@ -40,14 +40,14 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.43.0.0`, `/opt/mavo/venv`, python3.11 |
-| Installed at | **2026-08-30 08:40:44 UTC**, the `.dist-info` mtime, read during the deploy rather than owed to the next revision. The reading the previous revision owed for 0.42.0.0 is paid in the history below |
-| Wheel | sha256 `beb58d06…40b699`, 149,203 B, verified by `sha256sum -c` on the host before `pip` touched anything; transferred by base64 through the SSH control channel after `scp` stalled twice (see the stall note below) |
-| Discriminators | 2 / 1 / 2 / 301, counts fixed in advance, identical inside the wheel and on the installed source |
-| Point of return | `events.pre-0.43.0.0`, 18,456,576 B, sha256 `ab8f3232…1ebb56`, on the host |
-| First post-install polls | no `[STORE-MIGRATED]` line, correctly - the covering index does not announce itself the way a column does; `skipped=0` on the first poll, so F123 survives a package swap; `NRestarts=0` on one negative reading, no double session; collection gap 169 s, 08:39:03-08:41:52 |
-| `main` | 0.44.0.0 |
-| Behind by | **one** release, 0.44.0.0 - and unlike the row it replaces, this one is not an option to exercise when convenient. 0.44.0.0 is the D-040 switchover: the channel died as an output on 2026-08-29 04:55 UTC and the release carries the API collector, the snapshot persistence that lets a `oneshot` deployment clear, and the decision itself. The switchover procedure below is written before its deploy so the deploy can be checked against it rather than remembered |
+| Installed | `air-alert-early-warning 0.44.0.0`, `/opt/mavo/venv`, python3.11 |
+| Installed at | **2026-08-30 15:02:10 UTC**, the `.dist-info` mtime, read during the deploy |
+| Wheel | sha256 `0f918299…856259`, 157,554 B, verified on the host before `pip` touched anything; transferred by base64 through the SSH control channel, `scp` skipped rather than retried after its two stalls the same morning |
+| Discriminators | `SNAPSHOT_MAX_AGE_S` 0/3, `save_snapshot` 1/1, `snapshot_state` 3/3, `NO-SNAPSHOT` 1/0, counts fixed before transfer, identical inside the wheel and on the installed source |
+| Point of return | `events.pre-0.44.0.0`, 18,620,416 B, sha256 `bf08808e…946929`, taken with the timer stopped and no `-wal` or `-shm` beside it, so the copy is consistent rather than merely present |
+| First post-install polls | collection gap **184 s**, 14:59:48-15:02:52, `NRestarts=0`. First manual API poll `active=20 cleared=0 unresolved=9 snapshot=missing`, latency a tenth of a second; the second, in a new process, `snapshot=fresh(31s)` - the property 0.43.0.0 could not produce at any number of polls. First timer-driven run `snapshot=fresh(95s)`. The contract left `degraded` at 34 hours and read `feed=ok` at 15:13 |
+| `main` | 0.45.0.0 |
+| Behind by | **one** release, 0.45.0.0, and this one is visible to readers rather than internal: it stops every API alert from claiming to be a missile (F129, D-042) and makes four alerting areas resolvable from prose again (F128). Both defects are live on the host right now. Deploy sooner rather than at convenience |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -95,7 +95,8 @@ rows.
 
 | Version | Installed at (UTC) | Fate |
 | --- | --- | --- |
-| 0.43.0.0 | 2026-08-30 08:40:44, the `.dist-info` mtime | **current** |
+| 0.44.0.0 | 2026-08-30 15:02:10, the `.dist-info` mtime | **current**; the D-040 switchover |
+| 0.43.0.0 | 2026-08-30 08:40:44, the `.dist-info` mtime | superseded the same day |
 | 0.42.0.0 | 2026-08-29 14:38:38, the `.dist-info` mtime read on 2026-08-30, paying the reading the previous revision of this file owed | superseded |
 | 0.32.2.0 | 2026-08-14 18:13:09 | superseded |
 | 0.32.7.0 | 2026-08-17 11:02:06 | superseded; its restart opened the S9 window |

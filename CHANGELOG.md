@@ -16,6 +16,50 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.45.0.0 - 2026-08-30
+
+**The switchover's own homework, found by looking at the page.** 0.44.0.0 made
+the API the primary source in the afternoon, and by evening two of its defects
+were visible to anyone reading the map: every alert claimed to be a missile,
+and four areas that were alerting reported as unresolved. Both are failures of
+translation from somebody else's vocabulary into this one, and neither could
+have been caught by a gate that only checks this repository against itself.
+
+- **Every alert from the new source claimed to be a missile (F129, D-042).**
+  `AIR` mapped to `ThreatKind.MISSILE`. The channel named the means of attack
+  because it wrote it in prose; the API has one type for everything that flies.
+  `kind` crosses the contract, so the consumer drew a missile icon over alerts
+  nobody classified, `r3_border_missile` was handed a match for every air alert
+  in a border oblast, and `ThreatKind.DRONE` became unreachable, which would
+  have made the drone rule's silence read as a measurement. `AIR` is now
+  UNKNOWN; `ARTILLERY` keeps the name the API states, because discarding a
+  classification the source *did* make is the same defect pointing the other
+  way. **The cost is named rather than absorbed:** this release records that
+  switching sources cost the classification of the means of attack, that the
+  kind-dependent rules have no input rather than a low rate, and that their
+  zero is `[unestablished]`.
+
+- **Four areas the table already held were unreachable from prose (F128).**
+  The register writes a hromada as `X територіальна громада` and the channel's
+  hashtag drops the middle word, so a candidate built as a run of tokens
+  ending at the unit word swallowed the filler and matched nothing. Harmless
+  while the channel was the source, live the moment the API replaced it:
+  Nikopol, Marhanets, Chervonohryhorivka and the Kharkiv hromada were alerting
+  on switchover day and reported as unresolved. A single filler directly
+  before the unit word is now stepped over. Five of the nine unresolved names
+  stay unresolved and correctly so - they are not in the table, and a name the
+  map does not know stays a finding about coverage rather than a loose match.
+
+- **The frozen episodes have a decision and no mechanism yet (D-041).** 29
+  areas carry an ACTIVE from the dead channel that the API cannot close, none
+  of them western. The rule is written down: a synthesised all-clear requires a
+  successful observation that the area is not alerting, and **no containing
+  area may be alerting either** - Donetsk oblast alerts as a state while eight
+  frozen Donetsk raions sit under it, and closing those on absence would record
+  that the front line is quiet. The tool is deliberately not in this release:
+  F128 changes which names the API can resolve, so the measurement the tool
+  would be built on is one this release invalidates.
+
 ## 0.44.0.0 - 2026-08-30
 
 **The publisher stopped and the project switches pipes.** The channel this

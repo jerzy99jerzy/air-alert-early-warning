@@ -1565,3 +1565,83 @@ of one upstream, deduplicated by content, is a sentence someone can say.
 latency or availability degrades below what the channel provided; or a
 genuinely independent observation path appears, at which point the question
 is no longer which pipe but whether "two sources" can finally be said.
+
+## D-041. Episodes the dead channel left open are closed by observation or not at all
+Date: 2026-08-30. Status: adopted, mechanism deferred
+
+**The problem, measured.** On the day of the D-040 switchover the store held
+29 areas whose newest event was an ACTIVE from the channel, the oldest stamped
+2026-08-28T04:00Z. The API cannot close them: it never saw them, and an
+episode with no all-clear grows against the wall clock forever (T81). **None
+is western**, measured twice before and after the switch, so the contract a
+Polish reader sees was never affected; the whole question is about the rest of
+the map.
+
+**Decision.** A frozen episode may be closed by a synthesised CLEAR **only
+when a successful observation says the area is not alerting**, and never as
+housekeeping. Three conditions, all required:
+
+1. The area is in the area table, so the API is able to name it at all.
+2. The API resolved that area on a poll that succeeded, and did not list it.
+3. **No area containing it was listed either.** This is the condition the
+   first draft of this decision lacked, and it is the one that matters most.
+
+**Why the third condition exists.** The channel tagged raions; the API reports
+whichever level the operator declared, which on 2026-08-30 was 56 districts, 5
+states and 5 communities. Donetsk oblast alerts as a *state*, and the eight
+frozen Donetsk raions are eight different area ids that the API will never
+mention while it is naming their parent. Closing them on absence would write
+into the store, permanently, that the front line is quiet - the exact
+inversion of this project's rule, produced by a repair.
+
+**No hand-edited store, ever.** Any closure is a `ThreatEvent` appended
+through the normal path, carrying `source_id="reconcile"` so the store can
+always say which rows came down a pipe and which were derived,
+`provenance=INFERENCE`, and `ts_source` set to the observation that licensed
+it. `docs/DECISIONS.md` D-013 says a re-reading happens by rebuilding from the
+corpus, and this is the one thing a rebuild cannot produce, which is why it
+gets a label of its own rather than a quiet insert.
+
+**Mechanism deferred to a later release, deliberately.** F128 in this same
+release makes the API resolve four names it could not resolve before, so the
+set of areas the API is *able* to name changed inside the release that
+discovered the problem. Writing the tool against the old measurement would
+build on a number this release invalidates. The next step is to re-measure
+after this deploy, not to ship `mavo reconcile` on figures from before it.
+
+**Reopen if:** the frozen set reaches a western area, at which point this stops
+being a question about the rest of the map and becomes one about the contract.
+
+## D-042. The API says "air" and this project does not say "missile"
+Date: 2026-08-30. Status: adopted
+
+**Decision.** `AIR` maps to `ThreatKind.UNKNOWN`. `ARTILLERY` keeps its name,
+because the source states it.
+
+**What was wrong.** The adapter shipped at 0.44.0.0 mapped `AIR` to
+`ThreatKind.MISSILE`, and from 15:11 on the day it deployed every alert on the
+map drew a missile icon. The channel named the means of attack because it
+wrote it in prose - ballistic, drone, glide bomb - and the API has one type for
+everything that flies. The mapping put a classification on the reader's page
+that no operator made.
+
+**Three consequences, and the icon is the least of them.** `kind` crosses the
+contract, so the consumer renders it: a reader saw a claim about means of
+attack that came from this repository rather than from Ukraine. `r3_border_missile`
+fires on a border oblast reporting an alert **classified as a missile threat**,
+so a blanket MISSILE hands it a match for every air alert, and its hit count
+stops measuring anything. And `ThreatKind.DRONE` can no longer occur at all, so
+the drone rule's silence would read as a measurement rather than as a missing
+input.
+
+**The cost, which is the third cost of D-040 and was not named there.**
+Switching sources cost this project the classification of the means of attack.
+The kind-dependent rules are not wrong; they have no input. Their zero is
+`[unestablished]`, not `[measured]`, and any evaluation run over API-sourced
+events must say so rather than reporting a rate. Recovering it needs a source
+that classifies - the channel returning, or a second endpoint that states a
+type - and until then the honest page says the kind was not stated, which is a
+sentence the consumer already knows how to render and explain.
+
+**Reopen if:** the API gains a type that distinguishes what is in the air, or
+the channel returns and can be joined on the same transition.

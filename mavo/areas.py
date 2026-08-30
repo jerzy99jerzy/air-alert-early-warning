@@ -105,6 +105,14 @@ CONTINUES = re.compile(r"тривога\s+ще\s+трива[єе]|ще\s+три�
 # noun, and `район старої частини` is the old town, not an administrative unit.
 UNIT = re.compile(r"\b(район|громад[аи]|област[ьі])\b")
 
+#: Words that sit between a name and its unit word without being part of either.
+#: The register's full form for a hromada is `X територіальна громада`, and the
+#: API publishes it in full where the channel's tag drops the middle word. A
+#: candidate is built as a run of tokens ending at the unit word, so the filler
+#: landed inside every name it preceded and four areas the table holds were
+#: unreachable from prose - among them Nikopol and the Kharkiv hromada (F128).
+_FILLER = {"територіальна", "територіальної"}
+
 #: The unit word as prose spells it, mapped to the code the map stores. Keyed
 #: on the first five characters so the inflected forms the regex already allows
 #: (`громади`, `області`) land on one entry rather than needing a row each.
@@ -338,6 +346,11 @@ class AreaTable:
             index = ends.get(unit.end())
             if index is None:
                 continue
+            # The filler is stepped over rather than spanned: it belongs to
+            # neither the name nor the unit word, and a candidate that swallows
+            # it matches nothing the register ever wrote down.
+            if index > 0 and normalise_name(tokens[index - 1][0]) in _FILLER:
+                index -= 1
             for span in (4, 3, 2, 1):
                 start = index - span
                 if start < 0:
