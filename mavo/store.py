@@ -24,7 +24,14 @@ from mavo.schema import (
     Provenance,
     ThreatEvent,
     ThreatKind,
+    is_clear,
+    state_precedence,
 )
+
+#: SQLite's default parameter ceiling is 999; a query naming one area per
+#: placeholder stays well under it at any population this project has seen, and
+#: chunking here means it stays under it at populations it has not.
+_QUERY_CHUNK = 500
 
 # Bumped whenever a column is added. A store written by an older version is
 # refused rather than migrated: D-013 already says a re-reading is done by
@@ -182,6 +189,12 @@ CREATE TABLE IF NOT EXISTS feed_attempts (
 _INDEXES = """
 CREATE INDEX IF NOT EXISTS idx_events_ts_source ON events (ts_source);
 CREATE INDEX IF NOT EXISTS idx_events_area ON events (area_id, ts_source);
+-- D-044. `idx_events_area` carries neither `kind` nor `state`, so the newest
+-- clear per `(area, kind)` - asked on every collect cycle - was an area seek
+-- followed by a scan. Separate from `_SCHEMA` for the reason stated above: an
+-- index names columns, and this one names `kind` and `state`.
+CREATE INDEX IF NOT EXISTS idx_events_area_kind_state
+    ON events (area_id, kind, state, ts_source);
 CREATE INDEX IF NOT EXISTS idx_communiques_feed ON communiques (feed, ts_ingest);
 CREATE INDEX IF NOT EXISTS idx_attempts_feed ON feed_attempts (feed, started_at);
 -- 0.43.0.0. `newest_page_id` runs once per poll, before the fetch, so its cost
@@ -452,24 +465,99 @@ class EventStore:
                 )
 
 
-    def newest_by_area(self) -> tuple[ThreatEvent, ...]:
-        """The newest event per area, by the fold's own ordering.
+    def newest_by_area_kind(self) -> dict[tuple[str, ThreatKind], ThreatEvent]:
+        """The newest event per `(area_id, kind)`, by the fold's own ordering.
 
-        Reuses `replay` and the exact comparison `compose` folds with -
-        `(ts_source, ts_ingest)`, later wins, ties to the later ingest - so a
-        caller asking "what does the picture stand on for this area" gets the
-        same answer the picture gives. A second ordering here would be a
-        second opinion about the same log, and the two would drift (D-041's
-        reconcile is the caller this was written for).
+        The primitive, since D-044. `compose` folds on this key and everything
+        an area-level caller wants is derived from it here, so `reconcile` and
+        the picture cannot hold two opinions about one log. Reuses `replay` and
+        the exact comparison `compose` folds with - `(ts_source, ts_ingest)`,
+        later wins, ties to the later ingest.
         """
-        latest: dict[str, ThreatEvent] = {}
+        latest: dict[tuple[str, ThreatKind], ThreatEvent] = {}
         for event in self.replay():
-            current = latest.get(event.area_id)
+            key = (event.area_id, event.kind)
+            current = latest.get(key)
             if current is None or (event.ts_source, event.ts_ingest) >= (
                 current.ts_source, current.ts_ingest
             ):
-                latest[event.area_id] = event
-        return tuple(latest[area] for area in sorted(latest))
+                latest[key] = event
+        return latest
+
+    def newest_by_area(self) -> tuple[ThreatEvent, ...]:
+        """The event that names each area, by the same rule the picture uses.
+
+        Derived from `newest_by_area_kind` rather than folded a second time
+        (D-044). An area is named by its loudest *live* kind - `state_precedence`,
+        ties to the later stamp - and by its newest kind only when every kind is
+        clear, because an area whose kinds are all clear has nothing live to be
+        named by and the caller still needs a row to read the closure off.
+
+        Before D-044 this folded on `area_id` alone, which meant the clear of
+        one threat kind erased the area: fifteen areas rendered calm during
+        alarms on 2026-08-30 (F133). Callers wanting per-kind truth should ask
+        for it directly; this stays for the ones that genuinely want one row per
+        area.
+        """
+        by_area: dict[str, list[ThreatEvent]] = {}
+        for (area_id, _kind), event in self.newest_by_area_kind().items():
+            by_area.setdefault(area_id, []).append(event)
+        named: list[ThreatEvent] = []
+        for area_id in sorted(by_area):
+            standing = by_area[area_id]
+            live = [event for event in standing if not is_clear(event.state)]
+            named.append(
+                max(
+                    live or standing,
+                    key=lambda event: (
+                        state_precedence(event.state),
+                        event.ts_source,
+                        event.ts_ingest,
+                    ),
+                )
+            )
+        return tuple(named)
+
+    def newest_clear_by_area_kind(
+        self, keys: Iterable[tuple[str, ThreatKind]]
+    ) -> dict[tuple[str, ThreatKind], datetime]:
+        """The newest stored CLEAR stamp for each requested key, where one exists.
+
+        D-044 part 2's evidence, and the reason part 2 does not query the
+        snapshot: `reconcile` writes CLEAR rows and never touches the snapshot,
+        so a snapshot field would answer this from a population missing every
+        closure that command has ever made.
+
+        Batched and indexed rather than a fold. `newest_by_area_kind` is a full
+        `replay` through Python object construction, and this runs on every
+        collect cycle at a 121 s cadence against a store whose open-path cost is
+        already an open finding. `idx_events_area_kind_state` covers the seek;
+        the maximum is taken over parsed datetimes rather than over ISO text, so
+        a row written before that normalization was uniform cannot win by
+        spelling.
+        """
+        wanted = set(keys)
+        if not wanted:
+            return {}
+        areas = sorted({area_id for area_id, _kind in wanted})
+        newest: dict[tuple[str, ThreatKind], datetime] = {}
+        with closing(self._connect()) as conn:
+            for start in range(0, len(areas), _QUERY_CHUNK):
+                batch = areas[start:start + _QUERY_CHUNK]
+                placeholders = ",".join("?" * len(batch))
+                rows = conn.execute(
+                    "SELECT area_id, kind, ts_source FROM events "
+                    f"WHERE state = ? AND area_id IN ({placeholders})",
+                    (AlertState.CLEAR.value, *batch),
+                ).fetchall()
+                for area_id, kind_value, ts_text in rows:
+                    key = (str(area_id), ThreatKind(kind_value))
+                    if key not in wanted:
+                        continue
+                    stamp = datetime.fromisoformat(ts_text)
+                    if key not in newest or stamp > newest[key]:
+                        newest[key] = stamp
+        return newest
 
     def count(self) -> int:
         """Number of stored events."""

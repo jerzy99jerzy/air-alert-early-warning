@@ -59,7 +59,12 @@ REQUIRED_STREAM = ("window_start", "window_s", "truncated", "items")
 REQUIRED_ITEM = ("area_id", "oblast", "oblast_name", "alert", "kind", "role",
                  "at", "west")
 REQUIRED_AREA = ("katottg", "area_id", "oblast", "oblast_name", "alert", "kind",
-                 "since", "border_km_lower", "border_km_upper")
+                 "since", "border_km_lower", "border_km_upper", "kinds")
+# D-044. The per-kind standings inside an area block. Required rather than
+# optional, and checked non-empty below: an area is published only when it has
+# a live kind, so an empty list here means the fold and the publisher disagree
+# about what the area is, which is the shape F133 took.
+REQUIRED_KIND_STANDING = ("kind", "alert", "since")
 # The trailing block had no key set here for eleven releases while every other
 # block in the payload had one. `recent_7d` is the layer the consumer shades a
 # whole oblast from, so a rename here repaints the map rather than emptying a
@@ -160,6 +165,29 @@ def check_contract() -> list[str]:
             problems.append(f"area oblast {slug!r} is not ASCII")
         if area.get("alert") == "clear":
             problems.append("a cleared area must leave the list, not carry alert=clear")
+        # D-044. The per-kind standings, and three properties rather than one.
+        standings = area.get("kinds", [])
+        area_id = area.get("area_id", "?")
+        if not standings:
+            problems.append(
+                f"area {area_id} carries no kind standing; a published area has at "
+                "least one kind that is not clear, so an empty block means the fold "
+                "and the publisher disagree about what the area is (F133)"
+            )
+        for standing in standings:
+            for key in REQUIRED_KIND_STANDING:
+                if key not in standing:
+                    problems.append(f"area {area_id} kind standing is missing {key!r}")
+            if standing.get("alert") == "clear":
+                problems.append(
+                    f"area {area_id} publishes a cleared kind; a cleared kind leaves "
+                    "the block for the same reason a cleared area leaves the list"
+                )
+        if standings and area.get("kind") not in {s.get("kind") for s in standings}:
+            problems.append(
+                f"area {area_id} headline kind {area.get('kind')!r} is not among its "
+                "own standings; the headline is drawn from the block, never beside it"
+            )
 
     # An unresolvable area must still appear, with empty rather than guessed
     # identifiers: dropping it is what made the consumer's map disagree with

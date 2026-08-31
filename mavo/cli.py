@@ -40,7 +40,14 @@ from mavo.report import (
     write_feed,
 )
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
-from mavo.schema import AlertState, Provenance, ThreatEvent
+from mavo.schema import (
+    AlertState,
+    Provenance,
+    ThreatEvent,
+    ThreatKind,
+    is_clear,
+    redate_reassertions,
+)
 from mavo.sources.fixture import FixtureSource, generate_history
 from mavo.sources.rso import CATEGORIES as RSO_CATEGORIES
 from mavo.sources.rso import FEED as RSO_FEED
@@ -161,6 +168,42 @@ def _cmd_backfill(args: argparse.Namespace) -> int:
 API_FEED = "ukrainealarm"
 API_URL = f"{API_BASE}/alerts"
 
+def _redate_against_stored_clears(
+    store: EventStore, events: Sequence[ThreatEvent], observed_at: datetime
+) -> tuple[ThreatEvent, ...]:
+    """D-044 part 2, at the write boundary rather than inside the adapter.
+
+    **Snapshot sources only, and the restriction is the whole correctness
+    argument.** An assertion from a snapshot source means "this alarm is
+    standing right now", so an ACTIVE arriving with a stamp older than a stored
+    clear is a re-assertion of something this pipeline cleared in error, and
+    dating it by the observation is the repair. An assertion from a *log*
+    source means "a message existed at T", and an ACTIVE stamped before a later
+    clear is then a historical claim that must lose the fold - re-dating it
+    would resurrect an ended alert on every re-read of the same page, which is
+    both wrong and not idempotent. The first draft of this function ran on both
+    collectors and `test_sprint11` caught it: a repeated poll grew the log.
+
+    Kept out of the adapter all the same. The store belongs to the collector,
+    the `ThreatSource` protocol is `source_id` and `poll()`, and giving one
+    adapter a database handle would put a store parameter on the fixture
+    generator too. What travels into the adapter's module is nothing; what
+    travels out is a decision made where both the store and the source model
+    are already in scope.
+
+    Only ACTIVE rows are asked about, so the query names the handful of keys a
+    poll actually raised rather than the store.
+    """
+    keys = {
+        (event.area_id, event.kind)
+        for event in events
+        if event.state is AlertState.ACTIVE
+    }
+    return redate_reassertions(
+        events, store.newest_clear_by_area_kind(keys), observed_at
+    )
+
+
 def _cmd_collect(args: argparse.Namespace) -> int:
     """Poll the channel once, and leave a record that the poll happened.
 
@@ -275,6 +318,9 @@ def _cmd_collect(args: argparse.Namespace) -> int:
                 report.first_id,
                 report.last_id,
             )
+            # Deliberately no re-dating here: this is a log source. See
+            # `_redate_against_stored_clears` for why the two source models take
+            # opposite answers to the same-looking question.
             appended = store.append(events)
             kinds = store.append_kinds(source.kind_events)
         except Exception as failure:  # noqa: BLE001
@@ -418,7 +464,19 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
                 API_FEED, API_URL, started, active + cleared,
                 len(source.unresolved) + len(source.declined), fetch_s,
             )
-            appended = store.append(events)
+            # Before the append, and the order is the point: a row re-dated
+            # after storage would already have lost to the clear it supersedes.
+            redated = _redate_against_stored_clears(store, events, started)
+            reasserted = sum(
+                1 for event in redated if "superseded_clear" in event.raw_fields
+            )
+            if reasserted:
+                # Loud, because a re-assertion means this pipeline cleared an
+                # alarm that had not ended. The row repairs the map; the count
+                # is the only place the fault itself is visible.
+                print(f"  re-asserted {reasserted} alarm(s) dated by observation: "
+                      "the API repeated an alert this pipeline had already cleared")
+            appended = store.append(redated)
         except Exception as failure:  # noqa: BLE001
             print(f"[STORE-FAILED] {failure}")
             return 7
@@ -437,6 +495,18 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
         # here recreates the never-clearing map this flag exists to end.
         print(f"[SNAPSHOT-UNWRITTEN] {failure}")
     return 0
+
+
+def _key_order(key: tuple[str, ThreatKind]) -> tuple[str, str]:
+    """Total order over `(area_id, kind)`.
+
+    `ThreatKind` is an Enum and Enums are unordered, so a plain tuple sort works
+    until two keys share an area and then raises. Ordering on the *value* keeps
+    the output stable and comparable between runs, which is what an operator
+    diffing two dry-runs needs.
+    """
+    area_id, kind = key
+    return (area_id, kind.value)
 
 
 def _cmd_reconcile(args: argparse.Namespace) -> int:
@@ -471,7 +541,7 @@ def _cmd_reconcile(args: argparse.Namespace) -> int:
         print(f"[STORE-FAILED] {failure}")
         return 7
     snapshot_path = Path(args.snapshot)
-    state, age_s, previous, _oblasts = _load_snapshot(
+    state, age_s, previous, oblasts = _load_snapshot(
         snapshot_path, SNAPSHOT_MAX_AGE_S, datetime.now(UTC)
     )
     if state != "fresh" or previous is None:
@@ -481,18 +551,26 @@ def _cmd_reconcile(args: argparse.Namespace) -> int:
         return 3
     raw = json.loads(snapshot_path.read_text(encoding="utf-8"))
     saved_at = datetime.fromisoformat(str(raw["saved_at"]))
+    live_keys = set(previous)
     live_areas = {area_id for (area_id, _kind) in previous}
-    newest = store.newest_by_area()
+    newest = store.newest_by_area_kind()
+    # D-044 part 3. The ghost test is per kind. A stale `telegram` ACTIVE on an
+    # area the API is currently reporting under a *different* kind was outside
+    # this command's reach entirely while the test asked about the area: the
+    # area was present, so nothing about it was a ghost, and the stale row went
+    # on holding the area's identity. Thirteen rows sat there on 2026-08-30.
     ghosts = [
-        event for event in newest
-        if event.source_id == "telegram"
-        and event.state is AlertState.ACTIVE
-        and event.area_id not in live_areas
+        newest[key] for key in sorted(newest, key=_key_order)
+        if newest[key].source_id == "telegram"
+        and newest[key].state is AlertState.ACTIVE
+        and key not in live_keys
     ]
-    masked = [
-        event for event in newest
-        if event.area_id in live_areas
-        and not (event.source_id == "ukrainealarm" and event.state is AlertState.ACTIVE)
+    # The mirror population, per kind: a `(area, kind)` the fresh snapshot is
+    # reporting right now whose newest stored row is a clear, or which has no
+    # row at all. These are the alarms the map was rendering as calm.
+    unmasked_keys = [
+        key for key in sorted(live_keys, key=_key_order)
+        if key not in newest or is_clear(newest[key].state)
     ]
     now = datetime.now(UTC)
     closures = [
@@ -510,29 +588,68 @@ def _cmd_reconcile(args: argparse.Namespace) -> int:
         )
         for ghost in ghosts
     ]
+    unmasks = [
+        ThreatEvent(
+            area_id=area_id,
+            state=AlertState.ACTIVE,
+            # The observation that licenses the row, not the alarm's own start.
+            # The API's `began` is kept beside it because it is true and is a
+            # different claim: this row says when we saw the alarm standing.
+            ts_source=saved_at,
+            ts_ingest=now,
+            source_id="reconcile",
+            kind=kind,
+            provenance=Provenance.INFERENCE,
+            raw_fields={
+                "reason": "present in fresh snapshot, no live row for this kind",
+                "began": previous[(area_id, kind)].isoformat(),
+                "superseded": (
+                    newest[(area_id, kind)].ts_source.isoformat()
+                    if (area_id, kind) in newest else "none"
+                ),
+            },
+            oblast=oblasts.get((area_id, kind), ""),
+        )
+        for (area_id, kind) in unmasked_keys
+    ]
     mode = "apply" if args.apply else "dry-run"
-    print(f"reconcile {mode}: ghosts={len(closures)} masked={len(masked)} "
-          f"snapshot_areas={len(live_areas)} saved_at={saved_at.isoformat()}")
+    print(f"reconcile {mode}: ghosts={len(closures)} masked={len(unmasks)} "
+          f"snapshot_areas={len(live_areas)} snapshot_keys={len(live_keys)} "
+          f"saved_at={saved_at.isoformat()}")
     for closure in closures:
         print(f"  close {closure.area_id} kind={closure.kind.value} "
               f"oblast={closure.oblast or 'unknown'} "
               f"opened_at={closure.raw_fields['opened_at']}")
-    for event in masked:
-        # Named and never written: an area the API says is alerting now whose
-        # newest stored row says otherwise. Closing has no business here; the
-        # danger runs the other way, calm rendered during an alarm, and the
-        # repair is a decision about the fold, not a row from this command.
-        print(f"  MASKED {event.area_id} newest={event.source_id}/{event.state.value} "
-              f"ts={event.ts_source.isoformat()}")
+    for event in unmasks:
+        verb = "unmask" if args.unmask else "MASKED"
+        print(f"  {verb} {event.area_id} kind={event.kind.value} "
+              f"began={event.raw_fields['began']} "
+              f"superseded={event.raw_fields['superseded']}")
+    # The gate, and it is a gate rather than a warning. Closing a per-kind ghost
+    # on an area the snapshot is reporting removes that area's last live kind
+    # unless the snapshot's own kind is written in the same breath. Refusing is
+    # the only safe answer: the alternative is a command that takes an area dark
+    # while reporting success.
+    contested = sorted({ghost.area_id for ghost in ghosts} & live_areas)
+    if args.apply and contested and not args.unmask:
+        print(f"[REFUSED] {len(contested)} ghost(s) sit on areas the fresh snapshot "
+              "is reporting; closing them without --unmask would take a live area "
+              "dark. Re-run with --unmask, or with --store only to inspect.")
+        for area_id in contested:
+            print(f"  contested {area_id}")
+        return 4
+    writes = closures + (unmasks if args.unmask else [])
     if not args.apply:
-        print("nothing written (pass --apply to write the closures above)")
+        pending = "closures and unmasks" if args.unmask else "closures"
+        print(f"nothing written (pass --apply to write the {pending} above)")
         return 0
     try:
-        appended = store.append(closures)
+        appended = store.append(writes)
     except Exception as failure:  # noqa: BLE001
         print(f"[STORE-FAILED] {failure}")
         return 7
-    print(f"stored={appended} closures (seen={len(closures)}; the difference "
+    print(f"stored={appended} rows (seen={len(writes)}: {len(closures)} closures, "
+          f"{len(unmasks) if args.unmask else 0} unmasks; the difference "
           "is idempotence, not loss)")
     return 0
 
@@ -853,7 +970,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     reconcile_cmd.add_argument(
         "--apply", action="store_true",
-        help="write the closures; without it every planned row is printed and none lands",
+        help="write the rows; without it every planned row is printed and none lands",
+    )
+    reconcile_cmd.add_argument(
+        "--dry-run", action="store_true",
+        help="explicit form of the default. Accepted because docs/DEPLOYMENT.md "
+             "has documented it since the D-041 switchover while the parser "
+             "exited 2 on it (F134), and a runbook command that fails is worse "
+             "than a flag that does nothing",
+    )
+    reconcile_cmd.add_argument(
+        "--unmask", action="store_true",
+        help="also raise an ACTIVE for every (area, kind) the fresh snapshot is "
+             "reporting whose newest stored row is a clear or missing (D-044). "
+             "Required alongside --apply when a ghost sits on an area the "
+             "snapshot is reporting, because closing it alone would take a live "
+             "area dark",
     )
     reconcile_cmd.set_defaults(func=_cmd_reconcile)
 

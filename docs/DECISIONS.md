@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.16
+Document:  docs/DECISIONS.md, version 2.17
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1645,3 +1645,127 @@ sentence the consumer already knows how to render and explain.
 
 **Reopen if:** the API gains a type that distinguishes what is in the air, or
 the channel returns and can be joined on the same transition.
+
+## D-043. D-041's parent condition is retired on a measurement
+
+Date: 2026-08-30. Status: adopted. Settled in `docs/reviews/0.47.0.0.md` §3 and
+written here one release late; the gap between settling and recording is the
+numbering drift D-035 already paid for once.
+
+**Decision.** `mavo reconcile` no longer refuses closure when a parent area is
+mentioned. The other two D-041 conditions stand unchanged: the snapshot must be
+`fresh`, and membership in it protects every live alarm from closure.
+
+**Why.** The condition guarded against closing raions the API would only ever
+name through their oblast. The payload of 2026-08-30 named eight Donetsk raions
+individually, each resolving; the premise is measured false, and a guard whose
+premise is false does not guard, it filters. The falsification is recorded in
+the review rather than deleted, because a guard removed without its reason
+recorded is a guard someone will reinstall.
+
+**Reopen when** the API is observed naming an oblast in place of its raions
+during an alarm those raions are under - the original premise, measured true.
+
+## D-044. An area present in a fresh snapshot never renders as calm
+
+Date: 2026-08-31. Status: adopted
+
+**Decision.** The unit of alarm is `(area_id, kind)` at every layer, and three
+changes ship together because no one of them is sufficient:
+
+1. **The fold works per `(area_id, kind)`.** `compose` and
+   `EventStore.newest_by_area_kind` fold on the key; an area is not clear when
+   any of its kinds is not clear, tested with `is_clear` and never with
+   `!= ACTIVE`, so the ACTIVE-to-UNKNOWN asymmetry survives. Which surviving
+   kind *names* the area is `state_precedence` - `ACTIVE > PARTIAL_CLEAR >
+   UNKNOWN > CLEAR`, ties to the newer stamp - a headline, never a verdict.
+   `AreaPicture` gains `kinds`, one standing per live kind; `kind` and `since`
+   remain as the headline's derived fields, so the v3 contract is extended and
+   not changed, and the consumer at 4.60.0.0 - measured to validate required
+   fields only - keeps rendering without a coordinated release.
+2. **A re-assertion on the snapshot source is dated by observation.**
+   `redate_reassertions` (pure, in `mavo/schema.py`) runs at the write boundary
+   in `collect-api`: an ACTIVE whose `(area_id, kind)` carries a stored CLEAR
+   no older than its stamp takes `ts_source = observed_at`, with the source's
+   own word kept in `raw_fields`. Snapshot sources only. An assertion from a
+   snapshot means "standing now"; from a log it means "a message existed at T",
+   and re-dating the log path resurrected ended alerts on every re-read and
+   broke idempotence - measured by `test_sprint11` against the first draft. The
+   check lives in the collector rather than the adapter because the store
+   belongs to the collector and the `ThreatSource` protocol is `source_id` and
+   `poll()`.
+3. **`reconcile` tests ghosts per kind and gains `--unmask`.** A ghost is a
+   `(area_id, kind)` whose newest row is a channel ACTIVE and whose key the
+   fresh snapshot does not hold; the old area-level test left thirteen stale
+   channel rows out of reach on areas the API was reporting under a different
+   kind. `--unmask` raises `ACTIVE` for every key the snapshot reports whose
+   newest stored row is a clear or absent: `ts_source = saved_at`,
+   `provenance=INFERENCE`, `source_id="reconcile"`, the superseded clear in
+   `raw_fields`. A gate refuses `--apply` when a ghost sits on an area the
+   snapshot reports and `--unmask` was not given, because closing it alone
+   would take a live area dark while reporting success.
+
+**What was wrong.** F133: source, identity and fold held three different
+answers to what a unit of alarm is, and the clear of one threat kind erased
+the area. Fifteen areas rendered calm during measured alarms on 2026-08-30 -
+thirteen whose API key was cleared by the D-042 re-key with no activation
+stored since, two whose concurrent air alert ended over a chronic artillery
+alarm running since 19 April. The population was a ratchet, not a tide: a
+chronic alarm never re-emits, and a re-assertion was unstorable by content
+hash, so "wait for it to end" was not a mitigation on any human timescale.
+
+**Why no part ships alone.** Part 1 alone publishes the thirteen on a dead
+channel's authority. Part 2 alone changes nothing for anyone currently masked.
+Part 3 alone raises rows the area-level fold can still lose to a later clear
+on another kind. Together the fifteen clear at the next `--unmask`, the class
+stops recurring, and no area is published on a dead channel's word.
+
+**Reopen when** a source appears whose unit is neither an area nor an
+`(area, kind)` pair - a corridor, a trajectory - and the fold's key stops
+being the source's key again.
+
+## D-045. `kind` is part of row identity
+
+Date: 2026-08-31. Status: adopted. Its own number rather than a clause of
+D-044, because it changes the identity of every row this project will ever
+write and it touches D-013.
+
+**Decision.** `ThreatEvent.content_hash` includes `kind.value`. `ts_ingest`,
+`oblast` and the raw text stay out for the reasons D-013 gave.
+
+**Why this is D-013 outgrown rather than reversed.** D-013 excluded `kind` on
+the premise that a transition is something an *area* undergoes, so a
+reclassification was a better reading of one event. D-044 measured that
+premise false: an area carries several threat kinds at once and they begin and
+end independently. Under the old identity, two kinds asserted for one area at
+one instant by one source were one row, and the second was silently discarded
+at the write boundary - a granularity mismatch of exactly F133's class, one
+layer down. The API stamps batches identically (eight areas measured sharing
+one `ts_source` on 2026-08-26), so the collision is live on the primary
+source, and `reconcile --unmask` produces it by construction, since every row
+it writes carries one `saved_at`.
+
+**The finding that settled it** `[inference, mechanical]`: the old identity is
+the measured mechanism behind the thirteen's missing activations. At the
+D-042 re-key, `(area, UNKNOWN)` entered `current` as a new key and the source
+emitted its activation - which hashed identically to the pre-D-042
+`(area, MISSILE)` row already stored, `kind` being excluded, and was discarded
+as a duplicate. The thirteen were not areas the API forgot; they were areas
+whose activations this store refused.
+
+**Migration, bounded and stated.** Old rows keep the hashes they were written
+with; nothing rewrites them. A transition re-offered across the deploy lands a
+second time under the new formula. The API source re-offers nothing - a key in
+`previous` never re-emits - and the channel collector reads forward of its
+page cursor against a publisher that stopped on 2026-08-29, so the expected
+duplicate count on the production store is zero and any duplicate that does
+land carries the same area, kind, state and stamp as its original and folds to
+the same standing. D-013's own mechanism is untouched: a re-reading of the raw
+corpus still happens by rebuilding a store, and a rebuild computes every hash
+with one formula.
+
+**Reopen when** a source is observed reclassifying a live transition in place -
+same area, same instant, better kind - at a rate where two rows per
+reclassification distort the trailing counts. That was D-013's case; it has
+not been observed on either source.
+

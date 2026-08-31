@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.38
+Document:  docs/METHODOLOGY.md, version 2.39
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4280,3 +4280,72 @@ differ -- settle an ambiguity versus add a row -- and an operator reading the
 journal could not tell which was owed. `from_csv` now retains the normalised
 register names it declines, `resolve_prose_detail` returns `(resolved,
 declined)`, and the collector prints `declined by register:` as its own line.
+
+### F133, 0.48.0.0. Three layers held three answers to what a unit of alarm is
+
+The source keyed alerts by `(area_id, kind)`, row identity excluded `kind`
+(D-013), and the fold collapsed on `area_id` alone. The clear of one threat
+kind therefore erased the area: fifteen areas rendered calm during measured
+alarms at the 2026-08-30 19:28 reading - thirteen whose API key the D-042
+re-key had cleared with no activation stored since, two whose air alert ended
+at 18:59:36 over an artillery alarm running since 19 April. The population was
+a ratchet: a chronic alarm never re-emits an activation, and a re-emission
+would have been discarded by content hash anyway, so it shrank only when an
+alarm genuinely ended. Class: the granularity mismatch was visible in three
+files read side by side and no test put two kinds on one area. Supersedes the
+F132 candidate from the 2026-08-30 part-three handover, which described the
+ordering symptom rather than the mechanism; F132 was never registered in this
+log and the number is not reused. Repaired by D-044 (per-kind fold, re-dated
+re-assertions, per-kind `reconcile --unmask`) and D-045 (`kind` in identity).
+
+### F134, 0.48.0.0. The deployment document was wrong about the host in three ways
+
+`docs/DEPLOYMENT.md`, whose header promises a later reader can repeat every
+figure, carried an installed-package table one release stale, a "behind by"
+row describing a state that ended at 19:10 on 2026-08-30, and a runbook
+command - `reconcile --dry-run` - the parser exited 2 on. The unit table also
+omitted `mavo-collect-api`, the unit feeding the entire project since D-040.
+Repaired in halves, and the split is the point: the parser now accepts
+`--dry-run` as the explicit form of the default, because a documented runbook
+command that fails is worse than a flag that does nothing; the host-state
+rows are claims about a machine this repository cannot read and are corrected
+at deploy time from host reads, per the runbook shipped with 0.48.0.0. A
+documented command is now exercised by a test, which is the class of guard the
+document itself lacked.
+
+### F135, 0.48.0.0. The API path's coverage denominator quietly shrank
+
+`ukrainealarm_source.poll` skips any alert with `alert_type == "unparsed"`
+without appending it to `unresolved` or `declined`, so it never reaches the
+recap - while the parser producing that sentinel states in its own docstring
+that it marks such records rather than skipping them. The telegram path counts
+its unparsed and prints a drift note; the API path, the primary source since
+D-040, counted nothing. A region dropped this way left `current`, took a
+spurious clear, and under F133 was masked permanently. Recorded open at
+0.48.0.0: D-044 part 2 makes the eventual return storable and correctly dated,
+which lowers the cost of the drop without repairing the counting. The repair
+is a `declined`-style third population with its own printed line, and it must
+land before any coverage figure is quoted for the API path.
+
+### F136, 0.48.0.0. A substituted stamp is stored with no mark, and it zeroes E-0
+
+`current[key] = alert.started_at or now` substitutes the read time for a
+missing stamp and stores the row as `provenance=REPORTED`, unmarked - the
+exact act `_stamp` refuses one layer down, with the reason written beside the
+refusal: a substituted stamp zeroes the latency measurement for exactly the
+records that lack one. Not observed firing; the 18:14:06 stamp of
+2026-08-30 carried payload-origin microseconds, and no poll ran at that moment
+(journal read), so it cannot be a substitution. Recorded open at 0.48.0.0 and it blocks E-0: the latency measurement
+must not run until a missing `started_at` either marks the row or refuses it.
+
+### F137, 0.48.0.0. Two drop-ins both own `ExecStart` and only one can win
+
+`mavo-report.service` carries `feed.conf` and `interval.conf`, both resetting
+`ExecStart=` and both substituting a full line, differing only in
+`--interval 30` versus `--interval 120`. Both carry `--feed`, so the feed is
+safe either way; the delay a reader sees differs fourfold. systemd merges
+drop-ins in lexical order, so `interval.conf` should win, but that is a rule
+applied rather than a value read. Recorded open at 0.48.0.0; settles at deploy
+with `systemctl show mavo-report -p ExecStart` on the host, and whichever
+loses is a dead file that still looks like configuration and is removed.
+

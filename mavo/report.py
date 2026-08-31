@@ -42,7 +42,14 @@ from pathlib import Path
 
 from mavo.areas import AreaRef, AreaTable, oblast_slug
 from mavo.obs import RunLog
-from mavo.schema import AlertState, AreaRole, ThreatEvent, ThreatKind, is_clear
+from mavo.schema import (
+    AlertState,
+    AreaRole,
+    ThreatEvent,
+    ThreatKind,
+    is_clear,
+    state_precedence,
+)
 
 # The contract version. Bumped when a consumer could break, never silently:
 # FEED-SPEC section 3 property four is a requirement this project wrote for
@@ -137,6 +144,30 @@ class FeedState(Enum):
 
 
 @dataclass(frozen=True, slots=True)
+class KindStanding:
+    """One threat kind's standing within one area (D-044).
+
+    An area can carry several at once - artillery running since April under an
+    air alert raised twenty minutes ago - and before D-044 the fold collapsed
+    them onto the area, so the clear of one kind erased the area (F133). This
+    is the unit the fold actually works in, published rather than discarded so
+    a reader can see which threat ended and which did not.
+    """
+
+    kind: ThreatKind
+    state: AlertState
+    since: datetime
+
+    def as_item(self) -> dict[str, object]:
+        """The contract form, field names matching the area block it sits in."""
+        return {
+            "kind": self.kind.value,
+            "alert": self.state.value,
+            "since": self.since.isoformat(timespec="seconds"),
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class AreaPicture:
     """One area's current state, with everything a reader needs beside it."""
 
@@ -145,6 +176,13 @@ class AreaPicture:
     kind: ThreatKind
     since: datetime
     area: AreaRef | None
+    #: Every kind not affirmatively cleared, loudest first (D-044). `state`,
+    #: `kind` and `since` above are the headline drawn from this tuple by
+    #: `state_precedence`, kept as their own fields so a consumer reading the
+    #: v3 contract does not change on the day this one arrived. Defaulted, so a
+    #: `Report` constructed directly by a tool that predates the field is still
+    #: well formed rather than a TypeError at import time.
+    kinds: tuple[KindStanding, ...] = ()
 
     @property
     def oblast(self) -> str:
@@ -815,15 +853,28 @@ def compose(
 ) -> Report:
     """Fold an event log into the current picture.
 
-    Last write per area wins, ordered by source time, because a later
-    observation about an area supersedes an earlier one. Ties broken by
-    ingest time so that a re-read of the same moment does not depend on
-    iteration order.
+    **The fold works in `(area_id, kind)`, not in `area_id` (D-044).** Last
+    write per *key* wins, ordered by source time, because a later observation
+    about one threat kind supersedes an earlier one about that same kind and
+    says nothing at all about the others. Ties broken by ingest time so that a
+    re-read of the same moment does not depend on iteration order.
+
+    An area is then not clear when **any** of its kinds is not clear, tested
+    with `is_clear` and never with `!= ACTIVE`. Folding on `area_id` alone -
+    which is what this did until 0.48.0.0 - made the clear of one threat kind
+    erase the area: an artillery alarm running since April went calm the moment
+    a concurrent air alert ended, and fifteen areas rendered calm during
+    measured alarms on 2026-08-30 (F133).
+
+    Which surviving kind *names* the area is `state_precedence`, ties to the
+    later stamp. That is a headline, not a verdict: it decides the word beside
+    the area, never whether the area appears at all.
 
     Cleared areas are dropped from the list and unknown ones are kept. That
     asymmetry is the contract, and it is the reason this is a fold rather
-    than a filter: an area that went ACTIVE and then CLEAR must disappear,
-    while an area that went ACTIVE and then UNKNOWN must remain and say so.
+    than a filter: an area whose every kind went ACTIVE and then CLEAR must
+    disappear, while an area that went ACTIVE and then UNKNOWN must remain and
+    say so.
     """
     table = table if table is not None else AreaTable.from_csv()
     # Materialised once: the fold below and the trailing window both need the
@@ -831,29 +882,59 @@ def compose(
     # reader nothing, which here would be an empty seven-day layer that looks
     # like a quiet week.
     replayed = list(events)
-    latest: dict[str, ThreatEvent] = {}
+    latest: dict[tuple[str, ThreatKind], ThreatEvent] = {}
     for event in replayed:
-        current = latest.get(event.area_id)
+        key = (event.area_id, event.kind)
+        current = latest.get(key)
         if current is None or (event.ts_source, event.ts_ingest) >= (
             current.ts_source, current.ts_ingest
         ):
-            latest[event.area_id] = event
+            latest[key] = event
+
+    by_area: dict[str, list[ThreatEvent]] = {}
+    for (area_id, _kind), event in latest.items():
+        by_area.setdefault(area_id, []).append(event)
 
     pictures: list[AreaPicture] = []
     unresolved: list[str] = []
-    for area_id, event in sorted(latest.items()):
-        if is_clear(event.state):
+    for area_id in sorted(by_area):
+        live = [event for event in by_area[area_id] if not is_clear(event.state)]
+        if not live:
             continue
+        headline = max(
+            live,
+            key=lambda event: (
+                state_precedence(event.state),
+                event.ts_source,
+                event.ts_ingest,
+            ),
+        )
         area = table.by_code(area_id)
         if area is None:
             unresolved.append(area_id)
         pictures.append(
             AreaPicture(
                 area_id=area_id,
-                state=event.state,
-                kind=event.kind,
-                since=event.ts_source,
+                state=headline.state,
+                kind=headline.kind,
+                since=headline.ts_source,
                 area=area,
+                kinds=tuple(
+                    sorted(
+                        (
+                            KindStanding(
+                                kind=event.kind,
+                                state=event.state,
+                                since=event.ts_source,
+                            )
+                            for event in live
+                        ),
+                        key=lambda standing: (
+                            -state_precedence(standing.state),
+                            standing.kind.value,
+                        ),
+                    )
+                ),
             )
         )
     moment = as_of if as_of is not None else datetime.now(UTC)
@@ -1046,6 +1127,13 @@ def to_contract(report: Report) -> dict[str, object]:
                 "alert": picture.state.value,
                 "kind": picture.kind.value,
                 "since": picture.since.isoformat(timespec="seconds"),
+                # D-044. Every kind not affirmatively cleared. `alert`, `kind`
+                # and `since` above stay exactly what they were, so a consumer
+                # reading v3 today reads the same fields tomorrow; this block
+                # is what a consumer needs to stop treating one headline as the
+                # whole of an area's standing. Never empty for a published
+                # area: an area with no live kind is not published at all.
+                "kinds": [standing.as_item() for standing in picture.kinds],
                 "border_km_lower": (
                     picture.area.border_lower_km if picture.area is not None else None
                 ),

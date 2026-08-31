@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.14 / 2026-08-29
+Version: 1.15 / 2026-08-31
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -47,8 +47,8 @@ never a decision until D-031 wrote it down.
 | Point of return | `events.pre-0.45.0.0`, 18,714,624 B, sha256 `69daf1fb…1bba64`, taken with both timers stopped and no `-wal` or `-shm` beside it |
 | First post-install polls | collection gap **46 s**, 16:45:48-16:46:34, both timers. First run under the timer `active=32 cleared=26 unresolved=5 snapshot=fresh(121s)`, latency 0.1 s - `unresolved` down from 9, the F128 repair measured on production, and the five names remaining are genuinely outside the table |
 | Earlier deploy the same day | 0.44.0.0 at 15:02:10 UTC: wheel `0f918299…856259` 157,554 B, return point `events.pre-0.44.0.0` `bf08808e…946929`, gap 184 s, first poll `snapshot=missing`, second `snapshot=fresh(31s)` - the property 0.43.0.0 could not produce. The contract left `degraded` at 34 hours, `feed=ok` at 15:13 |
-| `main` | 0.47.0.0 |
-| Behind by | **two** releases, 0.46.0.0 and 0.47.0.0, and the second is reader-visible in the worst direction: twelve channel-era rows are rendering as active for areas the API's snapshots have not mentioned since the switchover [measured 2026-08-30 18:21 UTC], and only 0.47.0.0's `mavo reconcile` can end them. 0.46.0.0 rides along (F130, F131, the region-levels probe). Deploy sooner rather than at convenience, then run `reconcile --dry-run` before `--apply` |
+| `main` | 0.48.0.0 |
+| Behind by | **three** releases, 0.46.0.0, 0.47.0.0 and 0.48.0.0, and the gap is reader-visible in the worst direction twice over: twelve channel-era rows were rendering as active for areas the API's snapshots had not mentioned since the switchover [measured 2026-08-30 18:21 UTC], and fifteen areas were rendering calm during measured alarms [measured 2026-08-30 19:28 UTC, the reconcile dry-run] - the ghosts only 0.47.0.0's `mavo reconcile` can end, the masked only 0.48.0.0's `--unmask` can raise. 0.46.0.0 rides along (F130, F131, the region-levels probe). Deploy sooner rather than at convenience, then run `reconcile --unmask` dry-run before `--unmask --apply` |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

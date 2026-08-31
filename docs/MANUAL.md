@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.4
+Document:  docs/MANUAL.md, version 3.5
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -578,29 +578,39 @@ since the switchover and would never clear, having never seen them alive.
 mavo reconcile --store /var/lib/mavo/events --snapshot /var/lib/mavo/ukrainealarm.snapshot.json
 ```
 
-Dry-run by default: every planned closure is printed and nothing lands.
-`--apply` writes the same rows and nothing else.
+Dry-run by default: every planned row is printed and nothing lands. `--apply`
+writes the same rows and nothing else. Since 0.48.0.0 the command works per
+`(area, kind)` on both directions (D-044): a ghost is a *key* whose newest row
+is a channel ACTIVE and which the fresh snapshot does not hold, and a masked
+entry is a *key* the snapshot reports whose newest stored row is a clear, or
+which has no row at all.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--store` | none | The event store to read the newest-per-area picture from, and to append closures into under `--apply` |
+| `--store` | none | The event store to read the newest-per-key picture from, and to append rows into under `--apply` |
 | `--snapshot` | none | The collector's persisted snapshot. It must read back `fresh` (younger than 360 s); `stale`, `missing` or `corrupt` and the command examines nothing and exits 3, because a gap in observation licenses no closure |
-| `--apply` | off | Write the closures. Idempotent by the store's content hash: a second `--apply` stores zero |
+| `--apply` | off | Write the rows. Idempotent by the store's content hash: a second `--apply` stores zero |
+| `--dry-run` | on | The explicit form of the default, accepted because the runbook documented it for a release while the parser exited 2 on it (F134). It changes nothing |
+| `--unmask` | off | Also raise an ACTIVE for every masked key: `ts_source` = the snapshot's `saved_at`, `provenance=INFERENCE`, `source_id="reconcile"`, the superseded clear kept in `raw_fields`. Without it, masked keys are printed and never written. Required alongside `--apply` when a ghost sits on an area the snapshot is reporting, because closing that ghost alone would take a live area dark; the command refuses with exit 4 and names the contested areas |
 
 **What a closure is.** A row, not an edit: `source_id="reconcile"`,
 `provenance=INFERENCE`, `ts_source` set to the snapshot's own `saved_at` - the
 observation that licensed it - with the ghost's kind and oblast carried over
 and the opener recorded in `raw_fields`. D-041's conditions, executed; the
-parent-area condition is retired, its premise measured false on 2026-08-30
-when one payload named eight Donetsk raions individually.
+parent-area condition is retired (D-043), its premise measured false on
+2026-08-30 when one payload named eight Donetsk raions individually.
 
-**What it refuses.** Areas the snapshot holds whose newest stored row is not
-an API ACTIVE print as `MASKED` and are never written: that direction is a
-live alarm possibly rendered as something else, and its repair is a decision
-about the fold, not a row from this command.
+**What an unmask is.** The same shape in the opposite direction, and the only
+write that can end a masked state: a chronic alarm never re-emits its
+activation, and a re-emission would carry the same stamp the store already
+holds, so without this row the masked population is a ratchet (F133). The row
+says when the alarm was *observed standing*, not when it began; the API's own
+`began` travels in `raw_fields`, because those are different claims and a
+later reader must be able to tell them apart.
 
-Exit codes match the collectors: 3 when the snapshot licenses nothing, 7 when
-the store fails, 0 otherwise.
+Exit codes match the collectors, plus one of this command's own: 3 when the
+snapshot licenses nothing, 4 when closing without `--unmask` would take a live
+area dark, 7 when the store fails, 0 otherwise.
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)
 

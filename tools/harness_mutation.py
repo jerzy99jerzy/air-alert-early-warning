@@ -96,11 +96,18 @@ MUTATIONS: tuple[Mutation, ...] = (
         attack="test_a8_replaying_a_feed_does_not_grow_the_log",
         row="MT8",
         path="mavo/schema.py",
-        old='            [self.area_id, self.state.value, stamp, self.source_id, self.role.value]',
-        new=(
-            '            [self.area_id, self.state.value, stamp, self.source_id,'
-            ' self.role.value, self.ts_ingest.isoformat()]'
-        ),
+        # Re-targeted at 0.48.0.0: D-045 put `kind` into the payload and the
+        # previous mutation text went stale, which this harness reported rather
+        # than passed - the exact behaviour it exists for. The attack it guards
+        # is unchanged: fold ingest time into identity and a re-poll of one
+        # transition becomes a new row every time.
+        old='''                self.role.value,
+                self.kind.value,
+            ]''',
+        new='''                self.role.value,
+                self.kind.value,
+                self.ts_ingest.isoformat(),
+            ]''',
         disables="idempotence by content hash",
     ),
     Mutation(

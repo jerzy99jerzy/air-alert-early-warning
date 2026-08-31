@@ -16,6 +16,56 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.48.0.0 - 2026-08-31
+
+**The unit of alarm is `(area_id, kind)`, and an area present in a fresh
+snapshot never renders as calm.** Fifteen areas were rendering calm during
+measured alarms at the 2026-08-30 19:28 reading: the clear of one threat kind
+erased the area, because the source keyed per kind, row identity excluded
+`kind`, and the fold collapsed on the area (F133). Thirteen of them had lost
+their API activations entirely - the D-042 re-key emitted them under a new
+kind and the old identity hash-discarded them as duplicates of the pre-re-key
+rows - and two carried an artillery alarm running since 19 April under an air
+alert that ended at 18:59:36. The population was a ratchet: a chronic alarm
+never re-emits, so nothing on any human timescale would have corrected it.
+
+- **D-044, part 1.** `compose` and the store fold per `(area_id, kind)`; an
+  area is not clear while any kind is not clear, and which surviving kind
+  names it is `state_precedence` (`ACTIVE > PARTIAL_CLEAR > UNKNOWN > CLEAR`,
+  ties to the newer stamp) - a headline, never a verdict. `AreaPicture` and
+  the v3 contract gain `kinds`, one standing per live kind; `alert`, `kind`
+  and `since` are unchanged, the field is additive, and the consumer at
+  4.60.0.0 validates required fields only, so no coordinated release.
+  `contract_check` requires the block non-empty and the headline drawn from it.
+- **D-044, part 2.** A re-assertion on the snapshot source is dated by the
+  observation: `redate_reassertions`, pure, at the write boundary in
+  `collect-api`, keeping the API's own stamp in `raw_fields`. Snapshot sources
+  only - the first draft ran it on the channel collector too and
+  `test_sprint11` measured the consequence, an ended alert resurrected on
+  every re-read of the same page. The boundary is now itself pinned by a test.
+- **D-044, part 3.** `reconcile` tests ghosts per `(area_id, kind)` - the old
+  area-level test left thirteen stale channel rows out of reach - and gains
+  `--unmask`: an ACTIVE for every key the fresh snapshot reports whose newest
+  stored row is a clear or absent, `ts_source = saved_at`,
+  `provenance=INFERENCE`, superseded clear in `raw_fields`, idempotent by
+  content hash. A gate refuses `--apply` when a ghost sits on an area the
+  snapshot reports and `--unmask` was not given, because closing it alone
+  takes a live area dark while reporting success. `--dry-run` is accepted as
+  the explicit form of the default, ending the runbook command that exited 2
+  (F134).
+- **D-045.** `kind` joins row identity. Two kinds asserted for one area at one
+  instant were one row under D-013's hash, the second silently discarded -
+  the measured mechanism behind the thirteen's missing activations, live on
+  the primary source (the API stamps batches identically), and produced by
+  `--unmask` by construction. Old rows keep their hashes; the expected
+  duplicate count on the production store is zero, argued in the decision.
+- **F135, F136, F137 registered open**: the API path's silently shrinking
+  unparsed denominator, the unmarked substituted stamp that blocks E-0, and
+  the duelling `ExecStart` drop-ins that settle only by a host read.
+
+Deploys with `mavo reconcile --unmask` (dry-run first): the fifteen clear at
+the first apply, and the class does not recur.
+
 ## 0.47.0.0 - 2026-08-30
 
 **`mavo reconcile`: the closures a fresh snapshot licenses, and the census it

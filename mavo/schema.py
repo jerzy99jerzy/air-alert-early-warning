@@ -8,8 +8,8 @@ what makes a later switch to a Polish channel a new implementation of
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterable, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from enum import Enum
 from typing import Protocol, runtime_checkable
@@ -73,6 +73,93 @@ def is_clear(state: AlertState) -> bool:
 def is_actionable(state: AlertState) -> bool:
     """True when the state may contribute to a warning decision."""
     return state is AlertState.ACTIVE
+
+
+#: How loudly each reading speaks, for choosing among concurrent kinds (D-044).
+#: A table rather than an ordering on the enum, because ``AlertState`` has no
+#: natural order: CLEAR is not "less" than ACTIVE, it is a different claim.
+#: PARTIAL_CLEAR outranks UNKNOWN for the reason the enum's own docstring gives
+#: one screen up - a contradiction is evidence and silence is not.
+_STATE_PRECEDENCE = {
+    AlertState.ACTIVE: 3,
+    AlertState.PARTIAL_CLEAR: 2,
+    AlertState.UNKNOWN: 1,
+    AlertState.CLEAR: 0,
+}
+
+
+def state_precedence(state: AlertState) -> int:
+    """Which of several concurrent readings an area is *named* by.
+
+    Decides nothing about whether the area is clear. That is ``is_clear``
+    applied to every kind the area carries, and one kind not clear is enough.
+    This only picks which of the surviving kinds becomes the headline, so a
+    reader sees the loudest live reading rather than the most recent one.
+    """
+    return _STATE_PRECEDENCE[state]
+
+
+def _utc(ts: datetime) -> datetime:
+    """UTC form for comparison. A naive stamp is read as UTC and never dated.
+
+    The store refuses naive timestamps at the point of entry (``_stored_form``),
+    so nothing that reaches here from a store carries one. Fixtures and direct
+    constructions can, and a ``TypeError`` from comparing an aware stamp with a
+    naive one would surface as an outage rather than as the modelling fault it
+    is.
+    """
+    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
+
+
+def redate_reassertions(
+    events: Iterable[ThreatEvent],
+    newest_clears: Mapping[tuple[str, ThreatKind], datetime],
+    observed_at: datetime,
+) -> tuple[ThreatEvent, ...]:
+    """Date a re-asserted alarm by the observation rather than by its source stamp.
+
+    D-044 part 2. A snapshot API repeats the same ``lastUpdate`` for an alarm
+    that never ended, so an ACTIVE re-emitted after a spurious clear is
+    byte-identical to the row already stored and ``content_hash`` discards it.
+    It also carries a stamp older than the clear that preceded it, so even were
+    it stored the fold would still pick the clear and the area would render calm
+    during an alarm. One repair answers both: an ACTIVE whose ``(area_id, kind)``
+    already carries a stored CLEAR no older than the incoming stamp is dated by
+    the moment it was observed.
+
+    The source's own word is kept in ``raw_fields`` rather than discarded. This
+    row is a claim about when we saw the alarm, not about when it started, and
+    the two have to stay tellable apart by a later reader.
+
+    **Deliberately not in an adapter.** The invariant is a property of the log
+    and holds for every pipe: the channel path can emit an ACTIVE stamped from a
+    message older than a ``reconcile`` closure and would reproduce the same
+    defect by a second road. Pure - no store, no clock, ``observed_at`` passed
+    rather than read - so the behaviour is a function of its arguments and the
+    test needs neither a database nor a fixed clock.
+    """
+    redated: list[ThreatEvent] = []
+    for event in events:
+        cleared_at = newest_clears.get((event.area_id, event.kind))
+        if (
+            event.state is not AlertState.ACTIVE
+            or cleared_at is None
+            or _utc(event.ts_source) > _utc(cleared_at)
+        ):
+            redated.append(event)
+            continue
+        redated.append(
+            replace(
+                event,
+                ts_source=observed_at,
+                raw_fields={
+                    **event.raw_fields,
+                    "reported_at": _utc(event.ts_source).isoformat(),
+                    "superseded_clear": _utc(cleared_at).isoformat(),
+                },
+            )
+        )
+    return tuple(redated)
 
 
 def is_degraded(state: AlertState) -> bool:
@@ -239,17 +326,43 @@ class ThreatEvent:
         as still under alert, and those are two transitions rather than one
         row overwriting the other. ``oblast`` stays out, because it is derived
         from ``area_id`` rather than an independent fact about the moment.
-        Deliberately still excludes ``kind`` and the
-        raw text: identity means "this area entered this state at this moment
-        according to this source", and a reclassification of the same transition
-        is a better *reading*, not a new *event* - see D-013 for why re-reading
-        happens by rebuilding a store from the raw corpus rather than by
-        appending to an old one.
+
+        ``kind`` is part of the identity from 0.48.0.0 (D-044), and this is not
+        a reversal of D-013 but a consequence of it having been outgrown. D-013
+        excluded ``kind`` on the premise that a transition is something an
+        *area* undergoes, so a reclassification was a better reading of one
+        event rather than a second one. D-044 measured that premise false: an
+        area carries several threat kinds at once, they begin and end
+        independently, and the fold now works in ``(area_id, kind)``. Under the
+        old identity two kinds asserted for one area at one instant by one
+        source collapsed into a single row and the second was silently
+        discarded - which `reconcile --unmask` does by construction, since every
+        row it writes carries the snapshot's own ``saved_at``.
+
+        D-013's actual concern survives untouched: re-reading the raw corpus
+        with a better parser still happens by rebuilding a store from raw rather
+        than by appending to an old one.
+
+        **Migration.** Old rows keep the hashes they were written with. A
+        transition still live across the deploy will be re-polled, hash
+        differently and land a second time; that duplicate carries the same
+        area, kind, state and stamp as the original, so it folds to the same
+        standing and renders identically. The cost is bounded by the number of
+        alerts open at the moment of the deploy.
+
+        The raw text stays out for the reason it always did.
         """
         ts = self.ts_source
         stamp = (ts.astimezone(UTC) if ts.tzinfo is not None else ts).isoformat()
         payload = "|".join(
-            [self.area_id, self.state.value, stamp, self.source_id, self.role.value]
+            [
+                self.area_id,
+                self.state.value,
+                stamp,
+                self.source_id,
+                self.role.value,
+                self.kind.value,
+            ]
         )
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
