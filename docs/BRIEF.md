@@ -6,8 +6,10 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.3
-Measured:  2026-08-17, against STATUS.json at 0.32.9.0
+Document:  docs/BRIEF.md, version 2.4
+Measured:  2026-08-31, against STATUS.json at 0.50.0.0. The corpus figures
+           below were measured on 2026-08-17 and are unchanged; what moved
+           is the source, and that is said where it happened
 Audience:  anyone who wants to understand this project without reading the
            code: a journalist, an analyst from another field, a prospective
            recipient, a reviewer deciding whether the author is careful
@@ -58,19 +60,44 @@ the air. None of it is in any feed this project can read.
 
 ## Where the data comes from
 
-One public Telegram channel on which Ukrainian services declare alerts.
-**61,041 messages** were collected, contiguous, with no gaps, and with a
-checksum recorded over the whole set. The measurements in this document come
-from the design window, which is **99 nights and 48,540 messages**; the rest of
-the corpus is held back, and that is covered below.
+**This section changed on 2026-08-30, and the change is the most instructive
+thing in this document.**
 
-A single source is a serious weakness and the documentation says so. Two
-commercial APIs that looked like an independent alternative turned out to read
-the same channel, so using them would have produced the feeling of
-corroboration without any.
+Until then, the source was one public Telegram channel on which Ukrainian
+services declare alerts. **61,041 messages** were collected from it,
+contiguous, with no gaps, and with a checksum recorded over the whole set. The
+measurements below still come from that corpus, and specifically from the
+design window of **99 nights and 48,540 messages**; the rest is held back, and
+that is covered further down.
 
-The channel has one property that determined the whole design: **99.3% of
-messages carry a hashtag naming the district**, in the nominative, with
+On 2026-08-29 at 04:55 UTC that channel stopped publishing. It stayed silent
+for about thirty-four hours, through a night of attacks that other reporting
+described as continuous. Nothing was wrong with this project: it kept saying
+its picture was old, and how old, which is what it was built to do. But a
+system that reports its own blindness accurately is still blind, so the next
+day the source was switched to the official Ukrainian alerting API, which had
+been publishing throughout. The channel is still read, not as a second source
+but as a watchman: if the publisher comes back, this project will notice and
+will say which of the two spoke.
+
+**Two feeds is not two sources, and the distinction is the whole point.** Both
+draw from the same upstream, so agreement between them measures the delivery
+path and nothing else. A single source is a serious weakness and this
+documentation says so rather than dressing it up. The commercial APIs that
+looked like an independent alternative turned out to read the same channel,
+which is why using them would have produced the feeling of corroboration
+without any of the substance.
+
+The switch cost something specific and it is named rather than hidden: the API
+has one type for everything that flies, so where the channel would say what
+was in the air, the API often does not. For a few hours the map translated
+that silence into "missile", which was this project's error and not the
+publisher's word; it now reads **type not stated**, which is what is actually
+known.
+
+The channel had one property that determined the whole design, and it is why
+the corpus below is worth what it is: **99.3% of messages carry a hashtag
+naming the district**, in the nominative, with
 underscores for spaces. The channel labels its own messages and this project
 reads the label. There is no machine learning and no name recognition in prose,
 because there is nothing to recognise. The design window holds 127 distinct

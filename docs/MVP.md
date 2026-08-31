@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 3.8
+Document:  docs/MVP.md, version 3.9 / 2026-08-31
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -189,7 +189,7 @@ than absorbed into the next one.
 | **S9** | **N/A** | Real time. The run log attached to the publishing loop (T23, T24), interval jitter (T27), the host decision (T25, D-031). `mavo watch` is **not** shipping: `mavo report --watch` was already the loop | **Amended 2026-08-17, mid-window, and the amendment is D-032.** 72 hours of uninterrupted **collection**, every cycle accounted for and every pause named with its cause; **at most two planned restarts of the report loop**, each reported as its own segment; the first end-to-end latency measurement as a distribution rather than a best case. The original clause said only "72 hours unattended", which was declared before any figure in this plan existed |
 | **S10** | **N/A** | Delivery. Self-hosted ntfy, the three message classes, blindness reporting, per-recipient topics (M1) | A synthetic report reaches a phone through Do-Not-Disturb within a measured time; killing the feed produces a blindness message within one interval; the delivery ledger and the phone agree over a week |
 | **S11** | **N/A** | Hardening to beta. Threat-model rows for the delivery path with tests, the clean-clone probe (T7), the identifier lint (T22), the disengagement instrument (T29) | `make verify` green from a clean clone on a machine with nothing installed, every new threat row carrying a test, and T6 recorded |
-| **S12** | **cannot be scheduled** | Nothing. **This sprint ships no code.** It is the verification that the instrument works on the case it was built for, performed on real data when that data exists | **The project is not finished until this is met, and this is the only sprint whose window depends on an event outside the project.** Four checks, all against a real alert episode over western Ukraine: (1) a hand-labelled sample drawn from western rows with a stated error rate and its Wilson bound (T36); (2) the whole chain observed once end to end during that episode, channel to rendered page, with the latency measured rather than modelled; (3) the distance column checked against the areas that actually declared, not only against geometry; (4) the staleness machine observed crossing on a real host during real load (T54) |
+| **S12** | **cannot be scheduled** | Nothing. **This sprint ships no code.** It is the verification that the instrument works on the case it was built for, performed on real data when that data exists | **The project is not finished until this is met, and this is the only sprint whose window depends on an event outside the project.** Four checks, all against a real alert episode over western Ukraine: (1) a hand-labelled sample drawn from western rows with a stated error rate and its Wilson bound (T36); (2) the whole chain observed once end to end during that episode, source to rendered page, with the latency measured rather than modelled; (3) the distance column checked against the areas that actually declared, not only against geometry; (4) the staleness machine observed crossing on a real host during real load (T54) |
 
 **Beta: no date.** It is reached when S11's exit criterion is met, and stating
 when that will be would be restating the assumption this amendment removed.

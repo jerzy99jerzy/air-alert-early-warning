@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.17 / 2026-08-31
+Version: 1.18 / 2026-08-31
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -45,16 +45,17 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.48.0.0`, `/opt/mavo/venv`, python3.11 |
-| Installed at | **2026-08-31**, `pip --force-reinstall --no-deps` with the collect timers stopped; the first post-install `collect-api` cycle completed 06:22:53 UTC (journal). The `.dist-info` mtime was not re-read this session and is owed to the next host visit |
-| Wheel | sha256 `76fb176f…b564d0`, 164 KiB, verified by `sha256sum -c` on the host before `pip` touched anything; transferred by `gcloud compute scp` over the IAP tunnel, which completed without the 0.43.0.0 stall |
-| Point of return | `events.pre-0.48.0.0`, sha256 `a5585436…c205b4`, taken with both collect timers stopped |
-| First post-install poll | `active=0 cleared=0 unresolved=5 declined=1`, latency 0.3 s, `snapshot=fresh(120s)` - the snapshot survived the install window, the five unresolved names are the known set outside the table, and the declined one is Pokrovska (F131, live) |
-| Reconcile, per kind (D-044) | dry-run then apply, 06:26:54 UTC: **ghosts=8, masked=0, stored=8** - the Donetsk `glide_bomb` belt, eight areas opened by the channel at 2026-08-26 02:05:41 and never closeable while the ghost test was per area, closed with INFERENCE rows at the snapshot's own `saved_at`. A second apply stored **0**. The masked population of 2026-08-30 (fifteen areas) had melted by natural alarm cycling before the deploy; the ratchet held only keys that never cycle, and none were in the morning snapshot |
-| Contract after | `state.json` v3, `state=ok`, 33 areas at the host read and 36 at the public read minutes later, every area carrying a non-empty `kinds` block, none carrying `glide_bomb`; the eight closures visible in the `events` stream as `clear`, which is the stream doing its job |
-| Earlier deploys of 2026-08-30 | 0.45.0.0 at 16:46:13 UTC: wheel `de25b736…d06728` 158,127 B, return point `events.pre-0.45.0.0` `69daf1fb…1bba64`, first timer run `active=32 cleared=26 unresolved=5 snapshot=fresh(121s)`. 0.47.0.0 in the evening, from the session record rather than a host read; its `reconcile` closed seven channel-era ghosts and five self-healed. 0.44.0.0 at 15:02:10 UTC, the D-040 switchover: wheel `0f918299…856259`, return point `events.pre-0.44.0.0` `bf08808e…946929`, first poll `snapshot=missing`, second `snapshot=fresh(31s)` |
-| `main` | 0.49.0.0 |
-| Behind by | **two** releases: 0.48.0.1, documents-only, and 0.49.0.0, which repairs the trailing episode counters (F138) - the map's seven-day shading and "last alert ended" understate on chronic-alarm areas until it lands. Deploy 0.49.0.0 with the standard ceremony; 0.48.0.1 rides along inside it |
+| Installed | `air-alert-early-warning 0.49.0.0`, `/opt/mavo/venv`, python3.11 |
+| Installed at | **2026-08-31**, second deploy of the day; first `collect-api` cycle under it completed 12:14:41 UTC (journal). The `.dist-info` mtime was not read this session either, and is owed for the second consecutive visit |
+| Wheel | sha256 `955739db…81efa`, 165 KiB, verified by `sha256sum -c` on the host before `pip`; `gcloud compute scp` over the IAP tunnel, no stall |
+| Point of return | `events.pre-0.49.0.0`, 20,811,776 B, sha256 `25643014…05d95`, taken with both collect timers stopped and with no `-wal` or `-shm` beside it - the listing that shows this was itself re-run, because the first attempt expanded the glob in a shell that cannot read the directory and proved nothing |
+| Collection gap | **192 s**, 12:11:28 to 12:14:40, both timers. Inside the 360 s snapshot ceiling, so no clear was withheld across the window |
+| Discriminators | on the installed source, not the version string: `kinds_open` 7 in `report.py`, `self.unparsed` 2 and `ts_source_origin` 1 in `sources/ukrainealarm_source.py` - all three exist only after F138 and F135 |
+| First post-install poll | `active=0 cleared=0 unresolved=5 declined=1 unparsed=0 latency=0.227s snapshot=fresh(193s)`. The `unparsed` field is itself the proof of version: 0.48.0.0 could not print it. Zero means the API's type vocabulary still covers what arrives |
+| Contract after | `state.json` v3, `state=ok`, 38 areas active, `recent_7d` 19 oblasts of which **8 carry an open episode** (`still_under_alert`), and one carries `alert_seconds` **604,800**: a full seven-day window unbroken. That figure is the F138 repair visible from outside - before it, a concurrent kind's all-clear tore such an episode apart and the count could never reach the ceiling |
+| Earlier deploy the same day | 0.48.0.0 at 06:22:53 UTC: wheel `76fb176f…b564d0`, return point `events.pre-0.48.0.0` `a5585436…c205b4`, first poll `snapshot=fresh(120s)`, then `reconcile --unmask` closing the eight-area Donetsk `glide_bomb` belt (ghosts=8, masked=0, second apply 0) |
+| `main` | 0.50.0.0 |
+| Behind by | **one** release, 0.50.0.0, and it touches no package code: the changes are in `tools/`, in documentation, and in the version string. The wheel would differ from the installed one in nothing a reader can see. Install at convenience or fold into the next functional release |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -102,7 +103,8 @@ rows.
 
 | Version | Installed at (UTC) | Fate |
 | --- | --- | --- |
-| 0.48.0.0 | 2026-08-31, first post-install poll completed 06:22:53; `.dist-info` mtime owed | **current**; D-044 and D-045, the per-kind repair |
+| 0.49.0.0 | 2026-08-31, first cycle under it 12:14:41; `.dist-info` mtime owed | **current**; F138, the per-kind episode counters |
+| 0.48.0.0 | 2026-08-31, first post-install poll completed 06:22:53; `.dist-info` mtime owed | superseded the same day; D-044 and D-045, the per-kind repair |
 | 0.47.0.0 | 2026-08-30 evening, from the session record rather than a host read (F117's honesty rule, applied to our own gap) | superseded; brought `mavo reconcile` |
 | 0.45.0.0 | 2026-08-30 16:46:13, the `.dist-info` mtime | superseded |
 | 0.44.0.0 | 2026-08-30 15:02:10, the `.dist-info` mtime | superseded the next day; the D-040 switchover. An earlier revision of this table still called it current while the table above said 0.45.0.0 - the two-answers-in-one-document defect this section's own rule forbids, caught at this revision |

@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.41
+Document:  docs/METHODOLOGY.md, version 2.42
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4375,3 +4375,40 @@ missing and `last_alert_ended_at` set on a probe shaped like the two areas of
 the argument for writing "unverified" down rather than rounding it to fine.
 Repaired by keying the running state per `(area_id, kind)` in both counters,
 with the single-kind path pinned byte-identical.
+
+### F139, 0.50.0.0. A headline figure was incremented rather than counted, under sixteen checks
+
+`README.md` carried `Releases | 44 in the changelog` while `CHANGELOG.md` held
+122 entries: wrong by 78, and wrong for long enough that nobody remembers the
+last time it was true. Three figures beside it in the same table claim the same
+provenance - defects, decisions, threat-model rows - and all three are correct,
+so the row read as trustworthy by association.
+
+**The mechanism is the interesting part, and it is the gate's.** `defects_logged`
+and `decisions_recorded` are pinned in `STATUS.json` and compared by
+`docs_audit`; `releases` was pinned nowhere. What maintained it was release
+ceremony: each release incremented it by one, which produces a number that has
+been *touched* recently and never *checked* ever. Three of those increments
+happened in one session on 2026-08-31, by the author of this entry, none of
+them preceded by a count.
+
+Sixteen gate checks did not see it, and could not: they compare a document
+against a pin, so a figure with no pin is outside the guarded set entirely.
+The repair is not another comparison. `tools/figures.py` computes every figure
+the tree can recompute from itself - file and line counts, tests, coverage,
+defects, decisions, releases - writes them to both `STATUS.json` and the
+README, and the gate checks the regeneration rather than the memory. This is
+`todo_index.py`'s pattern, which has never drifted, applied to the population
+that had.
+
+**Same session, same shape, three more instances**, all self-inflicted by
+checks aimed at the wrong subject: `precision_lint` counted document version
+strings as false-precision figures three times, and the statistics pin was a
+fixed point - `README.md` sits inside the `documentation` group whose line
+count `README.md` prints - so convergence took two hand-run passes per release.
+Both are gone: version tokens are excluded by the word in front of them, and
+the fixed-point loop now runs inside the generator, once, where it belongs.
+
+The lesson generalises past this repository. A rule with a gate is enforced; a
+rule with a ritual is remembered; and a number maintained by ritual will look
+maintained right up until somebody counts it.

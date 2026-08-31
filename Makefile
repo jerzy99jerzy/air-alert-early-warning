@@ -2,9 +2,9 @@
 PY := python3
 PKG := mavo
 
-.PHONY: verify private-artifacts lint-adapters lint-precision manifest-completeness manifest manifest-write coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
+.PHONY: verify figures private-artifacts lint-adapters lint-precision manifest-completeness manifest manifest-write coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
 
-verify: private-artifacts manifest-completeness coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain lint-adapters lint-precision docs-audit manual-audit contract-check todo-index brief-check harness-mutation
+verify: private-artifacts manifest-completeness coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain lint-adapters lint-precision figures docs-audit manual-audit contract-check todo-index brief-check harness-mutation
 	@echo "verify: OK"
 
 # pytest exits 5 when nothing is collected. That exit code is NOT swallowed:
@@ -70,6 +70,14 @@ contract-check:
 # F31 and F73. `--check` compares the index block against the entries below it
 # and fails on an open task with no tier, because a task nobody has ordered is
 # a decision nobody has made.
+# Every figure this tree can recompute from itself, generated rather than
+# pinned by hand. Replaces a two-pass convergence dance nobody should have been
+# running and a badge row synced from memory; it also found `Releases | 44`
+# sitting under sixteen checks while the changelog held 122, because the gates
+# guarded what was pinned and the ritual guarded what was remembered.
+figures:
+	$(PY) tools/figures.py --check
+
 todo-index:
 	$(PY) tools/todo_index.py --check
 

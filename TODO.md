@@ -4,13 +4,13 @@
 
 ### Where the backlog stands
 
-**35 of 81 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**35 of 82 closed, 47 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 31 | Finished, with the release that closed it named in the entry |
 | `moved` | 4 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 36 | Nothing external blocks it; it needs a session |
+| `ready` | 37 | Nothing external blocks it; it needs a session |
 | `decision` | 5 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -27,7 +27,7 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 
 **Tier 1, 12 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does)
 
-**Tier 2, 20 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T83](#t83-unknown-type-strings-on-the-primary-source-are-folded-without-a-counter), [T82](#t82-the-channels-silence-measured-as-a-distribution)
+**Tier 2, 21 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T84](#t84-d-038-was-applied-to-one-instrument-rather-than-to-its-class), [T83](#t83-unknown-type-strings-on-the-primary-source-are-folded-without-a-counter), [T82](#t82-the-channels-silence-measured-as-a-distribution)
 
 **Tier 3, 14 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers)
 
@@ -42,7 +42,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T83](#t83-unknown-type-strings-on-the-primary-source-are-folded-without-a-counter), [T82](#t82-the-channels-silence-measured-as-a-distribution) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T84](#t84-d-038-was-applied-to-one-instrument-rather-than-to-its-class), [T83](#t83-unknown-type-strings-on-the-primary-source-are-folded-without-a-counter), [T82](#t82-the-channels-silence-measured-as-a-distribution) |
 
 <!-- index:end -->
 
@@ -55,9 +55,10 @@ Tier: `[tier 1]` | `[tier 2]` | `[tier 3]`, meaning below.
 
 ### Where the project is
 
-*Rewritten at 0.37.0.0, and the version is in this sentence on purpose.* The
+*Rewritten at 0.50.0.0, and the version is in this sentence on purpose.* The
 paragraph this replaces described 0.19.0.0 to 0.19.4.0 as "the last four
-releases" and was still saying so at 0.32.4.0, thirteen minor versions later.
+releases" and was still saying so at 0.32.4.0, thirteen minor versions later;
+its successor was written at 0.37.0.0 and left standing for thirteen more.
 The generated block above it cannot drift, by construction. This part can, it
 did, and it is the part a reader reaches first. Anyone editing here restates
 the version they wrote it at, so the next drift is visible rather than
@@ -70,9 +71,29 @@ rest of the paragraph does not. The D-032 window ran to 2026-08-20 11:02:06
 UTC and closed clean: zero
 restarts against the two the amendment permitted, 7,850 attempts at a 33.0 s
 cadence, continuity measured rather than assumed. The other half - the latency
-distribution written into `docs/CHANNEL.md` 8a - is taken and deliberately
-unwritten, waiting on T66's attribution and carrying T40's two-cadence caveat.
+distribution written into `docs/CHANNEL.md` 8a - is taken and still unwritten.
 S9 exits when the row exists, not when the window does.
+
+**Why that row has not been written, read at 0.50.0.0 rather than inherited.**
+The entry said it was waiting on T66. T66 has been `done` since 0.41.0.0, so
+that blocker was discharged nine releases ago and nobody re-read the sentence
+it was blocking - the F118 shape in reverse, where the good news is what goes
+unnoticed. The real obstacle is structural and was invisible while the stated
+one stood: `tools/latency.py` reads the event store, and `tools/` is not
+installed on the host that holds one, so the instrument has never been
+runnable where its input lives. That is **D-038 exactly**, the decision that
+moved `attempts.py` into the package for this reason and was applied to one
+file rather than to its class. The third obstacle expired on its own: T40
+needed a week of continuous collection and the channel supplied fifteen days
+before falling silent, so the window is now closed history rather than
+something to wait for.
+
+**And S9's criterion now points at a source that stopped publishing.** The row
+measures the channel, which since 2026-08-30 is the watchman rather than the
+source. Writing it remains worth doing, because `docs/CHANNEL.md` is a corpus
+document and its 2026-08-31 status note already says so. But whether S9 *exits*
+on a historical row is a judgement, not work, and it should be recorded as an
+amendment the way S7 and S8 were rather than settled quietly.
 
 **S8 closed on 2026-08-17, on an amended criterion and recorded as amended**,
 the way S7 did. The report composes, the command runs, the contract ships and
@@ -308,7 +329,18 @@ moving.
 
 ## T40. How late is the channel, measured
 Status: `ready`, instrument at 0.30.0.0, distribution taken 2026-08-19, the row
-still unwritten and waiting on T66 [tier 1], **S9**
+still unwritten [tier 1], **S9**
+
+**The stated blocker is discharged and the real one was underneath it, read at
+0.50.0.0.** This entry said "waiting on T66"; T66 closed at 0.41.0.0. What
+actually blocks the row is that `tools/latency.py` reads the event store while
+living in `tools/`, which the wheel does not ship, so it cannot run on the only
+machine that holds a store. D-038 decided this exact placement question on
+2026-08-29 and was applied to `attempts.py` alone; a decision applied to one
+instance rather than to its class is the shape this repository logs about
+itself. **T84 carries the repair.** The "host and a week" clause is also spent:
+the channel ran 15 days at the corrected cadence before falling silent, so the
+window is closed history.
 
 **Caveat that must reach section 8a with the number.** The distribution's
 window opens 2026-08-11 17:25 and D-027's thirty seconds is true only from
@@ -2487,6 +2519,23 @@ option that is not available is a number chosen because it sounded reasonable.
 **Acceptance:** a decision entry naming the option, the measured distribution
 it was chosen against, and the reopen condition.
 
+
+## T84. D-038 was applied to one instrument rather than to its class
+Status: `ready` [tier 2], found while reading S9 at 0.50.0.0, blocks T40
+
+D-038 says an instrument whose input is the event store ships as a `mavo`
+subcommand, and one whose input is the tree stays in `tools/`. It was adopted
+on 2026-08-29 after `attempts.py` was found unrunnable on the host that holds
+the store, and `attempts.py` was moved. `tools/latency.py` reads the store too,
+by the same `sqlite3` connection to the same file, and was left where it was.
+Nothing in the gate compares the decision against the population it governs, so
+a rule with one worked example looks satisfied.
+
+**Acceptance:** `latency.py` ships in the package as `mavo latency`, documented
+in the manual and policed by the manual audit, with `tools/` keeping only
+instruments that read the tree; and a check enumerates the modules under
+`tools/` that open the store, failing on any that remain. Verified red by
+leaving one behind.
 
 ## T83. Unknown type strings on the primary source are folded without a counter
 Status: `ready` [tier 2], found while paying F135 at 0.49.0.0

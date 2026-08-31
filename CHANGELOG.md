@@ -16,6 +16,46 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.50.0.0 - 2026-08-31
+
+**The gate stops fighting itself, and the outward-facing documents catch up
+with the source switch.** Sixteen checks were running and a headline figure was
+wrong by 78: `Releases | 44` against a changelog holding 122, unpinned and so
+unguarded, kept looking maintained by a release ritual that incremented it
+without counting it (**F139**). Three figures beside it claimed the same
+provenance and were right, which is what made the row readable as trustworthy.
+
+- **D-046 and `tools/figures.py`.** Every figure the tree can recompute from
+  itself is now generated into both `STATUS.json` and the README, and the gate
+  checks the regeneration rather than anybody's memory. This retires three
+  standing costs: the two-pass convergence dance forced by the README sitting
+  inside the group whose line count it prints, the six badge figures synced by
+  hand, and the false `releases` count. Figures a person measured stay pinned
+  with their provenance; the discriminator is whether the tree can count it by
+  being read rather than executed. The first cut of the generator broke that
+  boundary by reading the test count from `.gate/`, which `make verify` writes
+  in the same run, and was corrected before release: `tests/test_figures_generator.py`
+  holds nine regressions and one of them fails if those figures come back.
+- **`precision_lint` stops reading document versions as measurements.** It
+  fired three times in one session on `1.16` and its kin. Version tokens are
+  excluded by the word in front of them rather than by shape, so a genuine
+  `1.16` in prose still counts, and three ceilings fall.
+- **BRIEF and BRIEF-PL, both to 2.4.** The two documents an outside reader
+  actually reaches were pinned at 0.32.9.0 and told them the project reads one
+  public Telegram channel, which stopped being true on 2026-08-30. Both now
+  carry the outage, the switch, the watchman role, why two feeds are not two
+  sources, and the named cost of the switch. The corpus figures are unchanged
+  and said to be unchanged.
+- **THREAT-MODEL 2.3** loses the sentence claiming the API adapters do not
+  exist, sharpens MT9 with what 2026-08-29 measured, and gains a date its
+  header never had. **MVP 3.9** stops describing the chain as beginning at the
+  channel.
+- **TODO** header prose rewritten, thirteen versions after its predecessor was
+  left standing, and **T84 filed**: D-038 was applied to `attempts.py` and not
+  to its class, so `tools/latency.py` still reads the store from a directory
+  the wheel does not ship. That, not the discharged T66 dependency the entry
+  still named, is what has kept S9 open.
+
 ## 0.49.0.0 - 2026-08-31
 
 **The episode counters learn the unit of alarm (F138), and two registered

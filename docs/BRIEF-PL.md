@@ -7,8 +7,10 @@ powiadomienia.**
 Dokument dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.3
-Measured:  2026-08-17, against STATUS.json at 0.32.9.0
+Document:  docs/BRIEF-PL.md, version 2.4
+Measured:  2026-08-31, against STATUS.json at 0.50.0.0. Liczby korpusowe
+           poniżej zmierzono 2026-08-17 i nie zmieniły się; zmieniło się
+           źródło, i jest to powiedziane w miejscu, w którym się stało
 Audience:  a Polish reader without a technical background: a journalist, an
            analyst, a prospective recipient, anyone deciding whether the
            author is careful
@@ -60,19 +62,42 @@ rzeczy nie ma w feedzie, który ten projekt czyta.
 
 ## Skąd dane
 
-Z jednego publicznego kanału Telegram, na którym ukraińskie służby ogłaszają
-alarmy. Zebrano **61 041 wiadomości**, ciągłych, bez luk, z zapisaną sumą
-kontrolną całości. Pomiary w tym dokumencie pochodzą z okna projektowego,
-czyli z **99 nocy i 48 540 wiadomości**; reszta korpusu to materiał odłożony,
-o którym niżej.
+**Ta sekcja zmieniła się 30 sierpnia 2026 i ta zmiana jest najbardziej
+pouczającą rzeczą w całym dokumencie.**
 
-Jedno źródło to poważna słabość i jest w dokumentacji opisana jako taka. Dwa
-komercyjne API, które wyglądały na niezależną alternatywę, okazały się czytać
-ten sam kanał, więc korzystanie z nich dawałoby złudzenie potwierdzenia bez
-potwierdzenia.
+Do tego dnia źródłem był jeden publiczny kanał Telegram, na którym ukraińskie
+służby ogłaszają alarmy. Zebrano z niego **61 041 wiadomości**, ciągłych, bez
+luk, z zapisaną sumą kontrolną całości. Pomiary w tym dokumencie nadal
+pochodzą z tego korpusu, a konkretnie z okna projektowego, czyli z **99 nocy i
+48 540 wiadomości**; reszta to materiał odłożony, o którym niżej.
 
-Kanał ma jedną cechę, która przesądziła o konstrukcji: **99,3% wiadomości ma
-hasztag z nazwą powiatu**, w mianowniku, z podkreśleniami zamiast spacji. To
+29 sierpnia 2026 o 04:55 UTC ten kanał przestał publikować. Milczał około
+trzydziestu czterech godzin, przez noc nalotów, które inne źródła opisywały
+jako ciągłe. Z tym projektem nie stało się nic złego: przez cały ten czas
+pisał, że jego obraz jest stary, i podawał, ile ma godzin, bo dokładnie do
+tego został zbudowany. Ale system, który rzetelnie melduje własną ślepotę,
+nadal jest ślepy, więc następnego dnia źródło przełączono na oficjalne
+ukraińskie API alarmowe, które przez cały ten czas działało. Kanał jest dalej
+czytany, ale nie jako drugie źródło, tylko jako czujka: jeśli nadawca wróci,
+projekt to zauważy i powie, które z dwóch się odezwało.
+
+**Dwa feedy to nie są dwa źródła i to rozróżnienie jest tu sednem.** Oba
+czerpią z tej samej góry strumienia, więc ich zgodność mierzy drogę dostawy i
+nic poza tym. Jedno źródło to poważna słabość i dokumentacja mówi to wprost,
+zamiast to upiększać. Komercyjne API, które wyglądały na niezależną
+alternatywę, okazały się czytać ten sam kanał, i właśnie dlatego korzystanie z
+nich dawałoby złudzenie potwierdzenia bez potwierdzenia.
+
+Przełączenie kosztowało coś konkretnego i to też jest nazwane, a nie schowane:
+API ma jeden typ na wszystko, co lata, więc tam gdzie kanał powiedziałby, co
+jest w powietrzu, API często nie mówi. Przez kilka godzin mapa tłumaczyła to
+milczenie na „rakietę", co było błędem tego projektu, a nie słowem nadawcy;
+teraz takie alarmy mają opis **typ niepodany**, czyli to, co faktycznie
+wiadomo.
+
+Kanał miał jedną cechę, która przesądziła o konstrukcji, i to dlatego korpus
+opisany niżej jest wart tyle, ile jest wart: **99,3% wiadomości ma hasztag z
+nazwą powiatu**, w mianowniku, z podkreśleniami zamiast spacji. To
 znaczy, że kanał sam etykietuje swoje wiadomości, a projekt tylko czyta
 etykietę. Nie ma tu żadnego uczenia maszynowego ani rozpoznawania nazw w
 tekście, bo nie ma czego rozpoznawać. W oknie projektowym jest 127 różnych

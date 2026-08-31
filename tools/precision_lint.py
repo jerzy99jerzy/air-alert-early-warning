@@ -65,6 +65,16 @@ EXCLUDED = ("CHANGELOG.md", "docs/reviews/")
 #: is allowed to move. Extend the alternation when a new interpreter enters
 #: the matrix, with the release that added it.
 _INTERPRETERS = r"3\.1[1-4]"
+
+#: Document versions, excluded by *context* rather than by shape. T77 removed
+#: interpreter tokens by name; this removes the other population that fired
+#: three times in one session - `Version: 1.16`, and the same string quoted in
+#: prose describing the revision that made a change. A document version is
+#: never a measurement, and no shape rule can separate `1.16` the revision
+#: from `1.16` the ratio, so the discriminator is the word in front of it.
+_VERSION_CONTEXT = re.compile(
+    r"(?:[Vv]ersion|[Rr]evision|wersja)[:\s]\s*v?\d+\.\d+(?:\.\d+)*"
+)
 FIGURE = re.compile(
     rf"(?<![\w.])(?!{_INTERPRETERS}(?!\d))\d+\.\d{{2,}}(?!\.\d)(?!\w)"
 )
@@ -110,6 +120,8 @@ FIGURE_PL = re.compile(r"(?<![\d,.])\d+,\d{2}(?!\d)")
 #:   the finding and rounding the quote would soften the record, same
 #:   exception as the F109 entry itself.
 CEILINGS: dict[str, int] = {
+    # Three more fell at 0.50.0.0 when document versions stopped counting
+    # as measurements; the counter now measures prose, which is its subject.
     # Ceilings below fell at 0.49.0.0 when T77 stopped counting interpreter
     # tokens; each new value is the exact count on that day's tree.
     "ENGINEERING.md": 1,
@@ -160,8 +172,8 @@ CEILINGS: dict[str, int] = {
     # 32 -> 33 at 0.43.0.0: D-039 quotes the measured poll latency, 0.26 s,
     # because the no-lock arithmetic rests on it and rounding a load-bearing
     # figure to "fast" is how arithmetic becomes hope.
-    "docs/DECISIONS.md": 33,
-    "docs/DEPLOYMENT.md": 11,
+    "docs/DECISIONS.md": 32,
+    "docs/DEPLOYMENT.md": 10,
     "docs/FEED-SPEC.md": 6,
     "docs/FOUNDATIONS.md": 7,
     # 19 -> 20 at 0.43.0.0: the rewritten 4.5 (F127) quotes the channel's
@@ -181,7 +193,7 @@ CEILINGS: dict[str, int] = {
     # a figure with two decimals. **This is the second ceiling this release
     # raised for a reason unrelated to precision** and the class is logged as
     # T77 rather than absorbed here.
-    "docs/METHODOLOGY.md": 79,
+    "docs/METHODOLOGY.md": 78,
     "docs/MVP.md": 2,
     "docs/OBSERVABILITY.md": 1,
 }
@@ -202,6 +214,9 @@ def documents() -> list[Path]:
 def count(path: Path) -> int:
     """Figures with two or more decimals in one document, in either notation."""
     text = path.read_text(encoding="utf-8")
+    # Blanked rather than skipped: a line may carry a document version and a
+    # real figure, and dropping the whole line would hide the second.
+    text = _VERSION_CONTEXT.sub("version", text)
     found = len(FIGURE.findall(text))
     if path.name.endswith("-PL.md"):
         found += len(FIGURE_PL.findall(text))

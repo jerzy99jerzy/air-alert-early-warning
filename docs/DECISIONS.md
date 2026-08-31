@@ -1769,3 +1769,43 @@ same area, same instant, better kind - at a rate where two rows per
 reclassification distort the trailing counts. That was D-013's case; it has
 not been observed on either source.
 
+## D-046. A figure the tree can recompute is generated, never pinned by hand
+Date: 2026-08-31. Status: adopted
+
+**Decision.** Any figure derivable from the tree by counting - files, lines,
+tests, coverage, defects, decisions, releases - is written by
+`tools/figures.py` into every place that holds it, and the gate checks the
+regeneration. No such figure is maintained by a person, and no check exists
+whose job is to compare two hand-maintained copies of one number.
+
+**Why.** F139: `Releases | 44` sat in the README's headline table while the
+changelog held 122, unpinned and therefore unguarded, kept looking fresh by a
+release ritual that incremented it without ever counting it. Two adjacent
+mechanisms cost time every release without catching anything: a fixed point
+between the README and its own line count, and a precision linter that read
+document version strings as measurements.
+
+**What this does not cover, and the boundary is the decision.** A figure a
+person measured - corpus counts, host readings, latency distributions, anything
+carrying `[measured]` against an event outside this tree - is not derivable and
+stays pinned with its provenance. The discriminator is whether the tree can
+recompute the number from itself. `tools/figures.py` refuses to invent one when
+the artefact is missing rather than writing a zero, because a zero written into
+a pin is a measurement claim nobody made.
+
+**The boundary was tested by breaking it, in this same release.** The first
+implementation also read the test count and the coverage percentage from
+`.gate/`. Those describe a *run*, not a tree, and `make verify` writes them
+before it calls this check, so the gate went red on any run that changed a
+test - the manual convergence dance this decision retires, reintroduced one
+directory over and caught the same afternoon. They stay pinned and policed by
+`docs_audit`. The discriminator, stated once: can the tree recompute the
+number by being **read**, without being executed.
+
+**Reopen if** a generated figure is ever wanted in a document the generator
+cannot parse, or if the generator's own correctness becomes the thing in doubt:
+a generator nobody checks is the ritual again with better manners. That
+condition was live for one hour, which is why `tests/test_figures_generator.py`
+exists: nine regressions, each planting the drift it claims to find, including
+one that fails if the run-derived figures ever migrate back.
+
