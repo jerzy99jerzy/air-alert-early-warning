@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.50.0.0",
+  "version": "0.51.0.0",
   "python_requires": ">=3.11",
   "sprint_test_files": [
     0,
@@ -18,18 +18,18 @@
   "gate": "make verify",
   "documents": {
     "docs/ARCHITECTURE.md": "2.3",
-    "docs/BRIEF-PL.md": "2.4",
-    "docs/BRIEF.md": "2.4",
+    "docs/BRIEF-PL.md": "2.5",
+    "docs/BRIEF.md": "2.5",
     "docs/CHANNEL.md": "1.5",
     "docs/COMPUTATION.md": "1.1",
     "docs/DATA-FLOW.md": "1.2",
     "docs/DECISIONS.md": "2.17",
-    "docs/DEPLOYMENT.md": "1.18",
+    "docs/DEPLOYMENT.md": "1.19",
     "docs/FEED-SPEC.md": "2.3",
-    "docs/FOUNDATIONS.md": "1.1",
+    "docs/FOUNDATIONS.md": "1.2",
     "docs/MANUAL.md": "3.5",
     "docs/MECHANISMS.md": "2.1",
-    "docs/METHODOLOGY.md": "2.42",
+    "docs/METHODOLOGY.md": "2.43",
     "docs/MOBILE.md": "1.5",
     "docs/MVP.md": "3.9",
     "docs/OBSERVABILITY.md": "1.1",
@@ -78,7 +78,8 @@
     "docs/reviews/0.47.0.0.md": "1.0",
     "docs/reviews/0.48.0.0.md": "1.0",
     "docs/reviews/0.49.0.0.md": "1.0",
-    "docs/reviews/0.50.0.0.md": "1.0"
+    "docs/reviews/0.50.0.0.md": "1.0",
+    "docs/reviews/0.51.0.0.md": "1.0"
   },
   "threat_model_rows": 14,
   "harness_attacks": 13,
@@ -164,13 +165,13 @@
     "package_files": 22,
     "test_lines": 12228,
     "test_files": 61,
-    "tool_lines": 7392,
+    "tool_lines": 7530,
     "tool_files": 27,
-    "documentation_lines": 26853,
-    "documentation_files": 69,
+    "documentation_lines": 27328,
+    "documentation_files": 70,
     "runtime_dependencies": 0
   },
-  "defects_logged": 118,
+  "defects_logged": 119,
   "decisions_recorded": 45,
-  "releases": 123
+  "releases": 124
 }

@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.18 / 2026-08-31
+Version: 1.19 / 2026-08-31
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -54,8 +54,8 @@ never a decision until D-031 wrote it down.
 | First post-install poll | `active=0 cleared=0 unresolved=5 declined=1 unparsed=0 latency=0.227s snapshot=fresh(193s)`. The `unparsed` field is itself the proof of version: 0.48.0.0 could not print it. Zero means the API's type vocabulary still covers what arrives |
 | Contract after | `state.json` v3, `state=ok`, 38 areas active, `recent_7d` 19 oblasts of which **8 carry an open episode** (`still_under_alert`), and one carries `alert_seconds` **604,800**: a full seven-day window unbroken. That figure is the F138 repair visible from outside - before it, a concurrent kind's all-clear tore such an episode apart and the count could never reach the ceiling |
 | Earlier deploy the same day | 0.48.0.0 at 06:22:53 UTC: wheel `76fb176f…b564d0`, return point `events.pre-0.48.0.0` `a5585436…c205b4`, first poll `snapshot=fresh(120s)`, then `reconcile --unmask` closing the eight-area Donetsk `glide_bomb` belt (ghosts=8, masked=0, second apply 0) |
-| `main` | 0.50.0.0 |
-| Behind by | **one** release, 0.50.0.0, and it touches no package code: the changes are in `tools/`, in documentation, and in the version string. The wheel would differ from the installed one in nothing a reader can see. Install at convenience or fold into the next functional release |
+| `main` | 0.51.0.0 |
+| Behind by | **two** releases, 0.50.0.0 and 0.51.0.0, and neither touches package code: the changes are in `tools/`, in documentation, and in the version string. The wheel would differ from the installed one in nothing a reader can see. Install at convenience or fold into the next functional release. The judgement is unchanged from one release to two because its reason is unchanged; if a third lands before a functional one, that is the point at which this row should stop repeating itself |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

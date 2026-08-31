@@ -6,7 +6,7 @@
 [![tests 642](https://img.shields.io/badge/tests-642-brightgreen)](tests/)
 [![coverage 95.42%](https://img.shields.io/badge/coverage-95.42%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 118](https://img.shields.io/badge/defects%20logged-118-informational)](docs/METHODOLOGY.md)
+[![defects logged 119](https://img.shields.io/badge/defects%20logged-119-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -785,8 +785,8 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | --- | --- | --- |
 | Package `mavo/` | 22 | 8,518 |
 | Tests | 61 | 12,228 |
-| Tools | 27 | 7,392 |
-| Documentation | 69 | 26,853 |
+| Tools | 27 | 7,530 |
+| Documentation | 70 | 27,328 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -801,9 +801,9 @@ confidence interval attached.
 | Coverage | 95.42% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 118, the count pinned against the log itself |
+| Defects logged with their class | 119, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 45, counted from the log itself |
-| Releases | 123 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 124 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation
@@ -850,14 +850,18 @@ moved out of the gate and then stops running.
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: **471 tests passing, of which 13 are harness attacks.
-  Coverage 96.84%** against a floor of 95. These three numbers read 170, 12 and
+- `make verify` green: **642 tests passing, of which 13 are harness attacks.
+  Coverage 95.42%** against a floor of 95. These three numbers read 170, 12 and
   96.90% until 0.33.0.2, while the badges at the head of this file and the
   table in *The repository in numbers* carried the current ones. `docs_audit`
-  checks the badges and the table and **still does not check this list**, so
-  the correction at 0.33.0.2 and the update at 0.34.0.0 were both done by hand
-  and the next one can be missed the same way. The floor stays a
-  ratchet under T9:
+  checked the badges and the table and **did not check this list**, so the
+  correction at 0.33.0.2 and the update at 0.34.0.0 were both done by hand and
+  the sentence above said the next one could be missed the same way. It was:
+  this list stood at 471 and 96.84% for sixteen releases, under a paragraph
+  headed *a number appears in this documentation only when the code produced
+  it*. F140. A prediction written down and left unguarded is not a mitigation,
+  which is the same finding as F72 and F139 arriving a third time. The floor
+  stays a ratchet under T9:
   the rise is below the five-point threshold that moves it. The old caveat
   stands in kind:
   `transport.py` carries the one genuinely network-bound function, and it drags
