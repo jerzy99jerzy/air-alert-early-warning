@@ -441,7 +441,8 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
             if source.snapshot_age_s is not None else "")
     print(f"active={active} cleared={cleared} "
           f"unresolved={len(source.unresolved)} "
-          f"declined={len(source.declined)} latency={fetch_s:.3f}s "
+          f"declined={len(source.declined)} "
+          f"unparsed={len(source.unparsed)} latency={fetch_s:.3f}s "
           f"snapshot={source.snapshot_state}{aged}")
     if source.snapshot_state in ("stale", "corrupt"):
         # Withheld, and said so. Silently withholding clears would put a calm
@@ -458,6 +459,14 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
         # declines it. The repair is a disambiguation or a level, not a row,
         # and folding the two populations into one word hid a live one.
         print(f"  declined by register: {name}")
+    if source.unparsed:
+        # F135, and the note is the point: a rising count means the API's
+        # type vocabulary is drifting away from this adapter's, which is the
+        # channel path's own drift warning said for the primary source.
+        print(f"  unparsed type on {len(source.unparsed)} region(s); "
+              "a rising count means the type vocabulary is drifting")
+        for name in source.unparsed:
+            print(f"  unparsed: {name}")
     if store is not None:
         try:
             store.record_read(

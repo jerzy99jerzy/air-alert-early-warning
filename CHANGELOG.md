@@ -16,6 +16,32 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.49.0.0 - 2026-08-31
+
+**The episode counters learn the unit of alarm (F138), and two registered
+debts pay.** The full review this release opens with found F133's mechanism
+one layer further out than D-044 reached: both trailing counters kept their
+running state per area, so the clear of one threat kind closed an area whose
+other kind still ran - the map's shading and "last alert ended" understating
+exactly where an alarm is chronic. Probe red first, on the shape of the two
+measured areas of 2026-08-30; repaired per `(area_id, kind)` in both
+counters; single-kind behaviour pinned byte-identical.
+
+- **F135 paid.** The primary source's `unparsed` sentinel is counted and
+  named in the recap with a drift note, and a marked record whose region
+  resolves is stored under UNKNOWN rather than dropped. The adjacent
+  blindspot this surfaced - a novel type *string* folding into UNKNOWN with
+  no counter at all - is filed as T83, not patched in passing.
+- **F136 paid, E-0 unblocked from this side.** A substituted stamp still
+  stands in - an alert without a start is still an alert - and the stored row
+  now says so (`ts_source_origin: observed`), so the latency measurement can
+  exclude by reading rather than by guessing.
+- **T77 done.** The precision counter excludes CPython interpreter tokens by
+  dated name, never by shape, and six ceilings fall to their exact new
+  counts. **T75 done** on the 2026-08-31 host read that settled F137.
+- Review in `docs/reviews/0.49.0.0.md`, with the depth of the review stated
+  per module and this session's own errors logged beside the findings.
+
 ## 0.48.0.1 - 2026-08-31
 
 **Documents only: the tree catches up with the shop.** The D-040 source

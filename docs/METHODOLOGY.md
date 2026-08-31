@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.40
+Document:  docs/METHODOLOGY.md, version 2.41
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4327,7 +4327,13 @@ spurious clear, and under F133 was masked permanently. Recorded open at
 0.48.0.0: D-044 part 2 makes the eventual return storable and correctly dated,
 which lowers the cost of the drop without repairing the counting. The repair
 is a `declined`-style third population with its own printed line, and it must
-land before any coverage figure is quoted for the API path.
+land before any coverage figure is quoted for the API path. Landed at
+0.49.0.0: the sentinel is counted and named in the recap with the drift note,
+and a marked record whose region resolves is *stored* under UNKNOWN rather
+than dropped - a record the parser could not fully read is not the absence of
+an alert. Paying this surfaced the adjacent blindspot, filed as T83: a
+well-formed alert with a merely novel type string still folds into UNKNOWN
+with no counter at all.
 
 ### F136, 0.48.0.0. A substituted stamp is stored with no mark, and it zeroes E-0
 
@@ -4337,8 +4343,11 @@ exact act `_stamp` refuses one layer down, with the reason written beside the
 refusal: a substituted stamp zeroes the latency measurement for exactly the
 records that lack one. Not observed firing; the 18:14:06 stamp of
 2026-08-30 carried payload-origin microseconds, and no poll ran at that moment
-(journal read), so it cannot be a substitution. Recorded open at 0.48.0.0 and it blocks E-0: the latency measurement
-must not run until a missing `started_at` either marks the row or refuses it.
+(journal read), so it cannot be a substitution. Recorded open at 0.48.0.0 as
+the blocker of E-0. Landed at 0.49.0.0: a missing `started_at` still takes the
+read time - an alert without a start is still an alert - and the stored row now
+carries `ts_source_origin: observed`, so E-0 leaves substituted rows out by
+reading rather than by guessing, and the block is lifted from this side.
 
 ### F137, 0.48.0.0. Two drop-ins both own `ExecStart` and only one can win
 
@@ -4352,3 +4361,17 @@ applied rather than a value read. Settled 2026-08-31 by exactly that read:
 and `feed.conf` - the dead file that still looked like configuration - was
 removed and the surviving value re-read after `daemon-reload`.
 
+### F138, 0.49.0.0. The episode counters closed an area on the clear of one kind
+
+`trailing_counts` and `trailing_areas` kept their running state per area while
+the events they fold are per `(area_id, kind)`: F133's granularity mismatch,
+one layer further out than D-044 reached. The clear of a concurrent air alert
+discarded the whole area from the running set, closing the oblast's episode,
+stopping its clock and extinguishing `open_at_as_of` while a chronic artillery
+alarm ran - the quiet tail that nobody observed, produced by the function
+whose own docstring forbids it. Measured red before repair: 18,900 seconds
+missing and `last_alert_ended_at` set on a probe shaped like the two areas of
+2026-08-30. Found by the probe the 0.48.0.0 review recorded as owed, which is
+the argument for writing "unverified" down rather than rounding it to fine.
+Repaired by keying the running state per `(area_id, kind)` in both counters,
+with the single-kind path pinned byte-identical.

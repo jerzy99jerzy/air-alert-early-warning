@@ -646,9 +646,18 @@ def trailing_counts(
     `last_alert_ended_at` is the most recent episode close, or None where no
     episode closed inside the window. None means unknown, and a consumer must
     not render it as "ended just now".
+
+    **The running set holds `(area_id, kind)`, not `area_id` (F138).** Until
+    0.49.0.0 it held areas, so the clear of one threat kind discarded the whole
+    area while another kind was live: an oblast under a chronic artillery alarm
+    had its episode closed, its clock stopped and `open_at_as_of` extinguished
+    by the end of a concurrent air alert - the quiet tail that nobody observed,
+    forbidden two paragraphs down, produced by this function. F133's mechanism,
+    one layer further out than D-044 reached, found by the probe D-044's own
+    review said was owed.
     """
     cutoff = as_of - timedelta(days=days)
-    active: dict[str, set[str]] = {}
+    active: dict[str, set[tuple[str, ThreatKind]]] = {}
     episodes: dict[str, int] = {}
     last_close: dict[str, datetime] = {}
     #: Start of the stretch currently open per oblast, already clipped to the
@@ -668,9 +677,9 @@ def trailing_counts(
             continue
         running = active.setdefault(slug, set())
         if event.state is AlertState.ACTIVE:
-            running.add(event.area_id)
+            running.add((event.area_id, event.kind))
         elif is_clear(event.state):
-            running.discard(event.area_id)
+            running.discard((event.area_id, event.kind))
     # Episodes open as the window begins: counted here, once, so the loop
     # below cannot count them again (`running` is already non-empty). Their
     # clock starts at the cutoff for the same reason.
@@ -693,9 +702,9 @@ def trailing_counts(
             if not running:
                 episodes[slug] = episodes.get(slug, 0) + 1
                 span_since[slug] = stamp
-            running.add(event.area_id)
+            running.add((event.area_id, event.kind))
         elif is_clear(event.state):
-            running.discard(event.area_id)
+            running.discard((event.area_id, event.kind))
             if not running and slug in episodes:
                 last_close[slug] = event.ts_source
                 opened = span_since.pop(slug, None)
@@ -756,9 +765,15 @@ def trailing_areas(
     Ordered by the lower bound of the interval, nearest first, with unknown
     distances last: the same key `western_active` uses, for the same reason.
     An area with no distance must not sort as though it were near.
+
+    **The open state is a set of kinds per area, not a flag (F138).** The same
+    repair as `trailing_counts`, restated in code rather than inherited: an
+    area's episode closes when its *last* live kind is affirmatively cleared,
+    never when any one of them is.
     """
     cutoff = as_of - timedelta(days=days)
     open_since: dict[str, datetime] = {}
+    kinds_open: dict[str, set[ThreatKind]] = {}
     episodes: dict[str, int] = {}
     last_active: dict[str, datetime] = {}
     last_close: dict[str, datetime] = {}
@@ -777,9 +792,15 @@ def trailing_areas(
         if table.by_code(event.area_id) is None:
             continue
         if event.state is AlertState.ACTIVE:
-            open_since.setdefault(event.area_id, event.ts_source)
+            if not kinds_open.get(event.area_id):
+                open_since.setdefault(event.area_id, event.ts_source)
+            kinds_open.setdefault(event.area_id, set()).add(event.kind)
         elif is_clear(event.state):
-            open_since.pop(event.area_id, None)
+            live = kinds_open.get(event.area_id)
+            if live is not None:
+                live.discard(event.kind)
+                if not live:
+                    open_since.pop(event.area_id, None)
     # Episodes already running as the window opens: counted here, once, so the
     # loop below cannot count them again (`open_since` is already populated).
     # `last_active` is seeded with the opening time, which predates the window
@@ -795,13 +816,17 @@ def trailing_areas(
             continue
         stamp = min(event.ts_source, as_of)
         if event.state is AlertState.ACTIVE:
-            if event.area_id not in open_since:
+            if not kinds_open.get(event.area_id):
                 episodes[event.area_id] = episodes.get(event.area_id, 0) + 1
                 open_since[event.area_id] = event.ts_source
                 span_since[event.area_id] = stamp
+            kinds_open.setdefault(event.area_id, set()).add(event.kind)
             last_active[event.area_id] = event.ts_source
         elif is_clear(event.state):
-            if open_since.pop(event.area_id, None) is not None:
+            live = kinds_open.get(event.area_id)
+            if live is not None:
+                live.discard(event.kind)
+            if not live and open_since.pop(event.area_id, None) is not None:
                 last_close[event.area_id] = event.ts_source
                 opened = span_since.pop(event.area_id, None)
                 if opened is not None:

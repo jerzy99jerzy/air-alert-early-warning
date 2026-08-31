@@ -57,7 +57,17 @@ EXCLUDED = ("CHANGELOG.md", "docs/reviews/")
 
 #: Two or more decimals, excluding version strings (`0.33.0.2`), addresses
 #: (`34.116.232.215`) and anything glued to a word.
-FIGURE = re.compile(r"(?<![\w.])\d+\.\d{2,}(?!\.\d)(?!\w)")
+#: T77. CPython interpreter versions are excluded by name - the finite,
+#: dated list below, not a shape - because a shape wide enough for `3.14`
+#: swallows a genuine `7.84` and the counter stops measuring the thing it was
+#: built for. Two ceilings rose at 0.39.1.0 solely to accommodate interpreter
+#: tokens; with the exclusion they fall back, which is the direction a ceiling
+#: is allowed to move. Extend the alternation when a new interpreter enters
+#: the matrix, with the release that added it.
+_INTERPRETERS = r"3\.1[1-4]"
+FIGURE = re.compile(
+    rf"(?<![\w.])(?!{_INTERPRETERS}(?!\d))\d+\.\d{{2,}}(?!\.\d)(?!\w)"
+)
 
 #: The same figure written the Polish way. Applied **only** to `*-PL.md`,
 #: because a comma means one thing in `96,61` and another in `38,521`, and
@@ -100,7 +110,9 @@ FIGURE_PL = re.compile(r"(?<![\d,.])\d+,\d{2}(?!\d)")
 #:   the finding and rounding the quote would soften the record, same
 #:   exception as the F109 entry itself.
 CEILINGS: dict[str, int] = {
-    "ENGINEERING.md": 3,
+    # Ceilings below fell at 0.49.0.0 when T77 stopped counting interpreter
+    # tokens; each new value is the exact count on that day's tree.
+    "ENGINEERING.md": 1,
     # 23 -> 22 at 0.42.0.0, and the first attempt at this line said 20 for a
     # reason that turned out to be wrong. `coverage_percent` is 96.6, one
     # decimal, so the *table row* dropped a figure - but the badge is written
@@ -118,7 +130,7 @@ CEILINGS: dict[str, int] = {
     # the pin. A ceiling that follows a checked figure's formatting is
     # measuring noise; noted in the 0.43.0.0 review as a candidate for
     # excluding pin-quoted figures from this count rather than chasing them.
-    "README.md": 23,
+    "README.md": 20,
     # Raised at 0.39.1.0, 28 to 35, and the shape of the raise is the argument
     # for T77. **One of the seven is a measurement:** T9's closure quotes ``96.43``,
     # which is
@@ -139,7 +151,7 @@ CEILINGS: dict[str, int] = {
     # to hold a task written because the counter counts the wrong things, which
     # is the clearest statement of the problem available and is left standing
     # here rather than tidied away.
-    "TODO.md": 35,
+    "TODO.md": 32,
     "docs/BRIEF-PL.md": 6,
     "docs/BRIEF.md": 6,
     "docs/CHANNEL.md": 19,
@@ -149,14 +161,14 @@ CEILINGS: dict[str, int] = {
     # because the no-lock arithmetic rests on it and rounding a load-bearing
     # figure to "fast" is how arithmetic becomes hope.
     "docs/DECISIONS.md": 33,
-    "docs/DEPLOYMENT.md": 14,
+    "docs/DEPLOYMENT.md": 11,
     "docs/FEED-SPEC.md": 6,
     "docs/FOUNDATIONS.md": 7,
     # 19 -> 20 at 0.43.0.0: the rewritten 4.5 (F127) quotes the channel's
     # hashtag coverage, 99.34%, the figure the sprint-7 redesign stands on.
     # 20 -> 21 at 0.47.0.0: section ordinal 4.10 reads to this lint as a
     # two-decimal figure; a heading number is not a precision claim.
-    "docs/MANUAL.md": 21,
+    "docs/MANUAL.md": 20,
     "docs/MECHANISMS.md": 16,
     # Raised at 0.39.1.0, 82 to 87. F119's entry names the two interpreter
     # versions the defect appeared and disappeared on, ``3.14`` and ``3.12``,
@@ -169,7 +181,7 @@ CEILINGS: dict[str, int] = {
     # a figure with two decimals. **This is the second ceiling this release
     # raised for a reason unrelated to precision** and the class is logged as
     # T77 rather than absorbed here.
-    "docs/METHODOLOGY.md": 87,
+    "docs/METHODOLOGY.md": 79,
     "docs/MVP.md": 2,
     "docs/OBSERVABILITY.md": 1,
 }

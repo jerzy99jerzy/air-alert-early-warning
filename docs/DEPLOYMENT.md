@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.16 / 2026-08-31
+Version: 1.17 / 2026-08-31
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -53,8 +53,8 @@ never a decision until D-031 wrote it down.
 | Reconcile, per kind (D-044) | dry-run then apply, 06:26:54 UTC: **ghosts=8, masked=0, stored=8** - the Donetsk `glide_bomb` belt, eight areas opened by the channel at 2026-08-26 02:05:41 and never closeable while the ghost test was per area, closed with INFERENCE rows at the snapshot's own `saved_at`. A second apply stored **0**. The masked population of 2026-08-30 (fifteen areas) had melted by natural alarm cycling before the deploy; the ratchet held only keys that never cycle, and none were in the morning snapshot |
 | Contract after | `state.json` v3, `state=ok`, 33 areas at the host read and 36 at the public read minutes later, every area carrying a non-empty `kinds` block, none carrying `glide_bomb`; the eight closures visible in the `events` stream as `clear`, which is the stream doing its job |
 | Earlier deploys of 2026-08-30 | 0.45.0.0 at 16:46:13 UTC: wheel `de25b736…d06728` 158,127 B, return point `events.pre-0.45.0.0` `69daf1fb…1bba64`, first timer run `active=32 cleared=26 unresolved=5 snapshot=fresh(121s)`. 0.47.0.0 in the evening, from the session record rather than a host read; its `reconcile` closed seven channel-era ghosts and five self-healed. 0.44.0.0 at 15:02:10 UTC, the D-040 switchover: wheel `0f918299…856259`, return point `events.pre-0.44.0.0` `bf08808e…946929`, first poll `snapshot=missing`, second `snapshot=fresh(31s)` |
-| `main` | 0.48.0.1 |
-| Behind by | **one** release, 0.48.0.1, and it is documents-only: the wheel would differ from the installed one in its version string and in documentation the wheel does not ship. Install at convenience or fold into the next functional release |
+| `main` | 0.49.0.0 |
+| Behind by | **two** releases: 0.48.0.1, documents-only, and 0.49.0.0, which repairs the trailing episode counters (F138) - the map's seven-day shading and "last alert ended" understate on chronic-alarm areas until it lands. Deploy 0.49.0.0 with the standard ceremony; 0.48.0.1 rides along inside it |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

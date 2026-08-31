@@ -462,6 +462,7 @@ def test_collect_api_stores_events_and_the_attempt(
         source_id = "ukrainealarm"
         unresolved: tuple[str, ...] = ()
         declined: tuple[str, ...] = ()
+        unparsed: tuple[str, ...] = ()
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -508,6 +509,7 @@ def test_collect_api_records_a_refusal_and_says_the_source_was_unreachable(
     class _Refusing:
         unresolved: tuple[str, ...] = ()
         declined: tuple[str, ...] = ()
+        unparsed: tuple[str, ...] = ()
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -537,6 +539,7 @@ def test_collect_api_reads_the_key_from_a_file(
     class _Capturing:
         unresolved: tuple[str, ...] = ()
         declined: tuple[str, ...] = ()
+        unparsed: tuple[str, ...] = ()
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 

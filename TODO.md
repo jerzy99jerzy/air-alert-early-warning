@@ -4,11 +4,11 @@
 
 ### Where the backlog stands
 
-**34 of 80 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**35 of 81 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
-| `done` | 30 | Finished, with the release that closed it named in the entry |
+| `done` | 31 | Finished, with the release that closed it named in the entry |
 | `moved` | 4 | Owned by another repository; the entry here is a pointer, not a copy |
 | `ready` | 36 | Nothing external blocks it; it needs a session |
 | `decision` | 5 | Waiting on a judgement rather than on work |
@@ -27,9 +27,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 
 **Tier 1, 12 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does)
 
-**Tier 2, 19 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T82](#t82-the-channels-silence-measured-as-a-distribution)
+**Tier 2, 20 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T83](#t83-unknown-type-strings-on-the-primary-source-are-folded-without-a-counter), [T82](#t82-the-channels-silence-measured-as-a-distribution)
 
-**Tier 3, 15 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T77](#t77-the-false-precision-counter-counts-version-numbers)
+**Tier 3, 14 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers)
 
 ### By sprint
 
@@ -42,7 +42,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T75](#t75-a-drop-in-that-has-been-dead-since-it-was-written), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T82](#t82-the-channels-silence-measured-as-a-distribution) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T83](#t83-unknown-type-strings-on-the-primary-source-are-folded-without-a-counter), [T82](#t82-the-channels-silence-measured-as-a-distribution) |
 
 <!-- index:end -->
 
@@ -2278,7 +2278,13 @@ cadence, which is F116's own mechanism reappearing inside F116's repair.
 reading.
 
 ## T75. A drop-in that has been dead since it was written
-Status: `ready` [tier 3]
+Status: `done` (0.48.0.1, settled on the host 2026-08-31) [tier 3]
+
+**Closed by the F137 read.** `systemctl show mavo-report -p ExecStart` read
+`--feed` and `--interval 30` - the lexical prediction held - and `feed.conf`,
+the decoy, was deleted with the surviving `interval.conf` re-read after
+`daemon-reload`. `docs/DEPLOYMENT.md` quotes the reading in the unit table at its 2026-08-31
+revision, which is this entry's acceptance, met.
 
 `mavo-report.service` carries two drop-ins and both reset `ExecStart=`.
 Drop-ins apply in lexical order, so `interval.conf` overrides `feed.conf`
@@ -2481,6 +2487,24 @@ option that is not available is a number chosen because it sounded reasonable.
 **Acceptance:** a decision entry naming the option, the measured distribution
 it was chosen against, and the reopen condition.
 
+
+## T83. Unknown type strings on the primary source are folded without a counter
+Status: `ready` [tier 2], found while paying F135 at 0.49.0.0
+
+`parse_alerts` marks *structurally* bad records `unparsed`, and 0.49.0.0
+counts and stores them. A well-formed alert whose **type string** is simply
+new takes a different road: `_KIND.get(alert.alert_type, ThreatKind.UNKNOWN)`
+folds it into UNKNOWN with no counter and no name, so the API can grow a new
+type - the exact event D-042 documents this vocabulary lagging on - and the
+first sign will be a reader asking why a named threat renders as "type not
+stated". The channel path prints a drift note for its unresolved patterns;
+the primary source stays silent on this axis.
+
+**Acceptance:** the recap counts and names type strings absent from `_KIND`,
+distinctly from `unparsed`, with the same rising-count drift note; a test
+feeds a novel type string and reads it back by name; and the count lands in
+`feed_attempts` or beside it so drift is visible between sessions, not only
+in a journal nobody replays.
 
 ## T82. The channel's silence, measured as a distribution
 Status: `ready` [tier 2]

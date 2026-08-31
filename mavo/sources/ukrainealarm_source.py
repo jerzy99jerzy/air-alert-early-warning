@@ -209,6 +209,10 @@ class UkrainealarmSource:
         #: separately so an operator reading the journal can tell "add a row"
         #: from "settle an ambiguity" without opening the table.
         self.declined: tuple[str, ...] = ()
+        #: Regions whose alert type the vocabulary could not read (F135). A
+        #: rising count means the API's type vocabulary is drifting, and the
+        #: recap prints it for the same reason the channel path prints its own.
+        self.unparsed: tuple[str, ...] = ()
 
     def poll(self) -> Sequence[ThreatEvent]:
         """Transitions since the previous successful poll.
@@ -233,9 +237,21 @@ class UkrainealarmSource:
         oblast_of: dict[tuple[str, ThreatKind], str] = {}
         unresolved: list[str] = []
         declined: list[str] = []
+        unparsed: list[str] = []
+        substituted: set[tuple[str, ThreatKind]] = set()
         for alert in parse_alerts(payload):
             if alert.alert_type == "unparsed":
-                continue
+                # F135. Counted, never silently dropped: the parser one layer
+                # down marks these records for exactly this recap, and a
+                # coverage denominator that quietly shrinks flatters whichever
+                # side it was built to test. A named region still resolves and
+                # lands below under UNKNOWN - a type this vocabulary cannot
+                # read is not the absence of an alert - while an unreadable
+                # region is counted here and can land nowhere until it has a
+                # name.
+                unparsed.append(alert.region_name or "<unreadable region>")
+                if not alert.region_name:
+                    continue
             resolved = _resolve(self._areas, alert)
             if resolved is None:
                 unresolved.append(alert.region_name)
@@ -246,10 +262,20 @@ class UkrainealarmSource:
                 continue
             kind = _KIND.get(alert.alert_type, ThreatKind.UNKNOWN)
             key = (area_id, kind)
+            if alert.started_at is None:
+                # F136. The read time stands in for a stamp the payload did
+                # not carry - the exact act `_stamp` refuses one layer down,
+                # done here because an alert without a start is still an
+                # alert - and the substitution is marked on the stored row,
+                # because a substituted stamp zeroes the latency measurement
+                # for exactly the records that lack one, and E-0 must be able
+                # to leave them out by reading rather than by guessing.
+                substituted.add(key)
             current[key] = alert.started_at or now
             oblast_of[key] = oblast
         self.unresolved = tuple(dict.fromkeys(unresolved))
         self.declined = tuple(dict.fromkeys(declined))
+        self.unparsed = tuple(dict.fromkeys(unparsed))
 
         previous = self._previous
         events: list[ThreatEvent] = []
@@ -267,7 +293,12 @@ class UkrainealarmSource:
                     source_id=self.source_id,
                     kind=kind,
                     provenance=Provenance.REPORTED,
-                    raw_fields={"api_region": area_id, "api_type": kind.name},
+                    raw_fields=(
+                        {"api_region": area_id, "api_type": kind.name,
+                         "ts_source_origin": "observed"}
+                        if key in substituted
+                        else {"api_region": area_id, "api_type": kind.name}
+                    ),
                     oblast=oblast_of[key],
                 )
             )
