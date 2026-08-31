@@ -16,6 +16,22 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.51.0.1 - 2026-08-31
+
+**Documents only: the sprint document reported the window it forbade
+reporting.** `docs/MVP.md` carried the S9 block one hour into a
+seventy-two-hour window for eleven days after that window closed, under a
+header dated current, while `TODO.md` held the measured close. Same mechanism
+as F140, one release after F140 was paid, in the document whose audience is
+anyone asking when this is finished.
+
+- **MVP** (3.10): the S9 paragraph rewritten to the closed window and to the
+  criterion half that remains - the `CHANNEL` §8a latency row, blocked by T84
+  rather than by the discharged T66; the freeze recorded in place rather than
+  overwritten; and the question of whether S9 exits on a historical row, now
+  that the channel is the watchman rather than the source, left open as an
+  amendment to be recorded the way S7's and S8's were.
+
 ## 0.51.0.0 - 2026-08-31
 
 **The two documents that leave this repository were the two nothing checked, and

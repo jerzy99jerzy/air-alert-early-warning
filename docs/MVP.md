@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 3.9 / 2026-08-31
+Document:  docs/MVP.md, version 3.10 / 2026-08-31
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -288,9 +288,34 @@ ordered by dependency, not sized by effort, and S10 carries a delivery path
 that does not exist yet. A percentage here would be a number nobody measured,
 which is the kind this document removes rather than adds.
 
-**S9's block is amber and not green, and it is one hour into seventy-two.** The
-window opened 2026-08-17 11:02:06 UTC and closes 2026-08-20 11:02:06 UTC
-(D-032). Nothing about it can be reported until it does.
+**S9's block is amber because the window closed and the row did not.** The
+D-032 window opened 2026-08-17 11:02:06 UTC and closed 2026-08-20 11:02:06 UTC,
+clean: zero restarts against the two the amendment permitted, 7,850 attempts at
+a 33.0 s cadence, continuity measured rather than assumed. That is half the
+criterion. The other half is the latency distribution written into
+`docs/CHANNEL.md` 8a, which is taken and still unwritten, and **S9 exits when
+the row exists, not when the window does**.
+
+Until this revision the paragraph read *one hour into seventy-two* and *nothing about it
+can be reported until it does*, eleven days after the window closed and while
+`TODO.md` reported exactly what this document said could not be reported. The
+header carried the current date throughout. Same mechanism as F140, and it is
+recorded here rather than quietly overwritten.
+
+**Why the row is unwritten**, and only one of the three reasons is real. The
+stated blocker was T66, `done` since 0.41.0.0, so it was discharged nine
+releases before anyone re-read the sentence it was blocking. The real one is
+structural: `tools/latency.py` reads the event store and `tools/` is not
+installed on the host that holds one, so the instrument has never been runnable
+where its input lives. That is D-038 applied to one file rather than to its
+class, filed as T84. The third expired on its own when the channel supplied
+fifteen days of continuous collection before falling silent.
+
+**And the criterion now points at a source that stopped publishing.** The row
+measures the channel, which since 2026-08-30 is the watchman rather than the
+source. Whether S9 exits on a historical row is a judgement rather than work,
+and it is an open amendment to be recorded the way S7's and S8's were, not
+settled quietly.
 
 **The one date that stays, and it is not an estimate of effort.** T6, the legal
 position, is due **at the beginning of September**. It is a decision blocker:

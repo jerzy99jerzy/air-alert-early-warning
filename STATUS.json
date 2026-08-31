@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.51.0.0",
+  "version": "0.51.0.1",
   "python_requires": ">=3.11",
   "sprint_test_files": [
     0,
@@ -24,14 +24,14 @@
     "docs/COMPUTATION.md": "1.1",
     "docs/DATA-FLOW.md": "1.2",
     "docs/DECISIONS.md": "2.17",
-    "docs/DEPLOYMENT.md": "1.19",
+    "docs/DEPLOYMENT.md": "1.20",
     "docs/FEED-SPEC.md": "2.3",
     "docs/FOUNDATIONS.md": "1.2",
     "docs/MANUAL.md": "3.5",
     "docs/MECHANISMS.md": "2.1",
     "docs/METHODOLOGY.md": "2.43",
     "docs/MOBILE.md": "1.5",
-    "docs/MVP.md": "3.9",
+    "docs/MVP.md": "3.10",
     "docs/OBSERVABILITY.md": "1.1",
     "docs/THREAT-MODEL.md": "2.3",
     "docs/WEBAPP.md": "3.6",
@@ -167,11 +167,11 @@
     "test_files": 61,
     "tool_lines": 7530,
     "tool_files": 27,
-    "documentation_lines": 27328,
+    "documentation_lines": 27369,
     "documentation_files": 70,
     "runtime_dependencies": 0
   },
   "defects_logged": 119,
   "decisions_recorded": 45,
-  "releases": 124
+  "releases": 125
 }

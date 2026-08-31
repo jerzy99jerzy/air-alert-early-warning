@@ -786,7 +786,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 22 | 8,518 |
 | Tests | 61 | 12,228 |
 | Tools | 27 | 7,530 |
-| Documentation | 70 | 27,328 |
+| Documentation | 70 | 27,369 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -803,7 +803,7 @@ confidence interval attached.
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 119, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 45, counted from the log itself |
-| Releases | 124 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 125 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation
