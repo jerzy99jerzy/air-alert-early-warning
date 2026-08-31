@@ -6,7 +6,7 @@ the companion document and answers the other question, which components exist
 and what may talk to what.
 
 ```
-Document:  docs/DATA-FLOW.md, version 1.1
+Document:  docs/DATA-FLOW.md, version 1.2
 Audience:  a contributor about to change a transformation, a schema field, or
            anything that decides what is kept and what is dropped
 Companion: ARCHITECTURE (components and boundaries), MECHANISMS (why each
@@ -34,6 +34,39 @@ Note:      every stage below names what it can lose. A stage that cannot lose
 ---
 
 ## 1. The whole path in one diagram
+
+Two paths since D-040, and they answer to different models. The API is a
+snapshot: it lists what is alerting now and says nothing about what stopped, so
+an ended alert has to be synthesised from the difference between two polls, and
+that is only safe when the previous observation actually happened. The channel
+is a log: it announces transitions, and since 2026-08-29 it announces nothing,
+which the pipeline reports as staleness rather than calm.
+
+### The primary path: the API snapshot (D-040)
+
+```mermaid
+flowchart TD
+    API["/alerts<br/>full state, keyed, about a quarter of a second"]
+    API -->|"transport.fetch"| PARSE["parse_alerts<br/>malformed body yields no events, never clears"]
+    PARSE -->|"resolve_prose<br/>KATOTTG register"| CUR["current: area and kind to started_at<br/>unresolved and declined printed by name"]
+    PREV[("persisted snapshot<br/>fresh under 360 s or it licenses nothing")] --> DIFF
+    CUR --> DIFF{"diff against previous"}
+    DIFF -->|"key appears"| ACT["ACTIVE, REPORTED<br/>ts_source = started_at"]
+    DIFF -->|"key vanishes"| CLR["CLEAR, INFERENCE<br/>ts_source = the observation, not the start"]
+    ACT -->|"a stored newer clear exists (D-044)"| RED["re-dated by observation<br/>the API's own stamp kept in raw_fields"]
+    RED --> STORE
+    ACT --> STORE[("EventStore<br/>identity: area, kind, state, moment, source (D-045)")]
+    CLR --> STORE
+    CUR -->|"after the store accepted"| PREV
+    REC["reconcile<br/>per-kind ghosts closed, masked keys raised<br/>only under a fresh snapshot"] -.-> STORE
+```
+
+What this path can lose, named: a region the register does not know is counted
+and printed, never silently dropped; a poll that fails licenses no clears; and
+a snapshot older than its ceiling is a gap in observation, which is treated as
+exactly that.
+
+### The watchman path: the channel page
 
 ```mermaid
 flowchart TD

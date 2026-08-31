@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.5 / 2026-08-23
+Version: 3.6 / 2026-08-23
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -409,11 +409,12 @@ this project exists to avoid.
 
 ```mermaid
 flowchart LR
-  channel[Telegram channel] --> collector[MAVO collector]
+  api[ukrainealarm API, primary since D-040] --> collector[MAVO collectors]
+  channel[Telegram channel, the watchman] -.-> collector
   collector --> store[(event store)]
   store --> report[mavo report --watch]
-  report -->|writes every cycle| state[/state.json/]
-  state -->|pushed every 120 s| site[mavo-site, separate host]
+  report -->|writes every cycle| state[/state.json + feed.json/]
+  state -->|pushed every 30 s, F116| site[mavo-site, separate host]
   site --> reader([reader])
 ```
 

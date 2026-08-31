@@ -1,7 +1,9 @@
 # The notification channel: technology choice and MVP
 
-Version: 1.4 / 2026-08-21
+Version: 1.5 / 2026-08-21
 Diagram correction at 1.4: the node named `mavo watch daemon` never shipped.
+Diagram correction at 1.5: the source node caught up with D-040; the channel
+feeds the watchman path, the API feeds the primary one.
 D-031 chose a timer plus a `oneshot` collector, and `mavo report --watch` was
 already the loop; the diagram showed the design this document predates rather
 than the system that runs.
@@ -81,7 +83,7 @@ what is already legitimate: the operator notifying himself.
 
 ```mermaid
 flowchart LR
-    CH[Telegram channel] --> C["mavo collect<br/>timer plus oneshot, D-031"]
+    SRC["ukrainealarm API, primary since D-040<br/>Telegram channel beside it as the watchman"] --> C["mavo collect-api and collect<br/>timer plus oneshot, D-031"]
     C --> ST[(event store)]
     ST --> R["mavo report --watch"]
     R --> DP["DecisionPolicy plus delivery ledger<br/>S10, not built"]

@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.15 / 2026-08-31
+Version: 1.16 / 2026-08-31
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -10,7 +10,7 @@ written after the fact rather than before, and says so.
 
 ## What is installed on the hosts, and how far behind it is
 
-Host state measured: 2026-08-29
+Host state measured: 2026-08-31
 
 **This section is the state. The rest of this document is the shape**, and the
 two diverged silently once already (F102), which is why the line above exists
@@ -23,13 +23,18 @@ rather than trust it: `gcloud compute ssh vm-mavo --tunnel-through-iap`, then
 `systemctl cat`, `systemctl list-timers`, `sudo journalctl -u <unit>`, and the
 installed package read through its own interpreter.
 
-### Units, and there are four rather than one
+### Units, and there are five rather than one
+
+An earlier revision of this table said four and omitted `mavo-collect-api`,
+the unit that has fed the entire project since D-040 (F134). The omission is
+repaired from reads, not from memory.
 
 | Unit | Type | Cadence | What it does |
 | --- | --- | --- | --- |
-| `mavo-collect.service` | `oneshot`, `User=mavo` | `mavo-collect.timer`, 30 s + 5 s jitter, `AccuracySec=1s` | one poll into `/var/lib/mavo/events` |
+| `mavo-collect-api.service` | `oneshot`; `Deactivated successfully` after each run, journal 2026-08-31 | `mavo-collect-api.timer`, 121 s (timer read 2026-08-30); consecutive completions 120 s apart re-read 2026-08-31 06:22:53 to 06:24:53 | **the primary source since D-040**: one API poll into `/var/lib/mavo/events`, snapshot at `/var/lib/mavo/ukrainealarm.snapshot.json`, freshness ceiling 360 s |
+| `mavo-collect.service` | `oneshot`, `User=mavo` | `mavo-collect.timer`, 30 s + 5 s jitter, `AccuracySec=1s` | the watchman: one channel poll into the same store, so a returned publisher lands labelled |
 | `mavo-push.service` | `oneshot` | `mavo-push.timer`, 30 s with `AccuracySec=1s` since 2026-08-24 (F116); `RandomizedDelaySec` read as 15 s on 2026-08-21 and **not re-read since** | pushes `state.json` and `feed.json` to the site |
-| `mavo-report.service` | long-running | continuous | writes the report |
+| `mavo-report.service` | long-running | continuous, `--interval 30` with `--feed`, read from `ExecStart` 2026-08-31 after F137 settled; the duelling `feed.conf` drop-in is deleted and `interval.conf` alone carries the line | writes the report |
 | `mavo-adsb.service` | long-running | continuous | the sampler, `mavo-adsb` repository |
 
 **There is no daemon and the collector is not one.** A timer plus a `oneshot`
@@ -40,15 +45,16 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.45.0.0`, `/opt/mavo/venv`, python3.11 |
-| Installed at | **2026-08-30 16:46:13 UTC**, the `.dist-info` mtime, read during the deploy |
-| Wheel | sha256 `de25b736…d06728`, 158,127 B, verified on the host before `pip` touched anything; base64 through the SSH control channel, as at 0.44.0.0 |
-| Discriminators | `_FILLER` 2, `територіальна` 3, `ThreatKind.UNKNOWN` 3, `D-042` 1, `ThreatKind.MISSILE` **0**, identical inside the wheel and on the installed source |
-| Point of return | `events.pre-0.45.0.0`, 18,714,624 B, sha256 `69daf1fb…1bba64`, taken with both timers stopped and no `-wal` or `-shm` beside it |
-| First post-install polls | collection gap **46 s**, 16:45:48-16:46:34, both timers. First run under the timer `active=32 cleared=26 unresolved=5 snapshot=fresh(121s)`, latency 0.1 s - `unresolved` down from 9, the F128 repair measured on production, and the five names remaining are genuinely outside the table |
-| Earlier deploy the same day | 0.44.0.0 at 15:02:10 UTC: wheel `0f918299…856259` 157,554 B, return point `events.pre-0.44.0.0` `bf08808e…946929`, gap 184 s, first poll `snapshot=missing`, second `snapshot=fresh(31s)` - the property 0.43.0.0 could not produce. The contract left `degraded` at 34 hours, `feed=ok` at 15:13 |
-| `main` | 0.48.0.0 |
-| Behind by | **three** releases, 0.46.0.0, 0.47.0.0 and 0.48.0.0, and the gap is reader-visible in the worst direction twice over: twelve channel-era rows were rendering as active for areas the API's snapshots had not mentioned since the switchover [measured 2026-08-30 18:21 UTC], and fifteen areas were rendering calm during measured alarms [measured 2026-08-30 19:28 UTC, the reconcile dry-run] - the ghosts only 0.47.0.0's `mavo reconcile` can end, the masked only 0.48.0.0's `--unmask` can raise. 0.46.0.0 rides along (F130, F131, the region-levels probe). Deploy sooner rather than at convenience, then run `reconcile --unmask` dry-run before `--unmask --apply` |
+| Installed | `air-alert-early-warning 0.48.0.0`, `/opt/mavo/venv`, python3.11 |
+| Installed at | **2026-08-31**, `pip --force-reinstall --no-deps` with the collect timers stopped; the first post-install `collect-api` cycle completed 06:22:53 UTC (journal). The `.dist-info` mtime was not re-read this session and is owed to the next host visit |
+| Wheel | sha256 `76fb176f…b564d0`, 164 KiB, verified by `sha256sum -c` on the host before `pip` touched anything; transferred by `gcloud compute scp` over the IAP tunnel, which completed without the 0.43.0.0 stall |
+| Point of return | `events.pre-0.48.0.0`, sha256 `a5585436…c205b4`, taken with both collect timers stopped |
+| First post-install poll | `active=0 cleared=0 unresolved=5 declined=1`, latency 0.3 s, `snapshot=fresh(120s)` - the snapshot survived the install window, the five unresolved names are the known set outside the table, and the declined one is Pokrovska (F131, live) |
+| Reconcile, per kind (D-044) | dry-run then apply, 06:26:54 UTC: **ghosts=8, masked=0, stored=8** - the Donetsk `glide_bomb` belt, eight areas opened by the channel at 2026-08-26 02:05:41 and never closeable while the ghost test was per area, closed with INFERENCE rows at the snapshot's own `saved_at`. A second apply stored **0**. The masked population of 2026-08-30 (fifteen areas) had melted by natural alarm cycling before the deploy; the ratchet held only keys that never cycle, and none were in the morning snapshot |
+| Contract after | `state.json` v3, `state=ok`, 33 areas at the host read and 36 at the public read minutes later, every area carrying a non-empty `kinds` block, none carrying `glide_bomb`; the eight closures visible in the `events` stream as `clear`, which is the stream doing its job |
+| Earlier deploys of 2026-08-30 | 0.45.0.0 at 16:46:13 UTC: wheel `de25b736…d06728` 158,127 B, return point `events.pre-0.45.0.0` `69daf1fb…1bba64`, first timer run `active=32 cleared=26 unresolved=5 snapshot=fresh(121s)`. 0.47.0.0 in the evening, from the session record rather than a host read; its `reconcile` closed seven channel-era ghosts and five self-healed. 0.44.0.0 at 15:02:10 UTC, the D-040 switchover: wheel `0f918299…856259`, return point `events.pre-0.44.0.0` `bf08808e…946929`, first poll `snapshot=missing`, second `snapshot=fresh(31s)` |
+| `main` | 0.48.0.1 |
+| Behind by | **one** release, 0.48.0.1, and it is documents-only: the wheel would differ from the installed one in its version string and in documentation the wheel does not ship. Install at convenience or fold into the next functional release |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -96,7 +102,10 @@ rows.
 
 | Version | Installed at (UTC) | Fate |
 | --- | --- | --- |
-| 0.44.0.0 | 2026-08-30 15:02:10, the `.dist-info` mtime | **current**; the D-040 switchover |
+| 0.48.0.0 | 2026-08-31, first post-install poll completed 06:22:53; `.dist-info` mtime owed | **current**; D-044 and D-045, the per-kind repair |
+| 0.47.0.0 | 2026-08-30 evening, from the session record rather than a host read (F117's honesty rule, applied to our own gap) | superseded; brought `mavo reconcile` |
+| 0.45.0.0 | 2026-08-30 16:46:13, the `.dist-info` mtime | superseded |
+| 0.44.0.0 | 2026-08-30 15:02:10, the `.dist-info` mtime | superseded the next day; the D-040 switchover. An earlier revision of this table still called it current while the table above said 0.45.0.0 - the two-answers-in-one-document defect this section's own rule forbids, caught at this revision |
 | 0.43.0.0 | 2026-08-30 08:40:44, the `.dist-info` mtime | superseded the same day |
 | 0.42.0.0 | 2026-08-29 14:38:38, the `.dist-info` mtime read on 2026-08-30, paying the reading the previous revision of this file owed | superseded |
 | 0.32.2.0 | 2026-08-14 18:13:09 | superseded |

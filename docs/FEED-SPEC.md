@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 2.2 / 2026-08-28
+Version: 2.3 / 2026-08-31
 A specification, written from the position of someone who tried to build against
 one and found there was nothing to build against. The Ukrainian equivalent was
 consumed and measured over a corpus of 118 days; the work of building against it
@@ -256,6 +256,40 @@ difference from the outside at any cost.
 The heartbeat is therefore not a courtesy to consumers who want a liveness
 signal. It is the only thing that makes a consumer's error rate measurable at
 all.
+
+**Measured again, upstream this time.** This block was added at 2.3, after the
+section's failure mode stopped being an argument and became a date. On
+2026-08-29 at 04:55 UTC the Ukrainian channel itself stopped publishing - not
+a failed poll on the consumer's side, the publisher - and stayed silent
+through an attack wave that independent reporting measured at over a day.
+Three things followed, and each is a property of this section rather than of
+that channel.
+
+First, **the silence was legible**, for exactly the reason argued above: a
+source that publishes continuously enough makes absence a signal, and this
+project's page spent those hours saying its picture was old and how old,
+rather than drawing calm. A transitions-only feed would have made the same
+thirty-four hours indistinguishable from a quiet sky, on the consumer's side,
+at any cost.
+
+Second, **the replacement was a transitions problem in reverse.** The official
+API this project switched to publishes a full-state snapshot and says nothing
+about what ended, so every all-clear must be synthesised from the difference
+between two observations - and that is only safe when the previous observation
+provably happened. The consumer ends up building the heartbeat the feed does
+not carry: a persisted observation with an age ceiling, past which the gap
+licenses nothing. A feed designed with the heartbeat inside it makes no
+consumer do this, and every consumer of one without it must, independently,
+or fail silently.
+
+Third, **the access regime was part of the availability.** The switchover took
+under a day only because a key to the alternative had been requested weeks
+earlier and granted before it was needed. Had the application process started
+the morning the channel died, its duration would have been the outage. None of
+this softens property one: publicness is about who may verify, the heartbeat
+is about who can tell the feed is alive, and 2026-08-29 is the measurement
+that they are different properties - the tokenless source was the one that
+died, and its death was the one thing about it a consumer could read.
 
 **Why the standard does not cover this, and why that is not a criticism of it.**
 The technical standard describes how a dataset is formatted, described and

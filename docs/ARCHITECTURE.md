@@ -6,7 +6,7 @@ break. `DATA-FLOW.md` is the companion and answers the other question, what
 happens to a message as it travels.
 
 ```
-Document:  docs/ARCHITECTURE.md, version 2.2
+Document:  docs/ARCHITECTURE.md, version 2.3
 Audience:  a contributor about to add a module, a dependency, or a process
 Companion: DATA-FLOW (what happens to the data), MECHANISMS (why each mechanism
            is built the way it is), METHODOLOGY (what may be claimed)
@@ -33,20 +33,19 @@ Note:      the block index is maintained as a table so that a rename leaves a
 flowchart TD
     NET["transport.py<br/>the only module that reaches the network"]
     subgraph IN["Sources: everything implements ThreatSource"]
-        TG["telegram.py<br/>public Ajax channel, WIRED<br/>tags name area and unit, docs/CHANNEL.md"]
+        UASRC["ukrainealarm_source.py<br/>full-state API, PRIMARY since D-040<br/>ended alerts synthesised from the snapshot diff"]
+        TG["telegram.py<br/>channel silent since 2026-08-29<br/>kept wired as the watchman for the publisher's return"]
         RSO["rso.py<br/>Polish RSO reader, built 0.34.0.0<br/>no caller until T68 names the surface"]
-        UA["alerts.in.ua adapter<br/>not built, token outstanding, T1"]
-        OFF["ukrainealarm.py<br/>in the tree, not wired"]
+        OFF["ukrainealarm.py<br/>the measuring probe, never a source<br/>its module docstring is the prohibition"]
         FIX["fixture.py<br/>synthetic scenarios"]
     end
+    NET --> UASRC
     NET --> TG
     NET -.-> RSO
-    NET -.-> UA
     NET -.-> OFF
+    UASRC --> EV
     TG --> EV
     RSO -.-> EV
-    UA -.-> EV
-    OFF -.-> EV
     FIX --> EV
 
     EV["ThreatEvent<br/>area / state / kind / provenance / ts_source / ts_ingest"]
@@ -82,7 +81,8 @@ Maintained as a table so that a rename leaves a visibly stale row.
 | `ThreatEvent` | `mavo/schema.py` | Normalized transition. Stores both source and ingest time because the difference is the feed latency that eats the warning budget |
 | `AlertState` | `mavo/schema.py` | Four states. UNKNOWN is silence, PARTIAL_CLEAR is contradiction, and neither resolves to CLEAR |
 | transport | `mavo/transport.py` | The only module that imports a network client. One answer, in one place, to what this tool can talk to |
-| Telegram adapter | `mavo/sources/telegram.py` | The one wired live source. Parses the public channel page; area resolution runs on the channel's own tags since S7 (the pre-S7 pattern table measured 0 of 20, F23, and was replaced rather than repaired), and it reports the skipped message window rather than assuming continuity |
+| API adapter | `mavo/sources/ukrainealarm_source.py` | **The primary source since D-040.** A full-state snapshot presented as the transitions the collector expects: an ended alert is synthesised from the difference between two polls, dated by the observation, and only when the previous observation actually happened - a persisted snapshot older than its ceiling licenses no clears |
+| Telegram adapter | `mavo/sources/telegram.py` | The watchman since D-040: the channel fell silent 2026-08-29 and this stays wired so a returned publisher lands labelled rather than remembered. Parses the public channel page; area resolution runs on the channel's own tags since S7 (the pre-S7 pattern table measured 0 of 20, F23, and was replaced rather than repaired), and it reports the skipped message window rather than assuming continuity |
 | `EventStore` | `mavo/store.py` | Append-only log of transitions, never snapshots. Idempotent by content hash so a re-poll costs nothing |
 | replay | `mavo/store.py` | Reconstructs any past moment. The backtest and the live correlator run this same path |
 | rules | `mavo/rules.py` | Explicit predicates returning the moment they fire, which is what makes lead time measurable. R1 to R4 plus the missile and drone conjunctions |

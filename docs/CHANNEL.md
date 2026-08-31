@@ -1,7 +1,14 @@
 # The channel, as it actually is
 
-Version: 1.4 / 2026-08-13
+Version: 1.5 / 2026-08-31
 What the source emits, measured on 48,540 real messages, and what that changes.
+
+**Status, 2026-08-31.** The channel stopped publishing on 2026-08-29 at 04:55
+UTC (post 334744) and stayed silent through a measured attack wave; the API is
+the primary source since the next day (D-040), and the collector described here
+keeps running as the watchman for the publisher's return. Every figure below
+was produced from the corpus and remains true of the corpus; what changed is
+who speaks now, not what was said.
 Companion: `docs/DATA-FLOW.md` (how a message becomes an event),
 `docs/METHODOLOGY.md` (F23 and F59), `docs/DECISIONS.md` (D-016, geocoding).
 

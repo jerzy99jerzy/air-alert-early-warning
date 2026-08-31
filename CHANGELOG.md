@@ -16,6 +16,55 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.48.0.1 - 2026-08-31
+
+**Documents only: the tree catches up with the shop.** The D-040 source
+switchover left every architecture diagram drawing the Telegram channel as the
+only live path, the README asserting the API is "structurally prevented from
+becoming a source" a day after it became the primary one, and the deployment
+tables describing a host three deploys behind the machine. Falsified prose is
+worse than absent prose, because a reader has no way to tell which sentences
+survived the switch.
+
+- **README**: the pipeline diagram redrawn - API primary with the snapshot
+  diff, channel as the watchman, per-kind fold, reconcile, both contract
+  files, the 30 s push, and `mavo-adsb` shown as the non-public, planned,
+  only-independent observation (the shape agreed 2026-08-17 and never landed).
+  The two source FAQ sections rewritten to D-040/D-042 truth; the quickstart
+  gains the `collect-api` path production actually runs.
+- **ARCHITECTURE, DATA-FLOW, MOBILE, WEBAPP**: `ukrainealarm_source.py` drawn
+  as the wired primary and the dead `alerts.in.ua` node removed; DATA-FLOW
+  gains the API path as its own diagram (snapshot diff, synthesised clears
+  dated by observation, D-044 re-dating, reconcile) above the channel path,
+  now titled the watchman path; MOBILE's source node caught up; WEBAPP's push
+  cadence corrected from the pre-F116 120 s to the 30 s the host has run
+  since 2026-08-24.
+- **CHANNEL**: a status note - silent since 2026-08-29 04:55 UTC, watchman
+  role, every figure below remains true of the corpus it was measured on.
+- **DEPLOYMENT**: rewritten from the 2026-08-31 deploy reads - 0.48.0.0
+  installed, wheel and return-point digests, first poll, the per-kind
+  reconcile record (ghosts=8 glide_bomb closed, masked=0, second apply 0),
+  the unit table repaired to five with `mavo-collect-api` (F134 second half),
+  `mavo-report` at `--interval 30` with `feed.conf` deleted (F137 settled by
+  the read), and the deploy-history rows 0.45 through 0.48 that were owed.
+- **METHODOLOGY**: F134 and F137 entries record their completion.
+- **README, Author**: the sentence agreed and gate-tested on 2026-08-30 and
+  lost before `main` - a large share of the code and documentation is produced
+  with agentic AI (Anthropic's Claude), every line reviewed by the author and
+  answering to the same gate as anything hand-written - lands, verbatim.
+- **FEED-SPEC 2.3**: section 4 gains the upstream reading it was owed. On
+  2026-08-29 the section's failure mode became a date: the publisher itself
+  went silent through an attack wave, the silence was legible only because
+  continuous publication makes absence a signal, the replacement feed forced
+  the consumer to build the missing heartbeat itself, and the switchover was
+  fast only because access had been granted before it was needed. The
+  strongest measured evidence for the document's central ask, in the document
+  with ministerial exposure, marked at the version that added it.
+
+No code line changes. The gate is the reason this is a release rather than an
+edit: version pins, document pins, manifest and the freshness window all hold
+only through the ceremony.
+
 ## 0.48.0.0 - 2026-08-31
 
 **The unit of alarm is `(area_id, kind)`, and an area present in a fresh

@@ -197,36 +197,42 @@ nothing crosses between them that is not drawn here.
 
 ```mermaid
 flowchart LR
-    CH["Public Telegram channel<br/>web view, no account"]
+    API["api.ukrainealarm.com<br/>full-state snapshot, keyed<br/>PRIMARY since D-040"]
+    CH["Public Telegram channel<br/>silent since 2026-08-29<br/>read as the watchman"]
     KAT[("KATOTTG register<br/>vendored, CC BY 4.0")]
 
     subgraph PROD["air-alert-early-warning (this repository)"]
-        FETCH["fetch<br/>every 30 s"]
-        SNAP[("page snapshots<br/>kept when asked, as served")]
-        PARSE["parse<br/>state, area, kind"]
-        STORE[("event store<br/>SQLite, append only")]
-        REPORT["report<br/>fold to current state"]
+        CAPI["collect-api, about every 2 min<br/>diff against the previous snapshot<br/>an ended alert is synthesised, dated by observation"]
+        COLL["collect, every 30 s<br/>a returned publisher lands labelled"]
+        STORE[("event store<br/>SQLite, append only<br/>one row per area, kind, moment")]
+        REC["reconcile<br/>licensed only by a fresh snapshot"]
+        REPORT["report<br/>fold per area and kind<br/>any kind not clear keeps the area"]
     end
 
-    STATE[("state.json<br/>the contract")]
+    STATE[("state.json + feed.json<br/>the contract, pushed every 30 s")]
 
     subgraph SITE["mavo-site (separate repository)"]
         SERVE["render<br/>one file read, no imports"]
         PAGE["public page"]
     end
 
+    ADSB["mavo-adsb (non-public repository)<br/>ADS-B sampler near Rzeszow<br/>the only planned input that observes independently"]
+
     READER(["reader"])
 
-    CH --> FETCH
-    FETCH -.->|"--save-raw"| SNAP
-    FETCH --> PARSE
-    KAT --> PARSE
-    PARSE --> STORE
+    API --> CAPI
+    CH -.-> COLL
+    KAT --> CAPI
+    KAT -.-> COLL
+    CAPI --> STORE
+    COLL -.-> STORE
     STORE --> REPORT
+    REC -.-> STORE
     REPORT --> STATE
     STATE --> SERVE
     SERVE --> PAGE
     PAGE --> READER
+    ADSB -.->|"planned, not wired"| STORE
 ```
 
 Two properties the diagram is meant to make obvious. **The store is append
@@ -340,16 +346,23 @@ cookies, and makes no third-party requests. Visits are counted as two numbers a
 day, from an address hashed with a key that is regenerated daily and never
 written down. Your theme and map-layer choices stay in your own browser.
 
-**Why Telegram?** Because that is where the source publishes, and it publishes
-there publicly, without an account or a key. The project reads the public web
-view rather than any private interface, and stores what it read.
+**Why the official API, and why is the channel still read?** The channel was
+this project's source for as long as it published: public, no account, no key.
+On 2026-08-29 at 04:55 UTC it stopped, and stayed silent through a measured
+attack wave, so the official API became the primary source the next day
+(D-040). The channel collector keeps running beside it - not as a second
+source but as the watchman for the publisher's return, and should the channel
+come back, its events land labelled and distinguishable rather than
+remembered. The switch had a named cost: the API has one type for everything
+that flies, so the classification of the means of attack is not stated rather
+than guessed (D-042).
 
-**Why not just use an official API?** Two exist and are discussed in
-`docs/FEED-SPEC.md`. Both draw from the same upstream, so using one instead of
-the channel would swap a public source for a permissioned one without gaining
-an independent observation. One of them is used as a *measuring* adapter, to
-check this project against, and is structurally prevented from becoming a
-source.
+**Does two feeds mean two sources?** No, and the distinction is load-bearing.
+Both draw from the same upstream, so agreement between them measures the
+delivery path and nothing else. Nothing in this project is allowed to say "two
+sources confirm", and the one input that could genuinely observe independently
+- aircraft behaviour over the border region, sampled by the non-public
+`mavo-adsb` repository - is planned, not wired.
 
 **Who is behind it?** One person, in Warsaw, under HBCC. The code is open, the
 method is documented, and the defect log is public and unflattering on purpose.
@@ -563,8 +576,11 @@ mavo policy --weeks 208 --allocation demand
 No token, no network, no data of your own. What the second command prints is a
 property of the generator, not of the world.
 
-**On real data.** The channel is public, so this needs no token either. Nothing
-here is a simulation: these three commands hit the live source.
+**On real data.** Two live paths, and they need different things. The channel
+is public and needs no token; it has also been silent since 2026-08-29, so a
+poll of it measuring nothing is the expected reading, not a fault. The API is
+the primary source (D-040) and needs a key, granted on request by its
+operator; production runs `collect-api` about every two minutes.
 
 ```
 # one live poll, parsed and reported, nothing written
@@ -576,8 +592,15 @@ mavo collect --save-raw data/raw
 # five pages of channel history, verbatim, one request per second
 mavo backfill --out data/raw/corpus --pages 5 --delay 1.0
 
-# collect into a store, which is what an unattended host runs
+# collect the channel into a store; runs unattended as the watchman
 mavo collect --store /var/lib/mavo/events
+
+# the primary path: poll the API into the same store. The snapshot file is
+# what lets an ended alert be noticed across process restarts; without it no
+# alert this source raises will ever clear, and the command says so
+mavo collect-api --store /var/lib/mavo/events \
+    --key-file ~/.mavo/ukrainealarm.key \
+    --snapshot /var/lib/mavo/ukrainealarm.snapshot.json
 
 # write both contract files: the current picture and the day of history
 mavo report --store /var/lib/mavo/events \
@@ -763,7 +786,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 22 | 8,453 |
 | Tests | 59 | 11,833 |
 | Tools | 26 | 7,145 |
-| Documentation | 67 | 26,223 |
+| Documentation | 67 | 26,387 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -780,7 +803,7 @@ confidence interval attached.
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 116, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 44, counted from the log itself |
-| Releases | 42 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 43 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation
@@ -875,7 +898,10 @@ A number appears in this documentation only when the code produced it.
 ## Author
 
 **Jerzy Siwecki**, Warsaw. Senior cybersecurity engineer; this is a weekend
-project rather than anything's product, and no employer's.
+project rather than anything's product, and no employer's. A large share of
+the code and documentation is produced with agentic AI (Anthropic's Claude);
+every line of it is reviewed by the author and answers to the same gate as
+anything hand-written.
 
 The licence is open and the attribution requirement is real: Apache-2.0 keeps
 the copyright notice and the NOTICE file with any redistribution, including

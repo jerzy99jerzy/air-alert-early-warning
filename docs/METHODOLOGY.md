@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.39
+Document:  docs/METHODOLOGY.md, version 2.40
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4311,7 +4311,9 @@ command that fails is worse than a flag that does nothing; the host-state
 rows are claims about a machine this repository cannot read and are corrected
 at deploy time from host reads, per the runbook shipped with 0.48.0.0. A
 documented command is now exercised by a test, which is the class of guard the
-document itself lacked.
+document itself lacked. The second half landed on 2026-08-31: the host tables
+were rewritten from that morning's deploy reads at 0.48.0.1, and the unit table
+carries `mavo-collect-api`.
 
 ### F135, 0.48.0.0. The API path's coverage denominator quietly shrank
 
@@ -4345,7 +4347,8 @@ must not run until a missing `started_at` either marks the row or refuses it.
 `--interval 30` versus `--interval 120`. Both carry `--feed`, so the feed is
 safe either way; the delay a reader sees differs fourfold. systemd merges
 drop-ins in lexical order, so `interval.conf` should win, but that is a rule
-applied rather than a value read. Recorded open at 0.48.0.0; settles at deploy
-with `systemctl show mavo-report -p ExecStart` on the host, and whichever
-loses is a dead file that still looks like configuration and is removed.
+applied rather than a value read. Settled 2026-08-31 by exactly that read:
+`ExecStart` carries `--feed` and `--interval 30`, the lexical prediction held,
+and `feed.conf` - the dead file that still looked like configuration - was
+removed and the surviving value re-read after `daemon-reload`.
 
