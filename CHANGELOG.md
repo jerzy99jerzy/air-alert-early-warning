@@ -16,6 +16,60 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.51.0.0 - 2026-08-31
+
+**The two documents that leave this repository were the two nothing checked, and
+the check that read them named a pin it never compared.** F140. Four figures in
+`docs/BRIEF.md` and `docs/BRIEF-PL.md` were wrong for seventeen releases: 87
+defects against 118, 31 decisions against 45, 410 tests against 642, coverage
+96.61% against 95.42%. All four sat in the section whose entire content is the
+claim that figures here are guarded, under a header line asserting they had been
+measured against `STATUS.json` on the day of the release. The prose around them
+was rewritten at 0.50.0.0 for the source switch; nothing recomputed the figures
+and the header said something had. F139's mechanism, one release after F139.
+
+- **`tools/brief_check.py` rewritten.** It compared only whole numbers of four
+  digits or more, on the argument that the two languages spell numbers
+  differently and a locale table was not worth maintaining. It is four
+  substitutions. `defects_logged` was listed in `PINNED` from the day the module
+  was written and never once compared, because a `value < 1000` guard skipped
+  every value that field will ever hold: written, listed, documented, inert,
+  class 2. It now normalises each language's spelling, removes dates, clock
+  times and version strings, compares every remaining figure between the two
+  files by value **and by count**, and checks twenty-five pins with no floor
+  under any of them. Shown red before green against six deliberate mutations,
+  six caught.
+- **A fourth site, which had predicted itself.** `README.md` under *Measured
+  claims* carried 471 tests and 96.84% coverage beside a sentence saying
+  `docs_audit` does not check that list, so the next correction could be missed
+  the same way. It was, for sixteen releases, under a paragraph headed *a number
+  appears in this documentation only when the code produced it*.
+- **A fifth, found while repairing the fourth.** The defect index in
+  `docs/METHODOLOGY.md` stopped at F99 with no stated boundary while the log
+  held 139 entries. Thirty-eight entries were unreachable from the index that
+  exists to reach them, and nothing counted the two against each other. The
+  index was regenerated from the entry headings; all 119 anchors resolve.
+- **Prose corrections that no check would have caught, and this is said rather
+  than left implied.** Both briefs described the map as running at a temporary
+  address three weeks after `mavo.org.pl` went public and was read against the
+  channel during the raid of 2026-08-18. Both stated that not one conversation
+  had happened with anybody who would receive a warning, which was untrue; the
+  claim is now layered into what is actually absent, a notification channel and
+  a written record, and what is not. `docs/FOUNDATIONS.md` carried the
+  superseded 0-of-20 measurement as the only product measurement on real data,
+  and described the Telegram channel as the fallback forty releases after the
+  API became primary and eleven days after the channel went silent for
+  thirty-four hours.
+- **False precision removed at the reader, kept at the worksheet.** The briefs
+  quoted 5.73 and 1.56 western alert episodes a week, two decimals on counts of
+  81 and 22. They now read 5.7 and 1.6, with the counts and the window beside
+  them and the full quotients left in `docs/CHANNEL.md`, where somebody is
+  checking the arithmetic.
+- Two precision ceilings raised with the reason beside them, both for coverage
+  pins quoted as evidence inside F140. `README.md`'s has now moved five times in
+  five releases without one new claim of false precision, which is T77's class
+  and is filed rather than absorbed again.
+
 ## 0.50.0.0 - 2026-08-31
 
 **The gate stops fighting itself, and the outward-facing documents catch up

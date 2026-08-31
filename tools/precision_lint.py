@@ -142,7 +142,17 @@ CEILINGS: dict[str, int] = {
     # the pin. A ceiling that follows a checked figure's formatting is
     # measuring noise; noted in the 0.43.0.0 review as a candidate for
     # excluding pin-quoted figures from this count rather than chasing them.
-    "README.md": 20,
+    # 20 -> 21 at 0.51.0.0. The *Measured claims* list now carries the current
+    # coverage pin, ``95.42``, beside ``96.84``, the value it had stood at for
+    # sixteen releases (F140). Both are needed: the entry is about the gap
+    # between them. This ceiling has now moved 23 -> 22 -> 23 -> 20 -> 21 in
+    # five releases without one new claim of false precision, because it
+    # tracks how many decimals the coverage pin happens to carry and how many
+    # places quote it. The 0.43.0.0 review named the durable repair -
+    # exclude pin-quoted figures from this count rather than chase them - and
+    # this is the third recurrence since. T77's class, filed rather than
+    # absorbed again.
+    "README.md": 21,
     # Raised at 0.39.1.0, 28 to 35, and the shape of the raise is the argument
     # for T77. **One of the seven is a measurement:** T9's closure quotes ``96.43``,
     # which is
@@ -193,7 +203,15 @@ CEILINGS: dict[str, int] = {
     # a figure with two decimals. **This is the second ceiling this release
     # raised for a reason unrelated to precision** and the class is logged as
     # T77 rather than absorbed here.
-    "docs/METHODOLOGY.md": 78,
+    # Raised at 0.51.0.0, 78 to 81. All three are coverage pins quoted as
+    # evidence inside F140: ``96.61`` and ``96.84``, the two stale values that
+    # stood in the briefs and in the README's *Measured claims* list, and
+    # ``95.42``, the value both should have carried. Same exemption as the
+    # F109 entry three ceilings above: a figure that was wrong is the evidence,
+    # and rounding it in the entry that records the error would soften the
+    # record. An entry about four stale figures that cannot print them is not
+    # an entry.
+    "docs/METHODOLOGY.md": 81,
     "docs/MVP.md": 2,
     "docs/OBSERVABILITY.md": 1,
 }

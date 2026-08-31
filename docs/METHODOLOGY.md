@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.42
+Document:  docs/METHODOLOGY.md, version 2.43
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -64,7 +64,7 @@ so it travels with the output.
 
 ## The recurring defect classes
 
-Forty-odd entries, four shapes. A contributor who internalises these will predict
+A hundred and eighteen entries, four shapes, and the count in this sentence read "forty-odd" for seventy of them. A contributor who internalises these will predict
 most of what this repository is fussy about, and will recognise the next one
 faster than the last one was recognised.
 
@@ -181,6 +181,45 @@ repository has come to the mistake it was built after.
 | [F97](#f97-02420-replay-dropped-a-row-when-a-sort-key-tie-straddled-a-chunk-boundary) | 0.24.2.0 | Replay dropped a row when a sort-key tie straddled a chunk boundary |
 | [F98](#f98-02810-the-ten-second-timeout-was-a-ten-second-timeout-per-socket-operation) | 0.28.1.0 | The ten-second timeout was a ten-second timeout per socket operation |
 | [F99](#f99-03231-a-tag-was-created-over-a-gate-that-had-already-refused) | 0.32.3.1 | A tag was created over a gate that had already refused |
+| [F100](#f100-03250-a-correction-about-another-repository-in-the-present-tense-stale-for-eleven-of-its-releases) | 0.32.5.0 | A correction about another repository, in the present tense, stale for eleven of its releases |
+| [F101](#f101-03260-a-control-that-produced-the-behaviour-it-forbade) | 0.32.6.0 | A control that produced the behaviour it forbade |
+| [F102](#f102-03270-three-claims-about-the-production-host-all-stale-all-pessimistic) | 0.32.7.0 | Three claims about the production host, all stale, all pessimistic |
+| [F103](#f103-03270-observability-configured-on-the-host-documented-tested-to-98-and-never-once-called) | 0.32.7.0 | Observability configured on the host, documented, tested to 98%, and never once called |
+| [F104](#f104-03270-an-architectural-conclusion-about-this-package-drawn-from-a-unit-file-instead-of-from-the-code) | 0.32.7.0 | An architectural conclusion about this package, drawn from a unit file instead of from the code |
+| [F106](#f106-03280-the-same-inference-the-third-time-inside-the-release-that-documents-it) | 0.32.8.0 | The same inference, the third time, inside the release that documents it |
+| [F107](#f107-03280-a-measured-quiet-is-rendered-as-a-degraded-instrument) | 0.32.8.0 | A measured quiet is rendered as a degraded instrument |
+| [F108](#f108-03301-the-manifest-gate-could-not-see-the-files-it-was-missing) | 0.33.0.1 | The manifest gate could not see the files it was missing |
+| [F109](#f109-03600-a-pinned-failure-rate-that-was-two-orders-of-magnitude-wrong) | 0.36.0.0 | A pinned failure rate that was two orders of magnitude wrong |
+| [F110](#f110-03601-a-resolver-that-returned-datagram-addresses-and-a-cap-that-reached-them) | 0.36.0.1 | A resolver that returned datagram addresses, and a cap that reached them |
+| [F111](#f111-03800-five-counters-in-one-evening-none-of-which-measured-what-it-was-read-as) | 0.38.0.0 | Five counters in one evening, none of which measured what it was read as |
+| [F112](#f112-03801-a-date-quoted-correctly-in-conversation-and-transposed-by-two-years-in-the-tree) | 0.38.0.1 | A date quoted correctly in conversation and transposed by two years in the tree |
+| [F113](#f113-03900-the-index-that-cannot-drift-read-an-entrys-prose-as-its-status) | 0.39.0.0 | The index that cannot drift read an entry's prose as its status |
+| [F114](#f114-03900-the-alert-count-collapses-under-overlap-hardest-where-attack-is-heaviest) | 0.39.0.0 | The alert count collapses under overlap, hardest where attack is heaviest |
+| [F115](#f115-03900-a-rationale-that-defended-a-different-quantity-than-the-one-rendered) | 0.39.0.0 | A rationale that defended a different quantity than the one rendered |
+| [F116](#f116-03901-delivery-ran-four-times-slower-than-composition-and-neither-end-recorded-it) | 0.39.0.1 | Delivery ran four times slower than composition, and neither end recorded it |
+| [F117](#f117-03901-a-freshness-gate-on-a-date-over-rows-that-nothing-checks) | 0.39.0.1 | A freshness gate on a date, over rows that nothing checks |
+| [F118](#f118-03910-two-backlog-entries-outlived-the-facts-they-asserted-and-the-index-that-cannot-drift-could-not-see-it) | 0.39.1.0 | Two backlog entries outlived the facts they asserted, and the index that cannot drift could not see it |
+| [F119](#f119-03910-a-context-manager-that-commits-and-does-not-close-read-as-if-it-closed) | 0.39.1.0 | A context manager that commits and does not close, read as if it closed |
+| [F120](#f120-03910-one-timestamp-ahead-of-our-clock-disables-the-staleness-machine) | 0.39.1.0 | One timestamp ahead of our clock disables the staleness machine |
+| [F121](#f121-03910-the-corpus-is-read-with-a-different-text-normalisation-than-the-channel) | 0.39.1.0 | The corpus is read with a different text normalisation than the channel |
+| [F122](#f122-03910-the-manuals-onboarding-transcript-from-a-parser-deleted-twenty-eight-releases-earlier) | 0.39.1.0 | The manual's onboarding transcript, from a parser deleted twenty-eight releases earlier |
+| [F123](#f123-03910-the-skipped-window-measurement-cannot-fire-on-the-deployed-path) | 0.39.1.0 | The skipped-window measurement cannot fire on the deployed path |
+| [F124](#f124-04100-the-schema-guard-prescribes-a-repair-that-deletes-the-evidence) | 0.41.0.0 | The schema guard prescribes a repair that deletes the evidence |
+| [F125](#f125-04100-a-backlog-entry-attributed-to-a-lint-a-claim-the-lint-does-not-make) | 0.41.0.0 | A backlog entry attributed to a lint a claim the lint does not make |
+| [F126](#f126-04200-one-note-asserted-one-cause-for-three-different-states) | 0.42.0.0 | One note asserted one cause for three different states |
+| [F127](#f127-04300-the-manual-carried-two-claims-their-own-text-had-dated) | 0.43.0.0 | The manual carried two claims their own text had dated |
+| [F128](#f128-04500-four-areas-the-table-already-held-were-unreachable-from-prose) | 0.45.0.0 | Four areas the table already held were unreachable from prose |
+| [F129](#f129-04500-every-alert-from-the-new-source-claimed-to-be-a-missile) | 0.45.0.0 | Every alert from the new source claimed to be a missile |
+| [F130](#f130-04600-the-unit-word-in-prose-resolution-filtered-nothing-unless-two-rows-shared-a-name) | 0.46.0.0 | The unit word in prose resolution filtered nothing unless two rows shared a name |
+| [F131](#f131-04600-a-name-the-register-declines-was-indistinguishable-from-a-name-it-has-never-held) | 0.46.0.0 | A name the register declines was indistinguishable from a name it has never held |
+| [F133](#f133-04800-three-layers-held-three-answers-to-what-a-unit-of-alarm-is) | 0.48.0.0 | Three layers held three answers to what a unit of alarm is |
+| [F134](#f134-04800-the-deployment-document-was-wrong-about-the-host-in-three-ways) | 0.48.0.0 | The deployment document was wrong about the host in three ways |
+| [F135](#f135-04800-the-api-paths-coverage-denominator-quietly-shrank) | 0.48.0.0 | The API path's coverage denominator quietly shrank |
+| [F136](#f136-04800-a-substituted-stamp-is-stored-with-no-mark-and-it-zeroes-e-0) | 0.48.0.0 | A substituted stamp is stored with no mark, and it zeroes E-0 |
+| [F137](#f137-04800-two-drop-ins-both-own-execstart-and-only-one-can-win) | 0.48.0.0 | Two drop-ins both own `ExecStart` and only one can win |
+| [F138](#f138-04900-the-episode-counters-closed-an-area-on-the-clear-of-one-kind) | 0.49.0.0 | The episode counters closed an area on the clear of one kind |
+| [F139](#f139-05000-a-headline-figure-was-incremented-rather-than-counted-under-sixteen-checks) | 0.50.0.0 | A headline figure was incremented rather than counted, under sixteen checks |
+| [F140](#f140-05100-the-briefs-were-outside-the-guarded-set-and-the-check-that-named-them-skipped-its-own-pin) | 0.51.0.0 | The briefs were outside the guarded set, and the check that named them skipped its own pin |
 
 ## Defect log
 
@@ -4412,3 +4451,61 @@ the fixed-point loop now runs inside the generator, once, where it belongs.
 The lesson generalises past this repository. A rule with a gate is enforced; a
 rule with a ritual is remembered; and a number maintained by ritual will look
 maintained right up until somebody counts it.
+
+
+### F140, 0.51.0.0. The briefs were outside the guarded set, and the check that named them skipped its own pin
+
+`docs/BRIEF.md` and `docs/BRIEF-PL.md` are the two documents an outside reader
+reaches, and four figures in them were wrong: 87 defects against 118, 31
+decisions against 45, 410 tests against 642, and coverage of 96.61% against
+95.42%. All four came from 0.32.9.0 and stood for seventeen releases. They sat
+in the section whose entire content is the claim that the figures in this
+repository are guarded, under a header line reading `Measured: 2026-08-31,
+against STATUS.json at 0.50.0.0`, bumped at 0.50.0.0 when the prose around
+them was rewritten for the source switch. **Nothing recomputed them and the
+header said something had.** F139's mechanism exactly, one release after F139
+was written: a figure maintained by ceremony looks maintained.
+
+**Three guards were in the tree and none of them covered this.**
+`docs_audit.py` never opens either brief; `figures.py` regenerates the badges
+and the numbers table and stops there; `brief_check.py` reads both, and
+compared only whole numbers of four digits or more. Every one of the four
+stale figures is under a thousand.
+
+**The check named the pin it was not checking.** `brief_check.PINNED` listed
+`defects_logged` from the day the module was written, with a `value < 1000`
+guard immediately below it that skipped every value that field will ever hold.
+Written, listed, documented in the module docstring, and inert: class 2, the
+shape of F38 through F45. The guard was there for a real reason - Polish and
+English spell numbers differently and the module refused a locale table - but
+the reason applied to comparing the briefs *to each other* and was applied to
+comparing them *to the pins*, where it does not hold at all.
+
+**A fourth site, and it had predicted itself.** `README.md`, under
+*Measured claims*, carried 471 tests and 96.84% coverage beside a sentence
+stating that `docs_audit` does not check that list, so a correction there could
+be missed the same way as the last one. It was, for sixteen releases. A
+prediction written down and left unguarded is not a mitigation; that is F72 and
+F139 in a third costume.
+
+**A fifth, found while repairing the fourth.** The defect index in this
+document stopped at F99 with no stated boundary while the log held 139 entries,
+so thirty-eight entries were unreachable from the index that exists to reach
+them. Nothing counted the two against each other.
+
+**Repair.** `brief_check.py` rewritten: it normalises each language's spelling
+of a number, removes dates, clock times and version strings, compares every
+remaining figure between the two files by value *and by count*, and compares
+twenty-five pinned figures against `STATUS.json` with no floor under any of
+them. Shown red before green against six deliberate mutations, six caught. The
+index was regenerated from the entry headings and every anchor resolved. The
+README list and the four figures were corrected against a gate run rather than
+against memory.
+
+**What is still not guarded, stated rather than left to be discovered.** The
+prose of both briefs. Every factual error found in this pass that was not a
+number - a live page described as running at a temporary address three weeks
+after `mavo.org.pl` went public, a claim that no conversation had happened with
+anybody who would receive a warning, and a superseded 0-of-20 measurement
+standing in `FOUNDATIONS` as current - was found by a person reading, and no
+check proposed here would have caught any of them.

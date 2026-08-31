@@ -4,7 +4,7 @@ What this project rests on. Every load-bearing claim, its provenance, and what
 would falsify it.
 
 ```
-Document:  docs/FOUNDATIONS.md, version 1.1
+Document:  docs/FOUNDATIONS.md, version 1.2
 Audience:  a contributor deciding whether a change is consistent with why this
            exists, and a reader deciding whether to believe any of it
 Companion: METHODOLOGY (what may be claimed and the defect log), MECHANISMS
@@ -186,7 +186,10 @@ than messages. The second is the more likely refinement.
 
 ### A4. The positive class is too small to fit a model to
 
-**[measured]** Roughly a dozen crossings across four years.
+**[measured, external]** Roughly a dozen crossings across four years. The
+label carried `[measured]` alone until 1.2, which read as this project's own
+count; nothing here observes airspace and the figure is somebody else's, in
+the same class as the 57% in section 3.
 
 Consequence: rules are explicit predicates with thresholds in configuration, not
 a learned model. This is registered as a README limitation and enforced by a
@@ -251,7 +254,8 @@ so far was produced against a synthetic history.**
 | Every candidate rule fails the gate | `mavo gate` on the fixture generator | The generator, and the gate's arithmetic. Not the world |
 | Policy at 1.96 alarms/week, reported and no longer gated (D-014) | `mavo policy` on the fixture generator | The generator |
 | Recall 7 of 7 missile, 0 of 8 drone | Fixture scenarios | The generator's construction, which is why the drone finding is labelled speculation rather than measurement |
-| Classifier hit rate 0 of 20 | **Real channel content**, 2026-08-08 | The channel, and the pattern table. This is the only product measurement on real data so far |
+| Area resolution 20 of 20; 15 of those classify as alerts | **Real channel content** | The channel and the area table. Pinned as an assertion |
+| Classifier hit rate 0 of 20, **superseded at 0.22.0.0** | **Real channel content**, 2026-08-08 | The oblast-stem table the product does not run. The figure was true of a code path `probe` built without an area table, and two tests written to announce its repair called the same untabled path (F90). Kept in this table because deleting a superseded measurement is the edit this repository does not make |
 | Page size 20, backwards paging, channel volume | **Real channel**, 2026-08-09 | The channel on that day |
 
 The fixture generator is not a simulation of Ukraine. It is a device for
@@ -301,8 +305,13 @@ Stated so that continuing is a decision rather than a default.
   once real backtesting is possible, the honest output is a written negative
   result and an archived repository, not a lowered threshold.
 - **The feeds become unavailable.** Access to both APIs is revocable without
-  cause (MT10, D-010). The public channel is the fallback and is equally
-  revocable.
+  cause (MT10, D-010). The public channel is **no longer the fallback**: it
+  stopped publishing for about thirty-four hours from 2026-08-29 04:55 UTC,
+  through a night of attacks other reporting described as continuous, and the
+  primary source moved to `api.ukrainealarm.com` the next day. The channel is
+  now read as a watchman rather than as a reserve, and it is equally revocable.
+  This inverts what this bullet said for forty releases, and the inversion was
+  produced by the source failing rather than by anybody's judgement about it.
 - **No rule beats the calendar with confidence.** Sprint 3 already
   produced a configuration that passes at a 2% margin, which is not comfortable.
   If real data makes that worse, the shippable product may be the observation

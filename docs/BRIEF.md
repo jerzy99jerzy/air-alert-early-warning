@@ -6,10 +6,13 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.4
-Measured:  2026-08-31, against STATUS.json at 0.50.0.0. The corpus figures
-           below were measured on 2026-08-17 and are unchanged; what moved
-           is the source, and that is said where it happened
+Document:  docs/BRIEF.md, version 2.5
+Measured:  2026-08-31, against STATUS.json at 0.50.0.0, and this time the
+           figures were recomputed rather than carried over. Version 2.4 bore
+           the same line while four figures inside it came from 0.32.9.0; what
+           that means is set out under "What you do not have to take on trust".
+           The corpus figures were measured on 2026-08-17 and are unchanged;
+           what moved is the source, and that is said where it happened
 Audience:  anyone who wants to understand this project without reading the
            code: a journalist, an analyst from another field, a prospective
            recipient, a reviewer deciding whether the author is careful
@@ -20,6 +23,8 @@ Note:      no term is used before it is explained. Every number carries the
            same provenance label it carries everywhere else in this
            repository, and every measured one is pinned in STATUS.json
 ```
+
+---
 
 ## The whole thing in one paragraph
 
@@ -139,9 +144,12 @@ There is also a figure of this project's own, measured on this corpus rather
 than borrowed. In the design window an alert covered the whole of western
 Ukraine on **22 nights**, and the number of reported violations of Polish
 airspace on those nights is **zero**. A rule waking people on every such night
-would have scored 22 wake-ups and 0 hits in that window. For scale: western
-districts see 5.73 alert episodes a week on average, and episodes covering the
-whole west 1.56 a week.
+would have scored 22 wake-ups and 0 hits in that window. For scale: those 99
+nights held 81 alert episodes in western districts, 22 of which covered the
+whole west, which is **5.7 and 1.6 episodes a week**. One decimal place,
+because with twenty-two events the second one would describe noise rather than
+a rate; the full quotients are in `docs/CHANNEL.md`, where they are read by
+somebody checking the arithmetic.
 
 You could ask whether such a system is not, even so, slightly better than
 nothing. Probably yes, slightly. **But with three events a year that cannot be
@@ -185,15 +193,16 @@ is happening", rather than showing an empty map. An empty map and a broken
 system look identical and mean the opposite, and the entire design is arranged
 around that distinction.
 
-## How you would know the author is not fooling himself
+## What you do not have to take on trust
 
-With a private project this question matters more than the technology, so here
-are specifics instead of assurances.
+With a private project this weighs more than the technology, so specifics
+instead of assurances. Every one of them can be checked without asking the
+author for an opinion.
 
-**The defect log holds 87 entries.** Each states what broke, why nobody
+**The defect log holds 119 entries.** Each states what broke, why nobody
 noticed, and what class of error it was. Entries against the project's own
 interest are in there too, including the 0 of 20 above, and one where the
-documentation claimed something was checked and it was not. Separately, **31
+documentation claimed something was checked and it was not. Separately, **45
 design decisions** are recorded, each with the condition that would reopen it.
 
 **Part of the data was sealed before anyone read any of it.** 20.01% of the
@@ -208,19 +217,67 @@ reported, inferred, assumed. The 57% above is somebody else's figure and is
 labelled as such, including a note that the source may have meant a different
 area than this project does.
 
-**The gate is single and mechanical.** One command runs 410 tests, of which 13
+**The gate is single and mechanical.** One command runs 642 tests, of which 13
 are scripted attacks against the project's own controls; code coverage is
-96.61% against a floor of 95% that is never lowered. The attacks are themselves
+95.42% against a floor of 95% that is never lowered. The attacks are themselves
 checked: 12 of 13 were verified by deliberately breaking the control they guard
 and requiring the attack to catch it. The one without such verification is
 printed as unverified on every run rather than passed over.
+
+**And this is the place where this document tripped over itself.** Four of the
+figures above were untrue in version 2.4 of this file: 87 defects against
+the 118 logged at the time, 31 decisions instead of 45, 410 tests instead of 642, and coverage of
+96.61% instead of 95.42%. They came from a release seventeen numbers back. The
+prose around them was rewritten when the data source changed, nobody recomputed
+the figures, and the document header claimed somebody had. No check saw it,
+because the gate compared the two briefs against each other and against two
+pins, one of which was disabled by a condition cutting off values below a
+thousand. A defect against the project's own interest, in the section whose
+entire content is the claim that the figures are guarded. Logged as F140 and
+closed by a check that reads this file figure by figure, compares the two
+language versions by value and by count, and **was shown failing before it was
+allowed to pass**: six deliberately introduced errors, six caught.
 
 ## Where it actually is, without flattery
 
 Working: collection, district recognition from hashtags, distance to the
 border, the report, the file that feeds a web page, the map, and the web page
-itself, publicly running at a temporary address. The permanent address does not
-exist yet, and the temporary one is not fit to circulate.
+itself, **publicly reachable at mavo.org.pl since 2026-08-12**. The address is
+printed here because a document that says "publicly running" without saying
+where is asking to be trusted on the one claim a reader could check in a
+second.
+
+On 18 August, during a real raid, an alert covered eight western districts
+across four oblasts and the author read that page against the channel while it
+was happening. That is the only time this instrument was watched doing the job
+it exists for, and **no record was written from it**. The contract files from
+that night were preserved, but reading them back with a script compares the
+instrument against its own reference tables, so the snapshot alone proves
+nothing; the verdicts stayed with the person who made them. A worksheet that
+would turn such a night into rows a reader can audit exists, and for 18 August
+it holds the questions with none of the answers filled in.
+
+One thing about that page is counted, though, and it is worth saying because
+the project had nothing of the kind before: **somebody opens it every day.**
+Nobody promotes it, nobody receives notifications from it, and for as long as
+traffic has been measured the number of visitors has held at a similar level
+from one day to the next. That is an answer to the question of whether anybody
+reaches for such an instrument at all, and it is the first affirmative answer
+this project has. With the caveat that belongs to it rather than to a footnote:
+a counter cannot tell a reader from an indexing robot, so it says that
+something fetches this page, not that somebody reads it.
+
+It is tempting to add a second sentence to that: that on the night of an attack
+people reach for it more often. **That cannot be defended from the data
+collected and it is not claimed here.** The rise on the night of 18 August does
+not come from more people arriving, it comes from somebody refreshing, and the
+person who refreshed that page all that night was the author. The measurement
+begins on the night of the raid itself, so there is no quiet baseline to set it
+against, and it falls in the first days after the public launch, when any new
+address carries traffic from novelty alone. In the same period there was a
+completely quiet day on which visits went deeper than on that night, and a
+night of raids during which the source was silent and the traffic showed
+nothing at all. A hypothesis to test, not a result to announce.
 
 The distance column was checked three ways, and only one of them is an
 independent source: a different geometry and method puts three spot-check
@@ -237,13 +294,29 @@ not a good result, and it is not described as one. This is a ceiling of the
 channel rather than of the parser: every proposed vocabulary extension was
 tested against the full corpus and returned no new matches.
 
-Not started: the things that decide whether this ever reaches people. There is
-no legal position on distributing warnings to strangers, and not one
-conversation has happened with anybody who would receive them.
+Not started: the things that turn a public page into a warning service. There
+is no legal position on distributing warnings to people the operator does not
+know, and there is no notification channel of any kind: the page is opened,
+nothing arrives by itself.
 
-**Nobody receives a notification today and nobody will until those two things
-happen.** A public page is not a public warning service, and the documentation
-says so in those words.
+A verification with somebody who would be a recipient has been carried out. It
+is written here in the form in which it can be defended rather than the form in
+which it looks better: **the conversation happened, there is no record of it,
+so until one is written it is testimony rather than measurement.** The check of
+18 August has the same shape here and is labelled the same way. Closing this
+item takes two conversations and one number: at what alarm rate a recipient
+would stop reading them. Until that number is written down, the alarm threshold
+stays calibrated against a tolerance nobody has measured, and it is described
+that way in this repository.
+
+Correspondence with institutions is under way and deliberately does not live in
+this repository: it describes people rather than software, and the gate blocks
+such files from entering the tree. This document does not report its state and
+its silence should not be read as information in either direction.
+
+**Nobody receives a notification today and nobody will until the legal position
+and T11 are closed.** A public page is not a public warning service, and the
+documentation says so in those words.
 
 No date is promised, deliberately. Violations happen a few times a year, so no
 four-week trial can show whether the system catches them. That is a property of
@@ -265,8 +338,9 @@ If it turns out that reporting in Polish helps somebody direct fire, work
 stops. That looks unlikely, since the data is public and available faster in
 Ukrainian, but likelihood is not the argument here.
 
-If the people this is being built for say they do not want it, it ends. They
-have not been asked yet, and that is currently the largest hole in the project.
+If the people this is being built for say they do not want it, it ends. The
+first such conversation has happened and was not written down, so this
+condition stays unchecked rather than met.
 
 ## Questions worth asking
 
@@ -286,10 +360,15 @@ cosmetic.
 *What has the author not measured yet?* The list is in the repository, sorted
 into three priority tiers, and it is longer than the list of what has been.
 
-*Which figures in this document are enforced mechanically?* Every measured one
-comes from `STATUS.json`, and a disagreement between it and the tree fails the
-gate. Figures labelled as somebody else's, as an illustration, or as coming
-from a release review are not enforced, and they say so.
+*Which figures in this document are enforced mechanically?* Until version 2.5
+fewer than this document claimed, and that is the place to start. The gate
+compared the two briefs against each other only for figures of four digits and
+more; everything below a thousand passed unchecked, and that is how four
+figures in the section about checking came to drift. From 2.5 every measured
+figure in this file is compared against `STATUS.json` by value, and the two
+language versions against each other by value and by count; a disagreement
+fails the gate. Figures labelled as somebody else's, as an illustration, or as
+coming from a release review are not enforced at all, and they say so.
 
 ---
 

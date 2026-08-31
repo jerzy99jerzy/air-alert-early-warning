@@ -7,10 +7,13 @@ powiadomienia.**
 Dokument dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.4
-Measured:  2026-08-31, against STATUS.json at 0.50.0.0. Liczby korpusowe
-           poniżej zmierzono 2026-08-17 i nie zmieniły się; zmieniło się
-           źródło, i jest to powiedziane w miejscu, w którym się stało
+Document:  docs/BRIEF-PL.md, version 2.5
+Measured:  2026-08-31, against STATUS.json at 0.50.0.0, i tym razem liczby
+           faktycznie przeliczono zamiast przepisać. Wersja 2.4 nosiła tę samą
+           linijkę, a cztery liczby w środku pochodziły z 0.32.9.0; co to
+           znaczy, jest opisane w sekcji „Czego nie trzeba brać na słowo".
+           Liczby korpusowe zmierzono 2026-08-17 i nie zmieniły się; zmieniło
+           się źródło, i jest to powiedziane w miejscu, w którym się stało
 Audience:  a Polish reader without a technical background: a journalist, an
            analyst, a prospective recipient, anyone deciding whether the
            author is careful
@@ -40,7 +43,7 @@ To wszystko. Nie przewiduje, czy coś przeleci nad Polskę.
 
 W nocy z 29 na 30 lipca 2026 roku, podczas zmasowanego rosyjskiego ataku
 rakietowego na Ukrainę, rosyjski pocisk manewrujący Ch-101 naruszył polską
-przestrzeń powietrzną. Wykryto go o 3:40, zniknął z radarów o 3:46, sześć minut
+przestrzeń powietrzną. Wykryto go o 03:40, zniknął z radarów o 03:46, sześć minut
 później, i spadł na pole pod Tarnawą-Kolonią w województwie lubelskim, około stu
 kilometrów w głąb kraju `[dane zewnętrzne: Dowództwo Operacyjne RSZ za prasą]`.
 
@@ -138,8 +141,11 @@ Jest też liczba własna, zmierzona na tym korpusie, a nie pożyczona. W oknie
 projektowym alarm objął całą zachodnią Ukrainę **22 razy**, a liczba
 raportowanych naruszeń polskiej przestrzeni w te noce wynosi **zero**. Reguła
 budząca ludzi w każdą taką noc miałaby w tym oknie 22 pobudki i 0 trafień. Dla
-skali: epizodów alarmowych w zachodnich rejonach jest średnio 5,73 tygodniowo, a
-tych obejmujących cały zachód 1,56 tygodniowo.
+skali: w tych 99 nocach było 81 epizodów alarmowych w zachodnich rejonach, z
+czego 22 objęły cały zachód, czyli **5,7 i 1,6 epizodu tygodniowo**. Jedno
+miejsce po przecinku, bo przy dwudziestu dwóch zdarzeniach drugie opisywałoby
+szum, a nie tempo; pełne ilorazy stoją w `docs/CHANNEL.md`, gdzie czyta je
+ktoś, kto sprawdza rachunek.
 
 Można zapytać: czy taki system nie jest jednak odrobinę lepszy niż nic?
 Prawdopodobnie tak, odrobinę. **Ale przy trzech zdarzeniach rocznie nie da się
@@ -183,15 +189,15 @@ napisze „nie wiem, co się dzieje", a nie pokaże pustej mapy. Pusta mapa i
 zepsuty system wyglądają identycznie, a znaczą coś przeciwnego, i cały układ
 jest zbudowany wokół tego rozróżnienia.
 
-## Skąd wiadomo, że autor nie oszukuje sam siebie
+## Czego nie trzeba brać na słowo
 
-To pytanie, które przy prywatnym projekcie jest ważniejsze od technologii,
-więc kilka konkretów zamiast zapewnień.
+Przy prywatnym projekcie to waży więcej niż technologia, więc konkrety zamiast
+zapewnień. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Log defektów ma 87 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
+**Log defektów ma 119 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
 tego nie zauważył i jaka to klasa błędu. Wpisy przeciw interesowi projektu też
 tam są, łącznie z tym o wyniku 0 na 20 i z tym, w którym dokumentacja
-twierdziła, że coś jest sprawdzane, a nie było. Osobno zapisano **31 decyzji
+twierdziła, że coś jest sprawdzane, a nie było. Osobno zapisano **45 decyzji
 projektowych**, każdą z warunkiem, który by ją otworzył z powrotem.
 
 **Część danych została zapieczętowana, zanim ktokolwiek je przeczytał.**
@@ -205,19 +211,65 @@ wywnioskowane, założone. Te 57% z akapitu wyżej jest liczbą cudzą i tak jes
 oznaczone, łącznie z uwagą, że źródło mogło mieć na myśli inny obszar niż ten
 projekt.
 
-**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 410 testów,
+**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 642 testy,
 w tym 13 skryptowanych ataków na własne zabezpieczenia; pokrycie kodu wynosi
-96,61% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
+95,42% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
 sprawdzane: 12 z 13 zweryfikowano tak, że celowo psuto chronioną kontrolę i
 wymagano, żeby atak to wykrył. Ten jeden bez takiej weryfikacji jest wypisywany
 jako niezweryfikowany przy każdym uruchomieniu, zamiast być przemilczany.
+
+**I tu jest miejsce, w którym ten dokument sam się potknął.** Cztery liczby
+wyżej, w wersji 2.4 tego pliku, były nieprawdziwe: 87 defektów zamiast 118 zapisanych wtedy, 31
+decyzji zamiast 45, 410 testów zamiast 642 i pokrycie 96,61% zamiast 95,42%.
+Pochodziły z wydania oddalonego o siedemnaście numerów. Prozę wokół nich
+przepisano, kiedy zmieniło się źródło danych, liczb nie przeliczył nikt, a
+nagłówek dokumentu twierdził, że przeliczył. Żadna kontrola tego nie widziała,
+bo bramka porównywała oba briefy ze sobą i z dwoma pinami, z których
+jeden był wyłączony warunkiem odcinającym wartości poniżej tysiąca. Defekt
+przeciw interesowi projektu, w sekcji, której cała treść to twierdzenie, że
+liczby są pilnowane. Zapisany w logu jako F140 i zamknięty kontrolą, która
+czyta ten plik liczba po liczbie, porównuje obie wersje językowe co do wartości
+i krotności, i **została pokazana na czerwono, zanim przepuszczono ją na
+zielono**: sześć celowo wprowadzonych błędów, sześć wykrytych.
 
 ## Gdzie to jest teraz, bez upiększeń
 
 Działa: zbieranie danych, rozpoznawanie obszaru z hasztagów, obliczanie
 odległości do granicy, raport, plik zasilający stronę internetową i mapę, oraz
-sama strona z mapą, uruchomiona publicznie pod adresem tymczasowym. Adres
-docelowy jeszcze nie istnieje, a tymczasowy nie nadaje się do rozsyłania.
+sama strona z mapą, **publicznie dostępna pod adresem mavo.org.pl od 12
+sierpnia 2026**. Adres jest tu wydrukowany, bo dokument mówiący „działa
+publicznie" bez podania gdzie prosi, żeby uwierzyć mu na słowo w jedynym
+miejscu, które czytelnik sprawdza w sekundę.
+
+18 sierpnia, w trakcie realnego nalotu, alarm objął osiem zachodnich rejonów w
+czterech obwodach i autor czytał wtedy tę stronę przeciwko kanałowi. To
+jedyny raz, kiedy ten przyrząd był oglądany przy pracy, do której powstał, i
+**nie został z tego spisany żaden protokół**. Pliki kontraktowe z tamtej nocy
+zachowano, ale odczytanie ich skryptem porównuje przyrząd z jego własnymi
+tablicami, więc samo w sobie niczego nie dowodzi; werdykty zostały w głowie
+osoby, która je wydawała. Arkusz, który zamieniłby taką noc na wiersze do
+sprawdzenia, istnieje i dla 18 sierpnia ma wpisane pytania bez odpowiedzi.
+
+Jedna rzecz o tej stronie jest jednak policzona i warto ją powiedzieć, bo w
+tym projekcie nie było jej wcześniej wcale: **ktoś ją otwiera każdego dnia.**
+Nikt jej nie promuje, nikt nie dostaje z niej powiadomień, a odkąd ruch jest
+mierzony, liczba wchodzących utrzymuje się z dnia na dzień na podobnym
+poziomie. To jest odpowiedź na pytanie, czy po taki przyrząd ktokolwiek sięga,
+i pierwsza odpowiedź twierdząca, jaką ten projekt ma. Z zastrzeżeniem, które
+należy do niej, a nie do przypisu: licznik nie odróżnia czytelnika od robota
+indeksującego, więc mówi, że coś tę stronę pobiera, a nie że ktoś ją czyta.
+
+Kuszące jest dopisanie do tego zdania drugiego: że w noc ataku ludzie sięgają
+po nią częściej. **Tego z zebranych danych obronić się nie da i nie jest tu
+twierdzone.** Wzrost z nocy 18 sierpnia nie bierze się z tego, że przyszło
+więcej osób, tylko z tego, że ktoś odświeżał, a osobą, która odświeżała tę
+stronę przez całą tamtą noc, był autor. Pomiar zaczyna się dopiero w dobie
+samego nalotu, więc nie ma spokojnego tła, z którym można by go zestawić, i
+wypada w pierwszych dniach po publicznym uruchomieniu, kiedy każdy nowy adres
+ma ruch z samej nowości. W tym samym okresie zdarzył się dzień zupełnie
+spokojny, w którym wizyty były głębsze niż tamtej nocy, oraz doba nalotów, w
+którą źródło milczało, a po ruchu nie widać było niczego. Hipoteza do
+zbadania, nie wynik do ogłoszenia.
 
 Kolumnę odległości sprawdzono na trzy sposoby, ale tylko jeden z nich to
 niezależne źródło: inna geometria i inna metoda dają trzy punkty kontrolne w
@@ -233,13 +285,28 @@ nie jest to dobry wynik i nie jest tak nazywany. To sufit samego kanału, nie
 parsera: każde rozszerzenie słownika testowano na pełnym korpusie i zwracało
 zero nowych trafień.
 
-Nie zaczęte: rzeczy, które decydują o tym, czy to kiedykolwiek trafi do ludzi.
-Nie ma stanowiska prawnego wobec rozsyłania ostrzeżeń osobom postronnym i nie
-odbyła się ani jedna rozmowa z kimś, kto miałby je dostawać.
+Nie zaczęte: rzeczy, które zamieniają publiczną stronę w usługę ostrzegania.
+Nie ma stanowiska prawnego wobec rozsyłania ostrzeżeń osobom, których operator
+nie zna, i nie ma żadnego kanału powiadomień: stronę się otwiera, nic nie
+przychodzi samo.
 
-**Nikt nie dostaje dziś żadnego powiadomienia i nie dostanie, dopóki tamte dwie
-rzeczy się nie wydarzą.** Publiczna strona nie jest publiczną usługą
-ostrzegania i w dokumentacji jest tak nazwana wprost.
+Weryfikacja z kimś, kto miałby być odbiorcą, została przeprowadzona. Jest tu
+napisana w formie, w jakiej da się ją obronić, a nie w formie, w jakiej lepiej
+wygląda: **rozmowa się odbyła, protokołu z niej nie ma, więc do czasu spisania
+jest świadectwem, nie pomiarem.** Ten sam kształt ma tu kontrola z 18 sierpnia
+i jest oznaczona tak samo. Domknięcie tej pozycji wymaga dwóch rozmów i jednej
+liczby: przy jakiej częstotliwości alarmów odbiorca przestałby je czytać.
+Dopóki tej liczby nie ma zapisanej, próg alarmu pozostaje kalibrowany wobec
+tolerancji, której nikt nie zmierzył, i tak jest w tym repozytorium opisany.
+
+Korespondencja z instytucjami jest prowadzona i celowo nie mieszka w tym
+repozytorium: opisuje ludzi, nie oprogramowanie, a bramka blokuje wciągnięcie
+takich plików do drzewa. Ten dokument nie relacjonuje jej stanu i nie należy
+czytać jego milczenia jako informacji w żadną stronę.
+
+**Nikt nie dostaje dziś żadnego powiadomienia i nie dostanie, dopóki stanowisko
+prawne i T11 nie zostaną zamknięte.** Publiczna strona nie jest publiczną
+usługą ostrzegania i w dokumentacji jest tak nazwana wprost.
 
 Nie ma podanej daty i to jest świadome. Naruszenia zdarzają się kilka razy w
 roku, więc żaden miesięczny test nie pokaże, czy system je łapie. To
@@ -263,7 +330,8 @@ zostanie wstrzymana. To wygląda na mało prawdopodobne, bo dane są publiczne i
 po ukraińsku dostępne szybciej, ale prawdopodobieństwo nie jest tu argumentem.
 
 Jeśli osoby, dla których to jest budowane, powiedzą, że tego nie chcą, projekt
-się kończy. Nie zostały jeszcze zapytane i to jest obecnie największa dziura.
+się kończy. Pierwsza taka rozmowa się odbyła i nie została spisana, więc ten
+warunek pozostaje niesprawdzony, a nie spełniony.
 
 ## Pytania, które warto zadać
 
@@ -282,10 +350,15 @@ rejon nie zgłasza alarmu", a nie „bezpiecznie". Różnica nie jest kosmetyczn
 *Czego autor jeszcze nie zmierzył?* Lista jest w repozytorium, ustawiona w trzy
 poziomy priorytetu, i jest dłuższa niż lista rzeczy zmierzonych.
 
-*Które liczby w tym dokumencie są pilnowane maszynowo?* Wszystkie zmierzone
-pochodzą z `STATUS.json` i rozjazd między nimi a kodem wywraca bramkę. Liczby
-oznaczone jako cudze, przykładowe albo pochodzące z przeglądu wydania nie są
-pilnowane i są tak podpisane.
+*Które liczby w tym dokumencie są pilnowane maszynowo?* Do wersji 2.5 mniej,
+niż ten dokument twierdził, i warto zacząć od tego. Bramka porównywała oba
+briefy ze sobą wyłącznie dla liczb czterocyfrowych i większych; wszystko poniżej
+tysiąca przechodziło bez kontroli i tak zdryfowały cztery liczby w sekcji o
+kontroli. Od 2.5 każda zmierzona liczba w tym pliku jest porównywana z
+`STATUS.json` co do wartości, a obie wersje językowe co do wartości i
+krotności; rozjazd wywraca bramkę. Liczby oznaczone jako cudze, przykładowe
+albo pochodzące z przeglądu wydania nie są pilnowane w ogóle i są tak
+podpisane.
 
 ---
 
