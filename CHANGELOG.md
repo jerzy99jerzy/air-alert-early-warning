@@ -16,6 +16,49 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.51.1.0 - 2026-09-01
+
+**F141. The README's source repair went to the sections that argue about the
+source and not to the ones that use it.** 0.48.0.1 was the D-040 catch-up pass
+over this file: it redrew the pipeline diagram to API-primary and
+channel-as-watchman, rewrote both source FAQ sections, and gave the quickstart
+the `collect-api` path. It did not reach the opening summary, the worked
+example or the limitations list, which went on saying *This program reads that
+channel*, *Once every thirty seconds it fetches the channel's public web view*
+and *It reads a public channel on a cycle* for ten more releases, above
+everything the pass corrected. Those three are the sections a reader meets
+first.
+
+**The pass repaired every section that makes a claim about the source and no
+section that merely uses it.** A sentence about the source is easy to find when
+it is about the source; the expensive ones mention it in passing on the way to
+saying something else, and those are the ones a reader forms their picture
+from. D-040 enumerated documents. The unit has to be the section.
+
+- **README** rewritten in seven places: the opening summary, steps 1 to 3 of
+  the worked example, two limitation bullets, the silence invariant, the
+  observable-picture sentence, and the layout tree, which now names
+  `ukrainealarm_source.py`. The API is named where it acts and the channel
+  where it acts, which is as the watchman.
+- Step 2 does not inherit the channel path's claim that responses are stored as
+  served. That belongs to the corpus; the API path persists one previous
+  snapshot, and carrying the sentence across would have written a new false one
+  while removing an old one.
+- The 96.5% / 3.5% split stands and gains its provenance in place: measured
+  over the channel corpus, a claim about where alerts happen rather than about
+  which pipe carries them.
+- **METHODOLOGY** (2.44): F141.
+- **BRIEF**, **BRIEF-PL**: the defect count, 119 to 120. Caught by
+  `brief-check`, not by a reading.
+- **DEPLOYMENT**: the host is four releases behind, and the row records that
+  the third was already named as the point at which deferral stops.
+
+**No gate is proposed.** Which sentences describe the current source is not
+decidable from text, and a lint on the word *channel* would fire on the 21
+correct historical mentions this file now holds.
+
+No code line changes.
+
 ## 0.51.0.1 - 2026-08-31
 
 **Documents only: the sprint document reported the window it forbade

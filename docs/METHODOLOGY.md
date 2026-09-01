@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.43
+Document:  docs/METHODOLOGY.md, version 2.44
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -220,6 +220,7 @@ repository has come to the mistake it was built after.
 | [F138](#f138-04900-the-episode-counters-closed-an-area-on-the-clear-of-one-kind) | 0.49.0.0 | The episode counters closed an area on the clear of one kind |
 | [F139](#f139-05000-a-headline-figure-was-incremented-rather-than-counted-under-sixteen-checks) | 0.50.0.0 | A headline figure was incremented rather than counted, under sixteen checks |
 | [F140](#f140-05100-the-briefs-were-outside-the-guarded-set-and-the-check-that-named-them-skipped-its-own-pin) | 0.51.0.0 | The briefs were outside the guarded set, and the check that named them skipped its own pin |
+| [F141](#f141-05110-the-readmes-source-repair-went-to-the-sections-that-argue-about-the-source-and-not-to-the-ones-that-use-it) | 0.51.1.0 | The README's source repair went to the sections that argue about the source and not to the ones that use it |
 
 ## Defect log
 
@@ -4509,3 +4510,55 @@ after `mavo.org.pl` went public, a claim that no conversation had happened with
 anybody who would receive a warning, and a superseded 0-of-20 measurement
 standing in `FOUNDATIONS` as current - was found by a person reading, and no
 check proposed here would have caught any of them.
+
+### F141, 0.51.1.0. The README's source repair went to the sections that argue about the source and not to the ones that use it
+
+`README.md` names the delivery path 27 times as the channel and 4 times as the
+API. The four are one diagram node, one row of the source table, and two flags
+in an example command, and all four are correct. Above them, in present tense:
+*This program reads that channel*, *Once every thirty seconds it fetches the
+channel's public web view*, and *It is not faster than the source. It reads a
+public channel on a cycle.* Those are the opening summary, the worked example,
+and the limitations list - the three sections a reader meets first, and the
+three a reader who reads nothing else reads.
+
+**The README was repaired for this, and the repair stopped short.** 0.48.0.1
+was the D-040 catch-up pass: it redrew the pipeline diagram to API-primary and
+channel-as-watchman, rewrote both source FAQ sections to D-040 and D-042, and
+gave the quickstart the `collect-api` path. Its own entry says falsified prose
+is worse than absent prose because a reader cannot tell which sentences
+survived the switch. Ten releases later three of them had not, in the same
+file, above everything the pass corrected.
+
+**The line the pass drew was between argument and use.** Every section it
+repaired is a section that *makes a claim about the source*: the diagram, the
+two FAQ answers, the command that names the endpoint. Every section it left is
+one that merely *uses* the source on the way to saying something else - what
+the program does, how one alert travels through it, what it will not do. A
+sentence about the source is easy to find when it is about the source. The
+expensive ones are the sentences about something else that mention it in
+passing, and those are the ones a reader forms their picture from.
+
+**Same shape as F-S58 in the consumer**, found and paid there the same week in
+one sentence of the `preparation` panel. Same mechanism as F72, F139 and F140:
+a repair lands where a gate or an argument reaches, and the prose beyond that
+reach keeps the old world. `lint_mermaid` reads the diagram; `figures.py`
+regenerates six numbers in this file; nothing reads the sentences around them.
+
+**No gate is proposed and that is the finding.** Which sentences describe the
+current source is not decidable from text, and a lint on the word *channel*
+would fire on the 21 correct historical mentions the file now holds. The
+control that exists and was not applied is enumeration: D-040 named the
+documents that describe the source, and the unit of enumeration was the
+document. It needs to be the section.
+
+**Repair.** Rewritten to the two-path world: the opening summary, steps 1 to 3
+of the worked example, two limitation bullets, the silence invariant, the
+observable-picture sentence, and the layout tree, which now names
+`ukrainealarm_source.py`. Step 2 does not inherit the channel path's claim that
+responses are stored as served; the API path persists one previous snapshot,
+and carrying that sentence across would have written a new false one while
+removing an old one. The 96.5% / 3.5% split stands and gains its provenance in
+place: measured over the channel corpus, a claim about where alerts happen
+rather than about which pipe carries them. No sentence was added beside an old
+one; every old one was replaced.

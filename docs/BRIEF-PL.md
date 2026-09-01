@@ -194,7 +194,7 @@ jest zbudowany wokół tego rozróżnienia.
 Przy prywatnym projekcie to waży więcej niż technologia, więc konkrety zamiast
 zapewnień. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Log defektów ma 119 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
+**Log defektów ma 120 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
 tego nie zauważył i jaka to klasa błędu. Wpisy przeciw interesowi projektu też
 tam są, łącznie z tym o wyniku 0 na 20 i z tym, w którym dokumentacja
 twierdziła, że coś jest sprawdzane, a nie było. Osobno zapisano **45 decyzji

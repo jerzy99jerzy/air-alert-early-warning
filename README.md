@@ -6,7 +6,7 @@
 [![tests 642](https://img.shields.io/badge/tests-642-brightgreen)](tests/)
 [![coverage 95.42%](https://img.shields.io/badge/coverage-95.42%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 119](https://img.shields.io/badge/defects%20logged-119-informational)](docs/METHODOLOGY.md)
+[![defects logged 120](https://img.shields.io/badge/defects%20logged-120-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -108,23 +108,31 @@ claims with the machinery left out.
 ## In one minute
 
 Ukraine publishes air-raid alerts. When a region's alert is switched on, that
-fact reaches a public channel within seconds, along with thousands of other
-posts a day about the whole country.
+fact reaches the country's official alerting API within seconds, as one line in
+a list of everywhere alerting at that moment.
 
-This program reads that channel, works out **which region** each alert belongs
+This program reads that API, works out **which region** each alert belongs
 to, and looks up **how far that region's nearest edge is from the Polish
 border**. It then reports what is on right now, and how old its own information
 is.
+
+Until 2026-08-29 the source was a public Telegram channel, which published the
+same announcements as prose and stopped mid-attack. Its collector still runs,
+now as the watchman for the publisher's return rather than as a feed. The
+switch and its cost are in *Why the official API, and why is the channel still
+read?* below.
 
 That is the whole of it. It is a **reporting instrument**: it tells you what has
 been announced, in a form a person near the border can act on. It does not
 predict, it does not decide, and it does not know where anything is flying.
 
-The reason it exists is a filter. Roughly **96.5% of the alert activity in that
-channel concerns the east and the front line**, hundreds of kilometres from
+The reason it exists is a filter. Roughly **96.5% of the alert activity
+concerns the east and the front line**, hundreds of kilometres from
 Poland and of no practical relevance to somebody in Przemyśl. The remaining
 **3.5%** concerns the western regions, which is the part worth a person's
-attention. Sorting one from the other by hand, at three in the morning, in a
+attention. Both figures are measured over the channel corpus, because that is
+the body of text long enough to measure over; they are a claim about the
+distribution of alerts, not about either delivery path. Sorting one from the other by hand, at three in the morning, in a
 language you may not read, is not a thing anybody does. That sorting is the
 product.
 
@@ -132,7 +140,7 @@ Two rules run through every part of this, and they are worth stating before
 anything else because they explain a lot of the odd-looking decisions further
 down.
 
-**Silence is never shown as calm.** If the program cannot see the channel, or
+**Silence is never shown as calm.** If the program cannot see the source, or
 the information it has is old, it says so, loudly, and stops answering the
 question. An empty screen means "nothing is known", never "nothing is
 happening". Those two are different and the difference can matter.
@@ -152,24 +160,26 @@ tomorrow, it would have nothing to give away.
 
 The clearest way to explain the system is to follow a single alert through it.
 
-**1. Something is announced.** An air-raid alert goes on in Lviv oblast.
-Seconds later a post appears in the public channel, in Ukrainian, carrying a
-hashtag that names the area and a line of prose saying an alert has begun.
+**1. Something is announced.** An air-raid alert goes on in Lviv oblast. Within
+seconds the region appears in the official API's list of everywhere alerting
+now, named in Ukrainian prose and carrying the moment the alert started.
 
-**2. The program reads the page.** Once every thirty seconds it fetches the
-channel's public web view. No account, no key, no private interface: exactly
-what a browser would get. It stores the page as served, so any later argument
-about what was said can be settled against the original rather than against a
-memory of it.
+**2. The program reads the whole list.** About every two minutes it fetches the
+current state and compares it against the state it saw last. Alerts that are
+new to the list have begun. Alerts that have left it have ended, and are dated
+by the observation rather than by an announcement nobody made, because the API
+says nothing at all about what stopped. A poll that fails yields nothing rather
+than an empty sky: an absence is evidence only when the looking succeeded.
 
 **3. It works out which place is meant.** This is the part with the traps. Place
 names in the region repeat, decline in six grammatical cases, and appear in both
-Ukrainian and Russian spellings. So the program does not guess from prose: it
-reads the hashtag and looks the area up in **KATOTTG**, Ukraine's official
-register of administrative units, which gives every district a unique code. A
-name is ambiguous. A code is not. When a message names an area the register does
-not contain, that message is reported as unresolved rather than assigned to the
-nearest plausible match.
+Ukrainian and Russian spellings. So the program does not guess: it looks the
+region up in **KATOTTG**, Ukraine's official register of administrative units,
+which gives every district a unique code. A name is ambiguous. A code is not.
+When the source names an area the register does not contain, or names one the
+register holds too ambiguously to pick, that reading is counted as unresolved
+rather than assigned to the nearest plausible match, and the two are counted
+separately because they need different repairs.
 
 **4. It measures the distance.** Every area in the register carries a
 precomputed distance from its nearest edge to the Polish border. Nearest edge,
@@ -283,11 +293,12 @@ The document is written to be disagreed with, and section 7 says how.
 - **It is not an official warning service.** In Poland the authoritative
   channels are the sirens and the RCB alerts, and those stay authoritative. This
   is a private project run under a private company.
-- **It is not faster than the source.** It reads a public channel on a cycle. If
-  the channel is late, this is late.
-- **It cannot see anything the channel does not publish.** No radar, no sensors,
-  no intelligence. When the channel goes quiet, this project's honest answer is
-  "I do not know", and that is the answer it gives.
+- **It is not faster than the source.** It polls the official API on a cycle. If
+  the announcement is late, this is late.
+- **It cannot see anything the source does not publish.** No radar, no sensors,
+  no intelligence. When the source goes quiet, this project's honest answer is
+  "I do not know", and that is the answer it gives. That answer was tested on
+  2026-08-29, when the source it had then went silent mid-attack.
 - **It is not finished.** The status line above is not modesty: the accuracy of
   the western-area classification, which is the only part that matters for the
   audience this is built for, has not yet been scored by hand.
@@ -385,8 +396,8 @@ of an intercepted one lands, on a drone losing its way, and on an adversary's
 decisions minutes earlier. None of that is in any feed this project can reach,
 and no amount of history makes it so. What is observable at the moment it
 happens is the picture on the Ukrainian side: which areas are under alert, how
-intense the activity is right now, what means the channel names, and how far the
-nearest alerted area is from the Polish border.
+intense the activity is right now, what means the source names when it names
+one, and how far the nearest alerted area is from the Polish border.
 
 That distinction is the whole design. It is why the tool resolves rajons and
 hromadas down to kilometres from the border rather than scoring a binary
@@ -742,7 +753,8 @@ mavo/
   backfill.py      retrieves channel history backwards, verbatim, resumable
   sources/
     fixture.py     synthetic scenarios, shipped as a CLI command
-    telegram.py    the public channel adapter; its pattern table is under redesign
+    ukrainealarm_source.py  the primary adapter; snapshot diffing, clears synthesised
+    telegram.py    the channel adapter, now the watchman; its pattern table is under redesign
   cli.py           fixture / gate / policy / backfill / collect
 tests/
   test_<domain>.py behaviour
@@ -786,7 +798,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 22 | 8,518 |
 | Tests | 61 | 12,228 |
 | Tools | 27 | 7,530 |
-| Documentation | 70 | 27,369 |
+| Documentation | 70 | 27,477 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -801,9 +813,9 @@ confidence interval attached.
 | Coverage | 95.42% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 119, the count pinned against the log itself |
+| Defects logged with their class | 120, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 45, counted from the log itself |
-| Releases | 125 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 126 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation
