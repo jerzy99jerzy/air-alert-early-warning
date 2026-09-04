@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.45
+Document:  docs/METHODOLOGY.md, version 2.46
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -222,6 +222,8 @@ repository has come to the mistake it was built after.
 | [F140](#f140-05100-the-briefs-were-outside-the-guarded-set-and-the-check-that-named-them-skipped-its-own-pin) | 0.51.0.0 | The briefs were outside the guarded set, and the check that named them skipped its own pin |
 | [F141](#f141-05110-the-readmes-source-repair-went-to-the-sections-that-argue-about-the-source-and-not-to-the-ones-that-use-it) | 0.51.1.0 | The README's source repair went to the sections that argue about the source and not to the ones that use it |
 | [F142](#f142-05111-the-specifications-header-contradicted-the-section-beneath-it-for-five-editions) | 0.51.1.1 | The specification's header contradicted the section beneath it for five editions |
+| [F143](#f143-05201-a-shell-that-cannot-read-a-directory-reported-its-contents-as-absent) | 0.52.0.1 | A shell that cannot read a directory reported its contents as absent |
+| [F144](#f144-05201-the-deploy-account-cannot-install-the-package-and-no-document-said-so) | 0.52.0.1 | The deploy account cannot install the package, and no document said so |
 
 ## Defect log
 
@@ -4589,3 +4591,54 @@ fire on the correct historical uses of the same words in section 8.
 **Paid** at 2.4 by rewriting the header to say what was found and when. No
 gate is proposed, for F141's reason: which sentence is a claim about the
 present is not decidable from text.
+
+### F143, 0.52.0.1. A shell that cannot read a directory reported its contents as absent
+
+`ls -la /var/lib/mavo/events*` run through `sudo -u mavo` printed
+`No such file or directory`, and `cd /var/lib/mavo` printed `Permission
+denied`, on a host where the files exist and the `mavo` account can read them.
+The directory is `drwxr-x---` and owned by `mavo`; the glob and the `cd` were
+executed by the *calling* shell, which runs as the login account, and only the
+final `ls` would have run as `mavo`. The privilege was applied to the wrong
+half of the command.
+
+**Both outputs are indistinguishable from the finding they are not.** An
+operator reading `No such file or directory` during a deploy has been told the
+store is missing. The correct reading is that the question was never asked.
+This is the project's own invariant on the operator's side of the glass: an
+unobservable state rendered as a confident negative.
+
+**The same defect happened at 0.49.0.0** and was recorded as a clause inside a
+`docs/DEPLOYMENT.md` table cell rather than as an entry here, which is why it
+was available to be repeated four days later by the same hands.
+
+**Repair, and it is a habit rather than a check:** every command that must run
+as another account is wrapped whole -
+`sudo -u mavo bash -c "cd ... && ls ..."` - so that expansion, redirection and
+directory traversal all happen under the account that has the right. No gate
+is proposed: the shell that runs a deploy is not in this repository.
+
+### F144, 0.52.0.1. The deploy account cannot install the package, and no document said so
+
+`pip install` as `mavo` was refused with `EACCES` on `/opt/mavo/venv/bin/mavo`.
+The venv is `root:root` 755 and the unit runs as `User=mavo`: the account that
+executes the code deliberately cannot modify it, which is a sound arrangement
+and was nowhere in writing. `docs/DEPLOYMENT.md` gave the install step without
+saying which account performs it, and the project's own operating convention -
+run as `mavo` with the mavo venv - points at the account that cannot.
+
+**The evidence was on the host and had been for four days.** Two return points,
+`events.pre-0.47.0.0` and `events.pre-0.48.0.0`, are owned by `root` while the
+rest are owned by `mavo`: the trace of two deploys that took the other path
+without recording it. A fact visible in a directory listing and absent from
+every document is the shape this log calls a state that lives only in a
+machine.
+
+**What made it safe rather than expensive.** `--force-reinstall` uninstalls
+before it installs, so a refusal one step later would have left the venv
+without a package. It failed on the entry-point script, before the uninstall,
+and the version string still read 0.49.0.0 afterwards - verified rather than
+assumed.
+
+**Paid** by recording the ownership, the reason and the `sudo` install in the
+deploy table at 0.52.0.1.

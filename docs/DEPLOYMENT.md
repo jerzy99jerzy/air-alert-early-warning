@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.22 / 2026-09-04
+Version: 1.23 / 2026-09-04
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -45,17 +45,21 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.49.0.0`, `/opt/mavo/venv`, python3.11 |
-| Installed at | **2026-08-31**, second deploy of the day; first `collect-api` cycle under it completed 12:14:41 UTC (journal). The `.dist-info` mtime was not read this session either, and is owed for the second consecutive visit |
-| Wheel | sha256 `955739db…81efa`, 165 KiB, verified by `sha256sum -c` on the host before `pip`; `gcloud compute scp` over the IAP tunnel, no stall |
-| Point of return | `events.pre-0.49.0.0`, 20,811,776 B, sha256 `25643014…05d95`, taken with both collect timers stopped and with no `-wal` or `-shm` beside it - the listing that shows this was itself re-run, because the first attempt expanded the glob in a shell that cannot read the directory and proved nothing |
-| Collection gap | **192 s**, 12:11:28 to 12:14:40, both timers. Inside the 360 s snapshot ceiling, so no clear was withheld across the window |
-| Discriminators | on the installed source, not the version string: `kinds_open` 7 in `report.py`, `self.unparsed` 2 and `ts_source_origin` 1 in `sources/ukrainealarm_source.py` - all three exist only after F138 and F135 |
-| First post-install poll | `active=0 cleared=0 unresolved=5 declined=1 unparsed=0 latency=0.227s snapshot=fresh(193s)`. The `unparsed` field is itself the proof of version: 0.48.0.0 could not print it. Zero means the API's type vocabulary still covers what arrives |
-| Contract after | `state.json` v3, `state=ok`, 38 areas active, `recent_7d` 19 oblasts of which **8 carry an open episode** (`still_under_alert`), and one carries `alert_seconds` **604,800**: a full seven-day window unbroken. That figure is the F138 repair visible from outside - before it, a concurrent kind's all-clear tore such an episode apart and the count could never reach the ceiling |
-| Earlier deploy the same day | 0.48.0.0 at 06:22:53 UTC: wheel `76fb176f…b564d0`, return point `events.pre-0.48.0.0` `a5585436…c205b4`, first poll `snapshot=fresh(120s)`, then `reconcile --unmask` closing the eight-area Donetsk `glide_bomb` belt (ghosts=8, masked=0, second apply 0) |
-| `main` | 0.52.0.0 |
-| Behind by | **six** releases, 0.50.0.0 to 0.52.0.0, and the sixth is the first since 0.49.0.0 that changes package code: `INFO` records no longer raise an alert and unmapped type strings are named (T83). Five documents-only releases were cut against this row's own install-next judgement; this one carries a change the host has never run, which ends the argument that the wheel would differ in nothing a reader can see. The next act on this host is bringing it to 0.52.0.0, with `reconcile --dry-run` read before and after the first poll |
+| Installed | `air-alert-early-warning 0.52.0.0`, `/opt/mavo/venv`, python3.11 |
+| Installed at | **2026-09-04**, 08:00 UTC. First `collect-api` cycle under it, run by hand with the unit's own flags, completed 08:06; the first three under the timer at 08:07:27, 08:09:27 and 08:11:28 (journal). The `.dist-info` mtime is owed for the third consecutive visit |
+| Wheel | sha256 `45622e3d…a46a56`, 170,969 B, built from a worktree of `v0.52.0.0` rather than from the working tree, and verified by `sha256sum` on the host before `pip`; `gcloud compute scp` over the IAP tunnel, 20 s at 8.0 KB/s |
+| Point of return | `events.pre-0.52.0.0`, 27,283,456 B, sha256 `641611e7…a8a55d`, taken with the `collect-api` timer stopped and with no `-wal` or `-shm` beside it. Re-verified after the deploy: unchanged. The listing was re-run for the same reason as at 0.49.0.0 and the reason is now recorded as F144 rather than as an aside |
+| Who owns the venv | `/opt/mavo/venv` is `root:root` 755 and the unit runs as `User=mavo`, so the account that executes the code cannot modify it. `pip` as `mavo` is refused with `EACCES` on `venv/bin/mavo`, before anything is uninstalled; the install is `sudo`. Recorded because two earlier return points on this host are owned by `root` and nothing said why (F144) |
+| Collection gap | **~19 min**, 07:52 to 08:11, `collect-api` only. Past the 360 s snapshot ceiling by construction, so the first poll read `snapshot=stale(1049s)` and withheld clears, and `reconcile --dry-run` before that poll refused to examine anything at all: `[SNAPSHOT-STALE] (854s)`. Both refusals are the rule working. The consequence for the sequence is that no baseline reconcile reading exists for this deploy, because stopping the timer is what invalidates it |
+| Discriminators | on the recap, not the version string: `informational=` and `unmapped_types=` are printed by no release before 0.52.0.0 |
+| First post-install poll | `active=56 cleared=0 unresolved=5 declined=1 unparsed=0 informational=0 unmapped_types=0 latency=3.4s snapshot=stale(1049s)`, `stored=9 new events (seen=56)`. Under the timer, latency fell to a median of **0.1 s** over 18 attempts, so the 3.4 s is the first connection and not a regression |
+| T83 measured on the wire | `unmapped_types=0` on every one of the first four polls: the API returned no type string outside `_KIND`. That closes one half of the `[unmeasured]` this release shipped with. `informational=0` on all four leaves the other half open - whether this key ever returns `INFO` is still unmeasured, and a zero is not a demonstration |
+| `feed_attempts.detail` | 18 attempts, all `outcome=read`, **all with `detail` NULL**. The column's NULL branch is exercised on the host; that it can carry a string is shown by a test, not by production |
+| Reconcile after the polls | `ghosts=2 masked=0 snapshot_areas=38 snapshot_keys=41`. **`masked=0` is the D-044 control**: an area alerting per the API and rendering calm would appear here, and none did. `snapshot_keys` exceeding `snapshot_areas` by three is the multi-kind case the old fold collapsed. The two ghosts, opened 08:21 and the previous evening, were closed with `--apply` (`stored=2 rows`, `0 unmasks`), and a second dry-run read `ghosts=0 masked=0`. `--unmask` was not passed and had nothing to do |
+| Contract after | `feed=ok`, observation age 63 s, 0 areas active in the west, 40 elsewhere. Store 27,406,336 B, up 122,880 B over the hour |
+| Attempts window | `attempts=18 read=18 refused=0 gaps=0 unobserved=0s` from 08:06:01 to 08:39:42 at a 120 s cadence |
+| `main` | 0.52.0.1 |
+| Behind by | **one** release, 0.52.0.1, and it is this document recording the deploy above. The five-release deferral this row tracked from 0.50.0.0 is discharged: the host ran 0.49.0.0 for four days and now runs the release that changes package code. The judgement stands unchanged for the next one - a release that changes `mavo/` is installed before the release after it is cut |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

@@ -199,7 +199,7 @@ With a private project this weighs more than the technology, so specifics
 instead of assurances. Every one of them can be checked without asking the
 author for an opinion.
 
-**The defect log holds 121 entries.** Each states what broke, why nobody
+**The defect log holds 123 entries.** Each states what broke, why nobody
 noticed, and what class of error it was. Entries against the project's own
 interest are in there too, including the 0 of 20 above, and one where the
 documentation claimed something was checked and it was not. Separately, **46

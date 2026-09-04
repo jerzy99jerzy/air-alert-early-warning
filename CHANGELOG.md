@@ -16,6 +16,36 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.52.0.1 - 2026-09-04
+
+**Documents only: the release that changes package code reached the host, and
+this is the record of it.** 0.52.0.0 was installed on `vm-mavo` at 08:00 UTC,
+four days and five releases after the host last moved. The proof of version is
+the recap, not the version string: `informational=` and `unmapped_types=` are
+printed by no earlier release.
+
+- **DEPLOYMENT** (1.23): the installed-package table rewritten to this deploy -
+  wheel `45622e3d…a46a56` built from a worktree of the tag, return point
+  `641611e7…a8a55d` re-verified unchanged afterwards, the 19-minute collection
+  gap and the two refusals it correctly produced, `masked=0` as the D-044
+  control, two ghosts closed, and 18 attempts at 0.1 s median with no
+  refusals and no gaps. `Behind by` falls from six releases to one.
+- **T83 measured on the wire, one half of it.** `unmapped_types=0` on four
+  consecutive polls: the API returned no type string outside `_KIND`.
+  `informational=0` leaves the other half open, because a zero is not a
+  demonstration that `INFO` is ever sent.
+- **F143.** A glob and a `cd` expanded by the calling shell rather than by the
+  account the command was addressed to, so a readable directory reported
+  itself as absent and then as forbidden. Same defect as at 0.49.0.0, where it
+  was recorded as an aside in a table cell instead of as an entry.
+- **F144.** The venv is owned by `root` and the unit runs as `mavo`, so the
+  account this project's conventions name for host work is exactly the one
+  that cannot install. Nothing said so, and two return points owned by `root`
+  had been the evidence for four days.
+- **METHODOLOGY** (2.46): F143, F144.
+
+No code line changes.
+
 ## 0.52.0.0 - 2026-09-04
 
 **T83, and one value it did not name.** `UkrainealarmSource` folded every
