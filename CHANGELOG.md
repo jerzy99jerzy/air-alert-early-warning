@@ -16,6 +16,33 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.52.0.2 - 2026-09-04
+
+**Documents only: the host's network profile said it had no external IPv4, and
+it has one.** F145. The 2026-08-20 reading probed `mavo.org.pl`, which has no
+AAAA, over IPv6, and recorded the silence as the host having no IPv4 route at
+all. The host answers `curl -4` in 0.2 s, reaches its own public site in
+0.1 s, and talks to RSO over IPv4 by necessity. The instance has not been
+restarted since creation, so this was wrong on the day rather than stale.
+
+- **DEPLOYMENT** (1.24): the network table re-measured, every row naming its
+  target and date. Both egress addresses recorded with their reservation
+  names: `mavo-cap-egress` `34.116.130.76` and `mavo-cap-egress-v6`
+  `2600:1900:4140:3cb::`, reserved 2026-09-04 against the addresses already in
+  use, with no interruption to collection.
+- **Two rules withdrawn, not quietly.** *Never probe the public site from
+  `vm-mavo`* forbade a check that works and costs 0.1 s. *The IPv4 fallback
+  doubles a failed attempt's cost* explained refusals with a black hole that
+  does not exist; the refusals lose their cause rather than gaining an
+  invented one, and this path has recorded 706 cycles and zero
+  `[UNREACHABLE]` in 24 hours.
+- **The condition with no alarm**, recorded because it is dated: RSO publishes
+  no AAAA today, and on the day it does this host will select IPv6 by itself.
+  Both addresses go into the CAP token application for that reason.
+- **METHODOLOGY** (2.47): F145.
+
+No code line changes.
+
 ## 0.52.0.1 - 2026-09-04
 
 **Documents only: the release that changes package code reached the host, and
@@ -2170,7 +2197,7 @@ third time.**
 - **T60: production runs older code than `main`, and nothing here said so.**
   The collector on `vm-mavo` was last installed before 0.28.1.0, so F98 is not
   deployed and its fetch timeout means 20 s per resolved address rather than
-  10 s for the whole fetch - measured at 20.12 s in the journal on 2026-08-13.
+  10 s for the whole fetch - measured at 20.1 s in the journal on 2026-08-13.
   `docs/DEPLOYMENT.md` described F98 as a repair and nothing recorded that the
   repair was not on the host. Measurements are being read off that host and
   written into this repository, which is why this is tier 1 despite changing no

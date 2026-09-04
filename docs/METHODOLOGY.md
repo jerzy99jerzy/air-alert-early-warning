@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.46
+Document:  docs/METHODOLOGY.md, version 2.47
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -224,6 +224,7 @@ repository has come to the mistake it was built after.
 | [F142](#f142-05111-the-specifications-header-contradicted-the-section-beneath-it-for-five-editions) | 0.51.1.1 | The specification's header contradicted the section beneath it for five editions |
 | [F143](#f143-05201-a-shell-that-cannot-read-a-directory-reported-its-contents-as-absent) | 0.52.0.1 | A shell that cannot read a directory reported its contents as absent |
 | [F144](#f144-05201-the-deploy-account-cannot-install-the-package-and-no-document-said-so) | 0.52.0.1 | The deploy account cannot install the package, and no document said so |
+| [F145](#f145-05202-one-names-missing-aaaa-was-recorded-as-the-hosts-missing-ipv4-and-two-rules-were-built-on-it) | 0.52.0.2 | One name's missing AAAA was recorded as the host's missing IPv4, and two rules were built on it |
 
 ## Defect log
 
@@ -4642,3 +4643,52 @@ assumed.
 
 **Paid** by recording the ownership, the reason and the `sudo` install in the
 deploy table at 0.52.0.1.
+
+### F145, 0.52.0.2. One name's missing AAAA was recorded as the host's missing IPv4, and two rules were built on it
+
+`docs/DEPLOYMENT.md` stated, as a measurement dated 2026-08-20, that `vm-mavo`
+has **no external IPv4**, that `curl -4` to anywhere hangs to its own ceiling,
+and that its IPv6 address is *the only public egress*. All three are false and
+were false when written. The host has an external IPv4, `34.116.130.76`, on a
+`ONE_TO_ONE_NAT` access config; `curl -4` to a public endpoint answers 200 in
+0.2 s, and the collector's own traffic to RSO leaves over IPv4 because RSO
+publishes no AAAA [measured 2026-09-04].
+
+**The instance has not been restarted since it was created**
+(`lastStartTimestamp` equals `creationTimestamp`, 2026-08-11, eight seconds
+apart), so this is not configuration drift. The reading was wrong on the day.
+
+**The mechanism, and it is this log's most frequent class.** The session that
+wrote it probed one target, `mavo.org.pl`, which has an A record and no AAAA.
+Over IPv6 that probe returns nothing. The true fact available was *this name
+cannot be reached over IPv6*. What was recorded was *this host cannot reach
+anything over IPv4* - a conclusion about the host, from an observation about a
+name, in the opposite address family. Class 3: reasoning from a locally
+constructed input rather than from what the source states.
+
+**What it cost is not the wrong row; it is the two rules underneath it.**
+
+*Never probe the public site from `vm-mavo`* was stated as an operating rule
+and observed. It forbade a working end-to-end check - the host reaches
+`mavo.org.pl` over IPv4 in 0.1 s - and it forbade it for a fortnight, in a
+project whose site had no host-side check at all.
+
+*The IPv4 fallback does not rescue a failed IPv6 attempt, it doubles its cost,
+which is why every refusal in the journal sits exactly on the timeout* was an
+explanation of observed refusals. Its premise is gone, and with it the
+explanation. The refusals themselves are not re-explained here: this path
+recorded 706 cycles and zero `[UNREACHABLE]` in the 24 hours before this
+entry, so there is nothing to diagnose today, and an entry that invented a
+second cause to replace the first would be repeating the defect it records.
+
+**Found** while establishing which address to register with RSO for a CAP
+token - that is, by needing the fact for something rather than by re-reading
+the document. Two weeks of readers had the wrong picture and no reader had a
+reason to test it.
+
+**No gate is proposed.** A check that dials out from a host is a check that
+fails on the network rather than on the tree, and this repository's gate runs
+where the host is not. The control is the one this section now carries: every
+row of that table names what was measured, against what target, on what date,
+and the two rules that were inferences are marked as withdrawn rather than
+deleted.

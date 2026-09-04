@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.23 / 2026-09-04
+Version: 1.24 / 2026-09-04
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -58,8 +58,8 @@ never a decision until D-031 wrote it down.
 | Reconcile after the polls | `ghosts=2 masked=0 snapshot_areas=38 snapshot_keys=41`. **`masked=0` is the D-044 control**: an area alerting per the API and rendering calm would appear here, and none did. `snapshot_keys` exceeding `snapshot_areas` by three is the multi-kind case the old fold collapsed. The two ghosts, opened 08:21 and the previous evening, were closed with `--apply` (`stored=2 rows`, `0 unmasks`), and a second dry-run read `ghosts=0 masked=0`. `--unmask` was not passed and had nothing to do |
 | Contract after | `feed=ok`, observation age 63 s, 0 areas active in the west, 40 elsewhere. Store 27,406,336 B, up 122,880 B over the hour |
 | Attempts window | `attempts=18 read=18 refused=0 gaps=0 unobserved=0s` from 08:06:01 to 08:39:42 at a 120 s cadence |
-| `main` | 0.52.0.1 |
-| Behind by | **one** release, 0.52.0.1, and it is this document recording the deploy above. The five-release deferral this row tracked from 0.50.0.0 is discharged: the host ran 0.49.0.0 for four days and now runs the release that changes package code. The judgement stands unchanged for the next one - a release that changes `mavo/` is installed before the release after it is cut |
+| `main` | 0.52.0.2 |
+| Behind by | **two** releases, 0.52.0.1 and 0.52.0.2, and both are this document: the first records the deploy above, the second corrects the network profile it was written beside (F145). The five-release deferral this row tracked from 0.50.0.0 is discharged: the host ran 0.49.0.0 for four days and now runs the release that changes package code. The judgement stands unchanged for the next one - a release that changes `mavo/` is installed before the release after it is cut |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -409,22 +409,49 @@ document pinned at 0.076% until the pin was withdrawn.
 
 ### The network this host actually has
 
-Measured 2026-08-20, because a check written without these facts hangs and its
-author reads the hang as an outage.
+Re-measured 2026-09-04. **The 2026-08-20 reading of this section was wrong in
+its central fact and two operating rules were built on it** (F145); what
+follows replaces it.
 
 | | |
 | --- | --- |
 | Internal IPv4 | `10.20.0.2/32`, and the push to the site travels over it |
-| External IPv4 | **none.** `curl -4` to anywhere hangs to its own ceiling; packets leave by the default route and die without ICMP |
-| External IPv6 | `2600:1900:4140:3cb::/128`, the only public egress |
-| `mavo.org.pl` | **A record only.** This host cannot reach its own public site, over either family |
+| External IPv4 | `34.116.130.76`, reserved as `mavo-cap-egress`. A `ONE_TO_ONE_NAT` access config on `nic0`, not Cloud NAT. Reachable: `curl -4` to a public endpoint answers 200 in **0.2 s** |
+| External IPv6 | `2600:1900:4140:3cb::`, reserved as `mavo-cap-egress-v6`. GCP assigns a `/96`; the interface holds and uses the first address of it as a `/128`, stable across connections (three consecutive reads) |
+| Which family goes out | **IPv6 when the target publishes AAAA, IPv4 otherwise.** The stack is dual and both work; the selection is the resolver's, not a fallback |
+| `mavo.org.pl` | **A record only.** Reached from this host over IPv4 in **0.1 s**, `remote=34.116.232.215`. Over IPv6 it cannot resolve, which is a property of the name and not of this host |
+| `komunikaty.tvp.pl` (RSO) | **A record only**, `213.189.46.192`. Traffic to it therefore leaves over IPv4 by necessity [measured 2026-09-04, `http=200`] |
 
-Two consequences worth stating as rules. **Never probe the public site from
-`vm-mavo`** - the probe measures the missing route, not the site, and this
-session did exactly that once. And when an IPv6 connection fails, **the IPv4
-fallback does not rescue the attempt, it doubles its cost**: the black hole
-consumes whatever budget the attempt has left, which is why every refusal in
-the journal sits exactly on the timeout.
+**Both egress addresses are reserved, and the reservation is the point.** Until
+2026-09-04 both were ephemeral: they survive a running instance and change on
+the first stop/start. An address registered with a third party against a token
+is a dependency on a value nobody had pinned, and the failure mode is silent -
+the token stops matching and nothing says why. `mavo-cap-egress` and
+`mavo-cap-egress-v6` were created against the addresses already in use, so
+neither changed and the collector did not notice: `snapshot=fresh`, latency
+0.1 s, no `[UNREACHABLE]` across both operations.
+
+**The condition to watch, because it has no alarm.** RSO publishes no AAAA
+today. On the day it does, this host will select IPv6 by itself, with no
+change here, and a token bound only to the IPv4 address will stop matching.
+Both addresses are therefore registered with the operator rather than one -
+the cheaper insurance is a second line in a form, not a diagnosis in six
+months.
+
+**The rule this section used to state, withdrawn.** *Never probe the public
+site from `vm-mavo`* rested on the host having no route to it. It has one, and
+the probe costs 0.1 s. The end-to-end check that rule forbade is available
+and is worth having.
+
+**The second rule, withdrawn with less certainty, which is said rather than
+smoothed over.** This section used to explain that a failed IPv6 attempt has
+its remaining budget consumed by an IPv4 black hole, *which is why every
+refusal in the journal sits exactly on the timeout*. The black hole does not
+exist, so the explanation falls. Whether the refusals it explained were real
+is a separate question and is now unanswered: over the last 24 hours this
+path recorded **706 cycles and zero `[UNREACHABLE]`**, so there is nothing
+current to diagnose, and the historical refusals keep their timestamps and
+lose their cause.
 
 ### Files staged on this host
 
