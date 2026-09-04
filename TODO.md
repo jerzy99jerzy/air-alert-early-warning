@@ -447,15 +447,26 @@ The candidates, with what the project currently believes and its provenance:
 | --- | --- | --- |
 | RCB alert (SMS) | free text to a phone, no stream | `[reported]`, FEED-SPEC section 2 |
 | RCB's public web and social postings | unexamined | **nothing** - this is the gap |
-| RSO application | partially machine readable, not an open stream | `[assumption, unmeasured]` |
+| RSO list pages, XML and JSON | public, no token; category and issuer absent from the record; the scope named "all" incomplete | `[measured 2026-08-22]`, FEED-SPEC section 2 and 4a (fifteen, seventeen) |
+| RSO CAP resource | CAP since June 2026; token bound to one static IP; air-strike category in test, production targeted for the end of September 2026 | `[reported]`, letter DOLiZK-ZK.052.49.2026(2), FEED-SPEC sections 2, 8 and 9 |
 | NOTAM | machine readable | `[assumption, unmeasured]` - the old T8 asserted this flatly and nothing measured it |
-| MSWiA application | not released | `[reported]` |
+| A dedicated air-strike warning application | not built; under analysis by the operator of RSO | `[reported]`, the same letter |
 
-**The two rows with no provenance at all are the work.** RSO and NOTAM were
-asserted machine-readable in a one-line task nobody revisited; RCB's public
-postings were never looked at, which is the odd part, because scraping a
-public web preview is exactly the technique that produced this project's entire
-Ukrainian corpus.
+**The rows with no provenance at all are the work.** NOTAM was asserted
+machine-readable in a one-line task nobody revisited; RCB's public postings
+were never looked at, which is the odd part, because scraping a public web
+preview is exactly the technique that produced this project's entire Ukrainian
+corpus. The RSO row sat at `[assumption, unmeasured]` here for thirteen days
+after the stream was measured and written up in FEED-SPEC, which is F142's
+shape in the backlog: the repair reached the specification and not the task
+the specification argues from. Re-read at 0.51.1.1.
+
+**What the letter of 2026-09-02 makes possible.** The first acceptance bullet
+below - one real read, committed as a fixture - is now a read of CAP under a
+token, and the second is answerable in the same read: `geocode` either carries
+a TERYT code or it does not. Neither read is made. The task stays open on that,
+and the CAP half is `blocked-external` on the token while the list-page half
+is not.
 
 **Acceptance, and it closes in either direction.** For each candidate, a row in
 a written finding stating its verdict on each of FEED-SPEC's five properties -

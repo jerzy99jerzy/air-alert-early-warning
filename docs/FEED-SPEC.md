@@ -1,28 +1,32 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 2.3 / 2026-08-31
+Version: 2.4 / 2026-09-04
 A specification, written from the position of someone who tried to build against
-one and found there was nothing to build against. The Ukrainian equivalent was
-consumed and measured over a corpus of 118 days; the work of building against it
-is a weekend project, and the parser at the centre of it took two afternoons.
-Both facts are stated because the argument below rests on the second: what the
-convention enables is cheap to exploit, and that is the point. Companion:
-[`docs/CHANNEL.md`](CHANNEL.md), which is the measurement this rests on, and
-T8a in [`../TODO.md`](../TODO.md), which is where the gap was first recorded.
-T8a is the survey this document argues from. Its first source-level verdict,
-for the RSO stream, comes from reading the stream on 2026-08-22 and is folded
-into sections 2 and 4a below. The other Polish sources in section 2 have not
-been read by this project; they are described from what their operators
-publish about them, and each sentence says which of the two it is.
+one, found nothing at first, then found part of one behind a token, and was
+then told by the operator of that one what it publishes and what is being
+added to it. The Ukrainian equivalent was consumed and measured over a corpus
+of 118 days; the work of building against it is a weekend project, and the
+parser at the centre of it took two afternoons. Both facts are stated because
+the argument below rests on the second: what the convention enables is cheap
+to exploit, and that is the point. Companion: [`docs/CHANNEL.md`](CHANNEL.md),
+which is the measurement this rests on, and T8a in [`../TODO.md`](../TODO.md),
+which is where the gap was first recorded. T8a is the survey this document
+argues from. Its first source-level verdict, for the RSO stream, comes from
+reading the stream on 2026-08-22 and is folded into sections 2 and 4a below.
+Its second comes from the operator of that stream, in writing, on 2026-09-02,
+and is folded into sections 2, 3, 6 and 8. The other Polish sources in
+section 2 have not been read by this project; they are described from what
+their operators publish about them, and each sentence says which it is.
 
 ```
-Note: this document describes a feed that does not yet exist. Poland's nearest
-      existing counterpart, the RSO stream, was read and measured on
-      2026-08-22; section 2 records what it is, and the last entries of
-      section 4a record what consuming it taught. That reading corrected this
-      document in several places, and the corrections are marked rather than
-      silent. None of it is a claim about anyone's competence, and this
-      document makes none
+Note: this document describes a feed that does not yet exist in the form it
+      asks for. Poland's nearest counterpart, the RSO stream, was read and
+      measured on 2026-08-22; on 2026-09-02 its operator stated in writing
+      what it publishes, under what access, and what is being added to it.
+      Section 2 records both, section 8 records the correction, and the last
+      entries of section 4a record what consuming the stream taught. The
+      corrections are marked rather than silent. None of it is a claim about
+      anyone's competence, and this document makes none
 ```
 
 ## Contents
@@ -34,6 +38,8 @@ Note: this document describes a feed that does not yet exist. Poland's nearest
 5. [The objection, and the answer](#5-the-objection-and-the-answer)
 6. [What this is not asking for](#6-what-this-is-not-asking-for)
 7. [How to disagree with this document](#7-how-to-disagree-with-this-document)
+8. [Correction record](#8-correction-record)
+9. [Sources](#9-sources)
 
 ---
 
@@ -73,12 +79,15 @@ institution.
 | Sirens | People within earshot | No, and cannot be |
 | RCB alert (SMS) | Phones across the country | No. Free text to a phone |
 | RSO stream (XML and JSON) | Anyone who finds the address | Yes. Read on 2026-08-22, with the gaps recorded in section 4a |
-| RSO CAP interface | Holders of an access token | In format, yes. Access is by writing to the system's administrator |
-| The announced MSWiA application | Not yet released | Unknown |
+| RSO CAP interface, since June 2026 | Holders of a token, bound to one static IP | In format, yes. Access is by application to the system's administrator |
+| RSO air-strike threat category | Nobody yet: not in production on 2026-09-02 | In a test environment; production targeted for the end of September 2026 |
+| A dedicated air-strike warning application | Not built | Under analysis, separately from the category above |
 
-Only the RSO row comes from reading the source. The other four are described
-from what their operators publish about them, and no claim below rests on a
-reading this project has not made.
+Only the first RSO row comes from reading the source. The three RSO rows
+under it come from the operator's own letter, cited in section 9. The sirens
+and the SMS are described from what their operators publish about them. No
+claim below rests on a reading this project has not made or on a statement
+its source has not signed.
 
 **A correction to earlier editions, measured 2026-08-22.** This document used
 to describe the RSO stream as closed. It is not. The service behind the RSO
@@ -155,6 +164,44 @@ metadata, unpack, and filter the description fields. The command is in this
 repository's history and the figures above come from running it, not from
 browsing the site.
 
+**A second correction, from the operator, 2026-09-02.** The Department of
+Civil Protection and Crisis Management of the Ministry of the Interior and
+Administration, which operates RSO, answered the correspondence this document
+travelled with; the letter is cited in section 9. Four statements of fact
+follow from it. Each is `[reported]` rather than `[measured]`, and each is a
+claim about the world that a reading could confirm or refute.
+
+- **The statutory instrument exists.** Article 71(2)(6) of the Act on civil
+  protection and civil defence of 5 December 2024 lists public warnings sent
+  by fast digital transmission among the permitted warning systems. Earlier
+  editions of this document did not cite it and should have. Nothing below
+  needs new legislation.
+- **The operator is named, and is analysing four paths at once:** extending
+  RSO, a dedicated application for warning of air strikes, cell broadcast,
+  and the modernisation of the SMS centre behind the RCB alert.
+- **RSO has published in the Common Alerting Protocol since June 2026.** The
+  reading of 2026-08-22 found the CAP interface and did not know its age.
+- **The category this document exists for is being built.** On the letter's
+  date the RSO category set did not include air-strike threat. Work on adding
+  it is under way in a test environment, with a stated hope of reaching the
+  production system by the end of September 2026. This document is therefore
+  not a request to start anything. It is a set of properties to check the
+  result against, and section 3 is written as that checklist.
+
+**How CAP access is granted, from the same source.** An applicant supplies a
+static IP address that will connect to the CAP API and a contact address for
+correspondence about the token. Access is bound to a single network location
+as well as to a credential, which is stricter than property one of section 3
+had anticipated, and is recorded there.
+
+**What the letter leaves open**, each answerable by the operator in one
+sentence: whether the CAP payload carries the affected area as a TERYT code
+in `geocode` or only as a name or a polygon; whether the end of a threat is
+published as a `Cancel` or `Update` message or is implied by `expires`
+elapsing; and whether anything is published when nothing is happening, which
+is section 4. Those three are what a reading under a token would settle, and
+T8a in the backlog is that reading.
+
 ## 3. The specification, which is mostly not mine
 
 **Four of the five properties below are already required or recommended by the
@@ -178,10 +225,32 @@ matters most for alerting. It is marked as a gap rather than as a request.
 The four rows above need no argument from me. What follows is the reasoning for
 each in the specific case of alerting, and then the gap.
 
+**Read against RSO, at 2.4.** The same five properties, with the status each
+holds against the one Polish stream that exists. `[measured]` is this
+project's reading of 2026-08-22; `[reported]` is the operator's letter of
+2026-09-02; *unknown* is what neither settles, and section 2 lists what would.
+
+| Property | Status against RSO |
+| --- | --- |
+| Public, no application process | Met by the XML and JSON list pages `[measured]`. Not met by the CAP resource: a token, bound to one static IP `[reported]`. This is the remaining gap |
+| Area by register code, not prose | List pages carry the voivodeship as a slug and a name, no register code `[measured]`. Unknown for CAP, whose `geocode` can carry one |
+| Timestamped transitions | Unknown for both resources; not measured on 2026-08-22. CAP has `Cancel` and `Update` for it |
+| Versioned schema, served over an API | Largely met by CAP itself, a published versioned standard; the RSO profile of it, which optional elements are populated, is unpublished |
+| **A heartbeat** | Unknown for RSO. Not defined by CAP, so not obtained by adopting it. Section 4 |
+
 **One. Public, unauthenticated, no application process.** A feed behind an
 application form is not public infrastructure; it is a permission regime with an
 RSS icon. The Ukrainian channel needs no token, which is why anyone can verify
 the measurements in this repository rather than take them on trust.
+
+*Against RSO, at 2.4.* The CAP resource is behind a token, and the token is
+issued against one static IP address supplied by the applicant `[reported]`.
+That binds consumption to one network location, not only to one credential: a
+mobile client cannot hold it, a browser cannot hold it, and a consumer that
+moves hosts applies again. The XML and JSON list pages carry no gate at all,
+so the regime falls on the one resource that carries the structured form. It
+is not a schema question, so no field closes it, and it is the property that
+separates a system a municipality can build on from one it must ask to.
 
 **Two. Areas identified by register code, not by prose.** The standard makes
 this point better than I can: it introduces the universal address specifically
@@ -691,6 +760,11 @@ not an argument against publishing the rest.
 
 ## 6. What this is not asking for
 
+- **Not a new system.** RSO exists, is operated, and has emitted CAP since
+  June 2026. What is asked concerns which categories it carries and who may
+  read the structured form.
+- **Not new legislation.** Article 71(2)(6) of the Act of 5 December 2024
+  already provides for this class of system.
 - **Not a change to who decides.** The state decides what an alert is and when
   to issue one. This concerns the format in which an already-taken decision is
   published.
@@ -712,11 +786,68 @@ specific. Useful forms:
   document rather than with me.
 - A concrete reason why TERYT codes in the payload are harder than they look.
 - A pointer to a Polish source that already meets some of this and that the
-  author has not found. **This would be the most useful reply of all**, and T8a
-  in the backlog exists precisely because the search was inconclusive rather
-  than exhaustive.
+  author has not found. **This was the most useful reply of all**, and it
+  arrived: section 8 records it. T8a in the backlog now holds the reading
+  that the reply makes possible.
+- An answer to any of the three questions left open at the end of section 2.
 - Evidence that the security objection in section 5 has a stronger form than the
   one answered here.
 
 Corrections to this document are recorded like every other finding in this
 repository: with what was wrong, who found it, and what changed.
+
+## 8. Correction record
+
+Section 7 promised that a pointer to an existing Polish source would be the
+most useful reply this document could receive, and that a correction would be
+recorded like any other finding: what was wrong, who found it, what changed.
+
+| Field | Entry |
+| --- | --- |
+| Editions corrected | 1.0 / 2026-08-09 to 2.3 / 2026-08-31 |
+| Correction issued | 2.4 / 2026-09-04 |
+| Found by | Robert Klonowski, Deputy Director, DOLiZK |
+| Institution | Ministry of the Interior and Administration |
+| Source | Letter ref. DOLiZK-ZK.052.49.2026(2), Warsaw, 2 September 2026 |
+| In reply to | Correspondence of 28 August 2026 |
+
+**What was wrong.** Every edition to 2.3 opened by saying there was nothing
+to build against, and from 1.9 that sentence stood above a section that had
+already found and measured the RSO stream (F142). No edition cited the
+statutory basis that exists for this class of system. No edition knew that
+RSO had carried CAP since June 2026, or that the category this document
+argues for was already in test.
+
+**What changed.** The header and the note. Section 2: three rows, a block of
+four reported facts, the access procedure, and the three questions the letter
+leaves open. Section 3: a status table against RSO, and property one extended
+with the IP binding. Section 6: two items. Section 7: the promise kept.
+Sections 1, 4, 4a and 5 unchanged on substance.
+
+**What did not change.** The five properties. The request became smaller
+than 2.3 made it look, not larger: the category is being built, four of the
+five properties are satisfiable inside CAP without designing anything, and
+what remains is access and a heartbeat.
+
+## 9. Sources
+
+- Letter ref. DOLiZK-ZK.052.49.2026(2) of 2 September 2026, Department of
+  Civil Protection and Crisis Management, Ministry of the Interior and
+  Administration, signed by Deputy Director Robert Klonowski with a qualified
+  electronic signature. Cited for: the statutory basis, the operator of RSO,
+  the availability of CAP since June 2026, the token requirement, and the
+  four workstreams under analysis.
+- Correspondence from the same department of 2 September 2026, under the same
+  reference. Cited for: the absence of an air-strike category in RSO on that
+  date, the work on it in a test environment and its stated production
+  target, and the procedure for obtaining CAP access.
+- RSO integration documentation, <https://komunikaty.tvp.pl/Info/Integration>,
+  read 2026-08-22 and 2026-09-02. Cited for: the public availability of the
+  XML and JSON resources and the token on the CAP resource.
+- Common Alerting Protocol, OASIS, the current version. Cited for the
+  elements named in section 3.
+- Act on civil protection and civil defence of 5 December 2024, article
+  71(2)(6), cited as quoted in the letter above. The published wording has
+  not yet been read against the quotation, and the sentence in section 2
+  stands on the letter until it has.
+- [`docs/CHANNEL.md`](CHANNEL.md), for every measurement in section 1.

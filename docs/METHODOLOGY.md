@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.44
+Document:  docs/METHODOLOGY.md, version 2.45
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -221,6 +221,7 @@ repository has come to the mistake it was built after.
 | [F139](#f139-05000-a-headline-figure-was-incremented-rather-than-counted-under-sixteen-checks) | 0.50.0.0 | A headline figure was incremented rather than counted, under sixteen checks |
 | [F140](#f140-05100-the-briefs-were-outside-the-guarded-set-and-the-check-that-named-them-skipped-its-own-pin) | 0.51.0.0 | The briefs were outside the guarded set, and the check that named them skipped its own pin |
 | [F141](#f141-05110-the-readmes-source-repair-went-to-the-sections-that-argue-about-the-source-and-not-to-the-ones-that-use-it) | 0.51.1.0 | The README's source repair went to the sections that argue about the source and not to the ones that use it |
+| [F142](#f142-05111-the-specifications-header-contradicted-the-section-beneath-it-for-five-editions) | 0.51.1.1 | The specification's header contradicted the section beneath it for five editions |
 
 ## Defect log
 
@@ -4562,3 +4563,29 @@ removing an old one. The 96.5% / 3.5% split stands and gains its provenance in
 place: measured over the channel corpus, a claim about where alerts happen
 rather than about which pipe carries them. No sentence was added beside an old
 one; every old one was replaced.
+
+### F142, 0.51.1.1. The specification's header contradicted the section beneath it for five editions
+
+`docs/FEED-SPEC.md` opened, from 1.0 through 2.3, with *tried to build against
+one and found there was nothing to build against*. From 1.9, which added the
+two properties learned by reading the RSO stream on 2026-08-22, section 2 of
+the same file said the opposite: the stream is public, was read in an evening,
+and section 4a carries what consuming it taught. The header stood above that
+correction for five editions, in the first sentence a reader meets, and the
+version that folded the correction in is the version that wrote the sentence
+it contradicted.
+
+**Same mechanism as F141**, one document over, one release later: the repair
+went to the section that argued about the source and stopped before the
+sentence that merely used the claim on its way to introducing the document.
+Class 3 at the point of writing 1.9 and every edition after it: the header was
+inherited, not re-read.
+
+**Found by** folding an external correction into the file (D-047), which
+required reading the header against the body. Nothing mechanical would have
+caught it: the sentence is prose about a search, and a lint on its words would
+fire on the correct historical uses of the same words in section 8.
+
+**Paid** at 2.4 by rewriting the header to say what was found and when. No
+gate is proposed, for F141's reason: which sentence is a claim about the
+present is not decidable from text.

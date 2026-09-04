@@ -6,7 +6,7 @@
 [![tests 642](https://img.shields.io/badge/tests-642-brightgreen)](tests/)
 [![coverage 95.42%](https://img.shields.io/badge/coverage-95.42%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 120](https://img.shields.io/badge/defects%20logged-120-informational)](docs/METHODOLOGY.md)
+[![defects logged 121](https://img.shields.io/badge/defects%20logged-121-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -798,7 +798,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 22 | 8,518 |
 | Tests | 61 | 12,228 |
 | Tools | 27 | 7,530 |
-| Documentation | 70 | 27,477 |
+| Documentation | 70 | 27,720 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -813,9 +813,9 @@ confidence interval attached.
 | Coverage | 95.42% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 120, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 45, counted from the log itself |
-| Releases | 126 in the changelog; tags are fewer and some are cumulative (A11) |
+| Defects logged with their class | 121, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 46, counted from the log itself |
+| Releases | 127 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation

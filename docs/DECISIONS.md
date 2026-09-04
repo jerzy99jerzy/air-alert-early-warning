@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.17
+Document:  docs/DECISIONS.md, version 2.18
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1809,3 +1809,44 @@ condition was live for one hour, which is why `tests/test_figures_generator.py`
 exists: nine regressions, each planting the drift it claims to find, including
 one that fails if the run-derived figures ever migrate back.
 
+## D-047. A specification corrected by its addressee is revised as a delta, and the source is cited by its reference
+Date: 2026-09-04. Status: adopted
+
+**Decision.** `docs/FEED-SPEC.md` 2.4 folds the operator's reply into the 2.3
+lineage: header, note, sections 2, 3, 6 and 7 amended in place, and two
+sections added - a correction record naming who found what, and a sources list
+citing the letter by its reference number. A rewrite drafted on 2026-09-02
+against the 1.0 text is discarded: it was written against a copy three minor
+versions behind the tree and would have deleted section 4a, the reading of
+2026-08-22 and the record of 2026-08-29.
+
+**What forced it.** A letter, ref. DOLiZK-ZK.052.49.2026(2), from the
+department that operates RSO. It states the statutory basis, article 71(2)(6)
+of the Act of 5 December 2024; that RSO has published CAP since June 2026
+behind a token bound to one static IP; and that an air-strike category is in
+test with production targeted for the end of September 2026. Each is a claim
+the specification either lacked or contradicted, and the specification had
+promised in its own section 7 to record exactly this reply.
+
+**Why a delta and not a rewrite.** 2.3 had already withdrawn "RSO is closed"
+on its own reading; the letter adds facts rather than overturning a thesis, so
+the version moves one minor step and the correction record says what moved. A
+rewrite would have made the document's own history unreadable, and a document
+that argues for versioned schemas cannot carry an unversioned self.
+
+**Why the letter is cited by reference.** Every load-bearing figure in this
+repository carries its provenance. A statement by the operator of a system is
+`[reported]`, not `[measured]`, and a reader is owed the reference that lets
+them put the same question to the same operator. The letter is not reproduced.
+
+**What it costs.** The statutory wording is cited second-hand until read in
+the published text, and section 9 says so. T8a's table gains rows whose
+provenance is the letter; T8a stays open, because the reading it asks for -
+one real read of CAP, an area resolved to TERYT, the end of a threat as a
+message - is now possible and not yet made.
+
+**Reopen if:** the category reaches RSO production, at which point sections 2
+and 8 are read against the result and the note block is rewritten; a CAP token
+is granted, at which point property one is re-measured and the fact of the
+grant is stated in this repository rather than left to be inferred; or the
+published text of article 71(2)(6) differs from the letter's paraphrase.

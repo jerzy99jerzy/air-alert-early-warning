@@ -16,6 +16,39 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.51.1.1 - 2026-09-04
+
+**Documents only: the specification was corrected by the operator of the
+system it describes, and its own section 7 had said that would be the most
+useful reply of all.** D-047. A letter from the Department of Civil Protection
+and Crisis Management, ref. DOLiZK-ZK.052.49.2026(2), states what
+`docs/FEED-SPEC.md` did not know: the statutory basis exists, RSO has published
+CAP since June 2026 behind a token bound to one static IP, and an air-strike
+category is in test with production targeted for the end of September 2026.
+
+- **FEED-SPEC** (2.4): header and note rewritten to what was found and when;
+  section 2 gains three rows, four reported facts, the access procedure and
+  the three questions the letter leaves open; section 3 gains a status table
+  against RSO and the IP binding under property one; section 6 gains two
+  items; section 7 keeps its promise; sections 8 and 9 added. Sections 1, 4,
+  4a and 5 unchanged on substance. A rewrite drafted against the 1.0 text on
+  2026-09-02 is discarded, not merged: it was three minor versions behind the
+  tree.
+- **F142.** The header said there was nothing to build against, above a
+  section that had found the RSO stream, for five editions. F141's shape, in
+  the one document that leaves this repository for a ministry.
+- **DECISIONS** (2.18): D-047, whose reopen conditions carry dates - the end of
+  September for the category, the token for property one.
+- **METHODOLOGY** (2.45): F142.
+- **TODO**: T8a's table re-read against the tree. Its RSO row had said
+  `[assumption, unmeasured]` for thirteen days after the stream was measured.
+  Three rows now carry the letter as provenance; the task stays open because
+  the reading it asks for is now possible and not yet made.
+- **BRIEF**, **BRIEF-PL**, **README**: the defect count, 120 to 121; the
+  decision count, 45 to 46; the release count, 126 to 127.
+
+No code line changes.
+
 ## 0.51.1.0 - 2026-09-01
 
 **F141. The README's source repair went to the sections that argue about the

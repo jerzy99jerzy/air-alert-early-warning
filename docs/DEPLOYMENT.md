@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.20 / 2026-08-31
+Version: 1.21 / 2026-09-04
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -54,8 +54,8 @@ never a decision until D-031 wrote it down.
 | First post-install poll | `active=0 cleared=0 unresolved=5 declined=1 unparsed=0 latency=0.227s snapshot=fresh(193s)`. The `unparsed` field is itself the proof of version: 0.48.0.0 could not print it. Zero means the API's type vocabulary still covers what arrives |
 | Contract after | `state.json` v3, `state=ok`, 38 areas active, `recent_7d` 19 oblasts of which **8 carry an open episode** (`still_under_alert`), and one carries `alert_seconds` **604,800**: a full seven-day window unbroken. That figure is the F138 repair visible from outside - before it, a concurrent kind's all-clear tore such an episode apart and the count could never reach the ceiling |
 | Earlier deploy the same day | 0.48.0.0 at 06:22:53 UTC: wheel `76fb176f…b564d0`, return point `events.pre-0.48.0.0` `a5585436…c205b4`, first poll `snapshot=fresh(120s)`, then `reconcile --unmask` closing the eight-area Donetsk `glide_bomb` belt (ghosts=8, masked=0, second apply 0) |
-| `main` | 0.51.1.0 |
-| Behind by | **four** releases, 0.50.0.0, 0.51.0.0, 0.51.0.1 and 0.51.1.0, and still none touches package code beyond the version string: the wheel would differ from the installed one in nothing a reader can see. The previous revision of this row named the third such release as the point at which it should stop repeating itself and set the judgement to install-next. A fourth has now been cut against that judgement, which makes the row a record of a deferral that was decided against and taken anyway. The next act on this host is bringing it to 0.51.1.0 |
+| `main` | 0.51.1.1 |
+| Behind by | **five** releases, 0.50.0.0, 0.51.0.0, 0.51.0.1, 0.51.1.0 and 0.51.1.1, and still none touches package code beyond the version string: the wheel would differ from the installed one in nothing a reader can see. The revision of this row two releases ago named the third such release as the point at which it should stop repeating itself and set the judgement to install-next; a fourth and now a fifth have been cut against that judgement, the fifth because a document promised to a ministry could not wait for a host visit. The row is a record of a deferral decided against and taken anyway, twice. The next act on this host is bringing it to 0.51.1.1, and the release after this one is not cut before that act |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
