@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.24 / 2026-09-04
+Version: 1.25 / 2026-09-04
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -58,8 +58,8 @@ never a decision until D-031 wrote it down.
 | Reconcile after the polls | `ghosts=2 masked=0 snapshot_areas=38 snapshot_keys=41`. **`masked=0` is the D-044 control**: an area alerting per the API and rendering calm would appear here, and none did. `snapshot_keys` exceeding `snapshot_areas` by three is the multi-kind case the old fold collapsed. The two ghosts, opened 08:21 and the previous evening, were closed with `--apply` (`stored=2 rows`, `0 unmasks`), and a second dry-run read `ghosts=0 masked=0`. `--unmask` was not passed and had nothing to do |
 | Contract after | `feed=ok`, observation age 63 s, 0 areas active in the west, 40 elsewhere. Store 27,406,336 B, up 122,880 B over the hour |
 | Attempts window | `attempts=18 read=18 refused=0 gaps=0 unobserved=0s` from 08:06:01 to 08:39:42 at a 120 s cadence |
-| `main` | 0.52.0.2 |
-| Behind by | **two** releases, 0.52.0.1 and 0.52.0.2, and both are this document: the first records the deploy above, the second corrects the network profile it was written beside (F145). The five-release deferral this row tracked from 0.50.0.0 is discharged: the host ran 0.49.0.0 for four days and now runs the release that changes package code. The judgement stands unchanged for the next one - a release that changes `mavo/` is installed before the release after it is cut |
+| `main` | 0.52.1.0 |
+| Behind by | **three** releases: 0.52.0.1 and 0.52.0.2 are this document (the deploy record and the network profile, F145), and 0.52.1.0 changes `mavo/` (D-048, the third file). The judgement this row carries - a release that changes `mavo/` is installed before the release after it is cut - now binds: 0.52.1.0 is due on the host before the release after it is cut, and the flag it adds stays off until the consumer's forced command has the target |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -521,6 +521,20 @@ somebody has to take and none of which the gate can check:
   `mavo-site` repository. Until 2026-08-12 its only copy was on the host,
   with no version, no test and no history; the entry in `authorized_keys`
   must point at the version-controlled copy, not at whatever is there now.
+
+**A third file from 0.52.1.0, optional until the other side exists (D-048).**
+`mavo report --history /var/lib/mavo/history.json` writes the trailing
+windows at seven, thirty and ninety days from the same composition as the
+other two. Three more steps, none of which the gate can check, and the order
+matters: the consumer's forced command needs a `history` target in its
+table and its server a `/history.json` route **before** the push unit
+carries the file, because the forced command refuses a target it does not
+know and the push would fail on every cycle. Until then the flag may be set
+on `vm-mavo` and the file is written and read by nobody, which is harmless
+and is why the flag is optional. The host runs 0.52.0.0 as this is written
+[reported, the handover of 2026-09-04], so no unit there can carry the flag
+yet; adding it is a deploy step of the release that installs 0.52.1.0, and
+the flag stays off until the consumer's table has the target.
 
 **The producer and the consumer deploy in one window.** The consumer refuses
 any schema version it does not recognise, so a producer at v3 in front of a

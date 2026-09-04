@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.6 / 2026-08-23
+Version: 3.7 / 2026-09-04
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -117,9 +117,10 @@ lives above the fold rather than in a footer.
 
 ## The contract, and who owns it
 
-Two files, `state.json` and `feed.json`, schema v3. MAVO writes them
-(`mavo report --json ... --feed ...`, and `--watch` for the loop); the site
-reads them and imports nothing from this package.
+Two files, `state.json` and `feed.json`, schema v3, and from 0.52.1.0 a
+third, `history.json`, that the site does not yet read (D-048). MAVO writes
+them (`mavo report --json ... --feed ... --history ...`, and `--watch` for
+the loop); the site reads them and imports nothing from this package.
 
 **Two files rather than one, and the reason is cost rather than tidiness.**
 `state.json` is re-read on every cycle, so whatever it carries is a recurring
@@ -156,6 +157,8 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `recent_7d[].alert_seconds` | Union of the seconds any raion of the oblast spent under alert, inside the window | The quantity that does not collapse. Clipped at both edges, so `alert_seconds / (window_days * 86400)` is a share bounded by one and is what a shading scale should read: no bucket edges chosen by eye, and no way to invert. A **union**, not a sum: two raions under alert for the same hour give the oblast one hour, or the figure would measure subdivision again (F76) in a new field. Asserted by `tools/contract_check.py` against its own window |
 | `recent_7d[].still_under_alert` | The oblast was still under alert when the picture was composed | `alert_seconds` is then a lower bound that is still growing, and a growing figure rendered as a total is the collapse this pair exists to remove. A consumer must not print it as a finished total |
 | `feed.json: recent_7d_areas[].alert_seconds` | The same quantity per raion, with `still_under_alert` beside it | Summing it across an oblast's areas is **not** that oblast's `alert_seconds`, for the same reason the counts do not sum: the oblast figure is a union over simultaneous raions |
+| `history.json: windows[]` | The trailing window at 7, 30 and 90 days, each with `oblasts[]` in the `recent_7d` shape and `areas[]` in the `recent_7d_areas` shape (D-048) | One fold at three lengths: the 7-day entry is byte for byte the `recent_7d` block of `state.json` and the `recent_7d_areas` block of `feed.json`, held by `tools/contract_check.py`. A third file on D-024's argument: a reader who opens the quarter pays for the quarter. 19 KiB gzipped on a synthetic 180,000-event log across the packaged table's 126 areas [measured 2026-09-04, this tree]; production resolves more areas and is unmeasured |
+| `history.json: windows[].log_reaches_window_start` | Whether the oldest stamp in the store, `log_oldest_at`, lies at or before `window_start` | **`false` means the counts cover the part of the window the store has observed, and a page must say so.** A quarter published over a store three weeks old is not a quiet quarter; rendering it as one is unknown-resolves-to-calm one window out (F85's shape). Always present, always a boolean. What it does not say: a gap inside the window. The collector's attempt record could, and does not travel here yet |
 | `border_km_lower` / `_upper` | Interval to the border, may be `null` | A single number here would be false with a decimal point on it |
 | `kind` | `missile`, `drone`, `glide_bomb`, `artillery`, `unknown` | Five values, and the consumer currently labels three. See below |
 | `events` | The twenty-minute window, **always present** | An absent block and an empty one read alike to a careless reader. Empty means nothing happened, and the page must say so in words |

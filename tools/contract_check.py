@@ -31,12 +31,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from mavo.areas import OBLAST_SLUGS, AreaTable, oblast_slug  # noqa: E402
 from mavo.report import (  # noqa: E402
     FEED_WINDOW_S,
+    HISTORY_WINDOWS_DAYS,
     SCHEMA_VERSION,
     STREAM_WINDOW_S,
+    Report,
     compose,
     to_contract,
     write_contract,
     write_feed,
+    write_history,
 )
 from mavo.schema import (  # noqa: E402
     AlertState,
@@ -429,6 +432,8 @@ def check_contract() -> list[str]:
             "come from one composition"
         )
 
+    problems += _check_the_history_file(report, payload, feed)
+
     # Nulls must survive as nulls. A consumer renders null as unknown and 0 as
     # a measurement, and the difference is the founding invariant.
     blind = to_contract(compose([], as_of=now, table=table))
@@ -444,6 +449,81 @@ def check_contract() -> list[str]:
         problems.append("a blind report has no stamp to be skewed against; skew is 0.0")
 
     problems += _check_the_skew_field(table, now)
+    return problems
+
+
+REQUIRED_WINDOW = (
+    "days", "window_start", "log_oldest_at", "log_reaches_window_start",
+    "oblasts", "areas",
+)
+
+
+def _check_the_history_file(
+    report: Report, payload: dict[str, object], feed: dict[str, object]
+) -> list[str]:
+    """D-048. The third file is the other two at more lengths, and nothing else.
+
+    Three properties, each of which a consumer would otherwise have to
+    discover: the file describes the same moment as the contract; every
+    window carries its coverage beside its counts, so a quarter the store has
+    observed for three weeks cannot read as a quiet quarter; and the
+    seven-day window is byte for byte the `recent_7d` block of `state.json`
+    and the `recent_7d_areas` block of `feed.json`. That last one is the
+    whole arrangement: one fold, three files.
+    """
+    problems: list[str] = []
+    with tempfile.TemporaryDirectory() as directory:
+        history_path = write_history(report, Path(directory) / "history.json")
+        history = json.loads(history_path.read_text(encoding="utf-8"))
+    if history.get("v") != SCHEMA_VERSION:
+        problems.append(f"history version {history.get('v')} != {SCHEMA_VERSION}")
+    if history.get("generated_at") != payload.get("generated_at"):
+        problems.append(
+            "the history and the contract describe different moments; they "
+            "must come from one composition"
+        )
+    windows = history.get("windows")
+    if not isinstance(windows, list) or not windows:
+        return [*problems, "history has no windows list"]
+    days = [w.get("days") for w in windows]
+    if days != sorted(set(days)) or days != list(HISTORY_WINDOWS_DAYS):
+        problems.append(
+            f"history windows {days} are not the default set "
+            f"{list(HISTORY_WINDOWS_DAYS)} in ascending order"
+        )
+    for window in windows:
+        for key in REQUIRED_WINDOW:
+            if key not in window:
+                problems.append(f"window {window.get('days')} is missing {key!r}")
+        if not isinstance(window.get("log_reaches_window_start"), bool):
+            problems.append(
+                f"window {window.get('days')}: log_reaches_window_start must "
+                "be a boolean, never absent and never null"
+            )
+        if window.get("log_oldest_at") is not None and not isinstance(
+                window.get("log_oldest_at"), str):
+            problems.append(
+                f"window {window.get('days')}: log_oldest_at must be a stamp "
+                "or null"
+            )
+    week = next((w for w in windows if w.get("days") == payload.get("window_days")),
+                None)
+    if week is None:
+        problems.append(
+            f"history carries no window of {payload.get('window_days')} days, "
+            "the one state.json shades by"
+        )
+    else:
+        if week.get("oblasts") != payload.get("recent_7d"):
+            problems.append(
+                "the week's oblasts in history.json differ from recent_7d in "
+                "state.json; the two must be one serialisation of one fold"
+            )
+        if week.get("areas") != feed.get("recent_7d_areas"):
+            problems.append(
+                "the week's areas in history.json differ from recent_7d_areas "
+                "in feed.json; the two must be one serialisation of one fold"
+            )
     return problems
 
 

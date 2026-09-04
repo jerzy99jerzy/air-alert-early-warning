@@ -28,8 +28,10 @@ from mavo.evaluate import run_policy, run_rule
 from mavo.obs import from_environment as sink_from_environment
 from mavo.policy import Regime, policy_of
 from mavo.report import (
+    DEFAULT_TRAILING_DAYS,
     DEFAULT_VALID_FOR_S,
     FEED_WINDOW_S,
+    HISTORY_WINDOWS_DAYS,
     SCHEMA_VERSION,
     FeedState,
     Report,
@@ -38,6 +40,7 @@ from mavo.report import (
     render_text,
     write_contract,
     write_feed,
+    write_history,
 )
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
 from mavo.schema import (
@@ -769,6 +772,11 @@ def _cmd_report(args: argparse.Namespace) -> int:
     silence this command exists to prevent.
     """
     store = EventStore(Path(args.store))
+    try:
+        windows = parse_windows(args.windows)
+    except ValueError as failure:
+        print(f"--windows: {failure}", file=sys.stderr)
+        return 2
     if args.watch:
         if not args.json:
             print("--watch needs --json: the loop exists to publish the contract",
@@ -801,6 +809,8 @@ def _cmd_report(args: argparse.Namespace) -> int:
             valid_for_s=args.valid_for,
             on_cycle=announce,
             feed_path=Path(args.feed) if args.feed else None,
+            history_path=Path(args.history) if args.history else None,
+            history_days=windows,
             log=log,
         )
         print(outcome.line())
@@ -809,7 +819,9 @@ def _cmd_report(args: argparse.Namespace) -> int:
         # reason that returns non-zero, because it is the only one that
         # leaves the consumer reading a file nobody is refreshing.
         return 7 if outcome.reason.startswith("write failed") else 0
-    report = compose(store.replay(), valid_for_s=args.valid_for)
+    report = compose(
+        store.replay(), valid_for_s=args.valid_for, history_days=windows
+    )
     print(render_text(report))
     if args.json:
         written = write_contract(report, Path(args.json))
@@ -823,7 +835,41 @@ def _cmd_report(args: argparse.Namespace) -> int:
         written_feed = write_feed(report, Path(args.feed))
         print(f"feed={written_feed} v={SCHEMA_VERSION} events={events} "
               f"window={FEED_WINDOW_S}s")
+    if args.history:
+        # One line per window, each saying whether the log reaches its
+        # start: a quarter the store has observed for three weeks is
+        # published, and an operator reading stdout sees the three weeks.
+        written_history = write_history(report, Path(args.history))
+        coverage = " ".join(
+            f"{window.days}d="
+            f"{'full' if window.log_reaches_start else 'partial'}"
+            for window in report.history
+        )
+        print(f"history={written_history} v={SCHEMA_VERSION} {coverage}")
     return {FeedState.OK: 0, FeedState.DEGRADED: 5, FeedState.BLIND: 6}[report.feed_state]
+
+
+def parse_windows(spec: str) -> tuple[int, ...]:
+    """`--windows` as days, ascending, positive, distinct, holding the week.
+
+    Rejected loudly rather than repaired: a spec that drops the week would
+    publish a history whose windows include none the map shades by, and a
+    duplicate or a zero is a typo that should not become a file.
+    """
+    try:
+        days = tuple(int(part) for part in spec.split(","))
+    except ValueError as failure:
+        raise ValueError(f"not a comma-separated list of days: {spec!r}") from failure
+    if any(day < 1 for day in days):
+        raise ValueError(f"every window must be at least one day: {spec!r}")
+    if len(set(days)) != len(days):
+        raise ValueError(f"a window is listed twice: {spec!r}")
+    if DEFAULT_TRAILING_DAYS not in days:
+        raise ValueError(
+            f"must include {DEFAULT_TRAILING_DAYS}, the window state.json "
+            f"shades by: {spec!r}"
+        )
+    return tuple(sorted(days))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -968,6 +1014,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="also write the feed.json event history to this path "
              "(24 hours, all areas, both roles; fetched on demand by a "
              "consumer rather than on every cycle)",
+    )
+    report_cmd.add_argument(
+        "--history",
+        help="also write the history.json trailing windows to this path "
+             "(every window in --windows at oblast and raion granularity, "
+             "from the same fold as the other two files; fetched on demand, "
+             "D-048)",
+    )
+    report_cmd.add_argument(
+        "--windows", default=",".join(str(d) for d in HISTORY_WINDOWS_DAYS),
+        help="trailing windows in days for --history, comma-separated "
+             f"(default %(default)s). Must include {DEFAULT_TRAILING_DAYS}, "
+             "the window state.json shades by, so the week on the map and "
+             "the week in the history are one fold",
     )
     report_cmd.add_argument(
         "--valid-for", type=int, default=DEFAULT_VALID_FOR_S,

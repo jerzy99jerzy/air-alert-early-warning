@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.19
+Document:  docs/DECISIONS.md, version 2.20
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1862,3 +1862,66 @@ and 8 are read against the result and the note block is rewritten; a CAP token
 is granted, at which point property one is re-measured and the fact of the
 grant is stated in this repository rather than left to be inferred; or the
 published text of article 71(2)(6) differs from the letter's paraphrase.
+
+## D-048. Three trailing windows from one fold, in a third file that says what it has not seen
+Date: 2026-09-04. Status: adopted
+
+**Decision.** `mavo report --history PATH` writes `history.json` beside the
+other two files, every cycle, from the same composition: the trailing window
+at seven, thirty and ninety days, each at oblast granularity (the `recent_7d`
+shape) and at raion granularity (the `recent_7d_areas` shape). Every window
+carries its start, the oldest source stamp in the store, and a boolean
+saying whether the store reaches the start. The seven-day entry is the very
+tuple `state.json` and `feed.json` publish, taken from the history rather
+than computed beside it. `--windows` moves the set and must keep the seven.
+
+**What forced it.** The store keeps every event and prunes nothing, so the
+month and the quarter have been in it since the collector started; nothing
+read them. `compose` had taken `trailing_days` since 0.33.0.0 and no caller
+could set it: a parameter with no gate is a preference, and this one was
+never even a preference anyone had expressed. A reader asking how a week
+compares with the quarter had the map's week and nothing to compare it with.
+
+**Why a third file and not more blocks in `feed.json`.** D-024's argument,
+one file further: a reader who opens the day panel pays for the day, and a
+reader who opens the quarter pays for the quarter. On a synthetic log of
+180,000 events over 120 days across 126 areas the file is 173 KiB raw and
+19 KiB gzipped [measured 2026-09-04, this tree, `gzip -9`]; the production
+store resolves more areas than the synthetic table, so the production figure
+is larger and unmeasured [assumption]. `recent_7d_areas` stays in `feed.json`
+for the consumer that reads it there. Retiring the copy is a schema step and
+is not taken here.
+
+**Why one fold and not three.** Three windows from three compositions would
+be three moments, and a page whose week disagreed with its own quarter's
+first seven days would have no way to say which to believe. The cost is
+three passes of `trailing_counts` and `trailing_areas` over one replay:
+1.4 s for the week alone against 2.9 s for all three on the 180,000-event
+synthetic log [measured 2026-09-04, CPython 3.12, median of three], on a
+sixty-second cycle. A single-pass fold with per-cutoff counters would halve
+that and is the reopen condition, not the design: the two folds are proved,
+and a third arithmetic beside them would need proving against both.
+
+**Why the store's reach is a field.** The collector has run on the host
+since 2026-08-11 [reported, `docs/DEPLOYMENT.md`] and the quarter's start
+is earlier than that until November. A quarter published
+without that fact reads as a quiet quarter over the weeks nobody observed,
+which is the unknown-resolves-to-calm failure (F85's shape) one window out.
+`log_reaches_window_start` is a boolean beside a stamp rather than a clipped
+window because the question a reader asks is "does this cover ninety days",
+and the honest answer is the date it covers from. What it does not say: a
+gap inside the window. The collector's own attempt record could say so
+(T57's uptime figure) and does not travel here yet.
+
+**What it costs.** A third file crosses the push channel, so the consumer's
+forced command needs a third target and its server a third route; until
+both exist the file is written on `vm-mavo` and read by nobody, which is
+harmless and is what `--history` being optional is for. `tools/contract_check.py`
+holds the three-file agreement in the gate: same moment, the default set in
+order, and the week byte for byte the week of the other two files.
+
+**Reopen if:** the cycle time on the production store exceeds a quarter of
+the interval, at which point the single-pass fold is written; the consumer
+retires its reading of `recent_7d_areas` from `feed.json`, at which point
+that block leaves in a schema step; or a gap inside a window needs stating,
+at which point the attempt record joins the window.

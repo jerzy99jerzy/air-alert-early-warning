@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.5
+Document:  docs/MANUAL.md, version 3.6
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -490,6 +490,8 @@ is an output, not an error.
 | `--store` | required | The event store to read |
 | `--json` | none | Also write the `state.json` contract to this path, atomically |
 | `--feed` | none | Also write `feed.json`: the day-long event window and the trailing window per raion. A second file rather than a longer window inside `state.json`, because that one is re-read on every cycle and this one is fetched when a reader opens the panel |
+| `--history` | none | Also write `history.json`: every window in `--windows`, at oblast and raion granularity, from the same fold as the other two files (D-048). Each window says where it starts, the oldest stamp the store holds and whether the store reaches the start; a quarter the collector has watched for three weeks is published with that fact beside it, never as a quiet quarter. Fetched on demand, like `feed.json`. The one-shot path prints one coverage word per window |
+| `--windows` | `7,30,90` | The trailing windows in days for `--history`. Must include 7, the window `state.json` shades by, so the week on the map and the week in the history are one fold; a duplicate, a zero or a word is refused before any file is written |
 | `--valid-for` | 600 | Seconds a report may be trusted after its newest observation. An assumption rather than a measurement, and labelled as one in `mavo/report.py` |
 | `--watch` | off | Publish on an interval until stopped. Needs `--json`: the loop exists to write the contract, and a loop that only prints is a heartbeat nobody can read |
 | `--interval` | 30.0 | Seconds between cycles under `--watch`, drawn with 15% jitter per cycle. A fixed period is a beacon profile to anyone watching the traffic and a perfectly regular load on an upstream with which there is no agreement |

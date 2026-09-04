@@ -16,6 +16,51 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.52.1.0 - 2026-09-04
+
+**The store has held the month and the quarter since the collector started,
+and nothing read them.** D-048. `compose` took `trailing_days` since
+0.33.0.0 and no caller could set it; every window anyone saw was the week the
+map shades by. A reader asking how the week compares with the quarter had
+one side of the comparison.
+
+- **report**: `HISTORY_WINDOWS_DAYS = (7, 30, 90)`. `compose` folds each
+  window at both granularities over the one replay, and `recent` and
+  `recent_areas` are the seven-day entry's own tuples rather than a
+  computation beside it: one fold, three lengths, and the week on the map is
+  the week in the history by identity. `TrailingWindow` carries the window's
+  start, the oldest source stamp in the store and whether the store reaches
+  the start, because a quarter the collector has watched for three weeks
+  must not read as a quiet quarter. The oldest stamp is the raw one: F120's
+  skew filter bounds freshness, not reach. `to_history`, `write_history`,
+  and `publish(..., history_path=, history_days=)`. One serialisation,
+  `_oblast_item`, for `recent_7d` in `state.json` and the `oblasts` block of
+  every window.
+- **cli**: `mavo report --history PATH` and `--windows 7,30,90`.
+  `parse_windows` refuses a set without the seven, a duplicate, a zero and a
+  word, before any file is written. The one-shot path prints one coverage
+  word per window (`7d=full 30d=partial 90d=partial`) so an operator reading
+  stdout sees what the store reaches.
+- **contract_check**: the third file holds the gate's shape: the contract's
+  moment, the default set ascending, every window labelled, and the week
+  byte for byte the `recent_7d` block of `state.json` and the
+  `recent_7d_areas` block of `feed.json`.
+- **tests**: `tests/test_history_windows.py`, 24 cases. The fixture has an
+  episode at day 20, one at day 60 and one open since day 100, so every
+  window sees a different subset and every cutoff clips the open span to a
+  different length; three deliberate mutations of `compose` were each caught
+  by a named test before the file was kept [measured 2026-09-04].
+- **Measured on a synthetic log**, 180,000 events over 120 days across the
+  126 areas of the packaged table [this tree, CPython 3.12]: `compose` 1.4 s
+  with the week alone, 2.9 s with all three; `history.json` 173 KiB raw and
+  19 KiB gzipped. Production resolves more areas and is unmeasured.
+- **DECISIONS** (2.20), **MANUAL** (3.6), **WEBAPP** (3.7), **DEPLOYMENT**
+  (1.25): the third file, its flags, its fields and what the push channel
+  and the consumer's forced command now need. Neither exists on the
+  consumer's side in this release; until they do the file is written on
+  `vm-mavo` and read by nobody, which is what `--history` being optional is
+  for.
+
 ## 0.52.0.2 - 2026-09-04
 
 **Documents only: the host's network profile said it had no external IPv4, and

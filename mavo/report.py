@@ -34,7 +34,7 @@ import random
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -127,6 +127,15 @@ DEFAULT_JITTER = 0.15
 # parameter (`window_days`) so a reader can see which window produced the
 # counts instead of inferring one.
 DEFAULT_TRAILING_DAYS = 7
+
+#: The windows `history.json` carries, longest last (D-048). The shortest is
+#: `DEFAULT_TRAILING_DAYS` and its two blocks are the same objects
+#: `state.json` and `feed.json` publish: one fold, one moment, three lengths,
+#: so a reader comparing the week with the quarter compares one arithmetic
+#: applied twice and never two compositions that could disagree. A window
+#: longer than the store has observed is published with that fact beside it
+#: rather than as a quiet stretch; see `TrailingWindow.log_reaches_start`.
+HISTORY_WINDOWS_DAYS: tuple[int, ...] = (7, 30, 90)
 
 
 class FeedState(Enum):
@@ -460,6 +469,83 @@ class RecentArea:
 
 
 @dataclass(frozen=True, slots=True)
+class TrailingWindow:
+    """One trailing window at both granularities, with what the log can say.
+
+    `oblasts` is the `trailing_counts` fold and `areas` the `trailing_areas`
+    fold, both over the same replay at the same `as_of`, so the two blocks
+    of one window agree by construction and the blocks of different windows
+    differ only in their cutoff.
+
+    **A window the store has not observed in full is not a quiet window.**
+    `oldest_observation` is the earliest source stamp in the replayed log,
+    and `log_reaches_start` says whether it lies at or before the window's
+    start. When it does not, every count in the window is a count over the
+    part the log covers, and a consumer that renders it as a full window
+    renders the unobserved part as calm - which is the one thing this
+    project's counters exist to refuse (F85's shape, one window out). The
+    field is a boolean beside a stamp rather than a clipped window, because
+    the question a reader asks is "does this cover ninety days", and the
+    honest answer is the date it covers from.
+    """
+
+    days: int
+    start: datetime
+    oblasts: tuple[RecentOblast, ...]
+    areas: tuple[RecentArea, ...]
+    oldest_observation: datetime | None
+
+    @property
+    def log_reaches_start(self) -> bool:
+        return (
+            self.oldest_observation is not None
+            and self.oldest_observation <= self.start
+        )
+
+    def as_block(self) -> dict[str, object]:
+        """The contract form. `oblasts` matches `recent_7d` and `areas`
+        matches `recent_7d_areas` field for field, so a consumer reads all
+        three windows with the readers it already has."""
+        return {
+            "days": self.days,
+            "window_start": self.start.isoformat(timespec="seconds"),
+            "log_oldest_at": (
+                self.oldest_observation.isoformat(timespec="seconds")
+                if self.oldest_observation is not None
+                else None
+            ),
+            "log_reaches_window_start": self.log_reaches_start,
+            "oblasts": [_oblast_item(entry) for entry in self.oblasts],
+            "areas": [entry.as_item() for entry in self.areas],
+        }
+
+
+def _oblast_item(entry: RecentOblast) -> dict[str, object]:
+    """One `recent_7d` row. Shared by `to_contract` and `TrailingWindow` so
+    the week in `state.json` and the week in `history.json` are one
+    serialisation and cannot drift apart a field at a time."""
+    return {
+        "oblast": entry.slug,
+        "alerts_count": entry.alerts_count,
+        "last_alert_ended_at": (
+            entry.last_alert_ended_at.isoformat(timespec="seconds")
+            if entry.last_alert_ended_at is not None
+            else None
+        ),
+        # F114/F115. `alerts_count` collapses under overlap and the
+        # collapse is worst where attack is heaviest; these two carry
+        # the quantity that does not. A consumer shading a map should
+        # read `alert_seconds` over `window_days * 86400`, which is
+        # bounded, needs no thresholds chosen against a distribution,
+        # and cannot invert. `alerts_count` stays because "how many
+        # separate flare-ups" is a real and different question.
+        "alert_seconds": entry.alert_seconds,
+        # A figure still growing must not render as a total.
+        "still_under_alert": entry.open_at_as_of,
+    }
+
+
+@dataclass(frozen=True, slots=True)
 class Report:
     """The composed picture at one moment, with its own blindness measured."""
 
@@ -480,6 +566,10 @@ class Report:
     #: one travels in `state.json` as `nearest_7d`.
     recent_areas: tuple[RecentArea, ...] = ()
     trailing_days: int = DEFAULT_TRAILING_DAYS
+    #: Every window `history.json` publishes, shortest first (D-048). The
+    #: entry whose `days` equals `trailing_days` holds the very tuples
+    #: `recent` and `recent_areas` hold, not a recomputation of them.
+    history: tuple[TrailingWindow, ...] = ()
     #: The short window published inside `state.json` (T50).
     stream: EventWindow | None = None
     #: The day-long window published to `feed.json`, from the same fold.
@@ -875,8 +965,14 @@ def compose(
     table: AreaTable | None = None,
     valid_for_s: int = DEFAULT_VALID_FOR_S,
     trailing_days: int = DEFAULT_TRAILING_DAYS,
+    history_days: Sequence[int] = HISTORY_WINDOWS_DAYS,
 ) -> Report:
     """Fold an event log into the current picture.
+
+    **`history_days` must contain `trailing_days` (D-048).** The week that
+    `state.json` shades by and the week `history.json` lists are the same
+    fold or they are two weeks, and the check is here rather than in the
+    CLI because the CLI is one of several callers.
 
     **The fold works in `(area_id, kind)`, not in `area_id` (D-044).** Last
     write per *key* wins, ordered by source time, because a later observation
@@ -902,6 +998,15 @@ def compose(
     say so.
     """
     table = table if table is not None else AreaTable.from_csv()
+    windows = tuple(sorted(set(history_days)))
+    if trailing_days not in windows:
+        raise ValueError(
+            f"history_days {tuple(history_days)} must contain trailing_days "
+            f"{trailing_days}: the window state.json shades by has to be one "
+            "of the windows history.json lists, or the two are two weeks"
+        )
+    if any(days < 1 for days in windows):
+        raise ValueError(f"history_days must be positive: {tuple(history_days)}")
     # Materialised once: the fold below and the trailing window both need the
     # whole log, and a generator consumed twice would silently give the second
     # reader nothing, which here would be an empty seven-day layer that looks
@@ -994,23 +1099,43 @@ def compose(
         replayed, as_of=moment, window_s=STREAM_WINDOW_S, table=table
     )
     west = sum(1 for event in feed.events if event.is_western)
+    # D-048. One fold per window per granularity, all over the same replay
+    # at the same moment. The two blocks `state.json` and `feed.json` carry
+    # are the entries of the `trailing_days` window, taken from this tuple
+    # rather than computed beside it, so the week a reader sees on the map
+    # and the week they open in the history are one object. The oldest stamp
+    # is taken raw: a window's start is a question about the past of the log,
+    # not about its freshness, so the skew filter above does not apply.
+    oldest = min((event.ts_source for event in replayed), default=None)
+    history = tuple(
+        TrailingWindow(
+            days=days,
+            start=moment - timedelta(days=days),
+            oblasts=trailing_counts(
+                replayed, as_of=moment, days=days, table=table
+            ),
+            # Same log, same moment, same window as the block beside it. Two
+            # compositions would be two weeks, and a page whose headline
+            # named an area its own history block did not list would have no
+            # way to say which half to believe.
+            areas=trailing_areas(
+                replayed, as_of=moment, days=days, table=table
+            ),
+            oldest_observation=oldest,
+        )
+        for days in windows
+    )
+    week = next(window for window in history if window.days == trailing_days)
     return Report(
         as_of=moment,
         newest_observation=newest,
         valid_for_s=valid_for_s,
         areas=tuple(pictures),
         unresolved_areas=tuple(unresolved),
-        recent=trailing_counts(
-            replayed, as_of=moment, days=trailing_days, table=table
-        ),
-        # Same log, same moment, same window as the block above it. Two
-        # compositions would be two weeks, and a page whose headline named an
-        # area its own history block did not list would have no way to say
-        # which half to believe.
-        recent_areas=trailing_areas(
-            replayed, as_of=moment, days=trailing_days, table=table
-        ),
+        recent=week.oblasts,
+        recent_areas=week.areas,
         trailing_days=trailing_days,
+        history=history,
         stream=stream,
         feed=feed,
         # Counted off the day-long window rather than recomputed, so the two
@@ -1105,28 +1230,10 @@ def to_contract(report: Report) -> dict[str, object]:
         # in two fields.
         "clock_skew_s": report.clock_skew_s,
         "window_days": report.trailing_days,
-        "recent_7d": [
-            {
-                "oblast": entry.slug,
-                "alerts_count": entry.alerts_count,
-                "last_alert_ended_at": (
-                    entry.last_alert_ended_at.isoformat(timespec="seconds")
-                    if entry.last_alert_ended_at is not None
-                    else None
-                ),
-                # F114/F115. `alerts_count` collapses under overlap and the
-                # collapse is worst where attack is heaviest; these two carry
-                # the quantity that does not. A consumer shading a map should
-                # read `alert_seconds` over `window_days * 86400`, which is
-                # bounded, needs no thresholds chosen against a distribution,
-                # and cannot invert. `alerts_count` stays because "how many
-                # separate flare-ups" is a real and different question.
-                "alert_seconds": entry.alert_seconds,
-                # A figure still growing must not render as a total.
-                "still_under_alert": entry.open_at_as_of,
-            }
-            for entry in report.recent
-        ],
+        # One serialisation for this block and for the `oblasts` block of
+        # every window in `history.json` (D-048); the field comments live on
+        # `_oblast_item`.
+        "recent_7d": [_oblast_item(entry) for entry in report.recent],
         # 0.33.0.0. The nearest area that was under alert in the window, at
         # **raion** granularity, so the weekly sentence and the live sentence
         # measure the same thing and a reader comparing them is comparing
@@ -1264,6 +1371,39 @@ def write_feed(report: Report, path: Path) -> Path:
     return _write_json(to_feed(report), path, prefix=".feed-")
 
 
+def to_history(report: Report) -> dict[str, object]:
+    """The `history.json` payload: every trailing window, on demand (D-048).
+
+    A third file rather than more blocks in `feed.json`, on the same cost
+    argument that made `feed.json` a second file rather than a longer window
+    in the first: a reader who opens the day panel pays for the day, and a
+    reader who opens the quarter pays for the quarter. `recent_7d_areas`
+    stays in `feed.json` for the consumer that reads it there; it is the
+    same tuple as the seven-day entry here, and retiring the copy is a
+    schema step this release does not take.
+
+    Always every window, present and labelled, whether or not the store
+    reaches its start: an absent quarter would be indistinguishable from a
+    quiet one.
+    """
+    return {
+        "v": SCHEMA_VERSION,
+        "generated_at": report.as_of.isoformat(timespec="seconds"),
+        "windows": [window.as_block() for window in report.history],
+    }
+
+
+def write_history(report: Report, path: Path) -> Path:
+    """Write `history.json` atomically, every cycle, changed or not.
+
+    Same guarantees as the other two files and for the same reasons. Every
+    cycle rather than on change, because the quarter changes every cycle
+    anyway: its start moves with the clock, and a file that is only rewritten
+    on a new event would carry a `window_start` that stopped moving.
+    """
+    return _write_json(to_history(report), path, prefix=".history-")
+
+
 def _write_json(payload: dict[str, object], path: Path, *, prefix: str) -> Path:
     """The atomic write both files use. One implementation, one guarantee."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1335,6 +1475,8 @@ def publish(
     draw: Callable[[float, float], float] | None = None,
     log: RunLog | None = None,
     feed_path: Path | None = None,
+    history_path: Path | None = None,
+    history_days: Sequence[int] = HISTORY_WINDOWS_DAYS,
 ) -> PublishReport:
     """Write the contract on a fixed interval until a named condition stops it.
 
@@ -1384,7 +1526,8 @@ def publish(
                 print(f"[BLIND] store unreadable: {failure}",
                       file=sys.stderr, flush=True)
             report = compose(
-                events, as_of=clock(), table=table, valid_for_s=valid_for_s
+                events, as_of=clock(), table=table, valid_for_s=valid_for_s,
+                history_days=history_days,
             )
             if report.feed_state is FeedState.BLIND:
                 blind += 1
@@ -1399,6 +1542,11 @@ def publish(
                 # moving, with nothing in either file saying so.
                 if feed_path is not None:
                     write_feed(report, feed_path)
+                # The third file rides the same cycle for the same reason
+                # (D-048): a quarter frozen beside a moving week is the
+                # same defect one file over.
+                if history_path is not None:
+                    write_history(report, history_path)
             except OSError as failure:
                 reason = f"write failed: {failure}"
                 break
