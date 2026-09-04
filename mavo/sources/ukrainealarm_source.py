@@ -72,6 +72,19 @@ _KIND = {
     "URBAN_FIGHTS": ThreatKind.UNKNOWN,
 }
 
+#: Type strings the API uses for records that are not alerts. `INFO` is an
+#: informational message: the Home Assistant integration D-029 cites as one
+#: of its three sources lists it, with `UNKNOWN`, beside the five categories
+#: D-029 recorded, which makes the documented vocabulary seven values rather
+#: than five `[reported; the vocabulary this key actually returns is
+#: unmeasured until tools/api_kind_compare.py prints it]`. A record of this
+#: type is left out of the snapshot and counted by region, never folded into
+#: UNKNOWN: an informational notice rendered as an alert of unstated kind is a
+#: threat the source did not declare, which is the fold's failure in the other
+#: direction. Because it never enters the snapshot, its disappearance is not
+#: an all-clear either.
+NOT_AN_ALERT = frozenset({"INFO"})
+
 #: How old a persisted snapshot may be, in seconds, and still license clears.
 #: Three cycles of the 120 s cadence the `collect-api` timer runs at
 #: (`docs/DEPLOYMENT.md`, the D-040 switchover): one missed run survives it,
@@ -213,6 +226,17 @@ class UkrainealarmSource:
         #: rising count means the API's type vocabulary is drifting, and the
         #: recap prints it for the same reason the channel path prints its own.
         self.unparsed: tuple[str, ...] = ()
+        #: Regions carrying a record whose type is documented as not an alert
+        #: (`NOT_AN_ALERT`). Counted so an operator can see the API talking
+        #: without the map hearing an alarm.
+        self.informational: tuple[str, ...] = ()
+        #: Well-formed type strings absent from `_KIND`, to the regions they
+        #: arrived on (T83). Folded into UNKNOWN all the same - a type this
+        #: vocabulary cannot read is not the absence of an alert - but named,
+        #: because until 0.52.0.0 they took `_KIND.get`'s default silently and
+        #: the first sign of a new API type would have been a reader asking why
+        #: a named threat renders as "type not stated".
+        self.unmapped_types: dict[str, tuple[str, ...]] = {}
 
     def poll(self) -> Sequence[ThreatEvent]:
         """Transitions since the previous successful poll.
@@ -238,8 +262,13 @@ class UkrainealarmSource:
         unresolved: list[str] = []
         declined: list[str] = []
         unparsed: list[str] = []
+        informational: list[str] = []
+        unmapped: dict[str, list[str]] = {}
         substituted: set[tuple[str, ThreatKind]] = set()
         for alert in parse_alerts(payload):
+            if alert.alert_type in NOT_AN_ALERT:
+                informational.append(alert.region_name or "<unreadable region>")
+                continue
             if alert.alert_type == "unparsed":
                 # F135. Counted, never silently dropped: the parser one layer
                 # down marks these records for exactly this recap, and a
@@ -260,6 +289,8 @@ class UkrainealarmSource:
             if not area_id:
                 declined.append(alert.region_name)
                 continue
+            if alert.alert_type not in _KIND and alert.alert_type != "unparsed":
+                unmapped.setdefault(alert.alert_type, []).append(alert.region_name)
             kind = _KIND.get(alert.alert_type, ThreatKind.UNKNOWN)
             key = (area_id, kind)
             if alert.started_at is None:
@@ -276,6 +307,11 @@ class UkrainealarmSource:
         self.unresolved = tuple(dict.fromkeys(unresolved))
         self.declined = tuple(dict.fromkeys(declined))
         self.unparsed = tuple(dict.fromkeys(unparsed))
+        self.informational = tuple(dict.fromkeys(informational))
+        self.unmapped_types = {
+            type_string: tuple(dict.fromkeys(regions))
+            for type_string, regions in sorted(unmapped.items())
+        }
 
         previous = self._previous
         events: list[ThreatEvent] = []

@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.18
+Document:  docs/DECISIONS.md, version 2.19
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1073,6 +1073,18 @@ the provider documents a sub-type or a free-text description beside the
 category; or a corpus count shows the channel naming a threat this schema
 cannot hold, which reopens the enum question on its own terms rather than on
 this API's.
+
+**Amendment, 2026-09-04, not a reopening.** The Home Assistant integration
+this entry cites lists seven values, not five: `UNKNOWN` and `INFO` sit beside
+the five above `[reported, from the integration's own constants; the
+vocabulary returned to this key remains unmeasured]`. The entry stands - none
+of the seven names a means of attack - but the adapter that became primary
+under D-040 folded any string outside its three rows into UNKNOWN by default,
+which would have rendered an informational message as an alert. 0.52.0.0
+lists `INFO` as not an alert and names every other unknown string (T83). The
+reopen condition is unchanged and is now observable: the recap and
+`feed_attempts.detail` carry the strings, so a value outside the seven will be
+read, not inferred from a reader's question.
 
 ## D-030. A task identifier is issued by reading the file, never from memory
 Date: 2026-08-14. Status: adopted

@@ -373,3 +373,33 @@ def test_an_artillery_alert_keeps_the_kind_the_api_states() -> None:
     events = source.poll()
 
     assert events[0].kind is ThreatKind.ARTILLERY
+
+
+def test_an_informational_message_is_not_an_alert() -> None:
+    """`INFO` is counted by region and never folded into UNKNOWN (T83)."""
+    source = _source(SequenceTransport([_snapshot((LVIV, "INFO"), (VOLODYMYR, "AIR"))]))
+    events = source.poll()
+    assert [event.state for event in events] == [AlertState.ACTIVE]
+    assert events[0].kind is ThreatKind.UNKNOWN
+    assert source.informational == (LVIV,)
+    assert source.unmapped_types == {}
+    assert source.unparsed == ()
+
+
+def test_an_informational_message_ending_is_not_an_all_clear() -> None:
+    """What never entered the snapshot cannot clear out of it."""
+    source = _source(SequenceTransport([_snapshot((LVIV, "INFO")), _snapshot()]))
+    assert source.poll() == ()
+    assert source.poll() == ()
+    assert source.informational == ()
+
+
+def test_a_novel_type_string_is_folded_to_unknown_and_named() -> None:
+    """A type outside `_KIND` still raises an alert, and says which type (T83)."""
+    source = _source(SequenceTransport([_snapshot((LVIV, "BALLISTIC"), (VOLODYMYR, "AIR"))]))
+    events = source.poll()
+    assert len(events) == 2
+    assert all(event.kind is ThreatKind.UNKNOWN for event in events)
+    assert source.unmapped_types == {"BALLISTIC": (LVIV,)}
+    assert source.unparsed == ()
+    assert source.informational == ()

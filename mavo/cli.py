@@ -442,7 +442,10 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
     print(f"active={active} cleared={cleared} "
           f"unresolved={len(source.unresolved)} "
           f"declined={len(source.declined)} "
-          f"unparsed={len(source.unparsed)} latency={fetch_s:.3f}s "
+          f"unparsed={len(source.unparsed)} "
+          f"informational={len(source.informational)} "
+          f"unmapped_types={len(source.unmapped_types)} "
+          f"latency={fetch_s:.3f}s "
           f"snapshot={source.snapshot_state}{aged}")
     if source.snapshot_state in ("stale", "corrupt"):
         # Withheld, and said so. Silently withholding clears would put a calm
@@ -467,11 +470,28 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
               "a rising count means the type vocabulary is drifting")
         for name in source.unparsed:
             print(f"  unparsed: {name}")
+    if source.unmapped_types:
+        # T83. A well-formed type string this adapter has no row for is folded
+        # into UNKNOWN and said so, by name: D-029's reopen condition is a
+        # value outside the recorded vocabulary, and a fold with no counter is
+        # a reopen condition nothing can observe.
+        print(f"  unmapped type string(s): {len(source.unmapped_types)}, folded "
+              "to UNKNOWN; a rising count means the API's type vocabulary "
+              "has grown past this adapter's")
+        for type_string, regions in source.unmapped_types.items():
+            print(f"  unmapped: {type_string} on {len(regions)} region(s)")
     if store is not None:
         try:
             store.record_read(
                 API_FEED, API_URL, started, active + cleared,
                 len(source.unresolved) + len(source.declined), fetch_s,
+                # Persisted beside the attempt, not only printed (T83): drift
+                # between sessions is read off the table, and a journal nobody
+                # replays is not where a vocabulary change should first appear.
+                detail=(
+                    "unmapped types: " + ", ".join(source.unmapped_types)
+                    if source.unmapped_types else None
+                ),
             )
             # Before the append, and the order is the point: a row re-dated
             # after storage would already have lost to the clear it supersedes.

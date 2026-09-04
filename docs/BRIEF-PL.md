@@ -211,9 +211,9 @@ wywnioskowane, założone. Te 57% z akapitu wyżej jest liczbą cudzą i tak jes
 oznaczone, łącznie z uwagą, że źródło mogło mieć na myśli inny obszar niż ten
 projekt.
 
-**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 642 testy,
+**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 646 testy,
 w tym 13 skryptowanych ataków na własne zabezpieczenia; pokrycie kodu wynosi
-95,42% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
+95,45% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
 sprawdzane: 12 z 13 zweryfikowano tak, że celowo psuto chronioną kontrolę i
 wymagano, żeby atak to wykrył. Ten jeden bez takiej weryfikacji jest wypisywany
 jako niezweryfikowany przy każdym uruchomieniu, zamiast być przemilczany.

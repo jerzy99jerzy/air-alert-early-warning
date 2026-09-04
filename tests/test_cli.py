@@ -463,6 +463,8 @@ def test_collect_api_stores_events_and_the_attempt(
         unresolved: tuple[str, ...] = ()
         declined: tuple[str, ...] = ()
         unparsed: tuple[str, ...] = ()
+        informational: tuple[str, ...] = ()
+        unmapped_types: dict[str, tuple[str, ...]] = {}
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -510,6 +512,8 @@ def test_collect_api_records_a_refusal_and_says_the_source_was_unreachable(
         unresolved: tuple[str, ...] = ()
         declined: tuple[str, ...] = ()
         unparsed: tuple[str, ...] = ()
+        informational: tuple[str, ...] = ()
+        unmapped_types: dict[str, tuple[str, ...]] = {}
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -540,6 +544,8 @@ def test_collect_api_reads_the_key_from_a_file(
         unresolved: tuple[str, ...] = ()
         declined: tuple[str, ...] = ()
         unparsed: tuple[str, ...] = ()
+        informational: tuple[str, ...] = ()
+        unmapped_types: dict[str, tuple[str, ...]] = {}
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -559,3 +565,46 @@ def test_collect_api_reads_the_key_from_a_file(
 
     assert main(["collect-api", "--key-file", str(key_file)]) == 0
     assert seen["key"] == "secret-from-file"
+
+
+def test_collect_api_names_an_unmapped_type_and_persists_it(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """T83: a type string outside the vocabulary is named on stdout and lands
+    in `feed_attempts.detail`, not only in a journal."""
+    import sqlite3
+
+    from mavo import cli
+
+    class _Novel:
+        unresolved: tuple[str, ...] = ()
+        declined: tuple[str, ...] = ()
+        unparsed: tuple[str, ...] = ()
+        informational: tuple[str, ...] = ("Львівський район",)
+        unmapped_types: dict[str, tuple[str, ...]] = {"BALLISTIC": ("Володимирський район",)}
+        snapshot_state = "disabled"
+        snapshot_age_s: float | None = None
+
+        def __init__(self, key: str, snapshot: Path | None = None) -> None:
+            pass
+
+        def save_snapshot(self) -> None:
+            return None
+
+        def poll(self) -> tuple[ThreatEvent, ...]:
+            return ()
+
+    monkeypatch.setenv("MAVO_UKRAINEALARM_KEY", "k")
+    monkeypatch.setattr(cli, "UkrainealarmSource", _Novel)
+    store = tmp_path / "e"
+    assert main(["collect-api", "--store", str(store)]) == 0
+    out = capsys.readouterr().out
+    assert "informational=1 unmapped_types=1" in out
+    assert "unmapped: BALLISTIC on 1 region(s)" in out
+    with sqlite3.connect(store) as conn:
+        rows = conn.execute(
+            "SELECT outcome, detail FROM feed_attempts"
+        ).fetchall()
+    conn.close()
+    assert rows == [("read", "unmapped types: BALLISTIC")]

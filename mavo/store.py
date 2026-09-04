@@ -701,8 +701,14 @@ class EventStore:
         elapsed_s: float | None = None,
         first_id: int | None = None,
         last_id: int | None = None,
+        detail: str | None = None,
     ) -> None:
         """Log a poll that returned a page. `items` may legitimately be zero.
+
+        ``detail`` is the same column a refusal writes its reason to. On a
+        read it carries a note about the page that is not a failure - from
+        0.52.0.0, the type strings the API sent that the adapter had no row
+        for (T83) - and stays NULL when there is nothing to note.
 
         Separate from ``record_refusal`` so that a caller cannot write a
         refusal carrying `items=0`. That single confusion is the one this
@@ -712,7 +718,7 @@ class EventStore:
         ``elapsed_s`` defaults to None rather than to 0.0 because a caller
         that does not time itself has not measured a duration of zero.
         """
-        self._record(feed, url, started_at, "read", items, unreadable, None,
+        self._record(feed, url, started_at, "read", items, unreadable, detail,
                      elapsed_s, first_id, last_id)
 
     def record_refusal(

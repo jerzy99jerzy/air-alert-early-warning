@@ -16,6 +16,33 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.52.0.0 - 2026-09-04
+
+**T83, and one value it did not name.** `UkrainealarmSource` folded every
+well-formed type string outside its three-row vocabulary into UNKNOWN through
+`_KIND.get`'s default, with no counter and no name, so the first sign of a new
+API type would have been a reader asking why a named threat renders as "type
+not stated". The entry was found while paying F135 at 0.49.0.0 and left open
+for three releases. Reading the vocabulary source D-029 itself cites found the
+value the entry did not anticipate: `INFO`, an informational message, which
+that fold would have raised as an alert of unstated kind on the map. Whether
+this key has ever returned it is `[unmeasured]`.
+
+- **ukrainealarm_source**: `NOT_AN_ALERT = {"INFO"}`, left out of the snapshot
+  and counted by region; its disappearance is therefore not an all-clear.
+  Type strings outside `_KIND` still fold to UNKNOWN and are now named with
+  the regions they arrived on.
+- **cli**: the `collect-api` recap prints `informational=` and
+  `unmapped_types=`, lists each unmapped string with its region count, and
+  writes the strings to `feed_attempts.detail` beside the attempt.
+- **store**: `record_read` accepts `detail`, the column a refusal already
+  writes; NULL when there is nothing to note.
+- **DECISIONS** (2.19): D-029 amended, not reopened - the cited source lists
+  seven values, none of them a means of attack.
+- Three adapter tests and one CLI test. `tools/api_kind_compare.py` is the
+  measurement that closes the `[unmeasured]` above; it has not been run on
+  the host since the key went live.
+
 ## 0.51.1.1 - 2026-09-04
 
 **Documents only: the specification was corrected by the operator of the
