@@ -16,6 +16,57 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.53.0.0 - 2026-09-08
+
+**This pipeline could not say it had lost a source.** D-049, F146. `compose`
+took its freshness from one `max()` over a pool keyed `(area_id, kind)` with no
+source dimension, so while any feed produced rows the loss of another was
+invisible. Measured on production 2026-09-08: the channel had produced nothing
+for 33 h 50 min while its own pipe read perfectly twice a minute, and the
+contract said `ok` throughout because the API was delivering. The 28 h 30 min
+the API was down on 2026-09-07 was caught only because both feeds happened to
+be silent at once.
+
+- **liveness**: a new module that decides pipe state from `feed_attempts` and
+  nothing else. Four states a reader of the contract can act on differently:
+  `delivering`, `refusing` (polls current, far end saying no), `stalled` (no
+  poll at all, which is what a stopped timer looks like and what no external
+  observer can see), and `unknown` (never left a row, which is not `stalled`).
+- **liveness**: one threshold, `cadence_s * GAP_CADENCES`, imported from
+  `attempts` rather than restated. A second constant counting consecutive
+  refusals was designed and then removed as redundant: the n-th refusal in a
+  row *is* n cadences without a read. Checked against all four refusal
+  episodes the production table holds, it fires on the second consecutive 503
+  of 2026-09-06 and on the second 401 of 2026-09-07 ninety seconds before an
+  operator stopped that timer by hand, and stays silent on both isolated
+  refusals.
+- **liveness**: cadences are declared, never inferred. `PRODUCTION_FEEDS`
+  carries 120 s and 30 s as read from the unit files on 2026-09-08. Inferring
+  them from the table would calibrate the gap detector on the gaps it looks
+  for, which is the refusal `mavo attempts` already makes.
+- **liveness**: the feed name and the `source_id` are separate spaces and the
+  registry is the one place that joins them. The pipe called `channel` writes
+  rows stamped `telegram`.
+- **report**: `state.json` carries a `sources` block, additive against schema
+  v3. The consumer's validator rejects no field it did not expect, so this
+  reaches a deployed site with no coordinated release. `primary_delivering` is
+  the number a reader-facing rule reads; a plain count of delivering pipes
+  reads one throughout an outage of the only source that matters, because the
+  watchman polls a page nobody writes to, perfectly, twice a minute.
+- **report**: `sources: null` when the caller supplied no measurement, never an
+  absent key. A missing key and a producer that does not measure read alike,
+  and a consumer has to tell them apart to know whether it may stop leaning on
+  observation age.
+- **report**: `compose` folds `MAX(ts_ingest)` and `MAX(ts_source)` per
+  `source_id` in the pass it already makes, and hands both over. They answer
+  different questions: for the API `ts_source` is the alarm's own `began`, so a
+  chronic alarm carries an April stamp and a batch recovered after an outage
+  carries stamps from while we were blind. Neither decides a state.
+- **store**: `newest_attempt_at`, `newest_read_at` and `newest_refusal_detail`,
+  each one indexed seek. The window forms cannot answer these: a feed stalled
+  for a day and a half has no row inside any window cheap enough to ask, and an
+  empty window reads as a feed that never existed.
+
 ## 0.52.1.0 - 2026-09-04
 
 **The store has held the month and the quarter since the collector started,

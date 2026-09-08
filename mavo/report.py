@@ -41,6 +41,8 @@ from enum import Enum
 from pathlib import Path
 
 from mavo.areas import AreaRef, AreaTable, oblast_slug
+from mavo.liveness import EventStamps, FeedLiveness
+from mavo.liveness import as_block as sources_block
 from mavo.obs import RunLog
 from mavo.schema import (
     AlertState,
@@ -592,6 +594,13 @@ class Report:
     #: recorded the disagreement between the two clocks. Zero is the ordinary
     #: value and is written out, because an absent key and a zero read alike.
     clock_skew_s: float = 0.0
+    #: Pipe liveness per declared feed (D-049), or None when the caller did
+    #: not supply the measurement. None is not an empty tuple: an empty tuple
+    #: would say "we looked and there are no feeds", and this says "nobody
+    #: looked". The distinction reaches the contract as `sources: null`
+    #: against a block, and the consumer needs it to know whether it may stop
+    #: leaning on the observation-age heuristic.
+    sources: tuple[FeedLiveness, ...] | None = None
 
     @property
     def staleness_s(self) -> float | None:
@@ -966,6 +975,8 @@ def compose(
     valid_for_s: int = DEFAULT_VALID_FOR_S,
     trailing_days: int = DEFAULT_TRAILING_DAYS,
     history_days: Sequence[int] = HISTORY_WINDOWS_DAYS,
+    sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...]]
+    | None = None,
 ) -> Report:
     """Fold an event log into the current picture.
 
@@ -1013,6 +1024,18 @@ def compose(
     # like a quiet week.
     replayed = list(events)
     latest: dict[tuple[str, ThreatKind], ThreatEvent] = {}
+    # D-049. Two maxima per `source_id`, folded in the pass this loop already
+    # makes. They are *reported* beside pipe liveness and never decide it: a
+    # source that is alive and has nothing to say produces no rows, and on
+    # 2026-09-06 both feeds went 4,958 s without one because the sky was quiet.
+    #
+    # Both, not one. `ts_ingest` is when we wrote a row attributable to this
+    # pipe, which is the only one of the two that answers "when did we last
+    # hear from it": for the API `ts_source` is the alarm's own `began`, so a
+    # chronic alarm carries an April stamp and a batch recovered after an
+    # outage carries the stamps of alarms that started while we were blind.
+    newest_ingest: dict[str, datetime] = {}
+    newest_source: dict[str, datetime] = {}
     for event in replayed:
         key = (event.area_id, event.kind)
         current = latest.get(key)
@@ -1020,6 +1043,13 @@ def compose(
             current.ts_source, current.ts_ingest
         ):
             latest[key] = event
+        source_id = event.source_id
+        if (source_id not in newest_ingest
+                or event.ts_ingest > newest_ingest[source_id]):
+            newest_ingest[source_id] = event.ts_ingest
+        if (source_id not in newest_source
+                or event.ts_source > newest_source[source_id]):
+            newest_source[source_id] = event.ts_source
 
     by_area: dict[str, list[ThreatEvent]] = {}
     for (area_id, _kind), event in latest.items():
@@ -1144,6 +1174,18 @@ def compose(
         counts_24h=(west, len(feed.events) - west),
         newest_source_stamp=raw_newest,
         clock_skew_s=skew,
+        # The callable holds the store; this function never learns about one.
+        # `publish` is handed `store.replay` already and a second callable
+        # beside it is the whole of the coupling, so the fold stays testable
+        # with a list of events and no database.
+        sources=(
+            sources(
+                EventStamps(by_ingest=newest_ingest, by_source=newest_source),
+                moment,
+            )
+            if sources is not None
+            else None
+        ),
     )
 
 
@@ -1229,6 +1271,23 @@ def to_contract(report: Report) -> dict[str, object]:
         # so a large value here beside a `blind` state is the whole diagnosis
         # in two fields.
         "clock_skew_s": report.clock_skew_s,
+        # D-049. Which pipes are delivering, measured from `feed_attempts` and
+        # never from the event log. Additive against schema v3 on purpose: the
+        # consumer's validator checks the fields it requires and rejects no
+        # field it did not expect, so this reaches a deployed site without a
+        # coordinated release and the producer goes first.
+        #
+        # **`null` rather than absent when unmeasured.** A missing key and a
+        # producer that does not measure read alike to a consumer, and the
+        # consumer has to tell them apart: on `null` it keeps leaning on the
+        # observation-age heuristic, and on a block it may stop. An absent key
+        # would let a misconfigured producer revert the page to the old
+        # behaviour silently, which is the failure one level up.
+        "sources": (
+            sources_block(report.sources, report.as_of)
+            if report.sources is not None
+            else None
+        ),
         "window_days": report.trailing_days,
         # One serialisation for this block and for the `oblasts` block of
         # every window in `history.json` (D-048); the field comments live on
@@ -1477,6 +1536,8 @@ def publish(
     feed_path: Path | None = None,
     history_path: Path | None = None,
     history_days: Sequence[int] = HISTORY_WINDOWS_DAYS,
+    sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...]]
+    | None = None,
 ) -> PublishReport:
     """Write the contract on a fixed interval until a named condition stops it.
 
@@ -1527,7 +1588,7 @@ def publish(
                       file=sys.stderr, flush=True)
             report = compose(
                 events, as_of=clock(), table=table, valid_for_s=valid_for_s,
-                history_days=history_days,
+                history_days=history_days, sources=sources,
             )
             if report.feed_state is FeedState.BLIND:
                 blind += 1

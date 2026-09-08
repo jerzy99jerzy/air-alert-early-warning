@@ -4692,3 +4692,45 @@ where the host is not. The control is the one this section now carries: every
 row of that table names what was measured, against what target, on what date,
 and the two rules that were inferences are marked as withdrawn rather than
 deleted.
+
+### F146, 0.53.0.0. The freshness of the picture was a maximum over a pool with no source in it, so losing a feed was undetectable
+
+`compose` computed `newest_observation` as `max(ts_source)` over one dictionary
+keyed `(area_id, kind)`. No dimension in that pool records which pipe an
+observation arrived through, so the quantity answers "when did anything last
+arrive" and was read for four releases as though it answered "are our sources
+alive".
+
+**Both halves of the failure, measured on production 2026-09-08.**
+`api.ukrainealarm.com` stopped at 2026-09-07 08:24:51 and produced nothing for
+28 h 30 min. That outage did reach the page, but only by accident: the channel
+had gone silent at 06:09:04 the same morning, so nothing was arriving from
+anywhere and a global maximum was enough. The channel's own outage was still
+running 33 h 50 min later with `state` at `ok` for the whole of it, because the
+API had resumed. `feed_attempts` held 7 852 attempts and 7 852 successful reads
+for that feed across the same window: the pipe was in perfect health and the
+publisher behind it was silent, and no field in the contract could carry the
+difference.
+
+**Why the obvious repair is the same defect.** Keeping the newest stamp per
+`source_id` and thresholding it calls a healthy quiet feed dead. On the evening
+of 2026-09-06 both feeds went 4 958 s and then 4 922 s without an observation,
+beginning inside the same minute, because the sky was quiet. A per-source event
+threshold at an hour raises twice in nine days on two pipes that never missed a
+poll.
+
+**The measured anchor.** `feed_attempts` writes a row per poll whatever
+happened, is `RECORDED` rather than derived, and over the same fourteen days
+carries one gap on the API feed and none on the channel. The one gap is an
+operator stopping a timer by hand. Detection moves from 3 600 s with two false
+readings to 240 s with none.
+
+**Reopening condition.** Any health claim about a source computed from
+`events`. The event log says what the sky did; only the attempt log says
+whether we were looking.
+
+**Numbering note.** A previous session's handover records an F146 for a
+different defect, the `observation_started_at` base in `history.json`. That fix
+is not in this tree and was never logged here, so the number was free. If it
+lands later it takes the next free number and the handover is corrected, not
+this entry.

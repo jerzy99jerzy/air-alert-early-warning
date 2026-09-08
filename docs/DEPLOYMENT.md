@@ -58,8 +58,8 @@ never a decision until D-031 wrote it down.
 | Reconcile after the polls | `ghosts=2 masked=0 snapshot_areas=38 snapshot_keys=41`. **`masked=0` is the D-044 control**: an area alerting per the API and rendering calm would appear here, and none did. `snapshot_keys` exceeding `snapshot_areas` by three is the multi-kind case the old fold collapsed. The two ghosts, opened 08:21 and the previous evening, were closed with `--apply` (`stored=2 rows`, `0 unmasks`), and a second dry-run read `ghosts=0 masked=0`. `--unmask` was not passed and had nothing to do |
 | Contract after | `feed=ok`, observation age 63 s, 0 areas active in the west, 40 elsewhere. Store 27,406,336 B, up 122,880 B over the hour |
 | Attempts window | `attempts=18 read=18 refused=0 gaps=0 unobserved=0s` from 08:06:01 to 08:39:42 at a 120 s cadence |
-| `main` | 0.52.1.0 |
-| Behind by | **three** releases: 0.52.0.1 and 0.52.0.2 are this document (the deploy record and the network profile, F145), and 0.52.1.0 changes `mavo/` (D-048, the third file). The judgement this row carries - a release that changes `mavo/` is installed before the release after it is cut - now binds: 0.52.1.0 is due on the host before the release after it is cut, and the flag it adds stays off until the consumer's forced command has the target |
+| `main` | 0.53.0.0 |
+| Behind by | **four** releases: 0.52.0.1 and 0.52.0.2 are this document (the deploy record and the network profile, F145), 0.52.1.0 changes `mavo/` (D-048, the third file), and 0.53.0.0 changes `mavo/` (D-049, the source dimension). The judgement this row carries - a release that changes `mavo/` is installed before the release after it is cut - now binds twice over. 0.53.0.0 is the release that makes the loss of a feed visible at all, and until it is on the host the contract cannot carry the fact that this host spent 33 h 50 min on one source without saying so |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

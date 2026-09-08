@@ -25,6 +25,8 @@ from mavo.backfill import (
 )
 from mavo.errors import SourceUnavailable
 from mavo.evaluate import run_policy, run_rule
+from mavo.liveness import PRODUCTION_FEEDS, EventStamps, FeedLiveness
+from mavo.liveness import liveness as measure_liveness
 from mavo.obs import from_environment as sink_from_environment
 from mavo.policy import Regime, policy_of
 from mavo.report import (
@@ -801,9 +803,22 @@ def _cmd_report(args: argparse.Namespace) -> int:
         log = sink_from_environment()
         if log is not None:
             print(f"run-log={log.path}", flush=True)
+        # D-049. The second callable beside `load`. The store object is in
+        # hand here and `compose` never learns about one, which keeps the fold
+        # testable against a list of events. `PRODUCTION_FEEDS` carries the
+        # cadences read from the unit files; nothing infers them from the
+        # table they are used to judge.
+        def sources(
+            stamps: EventStamps, moment: datetime
+        ) -> tuple[FeedLiveness, ...]:
+            return measure_liveness(
+                store, PRODUCTION_FEEDS, as_of=moment, events=stamps
+            )
+
         outcome = publish(
             store.replay,
             Path(args.json),
+            sources=sources,
             interval_s=args.interval,
             max_cycles=args.max_cycles,
             valid_for_s=args.valid_for,

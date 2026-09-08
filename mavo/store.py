@@ -871,6 +871,61 @@ class EventStore:
                     "last_id": row[8],
                 }
 
+    def newest_attempt_at(self, feed: str) -> str | None:
+        """Stored form of the most recent poll of this feed, whatever happened.
+
+        `ORDER BY started_at DESC LIMIT 1` over `idx_attempts_feed`, so it stops
+        at the first row rather than walking the feed. The window forms in
+        `attempts` and `iter_attempts` cannot answer this: a feed that has been
+        stalled for a day and a half has no row inside any window short enough
+        to be cheap, and an empty window would read as a feed that never
+        existed. This is the tail, unbounded, and it costs one seek.
+
+        None when this feed has never left a row, which is genuinely unknown.
+        """
+        return self._tail(feed, None)
+
+    def newest_read_at(self, feed: str) -> str | None:
+        """Stored form of the most recent poll of this feed that succeeded.
+
+        The quantity a liveness check turns on: an attempt that happened proves
+        a timer is running, and only a *read* proves data arrived.
+        """
+        return self._tail(feed, "read")
+
+    def newest_refusal_detail(self, feed: str) -> str | None:
+        """`detail` of the most recent refusal, for classifying why.
+
+        Reported, never load-bearing. A refusal that carried no detail returns
+        None rather than an empty string, because "we did not record why" and
+        "there was no reason given" are different and only one of them is a
+        fact about the far end.
+        """
+        clauses = ["feed = ?", "outcome = ?"]
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT detail FROM feed_attempts "
+                f"WHERE {' AND '.join(clauses)} "
+                "ORDER BY started_at DESC, rowid DESC LIMIT 1",
+                (feed, "refused"),
+            ).fetchone()
+        return str(row[0]) if row and row[0] is not None else None
+
+    def _tail(self, feed: str, outcome: str | None) -> str | None:
+        clauses = ["feed = ?"]
+        values: list[Any] = [feed]
+        if outcome is not None:
+            clauses.append("outcome = ?")
+            values.append(outcome)
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT started_at FROM feed_attempts "
+                f"WHERE {' AND '.join(clauses)} "
+                "ORDER BY started_at DESC, rowid DESC LIMIT 1",
+                tuple(values),
+            ).fetchone()
+        return str(row[0]) if row and row[0] is not None else None
+
     def newest_page_id(self, feed: str) -> int | None:
         """The highest post id this feed has ever been observed to serve.
 

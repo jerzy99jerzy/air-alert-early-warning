@@ -1925,3 +1925,60 @@ the interval, at which point the single-pass fold is written; the consumer
 retires its reading of `recent_7d_areas` from `feed.json`, at which point
 that block leaves in a schema step; or a gap inside a window needs stating,
 at which point the attempt record joins the window.
+
+## D-049. A pipe's health is measured from its attempts, and a watchman cannot vouch for a primary
+Date: 2026-09-08. Status: adopted
+
+**Decision.** Feed liveness is decided from `feed_attempts` and never from
+`events`. Every declared feed carries a role, `primary` or `watchman`, and the
+number a reader-facing rule reads is how many **primary** feeds are delivering,
+not how many feeds are.
+
+**The defect.** `compose` took freshness from one `max()` over a pool keyed
+`(area_id, kind)`. There is no source dimension in that pool, so while any feed
+produced rows the loss of another was invisible. Two outages measured on
+2026-09-08 make the two halves of the failure concrete. The API stopped at
+2026-09-07 08:24 and stayed stopped for 28 h 30 min; that one was caught, but
+only because the channel happened to have gone silent two hours earlier, so
+nothing was arriving from anywhere. The channel stopped at 2026-09-07 06:09 and
+was still stopped 33 h 50 min later with the page reporting `ok` throughout,
+because the API was delivering.
+
+**Why attempts and not events.** A source that is alive and has nothing to
+report produces no events. On the evening of 2026-09-06 both feeds went silent
+together for 4 958 s and again for 4 922 s, beginning within a minute of each
+other, because the sky was quiet: an observation-age threshold at one hour
+would have claimed an outage twice in nine days with both pipes at full health.
+Over the same window `feed_attempts` recorded 1 287 reads on the API and 7 852
+on the channel with one gap between them, and that gap was an operator stopping
+a timer. The pipe signal detects in 240 s what the age signal detects in 3 600
+s, and it produced no false reading in the measured window.
+
+**Why the two sources cannot cover for each other.** They are not independent.
+Daily row counts run in step - 949 against 904 on 2026-09-03, 883 against 877
+on 09-04, 751 against 755 on 09-06 - and the two quiet stretches above began in
+the same minute on both. `t.me/s/air_alert_ua` and `api.ukrainealarm.com` are
+two delivery paths of one Ukrainian system, which is what MT9 says about two
+views of one origin agreeing. Redundancy of paths is not redundancy of sources,
+and no rule may treat it as such.
+
+**Why the role and not a count.** `mavo-collect.timer` polls every 30 s and on
+2026-09-08 had 7 852 attempts and 7 852 reads against a page nobody was writing
+to. A plain count of delivering pipes reads one throughout an outage of the
+only source the page can be blind without. The role makes D-040's own
+vocabulary executable: `docs/ARCHITECTURE.md` has called the API the primary
+source and the channel the watchman since the switchover, and until this
+decision that distinction lived only in prose.
+
+**What was designed and then removed.** A second constant counting consecutive
+refusals. It is redundant: the n-th refusal in a row is n cadences without a
+successful read, so the single threshold `cadence_s * GAP_CADENCES` already
+carries it. Checked against every refusal episode in the production table, the
+single rule raises on the second consecutive 503 of 2026-09-06 and on the
+second 401 of 2026-09-07, and stays silent on both isolated refusals.
+
+**What this decision does not do.** It does not remove the observation-age
+heuristic on the consumer. A new signal is added beside a working one and the
+old one is loosened only after the new one has been observed correct in
+production; swapping a working detector for an unproven one in one release is
+how a page loses a check it had.
