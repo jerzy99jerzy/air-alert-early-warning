@@ -100,6 +100,15 @@ class ApiAlert:
     alert_type: str
     started_at: datetime | None
     raw: dict[str, Any]
+    #: The newest level record, as the API's own word and its stamp, or None
+    #: when the alert carries no readable one. Never mapped: `Red` and
+    #: `Yellow` are the source's vocabulary and D-050 has not decided what a
+    #: reader is shown, so the string is carried and not interpreted.
+    level: tuple[str, datetime] | None = None
+    #: Keys on the alert record, or on a level record, that this adapter has
+    #: no reading for. A name the vocabulary does not know is a change in the
+    #: source, and F148 was a change that kept every name.
+    unknown_keys: tuple[str, ...] = ()
 
 
 #: Words the API appends to a region name and the channel's hashtags do not.
@@ -174,6 +183,44 @@ def _began(alert: dict[str, Any]) -> datetime | None:
     return min(stamps) if stamps else _stamp(alert.get("lastUpdate"))
 
 
+#: Every key measured on an alert record: the four of the official 2024 client
+#: model plus `activeAlertLevels`, which appeared on 2026-09-06 without
+#: announcement. And the three of a level record, measured 2026-09-08.
+_ALERT_KEYS = frozenset({"regionId", "regionType", "type", "lastUpdate", "activeAlertLevels"})
+_LEVEL_KEYS = frozenset({"alertLevel", "reason", "createdAt"})
+
+
+def _level(alert: dict[str, Any]) -> tuple[str, datetime] | None:
+    """The alert's current level: the newest readable level record.
+
+    Newest by `createdAt`, never by list position - both orders of a
+    two-record list were measured in one payload on 2026-09-08 - and a record
+    without a readable stamp or level is skipped, so an alert whose records are
+    all unreadable carries no level rather than a wrong one. The string is the
+    API's own (`Red`, `Yellow`), carried verbatim.
+    """
+    newest: tuple[str, datetime] | None = None
+    for record in alert.get("activeAlertLevels") or ():
+        if not isinstance(record, dict):
+            continue
+        level = record.get("alertLevel")
+        stamp = _stamp(record.get("createdAt"))
+        if stamp is None or not isinstance(level, str) or not level:
+            continue
+        if newest is None or stamp > newest[1]:
+            newest = (level, stamp)
+    return newest
+
+
+def _unknown_keys(alert: dict[str, Any]) -> tuple[str, ...]:
+    """Keys this adapter has no reading for, on the alert and its level records."""
+    names = {key for key in alert if key not in _ALERT_KEYS}
+    for record in alert.get("activeAlertLevels") or ():
+        if isinstance(record, dict):
+            names.update(f"activeAlertLevels.{key}" for key in record if key not in _LEVEL_KEYS)
+    return tuple(sorted(names))
+
+
 def parse_alerts(payload: Any, areas: AreaTable | None = None) -> tuple[ApiAlert, ...]:
     """Turn the API's answer into readings, dropping nothing silently.
 
@@ -222,6 +269,8 @@ def parse_alerts(payload: Any, areas: AreaTable | None = None) -> tuple[ApiAlert
                     alert_type=str(alert.get("type") or "unknown"),
                     started_at=_began(alert),
                     raw=alert,
+                    level=_level(alert),
+                    unknown_keys=_unknown_keys(alert),
                 )
             )
     return tuple(out)

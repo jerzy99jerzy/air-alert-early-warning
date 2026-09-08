@@ -16,6 +16,39 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.53.2.0 - 2026-09-08
+
+**What the source says about an alert's level is now kept, and nothing reads
+it yet.** D-050, the capture half. From 2026-09-06 every alert carries a list
+of level records; the adapter had read the list for its stamps (F148) and
+dropped its word. The word is now carried, verbatim, on the row that opens the
+episode, so the decision about what a reader is shown can be made against a
+week of rows instead of against a captured payload.
+
+- **ukrainealarm**: `_level`, the newest readable level record by `createdAt`,
+  never by position; and `_unknown_keys`, every key on an alert or level
+  record the adapter has no reading for.
+- **ukrainealarm_source**: the ACTIVE row's `raw_fields` gain `api_level` and
+  `api_level_at` when the payload carries a readable level record, and neither
+  key when it does not. The level is decided across every alert on a key
+  before the F147 fold, so a row can begin at the earlier alert and wear the
+  level of the later. `unknown_keys` counts what the poll could not read.
+- **cli**: the recap prints `unknown_keys=` and names each key, and the
+  attempt row's `detail` persists unknown keys beside unmapped types, both
+  through one function, because `activeAlertLevels` landed on 2026-09-06 and
+  was found on 2026-09-08.
+- **The level joins no identity, no state and no file.** Each of those moves
+  the three-file contract, which is a D-021 release. D-050 records both halves.
+- **tests**: four, both level-record orders, no readable record, two alerts on
+  one key with the level on the later, and the canary on a known payload and
+  on one with a key on each record.
+- **DECISIONS** (2.21): D-050.
+- **BRIEF, BRIEF-PL** (2.6): the three figures the briefs pin, from this
+  release's own run.
+
+Coverage falls from 95.39 to 95.27: the canary's skip branches and the
+no-level path are each exercised one way. The floor at 95 holds.
+
 ## 0.53.1.1 - 2026-09-08
 
 **Documents only: the release that changes package code reached the host, and

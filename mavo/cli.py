@@ -173,6 +173,23 @@ def _cmd_backfill(args: argparse.Namespace) -> int:
 API_FEED = "ukrainealarm"
 API_URL = f"{API_BASE}/alerts"
 
+def _vocabulary_detail(source: UkrainealarmSource) -> str | None:
+    """What the last poll saw and could not read, for the attempt row (T83).
+
+    Two vocabularies can drift: the type strings the kind map does not know,
+    and the keys the adapter does not know. Both are persisted beside the
+    attempt rather than only printed, because a journal nobody replays is not
+    where a change in the source should first appear. None when neither
+    drifted, never an empty string: an empty string is a claim of a reading.
+    """
+    parts: list[str] = []
+    if source.unmapped_types:
+        parts.append("unmapped types: " + ", ".join(source.unmapped_types))
+    if source.unknown_keys:
+        parts.append("unknown keys: " + ", ".join(source.unknown_keys))
+    return "; ".join(parts) if parts else None
+
+
 def _redate_against_stored_clears(
     store: EventStore, events: Sequence[ThreatEvent], observed_at: datetime
 ) -> tuple[ThreatEvent, ...]:
@@ -450,6 +467,7 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
           f"unparsed={len(source.unparsed)} "
           f"informational={len(source.informational)} "
           f"unmapped_types={len(source.unmapped_types)} "
+          f"unknown_keys={len(source.unknown_keys)} "
           f"latency={fetch_s:.3f}s "
           f"snapshot={source.snapshot_state}{aged}")
     if source.snapshot_state in ("stale", "corrupt"):
@@ -494,6 +512,15 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
               "to the earliest start")
         for (area_id, kind_name), count in source.overlapping.items():
             print(f"  overlapping: {area_id} {kind_name} x{count}")
+    if source.unknown_keys:
+        # A key with no reading is not an error and is not nothing: it is the
+        # source changing shape, printed on the day it lands rather than found
+        # weeks later in a payload capture (F148 landed on 2026-09-06 and was
+        # found on 2026-09-08).
+        print(f"  unknown key(s) on alert records: {len(source.unknown_keys)}, "
+              "read by nothing; the source's vocabulary has changed")
+        for name, count in source.unknown_keys.items():
+            print(f"  unknown key: {name} x{count}")
     if store is not None:
         try:
             store.record_read(
@@ -502,10 +529,7 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
                 # Persisted beside the attempt, not only printed (T83): drift
                 # between sessions is read off the table, and a journal nobody
                 # replays is not where a vocabulary change should first appear.
-                detail=(
-                    "unmapped types: " + ", ".join(source.unmapped_types)
-                    if source.unmapped_types else None
-                ),
+                detail=_vocabulary_detail(source),
             )
             # Before the append, and the order is the point: a row re-dated
             # after storage would already have lost to the clear it supersedes.

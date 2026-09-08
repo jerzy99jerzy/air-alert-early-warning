@@ -249,6 +249,12 @@ class UkrainealarmSource:
         #: area has been under that kind of alert since the earliest of them,
         #: and the count is here so the fold is a finding and not a silence.
         self.overlapping: dict[tuple[str, str], int] = {}
+        #: Keys on the last poll's alert records that the adapter has no
+        #: reading for, to how many records carried them. `activeAlertLevels`
+        #: arrived on 2026-09-06 and changed what `lastUpdate` meant (F148)
+        #: without failing a single check; the next such change should at
+        #: least be printed on the day it lands.
+        self.unknown_keys: dict[str, int] = {}
 
     def poll(self) -> Sequence[ThreatEvent]:
         """Transitions since the previous successful poll.
@@ -278,7 +284,11 @@ class UkrainealarmSource:
         unmapped: dict[str, list[str]] = {}
         substituted: set[tuple[str, ThreatKind]] = set()
         overlapping: dict[tuple[str, str], int] = {}
+        level_of: dict[tuple[str, ThreatKind], tuple[str, datetime]] = {}
+        unknown: dict[str, int] = {}
         for alert in parse_alerts(payload):
+            for name in alert.unknown_keys:
+                unknown[name] = unknown.get(name, 0) + 1
             if alert.alert_type in NOT_AN_ALERT:
                 informational.append(alert.region_name or "<unreadable region>")
                 continue
@@ -314,6 +324,13 @@ class UkrainealarmSource:
             # that lack one, and E-0 must be able to leave them out by reading
             # rather than by guessing.
             started = alert.started_at or now
+            # D-050, the capture half. The level is the newest record across
+            # every alert on the key, decided before the fold below, because
+            # the alert whose start loses may carry the level that is current.
+            if alert.level is not None and (
+                key not in level_of or alert.level[1] > level_of[key][1]
+            ):
+                level_of[key] = alert.level
             if key in current:
                 # Two alerts of one kind in one region. The episode began at
                 # the earliest of them; the later one is the same key and is
@@ -339,6 +356,7 @@ class UkrainealarmSource:
             for type_string, regions in sorted(unmapped.items())
         }
         self.overlapping = dict(sorted(overlapping.items()))
+        self.unknown_keys = dict(sorted(unknown.items()))
 
         previous = self._previous
         events: list[ThreatEvent] = []
@@ -347,6 +365,20 @@ class UkrainealarmSource:
             if previous is not None and key in previous:
                 continue
             area_id, kind = key
+            fields = {"api_region": area_id, "api_type": kind.name}
+            if key in substituted:
+                fields["ts_source_origin"] = "observed"
+            if key in level_of:
+                # Carried on the row's raw fields and nowhere else: the level
+                # cannot join the identity, because it changes inside an
+                # alert without an end event and without a new key, so a
+                # level in the key would open a ghost on every escalation
+                # (measured 2026-09-08, seven alerts in one payload). What a
+                # reader is shown is D-050's open half; this is the record
+                # that half will be decided against.
+                level, level_at = level_of[key]
+                fields["api_level"] = level
+                fields["api_level_at"] = level_at.isoformat()
             events.append(
                 ThreatEvent(
                     area_id=area_id,
@@ -356,12 +388,7 @@ class UkrainealarmSource:
                     source_id=self.source_id,
                     kind=kind,
                     provenance=Provenance.REPORTED,
-                    raw_fields=(
-                        {"api_region": area_id, "api_type": kind.name,
-                         "ts_source_origin": "observed"}
-                        if key in substituted
-                        else {"api_region": area_id, "api_type": kind.name}
-                    ),
+                    raw_fields=fields,
                     oblast=oblast_of[key],
                 )
             )

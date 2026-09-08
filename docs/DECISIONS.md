@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.20
+Document:  docs/DECISIONS.md, version 2.21
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1982,3 +1982,54 @@ heuristic on the consumer. A new signal is added beside a working one and the
 old one is loosened only after the new one has been observed correct in
 production; swapping a working detector for an unproven one in one release is
 how a page loses a check it had.
+
+## D-050. The alert level is captured as the source's word and not yet read
+Date: 2026-09-08. Status: adopted in part; the reading is open
+
+**Decision, the half taken.** From 0.53.2.0 the adapter carries an alert's
+current level on the ACTIVE row's `raw_fields`, as `api_level` (the API's own
+string, `Red` or `Yellow`, verbatim) and `api_level_at` (the stamp of the
+record that says so). The current level is the level record with the newest
+`createdAt`, taken by value and never by list position. Two alerts of one kind
+on one area, which F147 folds to one row, contribute their level records
+together, so the row can begin at the earlier alert and wear the level of the
+later. An alert with no readable level record carries neither key: absence
+means the payload said nothing, and an empty string would say something. The
+adapter also counts every key on an alert record or a level record that it has
+no reading for, prints them in the recap and persists them in the attempt
+row's `detail` beside the unmapped type strings (T83).
+
+**Decision, the half not taken.** No event carries the level as a state, no
+`ThreatKind` is derived from it, the level joins no identity, nothing in
+`state.json`, `feed.json` or `history.json` reads it, and no reader is shown
+it. Each of those is a change to the three-file contract or to the map's
+vocabulary, which is D-021's territory and a minor release.
+
+**Why capture first.** Every fact this decision will need is on the wire and
+was on the wire for two days before anyone read it. Measured on 2026-09-08
+from a captured payload: `activeAlertLevels` is a list on 40 of 40 alerts, its
+order does not encode time, `reason` is free Ukrainian text that repeats the
+level in parentheses and is empty on today's declarations as often as on old
+ones, six alerts carry a `Red` from 2022 to August 2026 with no other mark of
+age, and a level changes inside an alert without an end event and without a
+new key. A rule for what a reader sees written before rows exist to test it
+against is the class of defect F146 and F148 are: reasoning from a shape
+assumed rather than measured.
+
+**Why the level cannot join the identity.** D-045 put `kind` in the row key
+and an escalation would then open a second row on the same area with no CLEAR
+between - a ghost per escalation, seven in the payload above. The level lives
+on the row and can be re-read; the row's identity is the alarm, which did not
+change when its colour did.
+
+**What settles the open half.** A store with rows carrying `api_level` across
+at least one week, read for: how often a level changes inside an episode, how
+old the `Red` records the map does not draw are, and whether the thresholds
+the resolution says are set weekly move the meaning of a colour between
+weeks (which bears on the trailing windows of D-048). Until then the map draws
+what it drew, and the legend's sentence that the source has one category for
+everything that flies stays as the operator's open item, to be corrected in
+the release that first shows a level.
+
+**Reopening condition.** The API renaming or restructuring `activeAlertLevels`,
+which the unknown-key canary is there to print on the day it happens.

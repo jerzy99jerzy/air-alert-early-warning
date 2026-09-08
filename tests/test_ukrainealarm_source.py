@@ -531,3 +531,80 @@ def test_an_alert_without_level_records_still_begins_at_last_update() -> None:
     source = _source(SequenceTransport([body]))
     events = source.poll()
     assert events[0].ts_source.isoformat() == "2026-08-30T13:19:40+00:00"
+
+
+def _two_alerts_with_levels(name: str, first: str, first_level: tuple[str, str],
+                            second: str, second_level: tuple[str, str]) -> str:
+    """Two `AIR` alerts on one region, each with one level record."""
+    def alert(start: str, level: tuple[str, str]) -> dict[str, object]:
+        return {"regionId": "1284", "regionType": "Community", "type": "AIR",
+                "lastUpdate": start,
+                "activeAlertLevels": [{"alertLevel": level[0], "reason": "",
+                                       "createdAt": level[1]}]}
+    return json.dumps([{
+        "regionId": "1284", "regionType": "Community", "regionName": name,
+        "lastUpdate": second,
+        "activeAlerts": [alert(first, first_level), alert(second, second_level)],
+    }])
+
+
+def test_the_active_row_carries_the_newest_level_record_whatever_its_position() -> None:
+    """D-050, the capture half. The level is the record with the newest
+    `createdAt`, never the first or the last in the list: both orders were
+    measured in one payload. The string is the API's own word, not mapped."""
+    yellow, red, bumped = "2026-09-08T17:22:35Z", "2026-09-08T18:01:01Z", "2026-09-08T18:01:00Z"
+    red_first = _source(SequenceTransport([_escalated(LVIV, yellow, red, bumped)])).poll()
+    reversed_body = json.loads(_escalated(LVIV, yellow, red, bumped))
+    reversed_body[0]["activeAlerts"][0]["activeAlertLevels"].reverse()
+    yellow_first = _source(SequenceTransport([json.dumps(reversed_body)])).poll()
+    for events in (red_first, yellow_first):
+        assert [event.state for event in events] == [AlertState.ACTIVE]
+        assert events[0].raw_fields["api_level"] == "Red"
+        assert events[0].raw_fields["api_level_at"] == "2026-09-08T18:01:01+00:00"
+        assert events[0].ts_source.isoformat() == "2026-09-08T17:22:35+00:00"
+
+
+def test_an_alert_without_a_readable_level_puts_no_level_on_the_row() -> None:
+    """No key rather than an empty one: a consumer must be able to tell a
+    payload from before the field existed from a payload that says nothing."""
+    events = _source(SequenceTransport([_snapshot((LVIV, "AIR"))])).poll()
+    assert "api_level" not in events[0].raw_fields
+    assert "api_level_at" not in events[0].raw_fields
+    body = json.loads(_escalated(LVIV, "2026-09-08T17:22:35Z", "2026-09-08T18:01:01Z",
+                                 "2026-09-08T18:01:00Z"))
+    records = body[0]["activeAlerts"][0]["activeAlertLevels"]
+    records[0]["createdAt"] = "not a stamp"
+    records[1]["alertLevel"] = ""
+    events = _source(SequenceTransport([json.dumps(body)])).poll()
+    assert "api_level" not in events[0].raw_fields
+
+
+def test_two_alerts_on_one_key_take_the_newest_level_across_both() -> None:
+    """The fold (F147) keeps the earliest start; the level is the newest
+    record across both alerts, so the row can begin at the first alert and
+    wear the level of the second."""
+    body = _two_alerts_with_levels(
+        LVIV, "2026-09-08T17:00:00Z", ("Yellow", "2026-09-08T17:00:00Z"),
+        "2026-09-08T18:00:00Z", ("Red", "2026-09-08T18:00:00Z"))
+    source = _source(SequenceTransport([body]))
+    events = source.poll()
+    assert len(events) == 1
+    assert events[0].ts_source.isoformat() == "2026-09-08T17:00:00+00:00"
+    assert events[0].raw_fields["api_level"] == "Red"
+    assert list(source.overlapping.values()) == [2]
+
+
+def test_an_unknown_key_on_an_alert_or_a_level_record_is_counted_and_named() -> None:
+    """The canary. `activeAlertLevels` arrived without announcement and
+    changed a field's meaning (F148); the next key to arrive is printed on
+    the day it lands, and a payload with only known keys counts nothing."""
+    source = _source(SequenceTransport([_snapshot((LVIV, "AIR"))]))
+    source.poll()
+    assert source.unknown_keys == {}
+    body = json.loads(_escalated(LVIV, "2026-09-08T17:22:35Z", "2026-09-08T18:01:01Z",
+                                 "2026-09-08T18:01:00Z"))
+    body[0]["activeAlerts"][0]["severity"] = 3
+    body[0]["activeAlerts"][0]["activeAlertLevels"][0]["colour"] = "#f00"
+    source = _source(SequenceTransport([json.dumps(body)]))
+    source.poll()
+    assert source.unknown_keys == {"activeAlertLevels.colour": 1, "severity": 1}

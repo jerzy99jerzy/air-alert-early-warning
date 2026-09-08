@@ -3,8 +3,8 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 696](https://img.shields.io/badge/tests-696-brightgreen)](tests/)
-[![coverage 95.39%](https://img.shields.io/badge/coverage-95.39%25-brightgreen)](Makefile)
+[![tests 700](https://img.shields.io/badge/tests-700-brightgreen)](tests/)
+[![coverage 95.27%](https://img.shields.io/badge/coverage-95.27%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
 [![defects logged 127](https://img.shields.io/badge/defects%20logged-127-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
@@ -797,10 +797,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 23 | 9,349 |
-| Tests | 64 | 13,155 |
+| Package `mavo/` | 23 | 9,449 |
+| Tests | 64 | 13,236 |
 | Tools | 27 | 7,673 |
-| Documentation | 72 | 28,674 |
+| Documentation | 72 | 28,758 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -811,13 +811,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 696, of which 13 are scripted attacks |
-| Coverage | 95.39% against a floor of 95, a ratchet that is never lowered |
+| Tests | 700, of which 13 are scripted attacks |
+| Coverage | 95.27% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 127, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 48, counted from the log itself |
-| Releases | 134 in the changelog; tags are fewer and some are cumulative (A11) |
+| Decisions recorded with reopen conditions | 49, counted from the log itself |
+| Releases | 135 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation

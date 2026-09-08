@@ -59,8 +59,8 @@ never a decision until D-031 wrote it down.
 | Reconcile after the polls | not run at this install `[unknown]`; the one-cycle gap gave it nothing to examine, and the 0.52.0.0 reading (`ghosts=2 masked=0`, both closed with `--apply`) is in the deploy history below |
 | Contract after | `[unknown]` at this revision: the session record holds the unit and recap readings above and no `state.json` read after 20:26. The row is left empty rather than carried forward from the 0.52.0.0 install |
 | `Самарівський район` | in `unresolved` at 20:25:11, one of six names the map does not place, and the only one that appeared in no diagnostic read that evening. New or rare; either way a row for `data/reference/tag_map.csv`, and open |
-| `main` | 0.53.1.1 |
-| Behind by | **one** release, and the one is this release, which changes no line under `mavo/`: the host runs the code of `main`. The judgement the row carries is unchanged - a release that changes `mavo/` is installed before the release after it is cut - and it held for 0.53.1.0, which was on the host before this record was written |
+| `main` | 0.53.2.0 |
+| Behind by | **two** releases: 0.53.1.1 changes no line under `mavo/`, and 0.53.2.0 does - the level of an alert and an unknown-key canary land in `raw_fields` and the recap (D-050, the capture half). The judgement binds: 0.53.2.0 is installed before the release after it is cut. The judgement the row carries is unchanged - a release that changes `mavo/` is installed before the release after it is cut - and it held for 0.53.1.0, which was on the host before this record was written |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
