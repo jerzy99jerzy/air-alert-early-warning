@@ -403,3 +403,131 @@ def test_a_novel_type_string_is_folded_to_unknown_and_named() -> None:
     assert source.unmapped_types == {"BALLISTIC": (LVIV,)}
     assert source.unparsed == ()
     assert source.informational == ()
+
+
+def _two_alerts_one_kind(name: str, first: str, second: str, kind: str = "AIR") -> str:
+    """One region carrying two active alerts of one type, begun at `first` and
+    `second`, in that payload order."""
+    return json.dumps(
+        [
+            {
+                "regionId": "1284",
+                "regionType": "Community",
+                "regionName": name,
+                "lastUpdate": second,
+                "activeAlerts": [
+                    {"regionId": "1284", "regionType": "Community",
+                     "type": kind, "lastUpdate": first},
+                    {"regionId": "1284", "regionType": "Community",
+                     "type": kind, "lastUpdate": second},
+                ],
+            }
+        ]
+    )
+
+
+def test_two_alerts_of_one_kind_on_one_area_fold_to_the_earliest_start() -> None:
+    """The store keys an episode on `(area_id, kind)`, so two alerts of one
+    type in one region are one row whatever the API sends. Until 0.53.0.0 the
+    row took the start of whichever alert came later in the payload's own
+    order, which the API does not promise; a captured payload on 2026-09-08
+    carried one hromada with two `AIR` alerts whose level records dated March
+    and that afternoon, and which start the episode wore depended on list
+    position. The stamps in this test are chosen, not copied from that payload.
+
+    The rule is the earliest start, in either order, and the fold is counted
+    so it can be read off the recap rather than inferred from a date.
+    """
+    march, today = "2026-03-10T14:01:38Z", "2026-09-08T18:00:40Z"
+    for order in ((march, today), (today, march)):
+        source = _source(SequenceTransport([_two_alerts_one_kind(LVIV, *order)]))
+        events = source.poll()
+        assert [event.state for event in events] == [AlertState.ACTIVE]
+        assert events[0].ts_source.isoformat() == "2026-03-10T14:01:38+00:00", order
+        assert source.overlapping == {(events[0].area_id, "UNKNOWN"): 2}
+
+
+def test_a_region_with_one_alert_per_kind_reports_no_overlap() -> None:
+    """The counter is silent when nothing folds, so a non-empty value is a
+    finding and not a constant."""
+    source = _source(SequenceTransport([_snapshot((LVIV, "AIR"), (VOLODYMYR, "ARTILLERY"))]))
+    source.poll()
+    assert source.overlapping == {}
+
+
+def test_the_substitution_mark_follows_the_start_that_is_kept() -> None:
+    """One of two overlapping alerts carries no start and takes the read time
+    (F136); the other carries a real one. Whichever order they arrive in, the
+    row keeps the real start and does not say it was observed at read time,
+    because that mark is what lets the latency measurement leave substituted
+    rows out, and a real stamp mislabelled would be left out with them.
+    """
+    real = "2026-09-08T18:00:40Z"
+    for first, second in ((real, None), (None, real)):
+        body = json.dumps([{
+            "regionId": "1284", "regionType": "Community", "regionName": LVIV,
+            "lastUpdate": real,
+            "activeAlerts": [
+                {"regionId": "1284", "regionType": "Community", "type": "AIR",
+                 **({"lastUpdate": first} if first else {})},
+                {"regionId": "1284", "regionType": "Community", "type": "AIR",
+                 **({"lastUpdate": second} if second else {})},
+            ],
+        }])
+        source = _source(SequenceTransport([body]))
+        events = source.poll()
+        assert len(events) == 1
+        assert events[0].ts_source.isoformat() == "2026-09-08T18:00:40+00:00", (first, second)
+        assert "ts_source_origin" not in events[0].raw_fields, (first, second)
+        assert source.overlapping == {(events[0].area_id, "UNKNOWN"): 2}
+
+
+def _escalated(name: str, yellow: str, red: str, last_update: str) -> str:
+    """One alert that went yellow to red, with `lastUpdate` bumped to the red
+    record, the shape measured on 2026-09-08."""
+    return json.dumps([{
+        "regionId": "1293", "regionType": "State", "regionName": name,
+        "lastUpdate": last_update,
+        "activeAlerts": [{
+            "regionId": "1293", "regionType": "State", "type": "AIR",
+            "lastUpdate": last_update,
+            "activeAlertLevels": [
+                {"alertLevel": "Red", "reason": "", "createdAt": red},
+                {"alertLevel": "Yellow", "reason": "", "createdAt": yellow},
+            ],
+        }],
+    }])
+
+
+def test_an_escalated_alert_begins_at_its_first_level_not_its_last_update() -> None:
+    """From 2026-09-06 the API bumps `lastUpdate` when an alert changes level,
+    so read as a start it dates the episode from the escalation. Measured on
+    2026-09-08: Kharkiv city went yellow at 17:22:35 and red at 18:01:01, and
+    `lastUpdate` sat at 18:01:00. The row must wear the first level's stamp,
+    whatever order the level records arrive in.
+    """
+    yellow, red, bumped = "2026-09-08T17:22:35Z", "2026-09-08T18:01:01Z", "2026-09-08T18:01:00Z"
+    source = _source(SequenceTransport([_escalated(LVIV, yellow, red, bumped)]))
+    events = source.poll()
+    assert [event.state for event in events] == [AlertState.ACTIVE]
+    assert events[0].ts_source.isoformat() == "2026-09-08T17:22:35+00:00"
+    assert "ts_source_origin" not in events[0].raw_fields
+
+
+def test_an_alert_without_level_records_still_begins_at_last_update() -> None:
+    """A payload from before the field existed, or a record whose level
+    stamps cannot be read, must parse exactly as it always did."""
+    source = _source(SequenceTransport([_snapshot((LVIV, "AIR"))]))
+    events = source.poll()
+    assert events[0].ts_source.isoformat() == "2026-08-30T13:19:40+00:00"
+    body = json.dumps([{
+        "regionId": "1", "regionType": "District", "regionName": LVIV,
+        "lastUpdate": "2026-08-30T13:19:40Z",
+        "activeAlerts": [{"regionId": "1", "regionType": "District", "type": "AIR",
+                          "lastUpdate": "2026-08-30T13:19:40Z",
+                          "activeAlertLevels": [
+                              {"alertLevel": "Red", "createdAt": "not a stamp"}, "junk"]}],
+    }])
+    source = _source(SequenceTransport([body]))
+    events = source.poll()
+    assert events[0].ts_source.isoformat() == "2026-08-30T13:19:40+00:00"

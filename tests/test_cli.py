@@ -465,6 +465,7 @@ def test_collect_api_stores_events_and_the_attempt(
         unparsed: tuple[str, ...] = ()
         informational: tuple[str, ...] = ()
         unmapped_types: dict[str, tuple[str, ...]] = {}
+        overlapping: dict[tuple[str, str], int] = {}
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -514,6 +515,7 @@ def test_collect_api_records_a_refusal_and_says_the_source_was_unreachable(
         unparsed: tuple[str, ...] = ()
         informational: tuple[str, ...] = ()
         unmapped_types: dict[str, tuple[str, ...]] = {}
+        overlapping: dict[tuple[str, str], int] = {}
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -546,6 +548,7 @@ def test_collect_api_reads_the_key_from_a_file(
         unparsed: tuple[str, ...] = ()
         informational: tuple[str, ...] = ()
         unmapped_types: dict[str, tuple[str, ...]] = {}
+        overlapping: dict[tuple[str, str], int] = {}
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -583,6 +586,7 @@ def test_collect_api_names_an_unmapped_type_and_persists_it(
         unparsed: tuple[str, ...] = ()
         informational: tuple[str, ...] = ("Львівський район",)
         unmapped_types: dict[str, tuple[str, ...]] = {"BALLISTIC": ("Володимирський район",)}
+        overlapping: dict[tuple[str, str], int] = {}
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 

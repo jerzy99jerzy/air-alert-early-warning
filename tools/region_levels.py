@@ -55,8 +55,9 @@ It writes no store and no snapshot, it never writes or prints the key, and it
 makes one GET. It is a reading, not a source, and D-013's argument about this
 endpoint stands unchanged.
 
-`--save-raw` is the one exception and it writes exactly one file: the bytes as
-received, before parsing. Without it this project holds no wire artefact at
+`--save-raw` is the one exception and it writes exactly one file: the body as
+the package's transport handed it over, decoded once with undecodable bytes
+replaced, before parsing. Without it this project holds no wire artefact at
 all, which is why the payload from before the D-040 switchover is unrecoverable
 and why `ukrainealarm.snapshot.json` could not stand in for it - that file is a
 product of the parser, not of the wire. The body is saved *before* `json.loads`
@@ -69,7 +70,7 @@ can look at afterwards.
 
     python3 region_levels.py --stub payload.json     # no key, no network
 
-    sudo -u mavo /opt/mavo/venv/bin/python3 region_levels.py --save-raw /var/lib/mavo/wire
+    sudo -u mavo /opt/mavo/venv/bin/python3 region_levels.py --save-raw /tmp/wire
 
 Exit codes match `mavo collect-api`: 2 no key, 3 unreachable, 0 otherwise, and
 4 for a `--save-raw` that did not land, following `mavo collect --save-raw`: a
@@ -129,7 +130,7 @@ def inventory(payload: object) -> tuple[Counter[str], Counter[str], int]:
 
 
 def save_raw(directory: Path, body: str, from_stub: bool) -> Path:
-    """Write the body verbatim and return the path. Raises `OSError` on failure.
+    """Write the body as received and return the path. Raises `OSError` on failure.
 
     **The name carries the provenance, because the file cannot.** A stub echoed
     back into this directory and read later as a wire capture would be a
@@ -156,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--key-file", help="path to the API key (default: the package's)")
     parser.add_argument(
         "--save-raw",
-        help="write the payload verbatim into this directory before parsing. "
+        help="write the payload as received into this directory before parsing. "
              "The key is never part of the body and is never written",
     )
     args = parser.parse_args(argv)
@@ -274,8 +275,7 @@ def main(argv: list[str] | None = None) -> int:
     # actually reads had not. Same defect class as the one this tool measures,
     # committed in its own output.
     if args.save_raw:
-        print("\nOnly the payload was written, verbatim and nothing else. This "
-              "figure is")
+        print("\nOnly the payload was written, and nothing else. This figure is")
     else:
         print("\nNothing was written. This figure is")
     print("outside the gate: it is a reading of one moment and must not be")

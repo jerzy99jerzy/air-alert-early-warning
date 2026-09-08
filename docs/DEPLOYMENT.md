@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.25 / 2026-09-04
+Version: 1.26 / 2026-09-08
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -45,8 +45,8 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.52.0.0`, `/opt/mavo/venv`, python3.11 |
-| Installed at | **2026-09-04**, 08:00 UTC. First `collect-api` cycle under it, run by hand with the unit's own flags, completed 08:06; the first three under the timer at 08:07:27, 08:09:27 and 08:11:28 (journal). The `.dist-info` mtime is owed for the third consecutive visit |
+| Installed | `air-alert-early-warning 0.53.0.0`, `/opt/mavo/venv`, python3.11 [measured 2026-09-08, `USER_AGENT` read from the venv interpreter on the host] |
+| Installed at | **2026-09-08**, about 17:40 UTC `[reported, the 0.53.0.0 session]`. The `sources` block was absent at 17:01:40 and present at 17:42:17 with `primary_delivering: 1`, which is the pair of readings that makes the deployment a measurement rather than a hope. The 0.52.0.0 record this row replaced stood for four days after that release stopped being what the host ran |
 | Wheel | sha256 `45622e3d…a46a56`, 170,969 B, built from a worktree of `v0.52.0.0` rather than from the working tree, and verified by `sha256sum` on the host before `pip`; `gcloud compute scp` over the IAP tunnel, 20 s at 8.0 KB/s |
 | Point of return | `events.pre-0.52.0.0`, 27,283,456 B, sha256 `641611e7…a8a55d`, taken with the `collect-api` timer stopped and with no `-wal` or `-shm` beside it. Re-verified after the deploy: unchanged. The listing was re-run for the same reason as at 0.49.0.0 and the reason is now recorded as F144 rather than as an aside |
 | Who owns the venv | `/opt/mavo/venv` is `root:root` 755 and the unit runs as `User=mavo`, so the account that executes the code cannot modify it. `pip` as `mavo` is refused with `EACCES` on `venv/bin/mavo`, before anything is uninstalled; the install is `sudo`. Recorded because two earlier return points on this host are owned by `root` and nothing said why (F144) |
@@ -58,8 +58,8 @@ never a decision until D-031 wrote it down.
 | Reconcile after the polls | `ghosts=2 masked=0 snapshot_areas=38 snapshot_keys=41`. **`masked=0` is the D-044 control**: an area alerting per the API and rendering calm would appear here, and none did. `snapshot_keys` exceeding `snapshot_areas` by three is the multi-kind case the old fold collapsed. The two ghosts, opened 08:21 and the previous evening, were closed with `--apply` (`stored=2 rows`, `0 unmasks`), and a second dry-run read `ghosts=0 masked=0`. `--unmask` was not passed and had nothing to do |
 | Contract after | `feed=ok`, observation age 63 s, 0 areas active in the west, 40 elsewhere. Store 27,406,336 B, up 122,880 B over the hour |
 | Attempts window | `attempts=18 read=18 refused=0 gaps=0 unobserved=0s` from 08:06:01 to 08:39:42 at a 120 s cadence |
-| `main` | 0.53.0.0 |
-| Behind by | **four** releases: 0.52.0.1 and 0.52.0.2 are this document (the deploy record and the network profile, F145), 0.52.1.0 changes `mavo/` (D-048, the third file), and 0.53.0.0 changes `mavo/` (D-049, the source dimension). The judgement this row carries - a release that changes `mavo/` is installed before the release after it is cut - now binds twice over. 0.53.0.0 is the release that makes the loss of a feed visible at all, and until it is on the host the contract cannot carry the fact that this host spent 33 h 50 min on one source without saying so |
+| `main` | 0.53.1.0 |
+| Behind by | **one** release: 0.53.1.0 changes `mavo/` (F147 and F148, the start of an episode). The judgement this row carries is unchanged - a release that changes `mavo/` is installed before the release after it is cut - and it binds here, because until 0.53.1.0 is on the host every episode that escalated from yellow to red is recorded from its escalation rather than its start |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

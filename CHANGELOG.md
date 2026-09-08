@@ -16,6 +16,41 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.53.1.0 - 2026-09-08
+
+**The source changed the meaning of a field without changing its name, and an
+episode's start followed the change.** F148. From 2026-09-06 the API attaches
+a list of level records to each alert and bumps `lastUpdate` when the level
+changes; the adapter had read `lastUpdate` as the alert's start since D-040,
+correctly, because until that day nothing updated an alert in place. Measured
+2026-09-08: Kharkiv city went yellow at 17:22:35 and red at 18:01:01, and its
+`lastUpdate` said 18:01:00. Seven alerts in one payload were dated from their
+escalation instead of their start.
+
+**And two alerts of one kind on one area folded by list position.** F147.
+Lypetska hromada carried two `AIR` alerts in the same payload, one dated March
+and one from that afternoon, and which one the episode wore depended on the
+order the API happened to send them in.
+
+- **ukrainealarm**: `_began`, the earliest readable `createdAt` from
+  `activeAlertLevels`, falling back to `lastUpdate` when none is readable so a
+  payload from before the field existed parses as it always did.
+- **ukrainealarm_source**: overlapping alerts on one key fold to the earliest
+  start, are counted in `overlapping`, and carry the F136 substitution mark
+  with the start that survives.
+- **cli**: the recap names the folded keys, because a fold nobody can see is a
+  silence.
+- **tools/region_levels.py**: the `--save-raw` example wrote into the
+  production data directory, and "verbatim" described a body the transport had
+  already decoded. Both corrected.
+- **tests**: five, covering both payload orders, an escalation with its level
+  records reversed, a payload with no level records and one with unreadable
+  ones.
+
+**A window of known error stands in the store, 2026-09-06 to this release.**
+The affected starts cannot be recomputed: no wire artefact exists from before
+2026-09-08.
+
 ## 0.53.0.0 - 2026-09-08
 
 **This pipeline could not say it had lost a source.** D-049, F146. `compose`

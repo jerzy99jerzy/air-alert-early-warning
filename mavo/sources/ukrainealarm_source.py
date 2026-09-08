@@ -237,6 +237,18 @@ class UkrainealarmSource:
         #: the first sign of a new API type would have been a reader asking why
         #: a named threat renders as "type not stated".
         self.unmapped_types: dict[str, tuple[str, ...]] = {}
+        #: `(area_id, kind)` pairs the API sent more than one alert for on the
+        #: last poll, to how many. The store keys an episode on that pair, so
+        #: two alerts of one type in one region are one row here whatever the
+        #: API says, and until this counter existed the row took the start of
+        #: whichever alert came later in the payload's own order - an order
+        #: the API does not promise. Measured 2026-09-08 on a captured payload:
+        #: one hromada carried two `AIR` alerts, their level records dated
+        #: March and that afternoon [the alerts' own `lastUpdate` stamps were
+        #: not read at the time]. The rule is now the earliest start, because the
+        #: area has been under that kind of alert since the earliest of them,
+        #: and the count is here so the fold is a finding and not a silence.
+        self.overlapping: dict[tuple[str, str], int] = {}
 
     def poll(self) -> Sequence[ThreatEvent]:
         """Transitions since the previous successful poll.
@@ -265,6 +277,7 @@ class UkrainealarmSource:
         informational: list[str] = []
         unmapped: dict[str, list[str]] = {}
         substituted: set[tuple[str, ThreatKind]] = set()
+        overlapping: dict[tuple[str, str], int] = {}
         for alert in parse_alerts(payload):
             if alert.alert_type in NOT_AN_ALERT:
                 informational.append(alert.region_name or "<unreadable region>")
@@ -293,17 +306,30 @@ class UkrainealarmSource:
                 unmapped.setdefault(alert.alert_type, []).append(alert.region_name)
             kind = _KIND.get(alert.alert_type, ThreatKind.UNKNOWN)
             key = (area_id, kind)
-            if alert.started_at is None:
-                # F136. The read time stands in for a stamp the payload did
-                # not carry - the exact act `_stamp` refuses one layer down,
-                # done here because an alert without a start is still an
-                # alert - and the substitution is marked on the stored row,
-                # because a substituted stamp zeroes the latency measurement
-                # for exactly the records that lack one, and E-0 must be able
-                # to leave them out by reading rather than by guessing.
-                substituted.add(key)
-            current[key] = alert.started_at or now
+            # F136. The read time stands in for a stamp the payload did not
+            # carry - the exact act `_stamp` refuses one layer down, done here
+            # because an alert without a start is still an alert - and the
+            # substitution is marked on the stored row, because a substituted
+            # stamp zeroes the latency measurement for exactly the records
+            # that lack one, and E-0 must be able to leave them out by reading
+            # rather than by guessing.
+            started = alert.started_at or now
+            if key in current:
+                # Two alerts of one kind in one region. The episode began at
+                # the earliest of them; the later one is the same key and is
+                # counted rather than allowed to overwrite by payload order.
+                # The substitution mark follows the alert whose start is
+                # kept, so a real stamp beside a substituted one is never
+                # labelled as observed at read time.
+                overlapping[(area_id, kind.name)] = overlapping.get((area_id, kind.name), 1) + 1
+                if started >= current[key]:
+                    continue
+            current[key] = started
             oblast_of[key] = oblast
+            if alert.started_at is None:
+                substituted.add(key)
+            else:
+                substituted.discard(key)
         self.unresolved = tuple(dict.fromkeys(unresolved))
         self.declined = tuple(dict.fromkeys(declined))
         self.unparsed = tuple(dict.fromkeys(unparsed))
@@ -312,6 +338,7 @@ class UkrainealarmSource:
             type_string: tuple(dict.fromkeys(regions))
             for type_string, regions in sorted(unmapped.items())
         }
+        self.overlapping = dict(sorted(overlapping.items()))
 
         previous = self._previous
         events: list[ThreatEvent] = []

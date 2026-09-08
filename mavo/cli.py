@@ -485,6 +485,15 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
               "has grown past this adapter's")
         for type_string, regions in source.unmapped_types.items():
             print(f"  unmapped: {type_string} on {len(regions)} region(s)")
+    if source.overlapping:
+        # Two alerts of one kind on one area fold into one store row. Named
+        # here because the fold picks the earliest start, and an operator who
+        # sees an episode dated from months back should be able to find out
+        # from the journal that the API sent two, not one.
+        print(f"  overlapping alerts on {len(source.overlapping)} key(s), folded "
+              "to the earliest start")
+        for (area_id, kind_name), count in source.overlapping.items():
+            print(f"  overlapping: {area_id} {kind_name} x{count}")
     if store is not None:
         try:
             store.record_read(

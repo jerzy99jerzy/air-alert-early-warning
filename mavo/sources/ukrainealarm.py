@@ -142,6 +142,38 @@ def _stamp(value: Any) -> datetime | None:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
+def _began(alert: dict[str, Any]) -> datetime | None:
+    """When the alert began, as best the record states.
+
+    Until 2026-09-06 `lastUpdate` was the only stamp on an alert and nothing
+    ever updated an alert in place, so it was its start. From that day the API
+    attaches `activeAlertLevels`, a list of level records each with its own
+    `createdAt`, and it bumps `lastUpdate` when the level changes: measured
+    2026-09-08 on a captured payload, every alert that had gone yellow to red
+    carried a `lastUpdate` within a second of the red record's `createdAt` and
+    not of the yellow one's. Read as a start, `lastUpdate` then dates an
+    episode from its escalation, thirty-nine minutes late for Kharkiv city on
+    that payload, and the latency measurement this module exists for reads
+    the escalation as the announcement.
+
+    The earliest level record is the better witness: for an alert that never
+    changed level it sits within a second of `lastUpdate`, for one that did
+    it sits at the first level, and for the chronic alerts that predate the
+    field it was backfilled from `lastUpdate` and is equal to it. Records
+    that carry no readable `createdAt` are skipped, and with none readable the
+    rule falls back to `lastUpdate`, so a payload from before the field
+    existed reads exactly as it did.
+    """
+    stamps = [
+        stamp
+        for record in (alert.get("activeAlertLevels") or ())
+        if isinstance(record, dict)
+        for stamp in (_stamp(record.get("createdAt")),)
+        if stamp is not None
+    ]
+    return min(stamps) if stamps else _stamp(alert.get("lastUpdate"))
+
+
 def parse_alerts(payload: Any, areas: AreaTable | None = None) -> tuple[ApiAlert, ...]:
     """Turn the API's answer into readings, dropping nothing silently.
 
@@ -188,7 +220,7 @@ def parse_alerts(payload: Any, areas: AreaTable | None = None) -> tuple[ApiAlert
                     region_name=name,
                     oblast=slug,
                     alert_type=str(alert.get("type") or "unknown"),
-                    started_at=_stamp(alert.get("lastUpdate")),
+                    started_at=_began(alert),
                     raw=alert,
                 )
             )

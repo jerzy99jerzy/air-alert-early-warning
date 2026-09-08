@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.47
+Document:  docs/METHODOLOGY.md, version 2.48
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4692,6 +4692,63 @@ where the host is not. The control is the one this section now carries: every
 row of that table names what was measured, against what target, on what date,
 and the two rules that were inferences are marked as withdrawn rather than
 deleted.
+
+### F147, 0.53.1.0. Two alerts of one kind on one area folded by payload order, so an episode wore whichever start came last in a list
+
+The store keys an episode on `(area_id, kind)`. The API sends a list of active
+alerts per region and may send two of one type: measured 2026-09-08 on a
+captured payload, Lypetska hromada carried two `AIR` alerts, one whose level
+record dated 2026-03-10 and one from that afternoon. The adapter wrote
+`current[key] = started` as it walked the list, so the surviving start was
+whichever alert came later in the payload's own order, and that order is
+nowhere promised.
+
+**Neither answer is obviously right, which is why this needed a rule rather
+than a fix.** The area has been under that kind of alert since the earliest of
+the overlapping alerts, so the earliest start is the one that describes the
+area; the latest would date the episode from the newest declaration and drop
+the older one from the record entirely. The rule is the earliest, and the fold
+is counted in `source.overlapping` and printed by the recap, because a fold
+with no counter is a silence: an operator seeing an episode dated months back
+could not find out from anywhere that the API had sent two alerts and not one.
+
+**The substitution mark moved with it (F136).** A start substituted at read
+time and a real one can overlap, and the mark has to follow whichever start
+the row keeps, or a real stamp is labelled as observed and the latency
+measurement drops exactly the rows it should keep.
+
+### F148, 0.53.1.0. The API began updating `lastUpdate` when an alert changes level, and the adapter had read that field as the alert's start
+
+Until 2026-09-06 nothing updated an alert in place, so `lastUpdate` was its
+start and the adapter read it as one. From that day the API attaches
+`activeAlertLevels`, a list of level records each with its own `createdAt`,
+and bumps `lastUpdate` when the level changes.
+
+**Measured 2026-09-08 on a captured payload.** Every alert that had gone
+yellow to red carried a `lastUpdate` within about a second of the red record's
+`createdAt` and nowhere near the yellow one's. Kharkiv city went yellow at
+17:22:35 and red at 18:01:01 with `lastUpdate` at 18:01:00: read as a start,
+the episode is dated from its escalation, 38 minutes late. Seven alerts in
+that one payload were in that state.
+
+**The field did not change its name and no error was raised.** Nothing in the
+gate could see it, because every check on that stamp was a check that it parses
+and carries a zone, and it did both. The first sign would have been a reader
+asking why an alert that woke them at nine is recorded as beginning at ten.
+
+**The repair reads the start from the levels.** `_began` takes the earliest
+readable `createdAt` from `activeAlertLevels`, and falls back to `lastUpdate`
+when none is readable, so a payload from before the field existed parses
+exactly as it did. For an alert that never changed level the two agree within
+a second; for a chronic alert predating the field the level record was
+backfilled from `lastUpdate` and they are equal to the microsecond, measured on
+Lypetska hromada's March alert.
+
+**A window of known error stands in the store, from 2026-09-06 to this
+release, and cannot be repaired.** No wire artefact exists from before
+2026-09-08, so there is nothing to recompute the affected starts from. The
+figures for those days are what the store holds, and this paragraph is the
+record that they are late rather than wrong by an unknown amount.
 
 ### F146, 0.53.0.0. The freshness of the picture was a maximum over a pool with no source in it, so losing a feed was undetectable
 
