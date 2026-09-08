@@ -51,9 +51,17 @@ parser that discards it would produce a confident zero.
 
 ## What this does not do
 
-It writes nothing: no store, no snapshot, no file, no key to disk, and it never
-prints the key. It makes one GET. It is a reading, not a source, and D-013's
-argument about this endpoint stands unchanged.
+It writes no store and no snapshot, it never writes or prints the key, and it
+makes one GET. It is a reading, not a source, and D-013's argument about this
+endpoint stands unchanged.
+
+`--save-raw` is the one exception and it writes exactly one file: the bytes as
+received, before parsing. Without it this project holds no wire artefact at
+all, which is why the payload from before the D-040 switchover is unrecoverable
+and why `ukrainealarm.snapshot.json` could not stand in for it - that file is a
+product of the parser, not of the wire. The body is saved *before* `json.loads`
+so that a malformed one is preserved rather than being the one payload nobody
+can look at afterwards.
 
 ## Usage
 
@@ -61,15 +69,21 @@ argument about this endpoint stands unchanged.
 
     python3 region_levels.py --stub payload.json     # no key, no network
 
-Exit codes match `mavo collect-api`: 2 no key, 3 unreachable, 0 otherwise.
+    sudo -u mavo /opt/mavo/venv/bin/python3 region_levels.py --save-raw /var/lib/mavo/wire
+
+Exit codes match `mavo collect-api`: 2 no key, 3 unreachable, 0 otherwise, and
+4 for a `--save-raw` that did not land, following `mavo collect --save-raw`: a
+snapshot that silently fails to write is a quiet loss of evidence.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from collections import Counter
+from datetime import UTC, datetime
 from pathlib import Path
 
 from mavo.areas import _UNIT_CODE, UNIT, AreaTable
@@ -114,10 +128,37 @@ def inventory(payload: object) -> tuple[Counter[str], Counter[str], int]:
     return region_keys, alert_keys, regions
 
 
+def save_raw(directory: Path, body: str, from_stub: bool) -> Path:
+    """Write the body verbatim and return the path. Raises `OSError` on failure.
+
+    **The name carries the provenance, because the file cannot.** A stub echoed
+    back into this directory and read later as a wire capture would be a
+    fabricated measurement holding a real filename, so a read from `--stub`
+    lands under `stub-` and only a read from the API lands under `alerts-`.
+
+    Atomic by rename, unlike `mavo collect --save-raw`, and for a reason that
+    applies here and not there: these files are meant to be read back through
+    `--stub`, and a half-written one would parse as `[MALFORMED]` - reporting a
+    broken payload from the API when what broke was the local disk.
+    """
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+    target = directory / f"{'stub' if from_stub else 'alerts'}-{stamp}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    partial = target.with_name(target.name + ".partial")
+    partial.write_text(body, encoding="utf-8")
+    partial.replace(target)
+    return target
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stub", help="read the payload from this file instead of the API")
     parser.add_argument("--key-file", help="path to the API key (default: the package's)")
+    parser.add_argument(
+        "--save-raw",
+        help="write the payload verbatim into this directory before parsing. "
+             "The key is never part of the body and is never written",
+    )
     args = parser.parse_args(argv)
 
     if args.stub:
@@ -136,6 +177,18 @@ def main(argv: list[str] | None = None) -> int:
         except SourceUnavailable as unreachable:
             print(f"[UNREACHABLE] {unreachable}")
             return 3
+
+    if args.save_raw:
+        try:
+            saved = save_raw(Path(args.save_raw), body, from_stub=bool(args.stub))
+        except OSError as failure:
+            # Its own exit code, following `mavo collect --save-raw`: a caller
+            # reading only stdout must not mistake a lost capture for a capture.
+            print(f"[SNAPSHOT-FAILED] {failure}")
+            return 4
+        digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+        print(f"saved={saved}")
+        print(f"sha256={digest}")
 
     try:
         payload = json.loads(body)
@@ -214,9 +267,19 @@ def main(argv: list[str] | None = None) -> int:
     for cell, rid, rtype, name, types, detail, eng in sorted(rows, key=lambda r: (r[0], r[3])):
         print(f"  {cell:8s} {rid:>8s} {rtype:12s} {name:44s} {types:24s} {eng:28s} {detail}")
 
-    print("\nNothing was written. This figure is outside the gate: it is a reading")
-    print("of one moment and must not be pinned in any document as a property of")
-    print("the system.")
+    # The closing line is a claim about this run, so it is read off what this
+    # run did rather than off what the command used to do. It said "Nothing was
+    # written" beneath a `saved=` line on the first real capture: the docstring
+    # had been corrected for `--save-raw` and the sentence the operator
+    # actually reads had not. Same defect class as the one this tool measures,
+    # committed in its own output.
+    if args.save_raw:
+        print("\nOnly the payload was written, verbatim and nothing else. This "
+              "figure is")
+    else:
+        print("\nNothing was written. This figure is")
+    print("outside the gate: it is a reading of one moment and must not be")
+    print("pinned in any document as a property of the system.")
     return 0
 
 
