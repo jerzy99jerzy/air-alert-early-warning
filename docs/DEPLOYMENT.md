@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.26 / 2026-09-08
+Version: 1.27 / 2026-09-08
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -10,7 +10,7 @@ written after the fact rather than before, and says so.
 
 ## What is installed on the hosts, and how far behind it is
 
-Host state measured: 2026-08-31
+Host state measured: 2026-09-08
 
 **This section is the state. The rest of this document is the shape**, and the
 two diverged silently once already (F102), which is why the line above exists
@@ -45,21 +45,22 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.53.0.0`, `/opt/mavo/venv`, python3.11 [measured 2026-09-08, `USER_AGENT` read from the venv interpreter on the host] |
-| Installed at | **2026-09-08**, about 17:40 UTC `[reported, the 0.53.0.0 session]`. The `sources` block was absent at 17:01:40 and present at 17:42:17 with `primary_delivering: 1`, which is the pair of readings that makes the deployment a measurement rather than a hope. The 0.52.0.0 record this row replaced stood for four days after that release stopped being what the host ran |
-| Wheel | sha256 `45622e3d…a46a56`, 170,969 B, built from a worktree of `v0.52.0.0` rather than from the working tree, and verified by `sha256sum` on the host before `pip`; `gcloud compute scp` over the IAP tunnel, 20 s at 8.0 KB/s |
-| Point of return | `events.pre-0.52.0.0`, 27,283,456 B, sha256 `641611e7…a8a55d`, taken with the `collect-api` timer stopped and with no `-wal` or `-shm` beside it. Re-verified after the deploy: unchanged. The listing was re-run for the same reason as at 0.49.0.0 and the reason is now recorded as F144 rather than as an aside |
+| Installed | `air-alert-early-warning 0.53.1.0`, `/opt/mavo/venv`, python3.11 [measured 2026-09-08 20:26 UTC, `USER_AGENT mavo/0.53.1.0` read from the venv interpreter on the host] |
+| Installed at | **2026-09-08 20:26 UTC** `[reported, the 0.53.1.0 session; this revision was written from that session's record, not from a fresh host read]`. Baseline before the install: `grep -c '_began'` over the installed `mavo/sources/ukrainealarm.py` read **0** with `grep_exit=1` at 20:25:38; the count after the install is the discriminator, because the version string alone has reported success against a host running different code before. Third package on the host in one day: 0.53.0.0 went on at about 17:40 UTC (the `sources` block absent at 17:01:40 and present at 17:42:17 with `primary_delivering: 1`) and was replaced by this one under three hours later |
+| Wheel | `air_alert_early_warning-0.53.1.0-py3-none-any.whl`, sha256 `aa32463b…d1abb`, 182,753 B, built with `python3 -m build --wheel` (the producer has no `make dist`; that target is the consumer's) and verified by `sha256sum` on the host before `pip` touched anything. Installed as `sudo /opt/mavo/venv/bin/pip install --no-index --no-deps --force-reinstall`: `pip` is not on root's `PATH`, so `sudo pip` is `command not found` and the venv's own binary is the only correct spelling (F144 names the account; this names the path) |
+| Point of return | `[unknown]` for this install: the session record names the baseline reading and the wheel digest and does not name a store copy taken before `pip`. The previous return point on the host is `events.pre-0.52.0.0`, 27,283,456 B, sha256 `641611e7…a8a55d`, from the 2026-09-04 install; nine `events.pre-*` copies (about 190 MB) sit on the host and no retention rule has been written for them |
+| Snapshot age at timer stop | **121 s**, fresh, read from the recap of the last cycle before the timer was stopped. This is the precondition the ceremony below now states: under 360 s every current key is in `previous`, so the first cycle under the new code raises no ACTIVE for an alarm that was already open. Past 360 s the first poll is a cold start and re-opens every current alarm with a fresh stamp beside the row that is already open - a second ACTIVE on one key with no CLEAR between, which is exactly what this install avoided on purpose rather than by luck |
 | Who owns the venv | `/opt/mavo/venv` is `root:root` 755 and the unit runs as `User=mavo`, so the account that executes the code cannot modify it. `pip` as `mavo` is refused with `EACCES` on `venv/bin/mavo`, before anything is uninstalled; the install is `sudo`. Recorded because two earlier return points on this host are owned by `root` and nothing said why (F144) |
-| Collection gap | **~19 min**, 07:52 to 08:11, `collect-api` only. Past the 360 s snapshot ceiling by construction, so the first poll read `snapshot=stale(1049s)` and withheld clears, and `reconcile --dry-run` before that poll refused to examine anything at all: `[SNAPSHOT-STALE] (854s)`. Both refusals are the rule working. The consequence for the sequence is that no baseline reconcile reading exists for this deploy, because stopping the timer is what invalidates it |
-| Discriminators | on the recap, not the version string: `informational=` and `unmapped_types=` are printed by no release before 0.52.0.0 |
-| First post-install poll | `active=56 cleared=0 unresolved=5 declined=1 unparsed=0 informational=0 unmapped_types=0 latency=3.4s snapshot=stale(1049s)`, `stored=9 new events (seen=56)`. Under the timer, latency fell to a median of **0.1 s** over 18 attempts, so the 3.4 s is the first connection and not a regression |
-| T83 measured on the wire | `unmapped_types=0` on every one of the first four polls: the API returned no type string outside `_KIND`. That closes one half of the `[unmeasured]` this release shipped with. `informational=0` on all four leaves the other half open - whether this key ever returns `INFO` is still unmeasured, and a zero is not a demonstration |
-| `feed_attempts.detail` | 18 attempts, all `outcome=read`, **all with `detail` NULL**. The column's NULL branch is exercised on the host; that it can carry a string is shown by a test, not by production |
-| Reconcile after the polls | `ghosts=2 masked=0 snapshot_areas=38 snapshot_keys=41`. **`masked=0` is the D-044 control**: an area alerting per the API and rendering calm would appear here, and none did. `snapshot_keys` exceeding `snapshot_areas` by three is the multi-kind case the old fold collapsed. The two ghosts, opened 08:21 and the previous evening, were closed with `--apply` (`stored=2 rows`, `0 unmasks`), and a second dry-run read `ghosts=0 masked=0`. `--unmask` was not passed and had nothing to do |
-| Contract after | `feed=ok`, observation age 63 s, 0 areas active in the west, 40 elsewhere. Store 27,406,336 B, up 122,880 B over the hour |
-| Attempts window | `attempts=18 read=18 refused=0 gaps=0 unobserved=0s` from 08:06:01 to 08:39:42 at a 120 s cadence |
-| `main` | 0.53.1.0 |
-| Behind by | **one** release: 0.53.1.0 changes `mavo/` (F147 and F148, the start of an episode). The judgement this row carries is unchanged - a release that changes `mavo/` is installed before the release after it is cut - and it binds here, because until 0.53.1.0 is on the host every episode that escalated from yellow to red is recorded from its escalation rather than its start |
+| Collection gap | one cycle: last cycle under 0.53.0.0 at 20:25:11, first under 0.53.1.0 at 20:27:12, on the timer's own 121 s cadence. The install fitted inside one period, so no poll read a stale snapshot and no clears were withheld. (The 0.52.0.0 install of 2026-09-04 lost ~19 min, 07:52 to 08:11, and its first poll read `snapshot=stale(1049s)`; that record is in the deploy history below, not here) |
+| Discriminators | on the installed source and on the recap, not on the version string: `_began` in `mavo/sources/ukrainealarm.py` (0 before, present after) and the line `overlapping alerts on N key(s), folded to the earliest start`, which no release before 0.53.1.0 prints |
+| First post-install poll | 20:27:12 UTC: `active=1`, and the F147 fold was live on its first cycle rather than historical - `overlapping alerts on 2 key(s), folded to the earliest start`, `UA12080010000029838 UNKNOWN x2` and `UA12080050000062712 UNKNOWN x2` (Marhanets and Nikopol hromadas, Dnipropetrovsk oblast). The cycle before it, 20:25:11 under 0.53.0.0, read `active=0 cleared=0 snapshot=fresh(121s)`. `Result=success`, `ExecMainStatus=0` on the unit |
+| F148 on the wire | The window of known error is closed at the install, 2026-09-06 to 2026-09-08 20:26 UTC: every episode that went yellow to red in that window carries its escalation as its start in the store, and cannot be re-dated, because no wire artefact from before 2026-09-08 18:51 exists. Stated here so the deploy record and the defect entry (`docs/METHODOLOGY.md` F148) agree on the boundary. T83's earlier reading stands: `unmapped_types=0` on four polls at the 0.52.0.0 install, `informational=0` still not a demonstration |
+| The watchman while this went on | silent from 2026-09-07 06:09:04 UTC and still silent 33 h 50 min later, about 16:00 UTC on 2026-09-08, the last read this tree holds (F146, D-049). Whether it has resumed since is `[unknown]`; the first `telegram` row after that stamp in `events` is the reading that settles it. This is a second silence and not the one of 2026-08-29: D-049's daily counts put the channel at 904 rows on 2026-09-03, so the publisher returned from the first silence at a date **no document in this tree recorded** `[unknown]`. README and `docs/CHANNEL.md` said "silent since 2026-08-29" through both events; corrected at this revision. Not to be confused with the API's own outage, 2026-09-07 08:24:51 to 2026-09-08 12:55 UTC (14:55 Polish time), which the consumer's news page carries |
+| Reconcile after the polls | not run at this install `[unknown]`; the one-cycle gap gave it nothing to examine, and the 0.52.0.0 reading (`ghosts=2 masked=0`, both closed with `--apply`) is in the deploy history below |
+| Contract after | `[unknown]` at this revision: the session record holds the unit and recap readings above and no `state.json` read after 20:26. The row is left empty rather than carried forward from the 0.52.0.0 install |
+| `Самарівський район` | in `unresolved` at 20:25:11, one of six names the map does not place, and the only one that appeared in no diagnostic read that evening. New or rare; either way a row for `data/reference/tag_map.csv`, and open |
+| `main` | 0.53.1.1 |
+| Behind by | **one** release, and the one is this release, which changes no line under `mavo/`: the host runs the code of `main`. The judgement the row carries is unchanged - a release that changes `mavo/` is installed before the release after it is cut - and it held for 0.53.1.0, which was on the host before this record was written |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -107,7 +108,11 @@ rows.
 
 | Version | Installed at (UTC) | Fate |
 | --- | --- | --- |
-| 0.49.0.0 | 2026-08-31, first cycle under it 12:14:41; `.dist-info` mtime owed | **current**; F138, the per-kind episode counters |
+| 0.53.1.0 | 2026-09-08 20:26 UTC; baseline `grep -c '_began'` = 0 at 20:25:38, first cycle under it 20:27:12 | **current**; F147 and F148, the start of an episode. Snapshot 121 s old at timer stop, so no cold start |
+| 0.53.0.0 | 2026-09-08, about 17:40 UTC; `sources` block absent at 17:01:40 and present at 17:42:17 | superseded the same evening; D-049 and F146, feed liveness from `feed_attempts` |
+| 0.52.0.0 | 2026-09-04 08:00 UTC; wheel `45622e3d…a46a56` built from a worktree of the tag; return point `events.pre-0.52.0.0`, `641611e7…a8a55d`, re-verified unchanged after; ~19 min collection gap, first poll `snapshot=stale(1049s)`; reconcile `ghosts=2 masked=0`, both closed; 18 attempts at 0.1 s median | superseded 2026-09-08; T83's `unmapped_types=0` measured here |
+| 0.50.0.0, 0.51.0.0, 0.52.0.1, 0.52.0.2, 0.52.1.0 | `[unknown]` | whether 0.52.1.0 (the only one of the five that changes `mavo/`, D-048) was ever on the host is not recorded: the installed-package table moved from 0.52.0.0 straight to 0.53.0.0. Named rather than reconstructed (F117) |
+| 0.49.0.0 | 2026-08-31, first cycle under it 12:14:41; `.dist-info` mtime owed | superseded 2026-09-04, four days and five releases later; F138, the per-kind episode counters |
 | 0.48.0.0 | 2026-08-31, first post-install poll completed 06:22:53; `.dist-info` mtime owed | superseded the same day; D-044 and D-045, the per-kind repair |
 | 0.47.0.0 | 2026-08-30 evening, from the session record rather than a host read (F117's honesty rule, applied to our own gap) | superseded; brought `mavo reconcile` |
 | 0.45.0.0 | 2026-08-30 16:46:13, the `.dist-info` mtime | superseded |
@@ -531,10 +536,17 @@ table and its server a `/history.json` route **before** the push unit
 carries the file, because the forced command refuses a target it does not
 know and the push would fail on every cycle. Until then the flag may be set
 on `vm-mavo` and the file is written and read by nobody, which is harmless
-and is why the flag is optional. The host runs 0.52.0.0 as this is written
-[reported, the handover of 2026-09-04], so no unit there can carry the flag
-yet; adding it is a deploy step of the release that installs 0.52.1.0, and
-the flag stays off until the consumer's table has the target.
+and is why the flag is optional. The host runs 0.53.1.0 as this is written
+[reported, the 0.53.1.0 session], which carries the flag; no unit on the host
+passes it, and the far side does not exist: the consumer's forced command
+knows the targets `state` and `feed` and its server routes `/state.json` and
+`/feed.json` and nothing else [measured 2026-09-08 on the `mavo-site` tree at
+`v4.65.5.0`, `deploy/accept-state` and `src/mavosite/server.py`]. Turning the
+flag on before that table has a `history` target produces a refusal in the
+forced command on every push cycle, visible in the producer's journal and
+nowhere a reader can see, so the order is fixed: consumer target and route,
+then the push unit's third file, then the flag. D-048 is built and not
+deployed, and this paragraph is the record of which half is missing.
 
 **The producer and the consumer deploy in one window.** The consumer refuses
 any schema version it does not recognise, so a producer at v3 in front of a

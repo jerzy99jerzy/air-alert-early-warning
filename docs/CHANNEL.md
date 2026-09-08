@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.5 / 2026-08-31
+Version: 1.6 / 2026-09-08
 What the source emits, measured on 48,540 real messages, and what that changes.
 
 **Status, 2026-08-31.** The channel stopped publishing on 2026-08-29 at 04:55
@@ -9,6 +9,17 @@ the primary source since the next day (D-040), and the collector described here
 keeps running as the watchman for the publisher's return. Every figure below
 was produced from the corpus and remains true of the corpus; what changed is
 who speaks now, not what was said.
+
+**Status, 2026-09-08.** The publisher returned, and this document did not
+record when: by 2026-09-03 the channel was writing about nine hundred rows a
+day into the store beside the API (D-049's daily counts), and the sentence
+above stood unchanged through it `[unknown, the date of the return]`. It
+stopped again at 2026-09-07 06:09:04 UTC and was still silent 33 h 50 min
+later, at the last read this tree holds (F146, the outage the contract could
+not name); whether it has resumed since is `[unknown]`, and the first
+`telegram` row in `events` after that stamp is what settles it. The watchman
+is intermittent, not dead, and its health is now read from `feed_attempts`
+per pipe rather than from the age of the newest event anywhere.
 Companion: `docs/DATA-FLOW.md` (how a message becomes an event),
 `docs/METHODOLOGY.md` (F23 and F59), `docs/DECISIONS.md` (D-016, geocoding).
 

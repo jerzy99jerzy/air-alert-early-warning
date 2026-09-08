@@ -6,7 +6,7 @@ the companion document and answers the other question, which components exist
 and what may talk to what.
 
 ```
-Document:  docs/DATA-FLOW.md, version 1.2
+Document:  docs/DATA-FLOW.md, version 1.3
 Audience:  a contributor about to change a transformation, a schema field, or
            anything that decides what is kept and what is dropped
 Companion: ARCHITECTURE (components and boundaries), MECHANISMS (why each
@@ -39,16 +39,20 @@ Two paths since D-040, and they answer to different models. The API is a
 snapshot: it lists what is alerting now and says nothing about what stopped, so
 an ended alert has to be synthesised from the difference between two polls, and
 that is only safe when the previous observation actually happened. The channel
-is a log: it announces transitions, and since 2026-08-29 it announces nothing,
-which the pipeline reports as staleness rather than calm.
+is a log: it announces transitions, and it has twice stopped announcing
+anything - from 2026-08-29 04:55 UTC until a return no document recorded
+`[unknown]`, and from 2026-09-07 06:09:04 UTC, still running at the last read
+in this tree, about 16:00 UTC on 2026-09-08 (D-049) - which the pipeline
+reports as staleness rather than calm, and which D-049 now reports per pipe
+rather than as one global age.
 
 ### The primary path: the API snapshot (D-040)
 
 ```mermaid
 flowchart TD
     API["/alerts<br/>full state, keyed, about a quarter of a second"]
-    API -->|"transport.fetch"| PARSE["parse_alerts<br/>malformed body yields no events, never clears"]
-    PARSE -->|"resolve_prose<br/>KATOTTG register"| CUR["current: area and kind to started_at<br/>unresolved and declined printed by name"]
+    API -->|"transport.fetch"| PARSE["parse_alerts<br/>malformed body yields no events, never clears<br/>started_at = earliest createdAt in activeAlertLevels,<br/>else lastUpdate (F148)"]
+    PARSE -->|"resolve_prose<br/>KATOTTG register"| CUR["current: area and kind to started_at<br/>two alerts of one kind on one area fold to the earliest start,<br/>counted in overlapping (F147)<br/>unresolved and declined printed by name"]
     PREV[("persisted snapshot<br/>fresh under 360 s or it licenses nothing")] --> DIFF
     CUR --> DIFF{"diff against previous"}
     DIFF -->|"key appears"| ACT["ACTIVE, REPORTED<br/>ts_source = started_at"]
@@ -65,6 +69,25 @@ What this path can lose, named: a region the register does not know is counted
 and printed, never silently dropped; a poll that fails licenses no clears; and
 a snapshot older than its ceiling is a gap in observation, which is treated as
 exactly that.
+
+**Where the start of an episode comes from, since 0.53.1.0.** From 2026-09-06
+the API attaches `activeAlertLevels` to each alert, a list of level records
+each with its own `createdAt`, and bumps `lastUpdate` when the level changes.
+Until that day nothing updated an alert in place, so `lastUpdate` was its
+start and the adapter read it as one. It now takes the earliest readable
+`createdAt` in the list and falls back to `lastUpdate` when none is readable,
+so a payload from before the field existed parses as it always did (F148).
+The list's order does not encode time - both orders were measured in one
+payload - so the earliest is taken by value, never by position. Two alerts of
+one kind on one area are one row in the store, keyed `(area_id, kind)`, and
+the row takes the earliest of their starts rather than whichever came later
+in the payload (F147); the fold is counted in `overlapping` and named in the
+recap, because a fold nobody can see is a silence. The level itself is not
+read into any event: a level change happens inside an alert, without an end
+event and without a new key, so the level cannot join the row's identity
+without turning every escalation into a ghost. What is done with it is a
+decision reserved in session and not yet in `docs/DECISIONS.md`; until it is,
+the level is not read.
 
 ### The watchman path: the channel page
 

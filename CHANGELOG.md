@@ -16,6 +16,48 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.53.1.1 - 2026-09-08
+
+**Documents only: the release that changes package code reached the host, and
+this is the record of it.** 0.53.1.0 was installed on `vm-mavo` at 20:26 UTC,
+inside one timer period, with the snapshot 121 s old at the stop. The proof of
+version is the installed source and the recap, not the version string:
+`_began` read 0 before and is present after, and the first cycle printed
+`overlapping alerts on 2 key(s), folded to the earliest start` - Marhanets and
+Nikopol, F147 live on its first cycle rather than historical.
+
+- **DEPLOYMENT** (1.27): the installed-package table rewritten to this deploy,
+  with the rows the session did not read left as `[unknown]` rather than
+  carried forward from 0.52.0.0; the deploy history gains 0.52.0.0, 0.53.0.0
+  and 0.53.1.0 and names the five releases whose fate on the host was never
+  recorded; `Behind by` stays at one, and the one is this release. The ceremony states two things
+  it had only ever done: the snapshot must be under 360 s at timer stop, and
+  `pip` is `/opt/mavo/venv/bin/pip` under `sudo`, because root has no `pip` on
+  its `PATH`. The D-048 paragraph now measures the far side instead of
+  describing it: the consumer's forced command and server know two files, so
+  `history.json` is built and not deployed, and the order that gets it there is
+  written down.
+- **A claim about the watchman was false through two events.** README,
+  `docs/DATA-FLOW.md`, `docs/ARCHITECTURE.md` and `docs/CHANNEL.md` said the
+  channel had been silent since 2026-08-29, while D-049 in the same tree
+  measured nine hundred channel rows a day on 2026-09-03 and a second silence
+  from 2026-09-07 06:09 UTC. The date of the first return was recorded nowhere
+  and stays `[unknown]`; whether the second silence has ended is `[unknown]`
+  too, the last read being 33 h 50 min after its start, and the first
+  `telegram` row after the stop is what settles it. The four documents now say
+  intermittent, with both silences dated from the readings the tree holds. The stale sentence is F117's shape - a claim beside the
+  rows the gate reads - and is left for the defect register to number, since
+  the next free number was reserved in session for a different defect.
+- **DATA-FLOW** (1.3) and **ARCHITECTURE** (2.4): the primary-path diagram and
+  the component map carry F147 and F148 - where the start of an episode comes
+  from since 0.53.1.0, and why the level is not read into any event. Both had
+  described the adapter as it was before the source changed under it.
+- **CHANNEL** (1.6): a second status note under the first, rather than an
+  edit of it, so the reading of 2026-08-31 stays readable as what was known
+  then.
+
+No code line changes.
+
 ## 0.53.1.0 - 2026-09-08
 
 **The source changed the meaning of a field without changing its name, and an

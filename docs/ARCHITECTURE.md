@@ -6,7 +6,7 @@ break. `DATA-FLOW.md` is the companion and answers the other question, what
 happens to a message as it travels.
 
 ```
-Document:  docs/ARCHITECTURE.md, version 2.3
+Document:  docs/ARCHITECTURE.md, version 2.4
 Audience:  a contributor about to add a module, a dependency, or a process
 Companion: DATA-FLOW (what happens to the data), MECHANISMS (why each mechanism
            is built the way it is), METHODOLOGY (what may be claimed)
@@ -33,9 +33,9 @@ Note:      the block index is maintained as a table so that a rename leaves a
 flowchart TD
     NET["transport.py<br/>the only module that reaches the network"]
     subgraph IN["Sources: everything implements ThreatSource"]
-        UASRC["ukrainealarm_source.py<br/>full-state API, PRIMARY since D-040<br/>ended alerts synthesised from the snapshot diff"]
-        TG["telegram.py<br/>channel silent since 2026-08-29<br/>kept wired as the watchman for the publisher's return"]
-        RSO["rso.py<br/>Polish RSO reader, built 0.34.0.0<br/>no caller until T68 names the surface"]
+        UASRC["ukrainealarm_source.py<br/>full-state API, PRIMARY since D-040<br/>ended alerts synthesised from the snapshot diff<br/>an episode starts at its earliest level record (F148)<br/>and folds overlapping alerts to the earliest start (F147)"]
+        TG["telegram.py<br/>channel silent twice: from 2026-08-29, and again from 2026-09-07 06:09 UTC<br/>kept wired as the watchman, health read per pipe (D-049)"]
+        RSO["rso.py<br/>Polish RSO reader, built 0.34.0.0 against the public list pages<br/>RSO has published CAP behind a token since June 2026 (FEED-SPEC 2.4), token requested<br/>no caller until T68 names the surface"]
         OFF["ukrainealarm.py<br/>the measuring probe, never a source<br/>its module docstring is the prohibition"]
         FIX["fixture.py<br/>synthetic scenarios"]
     end

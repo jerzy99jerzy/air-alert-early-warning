@@ -208,7 +208,7 @@ nothing crosses between them that is not drawn here.
 ```mermaid
 flowchart LR
     API["api.ukrainealarm.com<br/>full-state snapshot, keyed<br/>PRIMARY since D-040"]
-    CH["Public Telegram channel<br/>silent since 2026-08-29<br/>read as the watchman"]
+    CH["Public Telegram channel<br/>intermittent: silent from 2026-08-29, again from 2026-09-07<br/>read as the watchman, health per pipe (D-049)"]
     KAT[("KATOTTG register<br/>vendored, CC BY 4.0")]
 
     subgraph PROD["air-alert-early-warning (this repository)"]
@@ -588,8 +588,10 @@ No token, no network, no data of your own. What the second command prints is a
 property of the generator, not of the world.
 
 **On real data.** Two live paths, and they need different things. The channel
-is public and needs no token; it has also been silent since 2026-08-29, so a
-poll of it measuring nothing is the expected reading, not a fault. The API is
+is public and needs no token; it has also gone silent twice since 2026-08-29,
+most recently from 2026-09-07 06:09 UTC with no return recorded, so a poll of it
+measuring nothing is a reading to keep, not a fault: `state.json` says per
+pipe whether the poll happened (D-049). The API is
 the primary source (D-040) and needs a key, granted on request by its
 operator; production runs `collect-api` about every two minutes.
 
@@ -798,7 +800,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 23 | 9,349 |
 | Tests | 64 | 13,155 |
 | Tools | 27 | 7,673 |
-| Documentation | 72 | 28,584 |
+| Documentation | 72 | 28,674 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -815,7 +817,7 @@ confidence interval attached.
 | Threat-model rows | 14, each with a control or a named acceptance |
 | Defects logged with their class | 127, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 48, counted from the log itself |
-| Releases | 133 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 134 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation
