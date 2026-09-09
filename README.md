@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 716](https://img.shields.io/badge/tests-716-brightgreen)](tests/)
+[![tests 729](https://img.shields.io/badge/tests-729-brightgreen)](tests/)
 [![coverage 95.60%](https://img.shields.io/badge/coverage-95.60%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 127](https://img.shields.io/badge/defects%20logged-127-informational)](docs/METHODOLOGY.md)
+[![defects logged 129](https://img.shields.io/badge/defects%20logged-129-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -798,9 +798,9 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | | Files | Lines |
 | --- | --- | --- |
 | Package `mavo/` | 23 | 9,665 |
-| Tests | 65 | 13,661 |
-| Tools | 27 | 7,699 |
-| Documentation | 72 | 29,237 |
+| Tests | 66 | 13,859 |
+| Tools | 28 | 7,951 |
+| Documentation | 73 | 31,517 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -811,13 +811,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 716, of which 13 are scripted attacks |
+| Tests | 729, of which 13 are scripted attacks |
 | Coverage | 95.60% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 127, the count pinned against the log itself |
+| Defects logged with their class | 129, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 49, counted from the log itself |
-| Releases | 138 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 139 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation
@@ -836,6 +836,7 @@ confidence interval attached.
 | [`docs/MOBILE.md`](docs/MOBILE.md) | The notification channel: technology choice, phases, and what gates distribution |
 | [`docs/WEBAPP.md`](docs/WEBAPP.md) | The web tier: the `state.json` contract and who owns it, three feed states that must read differently, the palette and the theme-inversion failure behind it, and mockups of every state |
 | [`docs/FEED-SPEC.md`](docs/FEED-SPEC.md) | What a machine-readable Polish alerting feed would have to be, written from consuming the Ukrainian one |
+| [`docs/FEED-SPEC-PL.md`](docs/FEED-SPEC-PL.md) | The same document in Polish, held to the English edition by `feed-spec-check` |
 | [`docs/CHANNEL.md`](docs/CHANNEL.md) | What the source actually emits, measured, and the join to the state register |
 | [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) | The durable run log and how a cycle is watched. Plan, not built |
 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Egress inventory, endpoint identity, containers, and where the daemon lives. Plan and open decisions |

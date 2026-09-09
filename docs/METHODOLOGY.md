@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.49
+Document:  docs/METHODOLOGY.md, version 2.50
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4749,6 +4749,76 @@ release, and cannot be repaired.** No wire artefact exists from before
 2026-09-08, so there is nothing to recompute the affected starts from. The
 figures for those days are what the store holds, and this paragraph is the
 record that they are late rather than wrong by an unknown amount.
+
+### F151, 0.53.4.0. The briefs said the defect log held 125 entries while the pin said 127, and the check passed because 127 is also the number of area labels
+
+`tools/brief_check.py` renders each pinned figure and asks whether the
+rendering appears among the figures the brief carries, anywhere in the
+file. At 0.53.4.0 the pin for defects logged read 127 and the sentence in
+both briefs that carries that figure read 125, two releases stale. The check
+passed on both files, because each brief also states that the design window
+holds 127 distinct area labels, and a multiset of figures does not know
+which sentence a number came from.
+
+**Measured 2026-09-09.** The pin moved to 128 with F150, no other sentence
+in either brief happened to carry 128, and the check failed for the first
+time on a figure that had been wrong for two releases. The first repair
+attempted in the container was worse than the defect: replace `127` with
+`128` in both files, which would have rewritten the label count. An assertion
+that the file carries the figure exactly once stopped it, and the sentence
+was then found by its subject rather than by its value.
+
+**Why it survived.** The same shape as F-S66 and F150: an instrument that
+compares a value with whatever spellings happen to be around it, and passes
+when one of them coincides. A pin without a sentence to live in is a pin that
+any number in the file can satisfy.
+
+**Repair, this release:** both sentences carry the pinned count. **Repair,
+pending:** the check keys each pin to the sentence that carries it - the
+bold-lead line whose subject is the figure - and looks nowhere else; a pin
+whose sentence is absent fails as removed. Not done here because the change
+is to the gate, and a gate changed in the release that a document rewrite
+rides on is two risks in one window.
+
+**Reopen condition:** any pinned figure present in a brief only by
+coincidence, which the pending repair makes impossible by construction.
+
+### F150, 0.53.4.0. Three readers of one coverage figure used two formats, and the gate could not run on the first one-decimal number
+
+`tools/figures.py` wrote the README's coverage badge and row from the raw
+float in `STATUS.json`. `docs_audit.check_badges_match_the_pins` read the
+badge as `:.2f`. `docs_audit.check_readme_tables_match_the_pins` compared the
+pin's spelling with the row's spelling. Three readers of one number, two
+formats, and they agreed on every coverage figure this tree ever had,
+because every one of them happened to carry two decimals.
+
+**Measured 2026-09-09, on the first run that did not.** The 0.53.4.0 suite
+landed on 95.6. The generator wrote `95.6%` into the badge and the row, the
+audit asked for the two-decimal spelling in the badge and for the one-decimal
+spelling in a row that carried the two-decimal one, and `lint-precision`
+asked for the README's ceiling to be
+lowered because three figures had lost a digit. `make verify` could not run
+on a number. Found in the container before the release, so nothing shipped
+with it; recorded because it would have shipped the first time coverage
+rounded to one decimal on a host, which is a matter of when.
+
+**Why it survived.** The format was a property of each reader separately and
+of no reader in common, and the only test of their agreement was the values
+that had occurred. That is F-S66's shape - a figure compared with the
+spellings that happened to be around it - one artefact over, and it is the
+class this repository logs under *an instrument reporting its own framing as
+a property of the material*: the ceiling ratchet fired on the shape of a
+number, not on its precision.
+
+**Repair.** The generator formats coverage as `:.2f`, so the badge and the
+row carry two decimals whatever the value; the audit's row check compares
+numbers (`_same_number`) where the spellings differ; and one test writes a
+one-decimal coverage into a scratch tree and reads the two-decimal spelling
+back. Two of the
+three readers now agree by construction and the third by value.
+
+**Reopen condition:** a second writer of any pinned figure. The rule is one
+writer per figure, and the reader is the gate.
 
 ### F146, 0.53.0.0. The freshness of the picture was a maximum over a pool with no source in it, so losing a feed was undetectable
 

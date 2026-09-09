@@ -16,6 +16,60 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.53.5.0 - 2026-09-09
+
+**The specification became an instruction, in two languages held together
+by the build.** FEED-SPEC 3.0 keeps sections 1 to 9 unchanged on substance
+and adds Part II, sections 10 to 16: the feed in one page as a CAP profile
+and an index document, the life of one alert on the wire as a state diagram
+with what the consumer does at every arrow, three clocks and one format,
+what makes one alert one alert, the area as a register code, serving and
+changing the feed, and a twenty-eight-line conformance checklist each line
+of which names the property it rests on. Written for the engineer the
+operator's letter of 2026-09-02 implies, who already publishes CAP; nothing
+in it requires leaving CAP and two things require adding to it.
+
+- **docs/FEED-SPEC-PL.md** (3.0): the Polish edition, section for section.
+  The reader named in section 8 reads Polish.
+- **tools/feed_spec_check.py**, in `verify` after `brief-check`: the two
+  editions are one document, or the build says which line disagrees. Same
+  version and date; headings level for level and number for number; per
+  section the same number of bold-lead paragraphs, table rows, list items
+  and fenced blocks, counted at paragraph starts because the languages wrap
+  differently; JSON examples identical to the byte, mermaid diagrams the
+  same shape; every inline code span as a multiset with the four provenance
+  labels mapped; every figure through `brief_check.figures`; every cited
+  identifier and URL as sets. Thirteen tests, the last of them the tree's
+  own pair. On its first run it found four differences that were the
+  check's own (bold phrases and years opening a line in one language and
+  sitting mid-line in the other, which is why it counts paragraph starts),
+  two that were the editions' own (each naming the other file), and one
+  code span split by a wrap in the English original since 2.4.
+- **DECISIONS** (2.24): D-050's open half closes on content, not on a
+  calendar - at least 50 level changes inside open alerts across at least
+  15 distinct keys, earliest reading 2026-09-12 - and the between-weeks
+  question is split off with its own condition, two full weeks, because
+  three days cannot buy a comparison of two weeks.
+- **DEPLOYMENT** (1.30): the 0.53.4.0 install as it happened, from the
+  operator's terminal: return point `events.pre-0.53.4.0` with its digest
+  taken before `pip`, snapshot 106 s, discriminator 0 then 12, the migration
+  line printed once, `levels=28 (observed=28)` then `levels=2 (observed=30)`,
+  and the read-only probe's three findings on the first thirty rows - 25
+  `Red` to 5 `Yellow` against the capture half's ten of ten `Yellow`, a
+  declaration two days older than its observation, one area with two kinds.
+- **METHODOLOGY** (2.50): F150, the coverage-format gap found at 0.53.4.0,
+  with its class and its reopen condition; and F151, found while pinning
+  this release: the briefs said the defect log held 125 entries while the
+  pin said 127, and `brief-check` passed because 127 is also the number of
+  area labels the briefs quote. The sentences carry the pinned count now;
+  the check that let it through is repaired in a release of its own, and
+  the entry says why.
+- **precision-lint**: a ceiling for the Polish edition. **README**: the
+  Polish edition in the documents table. **BRIEF, BRIEF-PL** (2.9): 729
+  tests.
+
+Under `mavo/` only the version string changes. Coverage stays at 95.60.
+
 ## 0.53.4.0 - 2026-09-09
 
 **The level of an alert changes inside the alert, and the only place the

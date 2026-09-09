@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 2.5 / 2026-09-09
+Version: 3.0 / 2026-09-09
 A specification, written from the position of someone who tried to build against
 one, found nothing at first, then found part of one behind a token, and was
 then told by the operator of that one what it publishes and what is being
@@ -29,7 +29,26 @@ Note: this document describes a feed that does not yet exist in the form it
       anyone's competence, and this document makes none
 ```
 
+**How to read this, and who it is for.** The document has two parts and two
+readers. Part I (sections 1 to 9) is the argument: what exists, what is
+missing, what it cost to find out, and nineteen properties learned by
+building a consumer against feeds that lacked them. It is written for the
+person who decides whether a feed of this kind should exist. Part II
+(sections 10 to 16) is the instruction: what the feed looks like element by
+element, how one alert moves through it from the first message to the last,
+and a checklist a publisher can run against a candidate before anybody
+outside the building reads it. It is written for the engineer who has been
+told to build it, and it assumes that engineer already publishes CAP, because
+the operator of RSO does. An engineer in a hurry can start at section 10 and
+come back to Part I when a rule in Part II needs its reason; every rule there
+names the property it rests on. A Polish edition, `FEED-SPEC-PL.md`, stands
+beside this file, `FEED-SPEC.md`, and is held to it section for section,
+figure for figure, by a check in this repository's build, so the two cannot
+drift apart without the build saying so.
+
 ## Contents
+
+**Part I. The argument**
 
 1. [The difference is a hashtag](#1-the-difference-is-a-hashtag)
 2. [What is available on the Polish side today](#2-what-is-available-on-the-polish-side-today)
@@ -40,6 +59,16 @@ Note: this document describes a feed that does not yet exist in the form it
 7. [How to disagree with this document](#7-how-to-disagree-with-this-document)
 8. [Correction record](#8-correction-record)
 9. [Sources](#9-sources)
+
+**Part II. The instruction**
+
+10. [The feed in one page](#10-the-feed-in-one-page)
+11. [The life of one alert on the wire](#11-the-life-of-one-alert-on-the-wire)
+12. [Three clocks, one format](#12-three-clocks-one-format)
+13. [What makes one alert one alert](#13-what-makes-one-alert-one-alert)
+14. [Where: the area as a code](#14-where-the-area-as-a-code)
+15. [Serving it, and changing it later](#15-serving-it-and-changing-it-later)
+16. [The conformance checklist](#16-the-conformance-checklist)
 
 ---
 
@@ -255,9 +284,10 @@ separates a system a municipality can build on from one it must ask to.
 **Two. Areas identified by register code, not by prose.** The standard makes
 this point better than I can: it introduces the universal address specifically
 so that a system, rather than a person, can resolve a location, and it names
-TERYT as the register that holds the codes. A message saying `powiat
-biłgorajski` in a sentence forces every consumer to write a name matcher and get
-it subtly wrong. This project spent a measurement discovering exactly that: name
+TERYT as the register that holds the codes. A message saying
+`powiat biłgorajski` in a sentence forces every consumer to write a name
+matcher and get it subtly wrong. This project spent a measurement
+discovering exactly that: name
 matching against a register reached 6.06% where the source's own structured
 labels reached 99.34%.
 
@@ -917,6 +947,14 @@ than 2.3 made it look, not larger: the category is being built, four of the
 five properties are satisfiable inside CAP without designing anything, and
 what remains is access and a heartbeat.
 
+**Edition note, 3.0.** Not a correction. Part II was added, and a Polish
+edition beside it. Nothing in sections 1 to 9 changed on substance; the
+header and the contents did. The reason for the addition is the audience the
+letter in this section named: a department that already runs a CAP
+interface and is adding the category this document argues for. To such a
+reader, an argument is less useful than an instruction, and an instruction in
+English is less useful than one in Polish.
+
 ## 9. Sources
 
 - Letter ref. DOLiZK-ZK.052.49.2026(2) of 2 September 2026, Department of
@@ -939,3 +977,550 @@ what remains is access and a heartbeat.
   not yet been read against the quotation, and the sentence in section 2
   stands on the letter until it has.
 - [`docs/CHANNEL.md`](CHANNEL.md), for every measurement in section 1.
+
+---
+
+# Part II. The instruction
+
+Everything in this part is a consequence of something in Part I, and each
+rule says which. Where Part I is careful to mark what was measured and what
+was reported, Part II is prescriptive on purpose: it says *do this*, and the
+reason is one click away. The examples are written against CAP because the
+publisher this is addressed to already emits it, and because a specification
+that asked for a new format would have been asking for a new system, which
+section 6 says it does not. Nothing below requires leaving CAP. Two things
+below require adding to it, and both are said in the open.
+
+## 10. The feed in one page
+
+A feed of this kind is three things, and the second is the one CAP does not
+give you.
+
+**The messages.** One CAP document per alert event: an alert declared, an
+alert changed, an alert ended. These already exist in RSO; what Part II adds
+is a profile - which of CAP's optional elements are always filled, with what,
+so a consumer does not have to guess. The profile is section 10.1.
+
+**The index.** One small document, regenerated on a fixed cadence whether or
+not anything happened, listing every alert currently in force and the moment
+the list was made. This is the heartbeat of section 4 and the full-state
+snapshot that property seven asks for, in one file. CAP does not define it and
+does not need to; it sits beside the messages, not inside them. It is section
+10.2, and it is the one addition this document insists on.
+
+**The history.** The messages, kept, for long enough that a reader can ask
+what happened last week. Section 2 measured what happens without it: a
+country's worst week surviving as a handful of rows. Retention is a number
+the publisher states, not a behaviour the consumer discovers. Section 15.
+
+### 10.1 The message profile
+
+CAP 1.2 has thirty-odd elements and most are optional. A profile says which
+ones this feed always fills and what goes in them. The table below is the
+whole of it; the paragraphs after it are the reasons, each pointing at a
+property in Part I.
+
+| Element | Always | Filled with | Rests on |
+| --- | --- | --- | --- |
+| `identifier` | yes | one string, unique for the life of the feed, never reused | section 13 |
+| `sender`, `senderName` | yes | the issuing authority, as an address and as a name; two authorities, two values | property fifteen |
+| `sent` | yes | the moment this message was issued, ISO 8601 with a UTC offset, never local time without one | section 12 |
+| `status` | yes | `Actual` for a real alert; `Test` and `Exercise` are legal values a consumer must be able to drop | section 16 |
+| `msgType` | yes | `Alert` when it begins, `Update` when it changes, `Cancel` when it ends | section 11 |
+| `references` | on `Update` and `Cancel` | the `identifier`, `sender` and `sent` of the message this one changes or ends | section 13 |
+| `category` | yes | `Safety` for an air-strike threat; one category per message | property fifteen |
+| `event` | yes | a fixed string from a published list, one per kind of alert; the vocabulary is a document, not a convention | property eleven |
+| `urgency`, `severity`, `certainty` | yes | CAP's own words, verbatim; `Unknown` is a legal value and is used when it is true | section 13, property nineteen |
+| `effective`, `expires` | yes | when the alert took effect and when it will lapse if nothing else is said; `expires` is a ceiling, not an end event | section 11 |
+| `area/geocode` | yes, at least one | `valueName` = `TERYT`, `value` = the register code of the affected unit, one `area` element per unit | section 14 |
+| `area/areaDesc` | yes | the unit's name, for people; never the only way the area is given | section 14 |
+| `polygon`, `circle` | optional | a shape, if the decision was taken on one; never instead of a code | section 14 |
+| `headline`, `description`, `instruction` | yes | the text a person reads; free, in Polish, with `language` set | section 11 |
+
+**Why `identifier` never comes back.** A consumer keeps what it has seen by
+that string. A reused identifier is two alerts wearing one name, and every
+consumer that deduplicates - which is every consumer that has run for more
+than a day - will drop the second one on the floor. Section 13 has the
+measurement.
+
+**Why `Update` references the original and does not replace it.** An alert
+that changes severity is the same alert. Section 11 walks it through. The
+`references` element is how CAP says so, and a consumer that keys its rows on
+`(identifier, severity)` instead of on `identifier` opens a ghost on every
+escalation; property nineteen counted seven in one payload.
+
+**Why `event` is a list you publish and not a word you choose.** Property
+eleven: a category tells a consumer that something was declared and not what
+it was, and nothing in the field says so. The remedy is one sentence per
+`event` value in a document the consumer can read, of the form "air-strike
+threat: any airborne means, including means this feed does not distinguish".
+The list is short. Writing it is an afternoon. Not writing it is every
+consumer guessing, in different directions.
+
+**Why `Unknown` is used when it is true.** CAP allows `severity`, `urgency`
+and `certainty` to say `Unknown`. A feed that always writes `Severe` because
+the schema wants a value is publishing a colour it does not have; property
+nineteen shows what a colour of unknown age looks like from the other side.
+Unknown is a legal reading and the honest one when the authority has not
+decided.
+
+### 10.2 The index
+
+```json
+{
+  "schema": "pl-air-alert-index/1",
+  "generated_at": "2026-09-09T11:21:48+02:00",
+  "valid_for_s": 120,
+  "publisher": "RSO",
+  "active": [
+    {
+      "identifier": "RSO-2026-09-09-000123",
+      "teryt": "0602",
+      "sent": "2026-09-09T11:21:48+02:00",
+      "severity": "Severe",
+      "severity_at": "2026-09-09T11:21:48+02:00"
+    }
+  ],
+  "window": {
+    "from": "2026-09-09T11:01:48+02:00",
+    "to": "2026-09-09T11:21:48+02:00",
+    "truncated": false
+  },
+  "counts": {
+    "active": 1,
+    "ended_in_window": 0,
+    "unresolved": 0
+  }
+}
+```
+
+Read it field by field, because each one is a property from Part I with a
+name on it.
+
+- `generated_at` is the heartbeat. It moves on every regeneration, on a
+  cadence the publisher states, whether the list is empty or not. A consumer
+  that sees it stop moving knows the feed is blind, and can say so. An empty
+  `active` list with a fresh `generated_at` is a quiet sky. The same list with
+  a stale one is nothing at all. Section 4, in one field.
+- `valid_for_s` is the ceiling the publisher puts on its own silence: the
+  number of seconds after `generated_at` beyond which a consumer must stop
+  treating the picture as current. It is published, not inferred, because a
+  consumer that guesses the cadence guesses wrong on the day the cadence
+  changes.
+- `active` is the full state. Everything in force, every time. A consumer that
+  was asleep for an hour reads one document and is current; it does not
+  reconstruct the present from the messages it missed. Property seven, and
+  the reverse of the failure section 4 measured on the Ukrainian API, where
+  the snapshot existed and the ends had to be synthesised from it.
+- `severity_at` is the moment the severity was declared, which is not the
+  moment the alert began and not the moment the index was made. Property
+  nineteen. A severity without its own stamp is a colour of unknown age.
+- `window` is the interval this document covers and `truncated` says whether
+  it was cut. Both halves of property six, and the left edge of property
+  seven, published rather than derived.
+- `counts` are the numbers a consumer would otherwise compute, published so
+  that a consumer's arithmetic can be checked against the publisher's. A zero
+  here is a measured zero: the publisher counted and found none. If the
+  publisher did not count, the field is absent, and property thirteen says
+  why absence and zero must not share a spelling.
+
+**What the index is not.** It is not a replacement for the messages, and a
+consumer that reads only the index loses the text, the instruction and the
+history. It is not large: at the scale of a country's air-alert state it is a
+few kilobytes on a bad night. It is not clever. It is the file this project
+publishes as `state.json`, with the names changed, and it has kept a map
+honest through two publisher outages that a messages-only feed would have
+turned into calm.
+
+### 10.3 What CAP gives and what it does not, in one table
+
+| Property from Part I | CAP already has it | The profile must add |
+| --- | --- | --- |
+| One: public | no opinion; access is the operator's | the decision in section 15 |
+| Two: area by code | `geocode` exists | `TERYT` as the `valueName`, always filled |
+| Three: transitions both ways | `Alert`, `Update`, `Cancel` | `Cancel` actually sent, not `expires` left to lapse |
+| Four: versioned schema | CAP is versioned | the profile itself, published, with a version |
+| Five: a heartbeat | nothing | the index, section 10.2 |
+| Six: a cap and a flag | nothing | `window.truncated` in the index |
+| Seven: the window's left edge | nothing | `window.from` in the index |
+| Eight: a changeover policy | nothing | section 15 |
+| Eleven: what a category does not say | nothing | one sentence per `event` value |
+| Thirteen: one null, one meaning | nothing | a sentence per optional element, section 16 |
+| Fifteen: category and author in the record | `category`, `sender` | both always filled |
+| Seventeen: partial answers say so | nothing | section 15, on the protocol |
+| Eighteen: a changed meaning is a new name | nothing | section 15 |
+| Nineteen: a severity with its own stamp | `severity`; no stamp | `severity_at` in the index, `sent` on the `Update` |
+
+Five rows say *nothing*. That is not a defect in CAP. CAP describes a
+message; this document describes a stream, and section 4 says why the two
+need different guarantees. The additions are one document and a handful of
+rules about filling elements CAP already has.
+
+## 11. The life of one alert on the wire
+
+One alert, from the moment an authority decides to the moment a reader can
+stop worrying, in the form a consumer sees it. Every arrow is a message or
+the absence of one, and the absences are where feeds go wrong.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Declared: CAP Alert, identifier issued
+    Declared --> Standing: present in every index
+    Standing --> Standing: index regenerated, nothing changed
+    Standing --> Changed: CAP Update, references the Alert
+    Changed --> Standing: present in the next index
+    Standing --> Ended: CAP Cancel, references the Alert
+    Standing --> Lapsed: expires passed, no Cancel
+    Ended --> [*]
+    Lapsed --> [*]
+    Standing --> Blind: index stops moving
+    Blind --> Standing: index moves again
+```
+
+**Declared.** The authority issues a CAP `Alert`. The `identifier` is minted
+here and lives as long as the feed does. `sent` is now. `effective` is when
+the alert takes force, usually the same moment. `expires` is a ceiling: the
+moment after which, if nothing else is said, the alert should not be treated
+as current. It is not a prediction of when the threat ends and it is not the
+end event.
+
+**Standing.** Nothing is published about the alert itself. The index carries
+it in `active`, regenerated on the cadence, and that is how a consumer knows
+it is still in force. This is the most common state and the one with the
+least traffic, which is exactly why the index exists: a consumer that joined
+during a long alert must be able to learn of it without the message that
+began it. Property seven.
+
+**Changed.** The authority raises or lowers the severity, extends the area,
+or moves `expires`. A CAP `Update` goes out, with `references` pointing at the
+`Alert`, with its own `sent`, and with the changed elements filled. The
+identifier does not change. This is the transition that property nineteen was
+learned on: on the Ukrainian side a level changed inside an alert with no
+message at all, and the consumer found out two days later by reading a
+payload. Here the change is a message, it is dated, and it names what it
+changes.
+
+**Ended.** A CAP `Cancel`, referencing the `Alert`, with its own `sent`. Then
+the identifier leaves `active`. Both happen; neither alone is enough. The
+`Cancel` is the end event a consumer stores and shows ("the alert ended at
+12:04"); the index is how a consumer that missed the `Cancel` still learns
+the alert is over. Property three, both directions.
+
+**Lapsed.** `expires` has passed and no `Cancel` came. The publisher removes
+the identifier from `active` and says so in the next index, in a field a
+consumer can read (`ended_in_window` counts it; a per-alert `lapsed: true` is
+better). What the publisher must not do is nothing: an alert that silently
+falls off the list is an end nobody can date, and a consumer that keeps it
+because it never saw a `Cancel` is right to. Lapsing should be rare in a feed
+whose authority sends `Cancel`; if it is common, `expires` is being used as
+the end event, and property three is not met.
+
+**Blind.** `generated_at` stops moving. Nothing about the alert changed; the
+feed did. A consumer that has an index older than `valid_for_s` must say that
+its picture is old and how old, and must not clear anything on the strength
+of the silence. This is the state section 4 is about, and it is drawn on the
+diagram because a lifecycle that omits it describes a feed that never fails,
+and there is no such feed: this project's watchman source went silent twice
+in ten days, for thirty-four hours and then for more than forty.
+
+**What a consumer does at each arrow.** Declared: store the message, add the
+row, show the alert with `sent` as its start. Standing: refresh the age from
+`generated_at`, nothing else. Changed: store the `Update`, re-read the row,
+show the new severity with the `Update`'s `sent` as its stamp; do not open a
+second row. Ended: store the `Cancel`, close the row, show the end with the
+`Cancel`'s `sent`. Lapsed: close the row, show the end as *lapsed at* rather
+than *ended at*, because they are different facts. Blind: stop the clock on
+everything, say the picture is old, keep every row open. The rows are the
+consumer's memory; the index is the publisher's; when they disagree, the
+index is newer and wins, unless the index is itself older than its ceiling,
+in which case nothing wins and the page says so.
+
+## 12. Three clocks, one format
+
+Every alert has three moments and a feed that conflates them produces the
+defect this project logged as property eighteen: a date that quietly stopped
+meaning what it used to.
+
+**Declared.** When the authority made the decision. On the message, this is
+`sent`. On a severity, it is the `sent` of the `Update` that carried it, and
+in the index it is `severity_at`. This is the clock a reader cares about: an
+alert declared at 03:12 is an alert declared at 03:12 however late the
+consumer read it.
+
+**Published.** When the document a consumer is reading was made. `sent` on a
+message; `generated_at` on the index. For a message the two clocks usually
+agree to the second; for the index they never do, because the index is
+remade every two minutes and the alerts in it were declared whenever they
+were declared. Measured on 2026-09-09 in this project's own store: an index
+row written at 11:21 carried a declaration made two days earlier. Both stamps
+are true. A reader shown the wrong one is shown a two-day-old threat as
+fresh.
+
+**Observed.** When the consumer read it. Never on the wire; the consumer
+writes it in its own store beside what it read. It is how a consumer tells
+"the publisher was silent" from "I was not listening", which property nine
+is about, and it is the stamp that makes a consumer's own outages visible in
+its own record.
+
+**One format.** ISO 8601, with the UTC offset written out, always:
+`2026-09-09T11:21:48+02:00`. Not `2026-09-09 11:21`, which has no zone and
+becomes two different moments on the day the clocks change. Not a Unix
+integer, which people cannot read in a log. Not a date without a time. The
+state's own technical standard already requires ISO 8601 for public data;
+the offset is the part it does not spell out and the part that goes wrong.
+
+**Ages are computed, never published.** "Declared 14 minutes ago" is the
+reader's clock minus `sent`, computed on the reader's device, ticking. A
+feed that publishes an age publishes a number that is wrong the moment it is
+written and more wrong every second after. Publish the moment; let the reader
+subtract.
+
+**A ceiling is a number in the feed.** `valid_for_s` on the index and
+`expires` on the message are the two places the publisher says how long its
+own silence may be trusted. Neither is a promise about the world; both are
+promises about the feed. A consumer holds to them literally, and a publisher
+that changes its cadence changes the number in the same release, because a
+consumer cannot see a cadence, only a stamp.
+
+## 13. What makes one alert one alert
+
+The identity of an alert is the thing every consumer keys on, and it has to
+be decided by the publisher, once, in writing, because every consumer that
+decides it for itself decides it differently.
+
+**The identity is the identifier.** One string, minted on `Alert`, carried
+by every `Update` and the `Cancel` through `references`, never reused. That
+is CAP's own design and it is right. Everything else about the alert is a
+property of it and may change: the severity, the area, the expiry, the text.
+A consumer keys its rows on the identifier and re-reads the properties.
+
+**What is not identity, and why it matters.** On the Ukrainian side the
+identity a consumer can build is `(area_id, kind)`, because the source
+publishes no identifier; and the day the source attached a severity to each
+alert, a consumer that had put the severity into its key would have opened a
+new row on every escalation and closed none. Property nineteen counted seven
+ghosts in one payload. The observation time is not identity either: the same
+alert read four hundred times a day is one alert, and a store that cannot
+tell the four-hundredth reading from the first fills up with the same fact.
+Measured on 2026-09-09, first cycle after this project began recording
+severities: thirty open alerts handed over their current declaration, the
+store kept one row for each; on the next cycle thirty were handed over again
+and the store kept two, the two that had changed. That is what a correct
+identity does. Everything that is not identity hashes to a row that already
+exists.
+
+**Idempotence is the consumer's proof that the identity is right.** Replaying
+a day of messages into a store must leave the store unchanged. If it grows,
+something that is not identity has leaked into the key. This project runs
+that test in its build, against every stream it stores, and one of the
+thirteen attacks in its harness is exactly this: replay a feed, assert the
+log did not grow.
+
+**A hash over the identity, published, is a gift.** CAP does not require it,
+and a publisher that adds one - a stable digest of the elements that make the
+message the message it is - lets every consumer deduplicate without agreeing
+on which elements those are. It is one field. Its absence costs each consumer
+the same afternoon of deciding, and they decide differently.
+
+## 14. Where: the area as a code
+
+**The area is a TERYT code, one `geocode` element per unit, with
+`valueName` set to `TERYT`.** The name goes in `areaDesc` for people. A
+polygon may go beside the code if the decision was taken on one. What may
+not happen is the name alone, or the polygon alone, because both force every
+consumer to build a resolver and every resolver is subtly wrong: this project
+measured name matching against a register at about six in a hundred where
+the source's own structured labels reached better than ninety-nine, and that
+was with the labels in a consistent convention. Property two has the exact
+figures.
+
+**The join field is a code, never a display name.** This project's own
+consumer shipped a release in which the map drew nothing while the list
+beside it drew everything, because the field the map joined on carried a
+name meant for reading and the geometry was keyed by a slug. Both were
+correct; they were correct about different things. A code is the same string
+in the geometry, in the register and in the message, and a name is not.
+
+**Publish at the level the decision was taken, and let the consumer roll
+up.** If the authority warns a powiat, the message names the powiat's code.
+If it warns three gminy, three `area` elements, three codes. What the
+publisher must not do is expand: a warning for a województwo written as its
+twenty-four powiaty is a feed that measures how finely a region is subdivided
+and calls it how many warnings there were. This project logged that exact
+defect against its own counter (F76, in its defect log): one episode over one
+oblast produced a count of seven, one per raion in the map, and a consumer
+shading by that count would have painted subdivision as intensity. A code at
+the decision's own level carries the decision; a consumer that wants the
+gminy can look them up.
+
+**The register is the one the state maintains, at the version the state
+publishes, and the feed says which.** TERYT changes: units merge, split,
+change names. A code in a message is read against the register as it stood
+when the message was sent, and a feed that does not say which edition of the
+register it means leaves the consumer to guess on the day a code is retired.
+One line in the profile, updated when the register is.
+
+## 15. Serving it, and changing it later
+
+**Serve files.** The index and the messages are documents; put them behind
+HTTPS at stable addresses and let a web server serve them. No session, no
+cookie, no query string that changes what is returned in a way the response
+does not state. The index at one address, always the current one; each
+message at an address derived from its identifier; a listing of recent
+messages at a third. This is what the state's technical standard means by an
+API at openness level 3, and it is also the cheapest thing a publisher can
+run: a static file behind a cache survives a load that would take a database
+down.
+
+**Say how fresh it is, in headers and in the body.** `Last-Modified` and
+`ETag` on every response, so a consumer can ask "has this changed" for the
+price of a header and be told no. `Cache-Control: max-age` no longer than the
+cadence, so an intermediary never serves a stale index as current. And
+`generated_at` in the body regardless, because headers are stripped by more
+intermediaries than anyone expects and the body is what the consumer stores.
+
+**State the cadence and the budget.** The index is regenerated every N
+seconds; N is published, and `valid_for_s` in the index is not smaller than
+it. If there is a rate limit, it is published, and the response carries the
+remaining allowance in a header. If there is none, the documentation says
+"none". Property ten: what fails is a limit that exists and is not stated,
+because a consumer finds it by being cut off, and the gap it leaves is
+unattributable.
+
+**Refuse what you do not honour.** A request carrying a parameter the server
+does not implement gets a `400`, not a `200` with the parameter ignored. A
+scope named *all* returns all, or is not named *all*. A count named for the
+total counts the total. Property seventeen measured all three failures on one
+Polish endpoint in one evening, and the third is the cheapest to prevent and
+the worst to suffer, because a consumer's mistake becomes a consumer's false
+belief and survives every check the consumer knows how to run.
+
+**State the retention.** The messages are kept for a period the profile
+names, and the listing says how far back it reaches. Section 2 measured the
+alternative: a stream whose history thins to a handful of rows per week,
+across a whole country, so that the week that mattered most could not be
+read back. A number in the profile - ninety days, a year, forever - is worth
+more than the best intentions, because a consumer can plan around a number
+and cannot plan around an intention.
+
+**Change by adding.** A new element is added; nothing is removed and nothing
+changes meaning. A consumer that reads only the elements it knows keeps
+working. When something must be removed or must change meaning, that is a new
+version of the profile: the version is a string in the index (`schema`) and
+in the profile document, and the old version keeps being served for a stated
+period after the new one appears. Property eight: this project moved its own
+contract by one version with the payload a strict superset and still went
+blind for the minutes between the two deployments, because the consumer
+refuses versions it does not know, correctly, and nothing had told it the
+overlap. Two minor versions of overlap, stated, is the rule this project
+holds itself to. A public feed has consumers it has never met; the overlap is
+for them.
+
+**A field that changes meaning changes name.** Property eighteen, and it is
+the rule that the additive policy above does not cover, because a meaning can
+change with no element added or removed. The Ukrainian API began bumping an
+existing timestamp on a new event and every consumer that had read that
+stamp as "when it began" was silently wrong. If `sent` ever needs to mean
+something new, it is a new element with a new name, and `sent` keeps meaning
+what it meant. On the consumer's side the matching rule is a canary: every
+element the parser has no reading for is counted and printed on the day it
+arrives, so the next unannounced change is seen in a log rather than found in
+a payload two days later.
+
+## 16. The conformance checklist
+
+Written so that each line can be a test. A publisher's own build should run
+these against a candidate feed before anyone outside the building reads it,
+and this project would run the same lines, from the outside, as the reading
+T8a in its backlog describes. Each line names what it rests on. *Index* means
+the document in section 10.2; *message* means a CAP document under the
+profile in section 10.1.
+
+**Liveness**
+
+1. The index is regenerated on the stated cadence when nothing is happening,
+   and its `generated_at` moves. Section 4, property five.
+2. `valid_for_s` is present, is not smaller than the cadence, and a consumer
+   holding an index older than it can say so from the index alone. Section
+   12.
+3. An empty `active` list and an absent index are distinguishable by a
+   consumer: the first is a quiet sky, the second is nothing. Section 4.
+
+**State and transitions**
+
+4. Every alert in force appears in `active`; a consumer that reads only the
+   current index is current. Property seven.
+5. An alert begins with `msgType` `Alert` and a fresh `identifier`. Section
+   11.
+6. An alert ends with `msgType` `Cancel` referencing the `Alert`, and leaves
+   `active` in the next index. Property three.
+7. An alert that lapses on `expires` without a `Cancel` is marked as lapsed
+   in the index, not silently dropped. Section 11.
+8. A change to an alert is an `Update` referencing the `Alert`, with its own
+   `sent`, and the identifier does not change. Section 11, property nineteen.
+
+**Identity**
+
+9. `identifier` is never reused for the life of the feed. Section 13.
+10. Replaying one day of messages into a consumer's store leaves the store
+    unchanged. Section 13.
+11. A severity change produces no new alert on the consumer's side, and the
+    `Update`'s `sent` is the severity's stamp. Property nineteen.
+
+**Time**
+
+12. Every timestamp is ISO 8601 with a UTC offset, in messages and in the
+    index. Section 12.
+13. No age is published; every age a reader sees is computed on the reader's
+    side. Section 12.
+14. `severity_at` in the index equals the `sent` of the `Update` that set the
+    severity, or the `Alert`'s `sent` if it never changed. Section 12.
+
+**Area**
+
+15. Every message carries at least one `geocode` with `valueName` `TERYT`
+    and a code that exists in the register edition the profile names.
+    Section 14.
+16. The code is at the level the decision was taken; a warning for one unit
+    is one `area` element. Section 14.
+17. `areaDesc` is present and is never the only way the area is given.
+    Section 14.
+
+**Vocabulary**
+
+18. Every `event` value is in a published list, and each entry in the list
+    has one sentence saying what it does not distinguish. Property eleven.
+19. `category` and `sender` are filled on every message. Property fifteen.
+20. `Unknown` is used for `severity`, `urgency` or `certainty` when the
+    authority has not decided, and never replaced by a default. Section 10.1.
+21. Every optional element the profile allows has one sentence saying what
+    its absence means, and where absence and a null would mean different
+    things, they are two elements. Property thirteen.
+
+**Protocol**
+
+22. A request with a parameter the server does not implement returns `400`.
+    Property seventeen.
+23. Any scope, count or filter that returns a partial answer says so in the
+    response. Property seventeen.
+24. The cadence, the rate limit or its absence, and the retention are stated
+    in the profile document, and the response carries the remaining allowance
+    if one exists. Property ten, section 15.
+25. `Last-Modified`, `ETag` and `Cache-Control` are set, and `max-age` does
+    not exceed the cadence. Section 15.
+
+**Change**
+
+26. The profile has a version, the index carries it in `schema`, and the
+    document says how long the previous version is served after a new one.
+    Property eight.
+27. No element has changed meaning since the previous version without
+    changing name. Property eighteen.
+28. `status` `Test` and `Exercise` messages are published in a way a
+    consumer can drop without reading the text. Section 10.1.
+
+Twenty-eight lines. A feed that passes them is one this project could read
+on the day it appeared, with the code it already runs, and so could anyone
+else. A feed that fails a line is not a bad feed; it is a feed with a known
+gap, which is the only kind a consumer can build against honestly, and the
+line says what the gap is.

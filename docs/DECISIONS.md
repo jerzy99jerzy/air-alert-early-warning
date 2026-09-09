@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.23
+Document:  docs/DECISIONS.md, version 2.24
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2042,8 +2042,20 @@ field would be shown yellow over an alarm that went red.
 reads the table, and no reader is shown a level. That is the release after
 the week of rows below, and it moves the contract (D-021).
 
-**What settles the open half.** A store with rows in `alert_levels` across
-at least one week, read for: how often a level changes inside an episode, how
+**What settles the open half, restated 2026-09-09.** Not a calendar. A date
+in a condition is a preference: three quiet days yield five escalations and
+a display rule tuned to quiet, three loud days yield three hundred, and a
+calendar knows neither. The condition is on content. The open half closes
+when `alert_levels` holds **at least 50 level changes inside open alerts,
+across at least 15 distinct `(area_id, kind)` keys**, and the age
+distribution of standing declarations has a tail that has been read. The
+earliest reading is 2026-09-12; if the condition is not met that day, the
+reading waits and says why. The third question below, whether the
+resolution's weekly thresholds move the meaning of a colour between weeks,
+is a between-weeks comparison by construction and cannot be bought with
+three days; it is split off as its own item with its own condition, two
+full weeks, and does not block showing a level to a reader, only the claim
+that a colour means the same thing this week as last. The store is read for: how often a level changes inside an episode, how
 old the `Red` records the map does not draw are, and whether the thresholds
 the resolution says are set weekly move the meaning of a colour between
 weeks (which bears on the trailing windows of D-048). Until then the map draws
