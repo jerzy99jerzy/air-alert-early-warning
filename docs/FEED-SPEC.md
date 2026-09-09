@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 2.4 / 2026-09-04
+Version: 2.5 / 2026-09-09
 A specification, written from the position of someone who tried to build against
 one, found nothing at first, then found part of one behind a token, and was
 then told by the operator of that one what it publishes and what is being
@@ -360,6 +360,30 @@ is about who can tell the feed is alive, and 2026-08-29 is the measurement
 that they are different properties - the tokenless source was the one that
 died, and its death was the one thing about it a consumer could read.
 
+**Measured a third time, and the instrument was the consumer's own attempt
+log.** Added at 2.5. The channel returned from its silence of 2026-08-29 - on
+a date this project did not record, which is a finding about this project -
+and stopped again on 2026-09-07 at 06:09 UTC `[measured]`. This time the
+consumer could say which side was silent, and could say it from storage rather
+than from the sky: the attempt log (property nine) recorded 43 new post
+identifiers in the 69 minutes before the stop, then the same identifier on
+4,463 consecutive successful reads through the evening of 2026-09-08, against
+592 identifiers in the control day before. Not one refusal in the window. A
+healthy pipe reading a silent publisher, as a pair of numbers.
+
+Two things follow. First, the state file this project publishes now names its
+sources one by one and says, per source, whether the pipe is delivering and
+when it last ingested an event, so a reader can be told "the primary is
+delivering, the watchman is silent" instead of an age with no attribution.
+Second, the instrument that settles a publisher's return is the feed's own
+page identifier in the attempt log, not the first classified event: a
+publisher that returns with content the classifier does not read produces no
+event row and is back all the same. This project wrote the wrong instrument
+into two of its own documents on the day of the measurement and corrected it
+the day after; the correction is recorded here because the mistake has exactly
+the shape this section warns publishers about - looking for life in the wrong
+place and reading its absence as silence.
+
 **Why the standard does not cover this, and why that is not a criticism of it.**
 The technical standard describes how a dataset is formatted, described and
 licensed. A dataset is a thing that sits still; a stream is a thing that must be
@@ -390,7 +414,9 @@ one**; their evidence is a single evening against one endpoint, which makes
 them narrower than the rest, and that is said here rather than buried. Sixteen
 was added at 1.9 and withdrawn at 2.0. The stub below says why, because a
 withdrawal recorded openly is part of the same discipline these properties ask
-of a publisher.
+of a publisher. Eighteen and nineteen were added at 2.5, both from the
+Ukrainian source changing under this project's collector on 2026-09-06: one
+from what the change broke, one from what it published.
 
 **Six. A cap, published, and a flag saying when it bound.** Learned in
 production.
@@ -730,6 +756,68 @@ correct one by construction.
 This is section 4's invariant moved from the feed's contents to the feed's
 protocol. There, silence must not mean safety. Here, **a partial answer must
 not look complete.**
+
+**Eighteen. A field that changes meaning changes name, and a consumer counts
+the keys it cannot read.** Learned on 2026-09-08 from the Ukrainian API, two
+days after it changed under this project's collector `[measured]`.
+
+On 2026-09-06 the API attached to every alert a list of level records - the
+two-level scheme introduced by the Ukrainian government's Resolution No. 1092
+of 2026-09-04 - and began bumping the alert's existing `lastUpdate` stamp
+whenever the level changed. Since the switchover the adapter had read
+`lastUpdate` as the alert's start, correctly: until that day nothing updated
+an alert in place. Measured on 2026-09-08: a city went yellow at 17:22:35 and
+red at 18:01:01, and its `lastUpdate` read 18:01:00. Seven alerts in one
+payload were dated from their escalation rather than their start, and not one
+check failed, because every check read only the keys it knew.
+
+Two halves. The publisher's: a field whose meaning changes is a new field, or
+a version bump on the record, or both. The rename rule this project applies
+to itself - every read site keeps the old reader for two minor versions - has
+this as its other side, and the cost is a name. The consumer's: a canary.
+Every key on a record that the parser has no reading for is counted per poll,
+printed in the recap and persisted with the attempt row, so that the next
+unannounced key is visible on the day it lands rather than on the day someone
+opens a payload by hand. Both halves are cheap; the two days between the
+change and its discovery were not.
+
+**Nineteen. A severity is the publisher's word, carries its own timestamp,
+sits beside the state and never inside the identity.** Learned from the same
+change, read for what it publishes rather than for what it broke `[measured:
+one captured payload of forty alerts, and the rows stored since]`.
+
+The level records are a list per alert; the list's order does not encode
+time; each record carries a level, a free-text reason that repeats the level
+in parentheses about as often as it says anything, and the moment the record
+was created. A level changes inside an alert with no end event and no new
+alert. Six of the forty alerts carried a `Red` dated between 2022 and August
+2026 with no other mark of age.
+
+What that settles about a severity field, in four sentences a publisher can
+adopt:
+
+- **The word is published verbatim and the vocabulary is open.** A consumer
+  mirrors the publisher's string and treats one it does not recognise as
+  unknown, never as the nearest colour it knows: property eleven's rule,
+  applied to a second field.
+- **Every level record carries the moment it was declared.** A severity
+  without a timestamp is a colour of unknown age, and the six old `Red`
+  records are what that looks like: a consumer painting them draws a threat
+  declared in the war's first year as if it were tonight's.
+- **The reason stays a separate field.** Text that explains a level is not
+  the level, and a consumer that parses one for the other will find both.
+- **An escalation is not a new alert.** The identity of an episode is the
+  alert. A consumer that keys its rows on the level as well opens a ghost row
+  on every escalation - seven in the payload above. The level is a property
+  of the row and is re-read; the row is the alarm, which did not change when
+  its colour did.
+
+And the consumer's half, which this project holds for itself: **a severity is
+captured before it is shown.** The rule for what a reader sees is written
+against stored rows rather than against one captured payload, because a rule
+written from a shape assumed is the class of defect the preceding property
+records. Until then the page says the level is coming, and says whose level
+it will be.
 
 
 ## 5. The objection, and the answer

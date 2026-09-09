@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.21
+Document:  docs/DECISIONS.md, version 2.22
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -104,15 +104,15 @@ requirement to display geography that a text message cannot carry.
 ## D-006. Apache-2.0
 Date: 2026-08-05. Status: adopted
 
-**Decision.** Apache-2.0, matching `phantomatics`.
+**Decision.** Apache-2.0.
 
-**Reasoning.** The portfolio currently carries three licences with no stated
-reasoning, which is the first thing a partner asks about. This repository is
-defensive tooling with no commercial dual-licence intent, and the patent grant is
-worth more here than copyleft would be.
+**Reasoning.** A licence chosen without stated reasoning is the first thing a
+partner asks about. This repository is defensive tooling with no commercial
+dual-licence intent, and the patent grant is worth more here than copyleft
+would be.
 
 **What would change this.** A commercial offering built on the same tree, which
-would make the `phantomatics` AGPL-plus-commercial split the better model.
+would make an AGPL-plus-commercial split the better model.
 
 ## D-007. Alarm rate is a hard control, not a quality metric
 Status: **superseded by D-014 (0.8.0.0).** Left in place with its reasoning intact: a decision log that deletes a superseded entry loses the ability to show what was believed and why.
