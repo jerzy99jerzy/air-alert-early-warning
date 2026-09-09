@@ -16,6 +16,38 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.53.3.0 - 2026-09-09
+
+**The most executed lines in the tree had no test.** P1, from the review of
+2026-09-08. In `mavo/sources/ukrainealarm_source.py` the two `continue`
+statements that make an alert listed on consecutive polls stay one open
+alert - neither re-opened nor cleared - were executed by nothing: the suite
+had 37 calls to `poll()` in that file and none polled twice with the same
+key. It walked a key appearing and a key disappearing, never a key that
+simply is. Production runs the opposite ratio - at 720 polls a day over some
+forty open alerts those lines run tens of thousands of times daily - and a
+defect in either has the shape of F145 and D-044 together: an ACTIVE
+re-issued for an alert already open, or a CLEAR for an alert still listed.
+The gap was older than 0.53.2.0 and the 95.27% summary did not show it; the
+file's missing-lines list did. Tests only, and the release is a third-digit
+release because the guarantee changed even though no package line did.
+
+- **tests**: a key present on four consecutive polls while a neighbour
+  arrives and leaves - one ACTIVE for the key, one ACTIVE and one CLEAR for
+  the neighbour, nothing on the fourth, the key's start unchanged in
+  `_previous`; a key that leaves and returns is two episodes with two starts
+  and two hashes; a key whose level changes between polls opens no row and
+  closes none, the regression control for the release that records level
+  changes as their own stream (D-050's open half); and the branch that files
+  a name the register declines (F131) under `declined` rather than
+  `unresolved`, which production exercises on every cycle (`declined=1`) and
+  no test did. After them the adapter has no missing line and no partial
+  branch.
+- **BRIEF, BRIEF-PL** (2.7): 704 tests, 95.45%.
+
+No line under `mavo/` changes. Coverage rises from 95.27 to 95.45; the floor
+stays at 95.
+
 ## 0.53.2.1 - 2026-09-09
 
 **Documents only: the standard named the projects it was learned in, two
