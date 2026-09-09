@@ -1,10 +1,9 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 3.0 / 2026-09-09
+Version: 3.2 / 2026-09-09
 A specification, written from the position of someone who tried to build against
-one, found nothing at first, then found part of one behind a token, and was
-then told by the operator of that one what it publishes and what is being
-added to it. The Ukrainian equivalent was consumed and measured over a corpus
+one, found nothing at first, and then found part of one behind a token. The
+Ukrainian equivalent was consumed and measured over a corpus
 of 118 days; the work of building against it is a weekend project, and the
 parser at the centre of it took two afternoons. Both facts are stated because
 the argument below rests on the second: what the convention enables is cheap
@@ -13,17 +12,15 @@ which is the measurement this rests on, and T8a in [`../TODO.md`](../TODO.md),
 which is where the gap was first recorded. T8a is the survey this document
 argues from. Its first source-level verdict, for the RSO stream, comes from
 reading the stream on 2026-08-22 and is folded into sections 2 and 4a below.
-Its second comes from the operator of that stream, in writing, on 2026-09-02,
-and is folded into sections 2, 3, 6 and 8. The other Polish sources in
+The other Polish sources in
 section 2 have not been read by this project; they are described from what
 their operators publish about them, and each sentence says which it is.
 
 ```
 Note: this document describes a feed that does not yet exist in the form it
       asks for. Poland's nearest counterpart, the RSO stream, was read and
-      measured on 2026-08-22; on 2026-09-02 its operator stated in writing
-      what it publishes, under what access, and what is being added to it.
-      Section 2 records both, section 8 records the correction, and the last
+      measured on 2026-08-22. Section 2 records that reading, section 8
+      records the corrections this document has had to make, and the last
       entries of section 4a record what consuming the stream taught. The
       corrections are marked rather than silent. None of it is a claim about
       anyone's competence, and this document makes none
@@ -108,15 +105,12 @@ institution.
 | Sirens | People within earshot | No, and cannot be |
 | RCB alert (SMS) | Phones across the country | No. Free text to a phone |
 | RSO stream (XML and JSON) | Anyone who finds the address | Yes. Read on 2026-08-22, with the gaps recorded in section 4a |
-| RSO CAP interface, since June 2026 | Holders of a token, bound to one static IP | In format, yes. Access is by application to the system's administrator |
-| RSO air-strike threat category | Nobody yet: not in production on 2026-09-02 | In a test environment; production targeted for the end of September 2026 |
-| A dedicated air-strike warning application | Not built | Under analysis, separately from the category above |
+| RSO CAP resource | Holders of a token | In format, yes. The publisher's integration page documents the token; this project has not read the resource |
 
-Only the first RSO row comes from reading the source. The three RSO rows
-under it come from the operator's own letter, cited in section 9. The sirens
-and the SMS are described from what their operators publish about them. No
-claim below rests on a reading this project has not made or on a statement
-its source has not signed.
+The RSO rows come from reading the stream and from the publisher's own
+integration page. The sirens and the SMS are described from what their
+operators publish about them. No claim below rests on a reading this project
+has not made or on a document its publisher has not published.
 
 **A correction to earlier editions, measured 2026-08-22.** This document used
 to describe the RSO stream as closed. It is not. The service behind the RSO
@@ -193,43 +187,13 @@ metadata, unpack, and filter the description fields. The command is in this
 repository's history and the figures above come from running it, not from
 browsing the site.
 
-**A second correction, from the operator, 2026-09-02.** The Department of
-Civil Protection and Crisis Management of the Ministry of the Interior and
-Administration, which operates RSO, answered the correspondence this document
-travelled with; the letter is cited in section 9. Four statements of fact
-follow from it. Each is `[reported]` rather than `[measured]`, and each is a
-claim about the world that a reading could confirm or refute.
-
-- **The statutory instrument exists.** Article 71(2)(6) of the Act on civil
-  protection and civil defence of 5 December 2024 lists public warnings sent
-  by fast digital transmission among the permitted warning systems. Earlier
-  editions of this document did not cite it and should have. Nothing below
-  needs new legislation.
-- **The operator is named, and is analysing four paths at once:** extending
-  RSO, a dedicated application for warning of air strikes, cell broadcast,
-  and the modernisation of the SMS centre behind the RCB alert.
-- **RSO has published in the Common Alerting Protocol since June 2026.** The
-  reading of 2026-08-22 found the CAP interface and did not know its age.
-- **The category this document exists for is being built.** On the letter's
-  date the RSO category set did not include air-strike threat. Work on adding
-  it is under way in a test environment, with a stated hope of reaching the
-  production system by the end of September 2026. This document is therefore
-  not a request to start anything. It is a set of properties to check the
-  result against, and section 3 is written as that checklist.
-
-**How CAP access is granted, from the same source.** An applicant supplies a
-static IP address that will connect to the CAP API and a contact address for
-correspondence about the token. Access is bound to a single network location
-as well as to a credential, which is stricter than property one of section 3
-had anticipated, and is recorded there.
-
-**What the letter leaves open**, each answerable by the operator in one
-sentence: whether the CAP payload carries the affected area as a TERYT code
-in `geocode` or only as a name or a polygon; whether the end of a threat is
-published as a `Cancel` or `Update` message or is implied by `expires`
-elapsing; and whether anything is published when nothing is happening, which
-is section 4. Those three are what a reading under a token would settle, and
-T8a in the backlog is that reading.
+**Three questions this document cannot answer**, and none of them is
+answered anywhere below: whether the CAP payload carries the affected area as
+a TERYT code in `geocode` or only as a name or a polygon; whether the end of a
+threat is published as a `Cancel` or `Update` message or is implied by
+`expires` elapsing; and whether anything is published when nothing is
+happening, which is section 4. A reading under a token would settle all three.
+T8a in the backlog is that reading, and it has not been made.
 
 ## 3. The specification, which is mostly not mine
 
@@ -256,12 +220,12 @@ each in the specific case of alerting, and then the gap.
 
 **Read against RSO, at 2.4.** The same five properties, with the status each
 holds against the one Polish stream that exists. `[measured]` is this
-project's reading of 2026-08-22; `[reported]` is the operator's letter of
-2026-09-02; *unknown* is what neither settles, and section 2 lists what would.
+project's reading of 2026-08-22; *unknown* is what that reading does not
+settle, and section 2 lists what would.
 
 | Property | Status against RSO |
 | --- | --- |
-| Public, no application process | Met by the XML and JSON list pages `[measured]`. Not met by the CAP resource: a token, bound to one static IP `[reported]`. This is the remaining gap |
+| Public, no application process | Met by the XML and JSON list pages `[measured]`. Not met by the CAP resource, which the publisher's integration page places behind a token. This is the remaining gap |
 | Area by register code, not prose | List pages carry the voivodeship as a slug and a name, no register code `[measured]`. Unknown for CAP, whose `geocode` can carry one |
 | Timestamped transitions | Unknown for both resources; not measured on 2026-08-22. CAP has `Cancel` and `Update` for it |
 | Versioned schema, served over an API | Largely met by CAP itself, a published versioned standard; the RSO profile of it, which optional elements are populated, is unpublished |
@@ -272,11 +236,9 @@ application form is not public infrastructure; it is a permission regime with an
 RSS icon. The Ukrainian channel needs no token, which is why anyone can verify
 the measurements in this repository rather than take them on trust.
 
-*Against RSO, at 2.4.* The CAP resource is behind a token, and the token is
-issued against one static IP address supplied by the applicant `[reported]`.
-That binds consumption to one network location, not only to one credential: a
-mobile client cannot hold it, a browser cannot hold it, and a consumer that
-moves hosts applies again. The XML and JSON list pages carry no gate at all,
+*Against RSO, at 2.4.* The CAP resource is behind a token, documented as
+such on the publisher's own integration page. The XML and JSON list pages
+carry no gate at all,
 so the regime falls on the one resource that carries the structured form. It
 is not a schema question, so no field closes it, and it is the property that
 separates a system a municipality can build on from one it must ask to.
@@ -703,10 +665,11 @@ one carried a category field:
 consumer knows what a row is, is to remember which URL returned it.
 
 The same holds for the author. Since April 2024 the Government Centre for
-Security has published into this feed, and the system's owner names it, with
-the ministry, as responsible for the nationwide messages, while the
-voivodeship crisis centres publish the rest. That division is the owner's own
-description of the system rather than something this project measured.
+Security has published into this feed, and the system's own published
+description names it, alongside the ministry, as responsible for the
+nationwide messages, while the voivodeship crisis centres publish the rest.
+That division is what the publisher publishes about itself rather than
+something this project measured.
 **No field distinguishes them.** A consumer that wants to label a warning with
 who issued it cannot, and a consumer that labels the whole block with one
 issuer's name is wrong about most of it.
@@ -878,11 +841,13 @@ not an argument against publishing the rest.
 
 ## 6. What this is not asking for
 
-- **Not a new system.** RSO exists, is operated, and has emitted CAP since
-  June 2026. What is asked concerns which categories it carries and who may
-  read the structured form.
-- **Not new legislation.** Article 71(2)(6) of the Act of 5 December 2024
-  already provides for this class of system.
+- **Not a new system.** RSO exists, is operated, and its integration page
+  documents a CAP resource. What is asked concerns which categories it
+  carries and who may read the structured form.
+- **Not new legislation.** The Act on civil protection and civil defence of
+  5 December 2024 provides for public warning by fast digital transmission;
+  section 9 records that its published wording has not been read against this
+  claim.
 - **Not a change to who decides.** The state decides what an alert is and when
   to issue one. This concerns the format in which an already-taken decision is
   published.
@@ -904,9 +869,8 @@ specific. Useful forms:
   document rather than with me.
 - A concrete reason why TERYT codes in the payload are harder than they look.
 - A pointer to a Polish source that already meets some of this and that the
-  author has not found. **This was the most useful reply of all**, and it
-  arrived: section 8 records it. T8a in the backlog now holds the reading
-  that the reply makes possible.
+  author has not found. **This is the most useful reply this document can
+  receive**, and section 8 says what happens when one arrives.
 - An answer to any of the three questions left open at the end of section 2.
 - Evidence that the security objection in section 5 has a stronger form than the
   one answered here.
@@ -916,66 +880,70 @@ repository: with what was wrong, who found it, and what changed.
 
 ## 8. Correction record
 
-Section 7 promised that a pointer to an existing Polish source would be the
-most useful reply this document could receive, and that a correction would be
-recorded like any other finding: what was wrong, who found it, what changed.
+Section 7 says a pointer to an existing Polish source is the most useful
+reply this document can receive, and that a correction would be recorded like
+any other finding: what was wrong, who found it, what changed.
 
 | Field | Entry |
 | --- | --- |
 | Editions corrected | 1.0 / 2026-08-09 to 2.3 / 2026-08-31 |
 | Correction issued | 2.4 / 2026-09-04 |
-| Found by | Robert Klonowski, Deputy Director, DOLiZK |
-| Institution | Ministry of the Interior and Administration |
-| Source | Letter ref. DOLiZK-ZK.052.49.2026(2), Warsaw, 2 September 2026 |
-| In reply to | Correspondence of 28 August 2026 |
+| Found by | this project's own reading, and a reply from outside it |
+| Reproduced here | the reading, yes; the reply, no |
 
 **What was wrong.** Every edition to 2.3 opened by saying there was nothing
 to build against, and from 1.9 that sentence stood above a section that had
-already found and measured the RSO stream (F142). No edition cited the
-statutory basis that exists for this class of system. No edition knew that
-RSO had carried CAP since June 2026, or that the category this document
-argues for was already in test.
+already found and measured the RSO stream (F142). That correction is section
+2's, and it rests on a reading anyone can repeat.
 
-**What changed.** The header and the note. Section 2: three rows, a block of
-four reported facts, the access procedure, and the three questions the letter
-leaves open. Section 3: a status table against RSO, and property one extended
-with the IP binding. Section 6: two items. Section 7: the promise kept.
-Sections 1, 4, 4a and 5 unchanged on substance.
+**A second correction arrived from outside this project and is not
+reproduced.** It came as correspondence rather than as a publication. What a
+body states about its own systems, in a reply to one person, is that body's to
+publish; a specification arguing for public data is the wrong place to publish
+it on the body's behalf, and the argument here does not need it. Editions 2.4
+to 3.1 did reproduce it. That was a mistake, the material is removed at 3.2,
+and this paragraph is the record of it, because the earlier editions are
+public and pretending otherwise would be a second mistake. What survives is
+what this project measured or what its publisher publishes.
 
-**What did not change.** The five properties. The request became smaller
-than 2.3 made it look, not larger: the category is being built, four of the
-five properties are satisfiable inside CAP without designing anything, and
-what remains is access and a heartbeat.
+**What did not change.** The five properties, and nothing in sections 1 to 7
+that the removal touches: the argument rests on the reading of 2026-08-22 and
+on the state's own standard, both of which anyone can check.
 
 **Edition note, 3.0.** Not a correction. Part II was added, and a Polish
 edition beside it. Nothing in sections 1 to 9 changed on substance; the
-header and the contents did. The reason for the addition is the audience the
-letter in this section named: a department that already runs a CAP
-interface and is adding the category this document argues for. To such a
-reader, an argument is less useful than an instruction, and an instruction in
-English is less useful than one in Polish.
+header and the contents did. The reason for the addition is the audience: a
+body that already publishes CAP and would be the one to carry a category of
+this kind. To such a reader an argument is less useful than an instruction,
+and an instruction in English is less useful than one in Polish.
+
+**Edition note, 3.1.** The Polish edition was rewritten. As shipped at 3.0 it
+was a translation rather than a document: it carried English figures of
+speech in Polish words, and one term - the heartbeat of section 4 - had been
+rendered as an anatomical phrase. The parity check in this repository's build
+holds the two editions to the same structure and the same figures and has
+nothing to say about whether either reads as prose in its own language; the
+limit is stated here because 3.0 passed the check and still needed a reader.
+
+**Edition note, 3.2.** Two removals and four corrections, none of them to the
+argument. Part II withdrew a recommendation it had no basis for, corrected
+two statements about CAP's own structure, corrected a measured figure it had
+reported wrongly, and withdrew a claim about this project's own version
+policy that property eight contradicts two sections earlier. A document that
+asks a publisher to say what its fields do not distinguish has to hold itself
+to that standard in the part that tells the publisher what to build.
 
 ## 9. Sources
 
-- Letter ref. DOLiZK-ZK.052.49.2026(2) of 2 September 2026, Department of
-  Civil Protection and Crisis Management, Ministry of the Interior and
-  Administration, signed by Deputy Director Robert Klonowski with a qualified
-  electronic signature. Cited for: the statutory basis, the operator of RSO,
-  the availability of CAP since June 2026, the token requirement, and the
-  four workstreams under analysis.
-- Correspondence from the same department of 2 September 2026, under the same
-  reference. Cited for: the absence of an air-strike category in RSO on that
-  date, the work on it in a test environment and its stated production
-  target, and the procedure for obtaining CAP access.
 - RSO integration documentation, <https://komunikaty.tvp.pl/Info/Integration>,
   read 2026-08-22 and 2026-09-02. Cited for: the public availability of the
   XML and JSON resources and the token on the CAP resource.
 - Common Alerting Protocol, OASIS, the current version. Cited for the
   elements named in section 3.
-- Act on civil protection and civil defence of 5 December 2024, article
-  71(2)(6), cited as quoted in the letter above. The published wording has
-  not yet been read against the quotation, and the sentence in section 2
-  stands on the letter until it has.
+- Act on civil protection and civil defence of 5 December 2024. Cited in
+  section 6 for the existence of a statutory basis for public warning by fast
+  digital transmission. Its published wording has not been read against that
+  citation, and the sentence stands as `[unverified]` until it has.
 - [`docs/CHANNEL.md`](CHANNEL.md), for every measurement in section 1.
 
 ---
@@ -1015,7 +983,7 @@ the publisher states, not a behaviour the consumer discovers. Section 15.
 
 ### 10.1 The message profile
 
-CAP 1.2 has thirty-odd elements and most are optional. A profile says which
+CAP 1.2 has a long list of elements and most of them are optional. A profile says which
 ones this feed always fills and what goes in them. The table below is the
 whole of it; the paragraphs after it are the reasons, each pointing at a
 property in Part I.
@@ -1028,14 +996,14 @@ property in Part I.
 | `status` | yes | `Actual` for a real alert; `Test` and `Exercise` are legal values a consumer must be able to drop | section 16 |
 | `msgType` | yes | `Alert` when it begins, `Update` when it changes, `Cancel` when it ends | section 11 |
 | `references` | on `Update` and `Cancel` | the `identifier`, `sender` and `sent` of the message this one changes or ends | section 13 |
-| `category` | yes | `Safety` for an air-strike threat; one category per message | property fifteen |
+| `category` | yes | one value from CAP's own list, named in the profile; `Safety` and `Security` both fit an air-strike threat, so the choice is the publisher's and belongs in writing | property fifteen |
 | `event` | yes | a fixed string from a published list, one per kind of alert; the vocabulary is a document, not a convention | property eleven |
 | `urgency`, `severity`, `certainty` | yes | CAP's own words, verbatim; `Unknown` is a legal value and is used when it is true | section 13, property nineteen |
 | `effective`, `expires` | yes | when the alert took effect and when it will lapse if nothing else is said; `expires` is a ceiling, not an end event | section 11 |
 | `area/geocode` | yes, at least one | `valueName` = `TERYT`, `value` = the register code of the affected unit, one `area` element per unit | section 14 |
 | `area/areaDesc` | yes | the unit's name, for people; never the only way the area is given | section 14 |
 | `polygon`, `circle` | optional | a shape, if the decision was taken on one; never instead of a code | section 14 |
-| `headline`, `description`, `instruction` | yes | the text a person reads; free, in Polish, with `language` set | section 11 |
+| `headline`, `description`, `instruction` | yes | the text a person reads; free, in Polish, with `language` set on the enclosing `info` block | section 11 |
 
 **Why `identifier` never comes back.** A consumer keeps what it has seen by
 that string. A reused identifier is two alerts wearing one name, and every
@@ -1054,8 +1022,9 @@ eleven: a category tells a consumer that something was declared and not what
 it was, and nothing in the field says so. The remedy is one sentence per
 `event` value in a document the consumer can read, of the form "air-strike
 threat: any airborne means, including means this feed does not distinguish".
-The list is short. Writing it is an afternoon. Not writing it is every
-consumer guessing, in different directions.
+The list is short, and writing it is a smaller job than answering the
+questions its absence produces. Not writing it is every consumer guessing, in
+different directions.
 
 **Why `Unknown` is used when it is true.** CAP allows `severity`, `urgency`
 and `certainty` to say `Unknown`. A feed that always writes `Severe` because
@@ -1126,11 +1095,12 @@ name on it.
 
 **What the index is not.** It is not a replacement for the messages, and a
 consumer that reads only the index loses the text, the instruction and the
-history. It is not large: at the scale of a country's air-alert state it is a
-few kilobytes on a bad night. It is not clever. It is the file this project
-publishes as `state.json`, with the names changed, and it has kept a map
-honest through two publisher outages that a messages-only feed would have
-turned into calm.
+history. It is not large: one line per alert in force, and nothing else. It
+is not clever. It is close to the file this project publishes as `state.json`,
+which carries the generation stamp, the window and its truncation flag and
+carries no severity and no stamp for one, and that file has kept a map honest
+through two publisher outages that a messages-only feed would have turned
+into calm.
 
 ### 10.3 What CAP gives and what it does not, in one table
 
@@ -1221,7 +1191,8 @@ its picture is old and how old, and must not clear anything on the strength
 of the silence. This is the state section 4 is about, and it is drawn on the
 diagram because a lifecycle that omits it describes a feed that never fails,
 and there is no such feed: this project's watchman source went silent twice
-in ten days, for thirty-four hours and then for more than forty.
+in ten days, the first time for thirty-four hours and the second for longer
+than a day.
 
 **What a consumer does at each arrow.** Declared: store the message, add the
 row, show the alert with `sent` as its start. Standing: refresh the age from
@@ -1303,9 +1274,9 @@ ghosts in one payload. The observation time is not identity either: the same
 alert read four hundred times a day is one alert, and a store that cannot
 tell the four-hundredth reading from the first fills up with the same fact.
 Measured on 2026-09-09, first cycle after this project began recording
-severities: thirty open alerts handed over their current declaration, the
-store kept one row for each; on the next cycle thirty were handed over again
-and the store kept two, the two that had changed. That is what a correct
+severities: twenty-eight open alerts handed over their current declaration
+and the store kept one row for each; two minutes later thirty were handed
+over and the store kept two, the two that had changed. That is what a correct
 identity does. Everything that is not identity hashes to a row that already
 exists.
 
@@ -1412,9 +1383,10 @@ period after the new one appears. Property eight: this project moved its own
 contract by one version with the payload a strict superset and still went
 blind for the minutes between the two deployments, because the consumer
 refuses versions it does not know, correctly, and nothing had told it the
-overlap. Two minor versions of overlap, stated, is the rule this project
-holds itself to. A public feed has consumers it has never met; the overlap is
-for them.
+overlap. This project has not written its own overlap policy either, which
+property eight records; the rule it does hold itself to is narrower and is
+about readers rather than about serving. A public feed has consumers it has
+never met; the overlap is for them.
 
 **A field that changes meaning changes name.** Property eighteen, and it is
 the rule that the additive policy above does not cover, because a meaning can
@@ -1431,8 +1403,8 @@ a payload two days later.
 
 Written so that each line can be a test. A publisher's own build should run
 these against a candidate feed before anyone outside the building reads it,
-and this project would run the same lines, from the outside, as the reading
-T8a in its backlog describes. Each line names what it rests on. *Index* means
+and this project could run the same lines from the outside, which is what the
+reading T8a in its backlog describes. Each line names what it rests on. *Index* means
 the document in section 10.2; *message* means a CAP document under the
 profile in section 10.1.
 

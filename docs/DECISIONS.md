@@ -1826,19 +1826,17 @@ Date: 2026-09-04. Status: adopted
 
 **Decision.** `docs/FEED-SPEC.md` 2.4 folds the operator's reply into the 2.3
 lineage: header, note, sections 2, 3, 6 and 7 amended in place, and two
-sections added - a correction record naming who found what, and a sources list
-citing the letter by its reference number. A rewrite drafted on 2026-09-02
+sections added - a correction record and a sources list. A rewrite drafted on 2026-09-02
 against the 1.0 text is discarded: it was written against a copy three minor
 versions behind the tree and would have deleted section 4a, the reading of
 2026-08-22 and the record of 2026-08-29.
 
-**What forced it.** A letter, ref. DOLiZK-ZK.052.49.2026(2), from the
-department that operates RSO. It states the statutory basis, article 71(2)(6)
-of the Act of 5 December 2024; that RSO has published CAP since June 2026
-behind a token bound to one static IP; and that an air-strike category is in
-test with production targeted for the end of September 2026. Each is a claim
-the specification either lacked or contradicted, and the specification had
-promised in its own section 7 to record exactly this reply.
+**What forced it.** A reply from outside this project, to correspondence the
+specification travelled with. Its content is not recorded here and was
+removed from the specification at FEED-SPEC 3.2: what a body states about its
+own systems in a reply to one person is that body's to publish. What survives
+of the episode is the discipline - the specification had promised in its own
+section 7 to record a correction, and section 8 records that one arrived.
 
 **Why a delta and not a rewrite.** 2.3 had already withdrawn "RSO is closed"
 on its own reading; the letter adds facts rather than overturning a thesis, so

@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.50
+Document:  docs/METHODOLOGY.md, version 2.52
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4749,6 +4749,113 @@ release, and cannot be repaired.** No wire artefact exists from before
 2026-09-08, so there is nothing to recompute the affected starts from. The
 figures for those days are what the store holds, and this paragraph is the
 record that they are late rather than wrong by an unknown amount.
+
+### F153, 2.4 of FEED-SPEC. A public specification reproduced the content of private correspondence, and the repository's provenance rules had nothing to say about it
+
+Every rule this repository holds about sources is a rule about accuracy: mark
+what was measured, mark what was reported, name the source, do not state
+second-hand material as fact. FEED-SPEC 2.4 followed all of them. It cited a
+reply that a public body had sent to this project's operator, by reference
+number and signatory, and reproduced what it said about that body's own
+systems, including one date that body had not published itself.
+
+**Found by the operator, 2026-09-09**, reviewing what the document discloses
+before an outreach window opens. Present in five tracked files: both editions
+of the specification, the backlog, one decision record and one changelog
+entry.
+
+**Why the rules did not catch it.** Provenance discipline asks *is this
+true and where is it from*. It does not ask *may this be republished*. The
+two questions look alike and only one of them was in the gate, in the
+checklist and in the habit; correctly attributing private correspondence is
+what the rules reward, and correct attribution is exactly what makes the
+disclosure worse. The class is the one this release keeps meeting from a
+different side: an instrument answering the question it was built for and
+being read as if it answered a wider one.
+
+**A second-order cost, and the reason this is not only an etiquette
+question.** The removed material was the load-bearing support for four
+sentences in section 2 and one bullet in section 6. When it went, those
+sentences had to stand on a public integration page and on published law
+instead - and one of them could not, so it now carries `[unverified]`. A
+document leaning on a source its readers cannot reach was weaker than it
+looked, independently of whether the source minded.
+
+**Repair.** Removed from all five files at 0.53.5.1; section 8 of the
+specification records that it was there and does not restate it, because the
+earlier editions are public and silence would be a second disclosure problem.
+The standing rule, now written where outgoing material is prepared: what a
+body states about its own systems in a reply to one person is that body's to
+publish, and this project cites only what it measured itself or what the
+publisher published.
+
+**Reopen condition:** any outgoing or published artefact that quotes
+correspondence rather than a publication.
+
+### F152, 0.53.5.0. The parity gate proved the two editions were one document and could not see that one of them was not written in its own language
+
+The check introduced at 0.53.5.0 holds `docs/FEED-SPEC.md` and
+`docs/FEED-SPEC-PL.md` to the same version, headings, per-section counts,
+examples, code spans, figures and identifiers. It passed on its first run and
+has passed since.
+
+**Found by the operator, 2026-09-09, on reading the shipped file.** The
+Polish edition was a translation rather than a document: English figures of
+speech carried across word for word - a failure wearing a different hat, an
+identifier dropped on the floor, a rule that generalises, effort spent - and
+several section headings built on English syntax. One term was worse than
+register: *heartbeat*, the name of the property section 4 exists for, had
+been rendered as the anatomical phrase, fifteen times, including two table
+rows and a property name, in a document addressed to a ministry. One was an
+error of fact: *publicness* had been rendered with the Polish word for an
+audience.
+
+**Why the gate could not see it.** Every one of those is
+structure-preserving. Paragraph counts, figures, code spans and identifiers
+were identical in both editions throughout, which is exactly what the check
+asserts; a faithful translation and a calqued one have the same shape by
+construction. The check's docstring said so from the first commit, and the
+release notes did not: they presented the gate as holding the two editions
+together, with no qualifier, which is how a limit that was written down
+stopped being read.
+
+**The class.** An instrument reporting its own framing as a property of the
+material - F150 and F151 in the same neighbourhood, and the reason this is a
+numbered entry rather than a quiet rewrite.
+
+**A second reading found a second layer, and that is the finding.** The
+first pass fixed the calques a reader trips on. A second pass, run against
+the pattern rather than against the memory of the first, found seven more of
+the same class - `string` rendered as the Polish word for a chain in seven
+places, *resolves to*, *honour*, *privacy posture*, *hashes to*, *plan
+around*, *the single most important* - none of which the first pass had
+caught, because the first pass was a list and the second was a search. A
+defect class is worth searching for twice; a list of its instances is not the
+class.
+
+**Two errors of fact in the English edition, found in the same sweep and
+unrelated to language.** Part II's message profile asserted `Safety` as the
+CAP category for an air-strike threat, which is a recommendation this project
+had no basis to make - `Security` fits as well, and the choice belongs to the
+publisher in writing. It also placed `language` on the text elements rather
+than on the enclosing `info` block. Both were shipped at 3.0 in a document
+addressed to the operator of a CAP system, and neither is a translation
+problem: Part II was written quickly, after Part I had been through five
+editions of correction, and it inherited none of that scrutiny. Section 16
+carries a checklist whose authority depends on the profile above it being
+right about CAP.
+
+**Repair.** The Polish edition rewritten at 3.1: terms replaced
+(*sygnal zycia*, *pulap*, *jawnosc*, *opis slowny*, *znacznik czasu*), the
+calques removed, seven headings rewritten in Polish syntax, and the whole
+read once end to end by a Polish speaker, which is the only instrument that
+finds this class. The limit is now in the check's docstring in the words a
+reader of the release notes would need, and in the edition note of both
+editions.
+
+**Reopen condition:** none available in the build. What the gate cannot
+check has to be read by a person who writes the language; this entry records
+that the reading happened once and does not happen automatically.
 
 ### F151, 0.53.4.0. The briefs said the defect log held 125 entries while the pin said 127, and the check passed because 127 is also the number of area labels
 

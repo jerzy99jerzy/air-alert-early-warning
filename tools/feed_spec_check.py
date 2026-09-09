@@ -23,10 +23,13 @@ everything that is language-neutral, which is more than figures:
   not quantities;
 - every cited identifier (`D-`, `F-`, `F-S`, `T`) and every URL, as sets.
 
-What it cannot check is meaning. A faithful translation and a wrong one have
-the same shape; the check catches the drift that happens by accident - an
-edit made in one file on a Tuesday - and leaves the drift that happens on
-purpose to the person making it, who then has to make it twice.
+What it cannot check is language. Every property above is structural, and a
+faithful translation, a wrong one and a word-for-word calque all have the
+same shape; F152 is what that looks like when it ships. The check catches the
+drift that happens by accident - an edit made in one file on a Tuesday - and
+says nothing about whether either edition reads as prose to someone who
+writes that language. That reading is a person's job and is not automated
+here.
 """
 
 from __future__ import annotations
