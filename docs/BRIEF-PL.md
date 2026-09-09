@@ -7,7 +7,7 @@ powiadomienia.**
 Dokument dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.9
+Document:  docs/BRIEF-PL.md, version 2.11
 Measured:  2026-08-31, against STATUS.json at 0.50.0.0, i tym razem liczby
            faktycznie przeliczono zamiast przepisać. Wersja 2.4 nosiła tę samą
            linijkę, a cztery liczby w środku pochodziły z 0.32.9.0; co to
@@ -194,7 +194,7 @@ jest zbudowany wokół tego rozróżnienia.
 Przy prywatnym projekcie to waży więcej niż technologia, więc konkrety zamiast
 zapewnień. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Log defektów ma 129 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
+**Log defektów ma 131 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
 tego nie zauważył i jaka to klasa błędu. Wpisy przeciw interesowi projektu też
 tam są, łącznie z tym o wyniku 0 na 20 i z tym, w którym dokumentacja
 twierdziła, że coś jest sprawdzane, a nie było. Osobno zapisano **49 decyzji

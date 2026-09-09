@@ -16,6 +16,63 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.53.5.1 - 2026-09-09
+
+**The Polish edition of FEED-SPEC was a translation; it is now a document.**
+Found by the operator on reading what 0.53.5.0 shipped, hours after it
+shipped, and logged as F152 because the interesting part is not the prose:
+the parity gate built in the same release passed on it, and passed correctly,
+because everything wrong with it was structure-preserving.
+
+- **docs/FEED-SPEC-PL.md** (3.1): rewritten. Terms: *heartbeat* was the
+  anatomical phrase in fifteen places including two table rows and a property
+  name, and is now *sygnal zycia*; *ceiling* was the word for a room's
+  ceiling and is now *pulap*; *publicness* was the word for an audience,
+  which is an error of fact and not of register, and is now *jawnosc*;
+  *prose* and *timestamp* unified. Calques removed throughout - a failure in
+  a different hat, an identifier dropped on the floor, a rule that
+  generalises, effort spent, a hash that is a gift, bookkeeping for
+  recordkeeping. Seven headings rewritten in Polish syntax rather than
+  English, with their anchors, including section 6, which read as a literal
+  rendering of *what this is not asking for*.
+- **docs/FEED-SPEC.md** (3.1): the version line and one edition note. The
+  editions carry one version by construction, so the English file moves with
+  the Polish one; nothing else in it changed.
+- **tools/feed_spec_check.py**: the docstring now states the limit in the
+  words a reader of a release note would need - the check is structural, and
+  a faithful translation and a calqued one have the same shape.
+- **Both editions at 3.2, and four other tracked files: the content of a
+  reply from a public body is removed.** F153. Editions 2.4 to 3.1 cited it
+  by reference and signatory and reproduced what it said about that body's
+  own systems, including a date that body had not published. Every provenance
+  rule in this repository was followed and none of them asks whether a source
+  may be republished. What survives is what this project measured or what the
+  publisher publishes; section 8 records that the material was there and does
+  not restate it. Four sentences in section 2 and one bullet in section 6 had
+  to be re-founded on the publisher's integration page and on published law,
+  and one of them now carries `[unverified]` because it could not be.
+- **Part II, five claims corrected.** A measured figure was reported wrongly
+  (twenty-eight declarations on the first cycle, not thirty); the index was
+  described as `state.json` with the names changed, which it is not; section
+  15 claimed a version-overlap policy that property eight says is unwritten;
+  an outage was given a duration the attempt log does not support; and two
+  estimates of other people's effort and of a file's size were dropped.
+- **docs/FEED-SPEC.md** and **docs/FEED-SPEC-PL.md**, two errors of fact
+  about CAP, shipped at 3.0 and unrelated to language: the profile asserted
+  `Safety` as the category for an air-strike threat, which this project had
+  no basis to recommend - `Security` fits as well and the choice is the
+  publisher's - and it put `language` on the text elements rather than on the
+  enclosing `info` block. Part II was written after Part I had been through
+  five editions of correction and inherited none of it.
+- **METHODOLOGY** (2.51): F152, with its class, the second sweep that found a
+  second layer of the same class after the first pass had "finished", the two
+  CAP errors, and the note that it has no reopen condition available in the
+  build.
+- **DEPLOYMENT** (1.31): the host is behind by two. **BRIEF, BRIEF-PL**
+  (2.10): 130 defects.
+
+Under `mavo/` only the version string changes. Coverage stays at 95.60.
+
 ## 0.53.5.0 - 2026-09-09
 
 **The specification became an instruction, in two languages held together
@@ -26,7 +83,7 @@ with what the consumer does at every arrow, three clocks and one format,
 what makes one alert one alert, the area as a register code, serving and
 changing the feed, and a twenty-eight-line conformance checklist each line
 of which names the property it rests on. Written for the engineer the
-operator's letter of 2026-09-02 implies, who already publishes CAP; nothing
+publisher of a CAP feed implies; nothing
 in it requires leaving CAP and two things require adding to it.
 
 - **docs/FEED-SPEC-PL.md** (3.0): the Polish edition, section for section.
@@ -534,7 +591,7 @@ this key has ever returned it is `[unmeasured]`.
 **Documents only: the specification was corrected by the operator of the
 system it describes, and its own section 7 had said that would be the most
 useful reply of all.** D-047. A letter from the Department of Civil Protection
-and Crisis Management, ref. DOLiZK-ZK.052.49.2026(2), states what
+and Crisis Management, states what
 `docs/FEED-SPEC.md` did not know: the statutory basis exists, RSO has published
 CAP since June 2026 behind a token bound to one static IP, and an air-strike
 category is in test with production targeted for the end of September 2026.

@@ -1,31 +1,28 @@
 # Czym musiałby być polski feed alarmowy czytelny maszynowo
 
-Version: 3.0 / 2026-09-09
+Version: 3.2 / 2026-09-09
 Specyfikacja napisana z pozycji kogoś, kto próbował budować na takim feedzie,
-najpierw nie znalazł niczego, potem znalazł jego część za tokenem, a potem
-usłyszał od operatora tej części, co ona publikuje i co jest do niej
-dokładane. Ukraiński odpowiednik został skonsumowany i zmierzony na korpusie
-118 dni; zbudowanie na nim czegoś to projekt na weekend, a parser w jego
-środku zajął dwa popołudnia. Oba fakty są tu po to, że argument poniżej
-opiera się na drugim z nich: to, co konwencja umożliwia, jest tanie w
-wykorzystaniu, i o to właśnie chodzi. Dokument towarzyszący:
+najpierw nie znalazł niczego, a potem znalazł jego część za tokenem.
+Ukraiński odpowiednik był czytany i mierzony na korpusie
+118 dni; zbudowanie na nim czegoś to praca na weekend, a parser w jego
+środku zajął dwa popołudnia. Podaję oba, bo argument poniżej opiera się na
+drugim: to, co ta konwencja umożliwia, jest tanie w wykorzystaniu, i w tym
+rzecz. Dokument towarzyszący:
 [`docs/CHANNEL.md`](CHANNEL.md), czyli pomiar, na którym to wszystko stoi,
 oraz T8a w [`../TODO.md`](../TODO.md), gdzie luka została po raz pierwszy
-zapisana. T8a to przegląd, z którego ten dokument argumentuje. Jego pierwszy
+zapisana. T8a to przegląd, na którym ten dokument się opiera. Jego pierwszy
 werdykt na poziomie źródła, dla strumienia RSO, pochodzi z odczytu strumienia
-z 2026-08-22 i jest wpleciony w sekcje 2 i 4a poniżej. Drugi pochodzi od
-operatora tego strumienia, na piśmie, z 2026-09-02, i jest wpleciony w sekcje
-2, 3, 6 i 8. Pozostałych polskich źródeł z sekcji 2 ten projekt nie czytał;
-są opisane z tego, co ich operatorzy o nich publikują, i każde zdanie mówi,
-którym z tych dwóch jest.
+z 2026-08-22 i jest wpleciony w sekcje 2 i 4a poniżej. Pozostałych polskich
+źródeł z sekcji 2 ten projekt nie czytał;
+są opisane z tego, co ich operatorzy o nich publikują, i przy każdym zdaniu
+widać, czy jest odczytem, czy cudzą deklaracją.
 
 ```
 Uwaga: ten dokument opisuje feed, który jeszcze nie istnieje w postaci, o
        którą prosi. Najbliższy polski odpowiednik, strumień RSO, został
-       odczytany i zmierzony 2026-08-22; 2026-09-02 jego operator stwierdził
-       na piśmie, co publikuje, na jakich zasadach dostępu i co jest do
-       niego dokładane. Sekcja 2 zapisuje jedno i drugie, sekcja 8 zapisuje
-       korektę, a ostatnie wpisy sekcji 4a zapisują, czego nauczyło
+       odczytany i zmierzony 2026-08-22. Sekcja 2 zapisuje ten odczyt,
+       sekcja 8 zapisuje korekty, które ten dokument musiał wprowadzić,
+       a ostatnie wpisy sekcji 4a zapisują, czego nauczyło
        konsumowanie strumienia. Korekty są oznaczone, nie ciche. Nic z tego
        nie jest twierdzeniem o czyichkolwiek kompetencjach i ten dokument
        takich twierdzeń nie stawia
@@ -58,19 +55,19 @@ powiedział.
 3. [Specyfikacja, która w większości nie jest moja](#3-specyfikacja-która-w-większości-nie-jest-moja)
 4. [Cisza nie może znaczyć bezpieczeństwa](#4-cisza-nie-może-znaczyć-bezpieczeństwa)
 5. [Zarzut i odpowiedź](#5-zarzut-i-odpowiedź)
-6. [O co ten dokument nie prosi](#6-o-co-ten-dokument-nie-prosi)
-7. [Jak się z tym dokumentem nie zgodzić](#7-jak-się-z-tym-dokumentem-nie-zgodzić)
+6. [Czego ten dokument nie postuluje](#6-czego-ten-dokument-nie-postuluje)
+7. [Jak z tym dokumentem polemizować](#7-jak-z-tym-dokumentem-polemizować)
 8. [Rejestr korekt](#8-rejestr-korekt)
 9. [Źródła](#9-źródła)
 
 **Część II. Instrukcja**
 
-10. [Feed na jednej stronie](#10-feed-na-jednej-stronie)
-11. [Życie jednego alarmu na łączu](#11-życie-jednego-alarmu-na-łączu)
+10. [Cały feed na jednej stronie](#10-cały-feed-na-jednej-stronie)
+11. [Jak jeden alarm przechodzi przez feed](#11-jak-jeden-alarm-przechodzi-przez-feed)
 12. [Trzy zegary, jeden format](#12-trzy-zegary-jeden-format)
-13. [Co sprawia, że jeden alarm jest jednym alarmem](#13-co-sprawia-że-jeden-alarm-jest-jednym-alarmem)
-14. [Gdzie: obszar jako kod](#14-gdzie-obszar-jako-kod)
-15. [Serwowanie i późniejsze zmiany](#15-serwowanie-i-późniejsze-zmiany)
+13. [Kiedy dwa odczyty to ten sam alarm](#13-kiedy-dwa-odczyty-to-ten-sam-alarm)
+14. [Gdzie: obszar jako kod rejestru](#14-gdzie-obszar-jako-kod-rejestru)
+15. [Udostępnianie i późniejsze zmiany](#15-udostępnianie-i-późniejsze-zmiany)
 16. [Lista kontrolna zgodności](#16-lista-kontrolna-zgodności)
 
 ---
@@ -85,7 +82,7 @@ kanału alarmów lotniczych, przez 99 nocy ([`docs/CHANNEL.md`](CHANNEL.md)):
 | Wiadomości oznaczone dotkniętym obszarem i typem jego jednostki | **99,34%** |
 | Różnych etykiet obszarów w całym okresie | 127 |
 | Etykiet rozwiązujących się do unikalnego kodu w państwowym rejestrze | 126 automatycznie, 127 z jedną decyzją kontekstową |
-| Zgodność etykiety z prozą samej wiadomości | **99,997%** na 38 521 porównywalnych wiadomościach |
+| Zgodność etykiety z treścią samej wiadomości | **99,997%** na 38 521 porównywalnych wiadomościach |
 
 Etykieta to hasztag: `#Харківський_район`, `#Львівський_район`,
 `#м_Харків_та_Харківська_територіальна_громада`. Mianownik, podkreślenia
@@ -111,15 +108,12 @@ Bez oceny, bo chodzi o interfejs, a nie o instytucję.
 | Syreny | Ludzi w zasięgu słuchu | Nie, i nie może być |
 | Alert RCB (SMS) | Telefonów w całym kraju | Nie. Wolny tekst na telefon |
 | Strumień RSO (XML i JSON) | Każdego, kto znajdzie adres | Tak. Odczytany 2026-08-22, z lukami zapisanymi w sekcji 4a |
-| Interfejs CAP RSO, od czerwca 2026 | Posiadaczy tokena, związanego z jednym stałym IP | Co do formatu, tak. Dostęp na wniosek do administratora systemu |
-| Kategoria zagrożenia uderzeniem z powietrza w RSO | Do nikogo jeszcze: 2026-09-02 nie w produkcji | W środowisku testowym; produkcja planowana na koniec września 2026 |
-| Dedykowana aplikacja ostrzegania przed uderzeniami z powietrza | Nie zbudowana | W analizie, osobno od kategorii powyżej |
+| Zasób CAP RSO | Posiadaczy tokena | Co do formatu, tak. Strona integracyjna wydawcy dokumentuje token; ten projekt nie czytał tego zasobu |
 
-Tylko pierwszy wiersz RSO pochodzi z odczytu źródła. Trzy wiersze RSO pod nim
-pochodzą z pisma samego operatora, cytowanego w sekcji 9. Syreny i SMS są
-opisane z tego, co ich operatorzy o nich publikują. Żadne twierdzenie poniżej
-nie opiera się na odczycie, którego ten projekt nie wykonał, ani na
-oświadczeniu, którego jego źródło nie podpisało.
+Wiersze RSO pochodzą z odczytu strumienia i z własnej strony integracyjnej
+wydawcy. Syreny i SMS są opisane z tego, co ich operatorzy o nich publikują.
+Żadne twierdzenie poniżej nie opiera się na odczycie, którego ten projekt nie
+wykonał, ani na dokumencie, którego jego wydawca nie opublikował.
 
 **Korekta wcześniejszych wydań, zmierzona 2026-08-22.** Ten dokument opisywał
 kiedyś strumień RSO jako zamknięty. Nie jest. Usługa stojąca za aplikacją RSO
@@ -133,7 +127,7 @@ jest jeszcze feedem, który ten dokument opisuje. Żadna wiadomość nie mówi,
 czym jest: pięć kategorii istnieje, ale tylko w adresie żądania, nigdy w
 rekordzie. Żadna wiadomość nie mówi, kto ją wydał, choć do tego samego
 strumienia publikują dwa różne rodzaje organów. Zakres nazwany „wszystkie" po
-cichu zwraca ułamek danych. A historia chudnie do garści rekordów na tydzień
+cichu zwraca ułamek danych. A historia kurczy się do garstki rekordów na tydzień
 w skali całego kraju, więc tydzień, w który ten projekt najbardziej
 potrzebował spojrzeć wstecz, już w większości przepadł. Każde z tych czterech
 jest zmierzone i każde ma własny wpis na końcu sekcji 4a.
@@ -188,7 +182,7 @@ dostępności dla osób niesłyszących, wyświetlacz w szkole, sprawdzenie, jak
 szybki naprawdę jest system - każde z nich da się na nim spróbować i każde
 dziedziczy wszystkie luki z sekcji 4a bez żadnego kontraktu pod spodem.
 
-Ten projekt uderzył w tę ścianę bezpośrednio. Ukraińska strona granicy jest
+Ten projekt natrafił na tę ścianę wprost. Ukraińska strona granicy jest
 zmierzona do poziomu rejonu, 118 dni, 61 041 wiadomości. Polska strona ma
 jeden wieczór i nie da się jej zbudować wstecz: własna retencja strumienia
 trzyma chudy plik, a tydzień lipcowego uderzenia pocisku manewrującego
@@ -200,44 +194,13 @@ portalu, rozpakować, przefiltrować pola opisu. Polecenie jest w historii tego
 repozytorium, a liczby wyżej pochodzą z jego uruchomienia, nie z przeglądania
 strony.
 
-**Druga korekta, od operatora, 2026-09-02.** Departament Ochrony Ludności i
-Zarządzania Kryzysowego Ministerstwa Spraw Wewnętrznych i Administracji,
-który prowadzi RSO, odpowiedział na korespondencję, z którą ten dokument
-podróżował; pismo jest cytowane w sekcji 9. Wynikają z niego cztery
-stwierdzenia faktu. Każde jest `[raportowane]`, a nie `[zmierzone]`, i każde
-jest twierdzeniem o świecie, które odczyt mógłby potwierdzić albo obalić.
-
-- **Instrument ustawowy istnieje.** Art. 71 ust. 2 pkt 6 ustawy z 5 grudnia
-  2024 o ochronie ludności i obronie cywilnej wymienia ostrzeżenia publiczne
-  przesyłane szybką transmisją cyfrową wśród dopuszczonych systemów
-  ostrzegania. Wcześniejsze wydania tego dokumentu go nie cytowały, a
-  powinny. Nic poniżej nie wymaga nowej ustawy.
-- **Operator jest nazwany i analizuje cztery tory naraz:** rozszerzenie RSO,
-  dedykowaną aplikację do ostrzegania przed uderzeniami z powietrza, cell
-  broadcast oraz modernizację centrum SMS stojącego za Alertem RCB.
-- **RSO publikuje w Common Alerting Protocol od czerwca 2026.** Odczyt z
-  2026-08-22 znalazł interfejs CAP i nie znał jego wieku.
-- **Kategoria, dla której ten dokument istnieje, jest budowana.** W dniu pisma
-  zestaw kategorii RSO nie obejmował zagrożenia uderzeniem z powietrza. Prace
-  nad jej dodaniem trwają w środowisku testowym, z zadeklarowaną nadzieją
-  dotarcia do systemu produkcyjnego do końca września 2026. Ten dokument nie
-  jest zatem prośbą o rozpoczęcie czegokolwiek. Jest zestawem właściwości, o
-  które można sprawdzić wynik, i sekcja 3 jest napisana jako ta lista
-  kontrolna.
-
-**Jak przyznawany jest dostęp do CAP, z tego samego źródła.** Wnioskodawca
-podaje stały adres IP, z którego będzie łączył się z API CAP, oraz adres
-kontaktowy do korespondencji w sprawie tokena. Dostęp jest związany z jedną
-lokalizacją sieciową, nie tylko z jednym poświadczeniem, co jest surowsze,
-niż zakładała właściwość pierwsza z sekcji 3, i jest tam zapisane.
-
-**Co pismo zostawia otwarte**, a na co operator może odpowiedzieć jednym
-zdaniem: czy ładunek CAP niesie dotknięty obszar jako kod TERYT w `geocode`,
-czy tylko jako nazwę albo wielokąt; czy koniec zagrożenia jest publikowany
-jako wiadomość `Cancel` lub `Update`, czy wynika z upływu `expires`; oraz czy
-cokolwiek jest publikowane, kiedy nic się nie dzieje, co jest tematem sekcji
-4. Te trzy rzeczy rozstrzygnąłby odczyt pod tokenem i T8a w backlogu jest tym
-odczytem.
+**Trzy pytania, na które ten dokument nie odpowiada**, i nie odpowiada na nie
+nigdzie poniżej: czy ładunek CAP niesie dotknięty obszar jako kod TERYT w
+`geocode`, czy tylko jako nazwę albo wielokąt; czy koniec zagrożenia jest
+publikowany jako wiadomość `Cancel` lub `Update`, czy wynika z upływu
+`expires`; oraz czy cokolwiek jest publikowane, kiedy nic się nie dzieje, co
+jest tematem sekcji 4. Wszystkie trzy rozstrzygnąłby odczyt pod tokenem. T8a w
+backlogu jest tym odczytem i nie został wykonany.
 
 ## 3. Specyfikacja, która w większości nie jest moja
 
@@ -255,57 +218,53 @@ alarmowania największe znaczenie. Jest oznaczona jako luka, nie jako prośba.
 | Właściwość | Status w standardzie |
 | --- | --- |
 | Publiczny, bez procedury wnioskowej | Portal stwierdza, że dane mogą być ponownie wykorzystywane bez składania wniosku |
-| Obszar przez kod rejestru, nie prozą | Standard wskazuje TERYT jako rejestr autorytatywny i definiuje *adres uniwersalny*, mówiąc wprost, że nie jest on do czytania przez człowieka, lecz dla systemu |
+| Obszar przez kod rejestru, nie opisem słownym | Standard wskazuje TERYT jako rejestr autorytatywny i definiuje *adres uniwersalny*, mówiąc wprost, że nie jest on do czytania przez człowieka, lecz dla systemu |
 | Przejścia stanów ze znacznikiem czasu | Wymagane ISO 8601, `yyyy-mm-ddThh:mm` |
 | Wersjonowany schemat, serwowany przez API | Poziom otwartości 3 i wyżej: API zalecane, JSON wg RFC 8259 ze standardem JSON API; poziom 4 wymaga JSON-LD z pełnym kontekstem semantycznym. Istnieje osobny Standard API |
-| **Bicie serca** | **Brak.** Patrz sekcja 4 |
+| **Sygnał życia** | **Brak.** Patrz sekcja 4 |
 
 Cztery wiersze powyżej nie potrzebują ode mnie argumentu. Dalej jest
 uzasadnienie każdego z nich w konkretnym przypadku alarmowania, a potem luka.
 
 **Odczytane na tle RSO, w 2.4.** Te same pięć właściwości, ze statusem
 każdej wobec jedynego istniejącego polskiego strumienia. `[zmierzone]` to
-odczyt tego projektu z 2026-08-22; `[raportowane]` to pismo operatora z
-2026-09-02; *nieustalone* to to, czego nie rozstrzyga żadne z nich, a sekcja
-2 wymienia, co by rozstrzygnęło.
+odczyt tego projektu z 2026-08-22; *nieustalone* to to, czego ten odczyt nie
+rozstrzyga, a sekcja 2 wymienia, co by rozstrzygnęło.
 
 | Właściwość | Status wobec RSO |
 | --- | --- |
-| Publiczny, bez procedury wnioskowej | Spełniona przez strony list XML i JSON `[zmierzone]`. Niespełniona przez zasób CAP: token, związany z jednym stałym IP `[raportowane]`. To jest pozostała luka |
-| Obszar przez kod rejestru, nie prozą | Strony list niosą województwo jako slug i nazwę, bez kodu rejestru `[zmierzone]`. Nieustalone dla CAP, którego `geocode` może go nieść |
+| Publiczny, bez procedury wnioskowej | Spełniona przez strony list XML i JSON `[zmierzone]`. Niespełniona przez zasób CAP, który strona integracyjna wydawcy stawia za tokenem. To jest pozostała luka |
+| Obszar przez kod rejestru, nie opisem słownym | Strony list podają województwo jako slug i nazwę, bez kodu rejestru `[zmierzone]`. Nieustalone dla CAP, którego `geocode` może go nieść |
 | Przejścia stanów ze znacznikiem czasu | Nieustalone dla obu zasobów; nie zmierzone 2026-08-22. CAP ma na to `Cancel` i `Update` |
 | Wersjonowany schemat, serwowany przez API | W dużej mierze spełniona przez sam CAP, opublikowany wersjonowany standard; profil RSO, czyli które elementy opcjonalne są wypełniane, jest nieopublikowany |
-| **Bicie serca** | Nieustalone dla RSO. Nie zdefiniowane przez CAP, więc nie uzyskane przez jego przyjęcie. Sekcja 4 |
+| **Sygnał życia** | Nieustalone dla RSO. Nie zdefiniowane przez CAP, więc nie uzyskane przez jego przyjęcie. Sekcja 4 |
 
 **Pierwsza. Publiczny, bez uwierzytelniania, bez procedury wnioskowej.** Feed
-za formularzem wniosku nie jest infrastrukturą publiczną; jest reżimem
+za formularzem wniosku nie jest infrastrukturą publiczną; jest systemem
 zezwoleń z ikoną RSS. Ukraiński kanał nie potrzebuje tokena i dlatego każdy
 może zweryfikować pomiary w tym repozytorium zamiast brać je na wiarę.
 
-*Wobec RSO, w 2.4.* Zasób CAP jest za tokenem, a token jest wydawany na jeden
-stały adres IP podany przez wnioskodawcę `[raportowane]`. To wiąże konsumpcję
-z jedną lokalizacją sieciową, nie tylko z jednym poświadczeniem: klient
-mobilny nie może go trzymać, przeglądarka nie może go trzymać, a konsument,
-który zmienia host, wnioskuje ponownie. Strony list XML i JSON nie mają
-żadnej bramki, więc reżim spada na ten jeden zasób, który niesie postać
+*Wobec RSO, w 2.4.* Zasób CAP jest za tokenem, co dokumentuje własna strona
+integracyjna wydawcy. Strony list XML i JSON nie mają
+żadnej bramki, więc cały ciężar spada na ten jeden zasób, który niesie postać
 ustrukturyzowaną. To nie jest pytanie o schemat, więc żadne pole go nie
 zamyka, i to jest właściwość, która oddziela system, na którym gmina może
 budować, od takiego, o który musi prosić.
 
-**Druga. Obszary identyfikowane kodem rejestru, nie prozą.** Standard
+**Druga. Obszary identyfikowane kodem rejestru, nie opisem słownym.** Standard
 formułuje to lepiej niż ja: wprowadza adres uniwersalny właśnie po to, żeby
 lokalizację rozwiązywał system, a nie człowiek, i wskazuje TERYT jako
 rejestr, który trzyma kody. Wiadomość mówiąca `powiat biłgorajski` w zdaniu
-zmusza każdego konsumenta do napisania dopasowywacza nazw i pomylenia się w
-nim w subtelny sposób. Ten projekt wydał jeden pomiar na odkrycie dokładnie
-tego: dopasowywanie nazw do rejestru osiągnęło 6,06% tam, gdzie własne
+zmusza każdego konsumenta do zbudowania własnego mechanizmu dopasowywania
+nazw i do subtelnych pomyłek w nim. Odkrycie dokładnie tego kosztowało ten projekt jeden
+pomiar: dopasowywanie nazw do rejestru osiągnęło 6,06% tam, gdzie własne
 ustrukturyzowane etykiety źródła osiągnęły 99,34%.
 
 **Trzecia. Przejścia stanów, ze znacznikiem czasu, w obie strony.** Początek
 alarmu i koniec alarmu to dwa zdarzenia i oba mają znaczenie. Feed publikujący
 tylko początek zostawia każdemu konsumentowi zgadywanie, kiedy jest po
 wszystkim, a zgadywanie produkuje awarię, której ten projekt odmawia
-wszędzie: stan nieznany rozwiązujący się do wyglądającego bezpiecznie.
+wszędzie: stan nieznany zamieniony w taki, który wygląda bezpiecznie.
 
 **Czwarta. Wersjonowany schemat, serwowany przez API.** Standard już zaleca
 udostępnianie przez API od poziomu otwartości 3 i ostrzega, własnymi słowami,
@@ -314,7 +273,7 @@ pole. Dane alarmowe to dokładnie to miejsce, gdzie ta niejednoznaczność jest
 droga, i to jest argument za pójściem na poziom 4 zamiast zatrzymania się na
 opublikowanym pliku.
 
-**Piąta. Bicie serca.** Nie ma go w standardzie i standard nie myli się,
+**Piąta. Sygnał życia (heartbeat).** Nie ma go w standardzie i standard nie myli się,
 pomijając je w ogólności: opisuje, jak *zbiór danych* jest sformatowany i
 opisany, co jest innym problemem niż to, jak *strumień* sygnalizuje, że żyje.
 DCAT-AP niesie `accrualPeriodicity`, ale to zadeklarowana częstotliwość
@@ -323,24 +282,24 @@ wszystko i to jest sekcja 4.
 
 ## 4. Cisza nie może znaczyć bezpieczeństwa
 
-Jedyna najważniejsza właściwość i ta, która jest niewidoczna aż do dnia, w
+Najważniejsza właściwość ze wszystkich, i ta, która jest niewidoczna aż do dnia, w
 którym ma znaczenie.
 
 Jeśli feed publikuje tylko wtedy, gdy coś się dzieje, to **martwy feed i
-spokojne niebo wyglądają identycznie**. Każdy konsument, który renderuje
+spokojne niebo wyglądają identycznie**. Każdy konsument, który wyświetla
 ciszę jako „nic się nie dzieje", jest o jedną awarię od powiedzenia ludziom,
 że są bezpieczni, w chwili, gdy nie są. To nie jest hipoteza: to założycielski
-niezmiennik tego repozytorium, że nieznane nigdy nie rozwiązuje się do
-odwołania, a kilka wpisów w jego rejestrze defektów to przypadki pomylenia
+niezmiennik tego repozytorium, że nieznane nigdy nie zamienia się w
+odwołanie, a kilka wpisów w jego rejestrze defektów to przypadki pomylenia
 tego wewnętrznie.
 
-Naprawa jest trywialna i musi być zaprojektowana od początku: okresowe bicie
-serca niosące „na ten znacznik czasu stan to X", publikowane niezależnie od
-tego, czy stan się zmienił. Konsument, który nie widział bicia serca w
-zadeklarowanym interwale, wie, że jest ślepy, i może to powiedzieć, zamiast
+Naprawa jest prosta i musi być pomyślana od początku: okresowy sygnał życia
+o treści „na ten znacznik czasu stan wygląda tak", nadawany niezależnie od
+tego, czy stan się zmienił. Konsument, do którego taki sygnał nie dotarł w
+zadeklarowanym odstępie, wie, że jest ślepy, i może to powiedzieć, zamiast
 wyświetlać spokój.
 
-Feed alarmowy bez bicia serca to system, który z założenia zawodzi po cichu.
+Feed alarmowy bez sygnału życia to system, który z założenia zawodzi po cichu.
 
 **Zmierzone, i jest gorzej, niż zakładał argument powyżej.** Ten projekt
 uruchomił własny kolektor na ukraińskim kanale bez nadzoru na jedną noc i
@@ -366,9 +325,9 @@ tylko przejścia uczyniłby wszystkie jedenaście nieodróżnialnymi od spokojne
 nieba, a własne oprzyrządowanie konsumenta nie odzyskałoby tej różnicy z
 zewnątrz za żadną cenę.
 
-Bicie serca nie jest zatem uprzejmością wobec konsumentów, którzy chcą
-sygnału żywotności. Jest jedyną rzeczą, która sprawia, że wskaźnik błędów
-konsumenta w ogóle da się zmierzyć.
+Sygnał życia nie jest więc uprzejmością wobec konsumentów, którym zależy na
+potwierdzeniu, że feed działa. Jest jedynym, co pozwala w ogóle zmierzyć
+własny wskaźnik błędów.
 
 **Zmierzone ponownie, tym razem u źródła.** Ten blok został dodany w 2.3, gdy
 tryb awarii tej sekcji przestał być argumentem i stał się datą. 2026-08-29 o
@@ -389,35 +348,35 @@ API, na które ten projekt się przełączył, publikuje migawkę pełnego stanu
 nic nie mówi o tym, co się skończyło, więc każde odwołanie musi być
 zsyntetyzowane z różnicy dwóch obserwacji - a to jest bezpieczne tylko wtedy,
 gdy poprzednia obserwacja dowodnie miała miejsce. Konsument buduje w końcu
-bicie serca, którego feed nie niesie: utrwaloną obserwację z sufitem wieku,
-powyżej którego luka nie upoważnia do niczego. Feed zaprojektowany z biciem
-serca w środku nie każe tego robić żadnemu konsumentowi, a każdy konsument
-feedu bez niego musi, niezależnie, albo zawieść po cichu.
+sygnał życia, którego feed nie daje: utrwaloną obserwację z pułapem wieku,
+powyżej którego przerwa do niczego nie upoważnia. Feed, który ma sygnał życia
+w środku, oszczędza tę pracę każdemu konsumentowi; przy feedzie bez niego
+każdy konsument musi ją wykonać osobno albo zawieść po cichu.
 
-Po trzecie, **reżim dostępu był częścią dostępności.** Przełączenie zajęło
+Po trzecie, **tryb dostępu był częścią dostępności.** Przełączenie zajęło
 mniej niż dobę tylko dlatego, że o klucz do alternatywy wystąpiono tygodnie
 wcześniej i przyznano go, zanim był potrzebny. Gdyby procedura wnioskowa
 zaczęła się rano w dniu śmierci kanału, jej czas trwania byłby przerwą w
-dostawie. Nic z tego nie łagodzi właściwości pierwszej: publiczność dotyczy
-tego, kto może weryfikować, bicie serca tego, kto może stwierdzić, że feed
-żyje, a 2026-08-29 jest pomiarem, że to różne właściwości - to źródło bez
+dostawie. Nic z tego nie łagodzi właściwości pierwszej: jawność rozstrzyga o
+tym, kto może weryfikować, a sygnał życia o tym, kto pozna, że feed jeszcze
+działa; 2026-08-29 jest pomiarem, że to dwie różne właściwości - to źródło bez
 tokena umarło, a jego śmierć była jedyną rzeczą, którą konsument mógł o nim
 odczytać.
 
 **Zmierzone po raz trzeci, a instrumentem był własny dziennik prób
 konsumenta.** Dodane w 2.5. Kanał wrócił ze swojej ciszy z 2026-08-29 - w
-dniu, którego ten projekt nie zapisał, co jest ustaleniem o tym projekcie - i
+dniu, którego ten projekt nie zapisał, co jest ustaleniem na temat tego projektu - i
 zatrzymał się ponownie 2026-09-07 o 06:09 UTC `[zmierzone]`. Tym razem
 konsument mógł powiedzieć, która strona milczy, i mógł to powiedzieć z
 magazynu, a nie z nieba: dziennik prób (właściwość dziewiąta) zapisał 43 nowe
 identyfikatory wpisów w 69 minut przed zatrzymaniem, a potem ten sam
 identyfikator na 4 463 kolejnych udanych odczytach aż do wieczora 2026-09-08,
 wobec 592 identyfikatorów w kontrolnej dobie wcześniej. Ani jednej odmowy w
-oknie. Zdrowa rura czytająca milczącego wydawcę, jako para liczb.
+oknie. Sprawny odbiór czytający milczącego wydawcę, jako para liczb.
 
 Wynikają z tego dwie rzeczy. Po pierwsze, plik stanu, który ten projekt
 publikuje, nazywa teraz swoje źródła jedno po drugim i mówi, per źródło, czy
-rura dostarcza i kiedy ostatnio przyjęła zdarzenie, więc czytelnikowi można
+odbiór działa i kiedy ostatnio przyjął zdarzenie, więc czytelnikowi można
 powiedzieć „główne dostarcza, strażnik milczy" zamiast podawać wiek bez
 atrybucji. Po drugie, instrumentem, który rozstrzyga powrót wydawcy, jest
 własny identyfikator strony feedu w dzienniku prób, a nie pierwsze
@@ -439,7 +398,7 @@ dzieje się teraz. Dla większości danych publicznych ta luka nic nie kosztuje.
 Dla alarmowania to różnica między spokojną nocą a martwym systemem, a
 konsument nie odróżni ich z zewnątrz.
 
-## 4a. Właściwości nauczone przez wdrażanie, nie przez specyfikowanie
+## 4a. Właściwości wzięte z wdrożenia, nie ze specyfikacji
 
 Sekcje 1 do 4 zostały napisane, zanim ten projekt miał konsumenta w produkcji.
 Ma go od 2026-08-11 i wyłoniło się pięć wymagań, których pierwotna piątka nie
@@ -458,14 +417,13 @@ siedemnasta zostały dodane w 1.9, jako pierwsze wpisy wzięte z **czytania
 polskiego źródła, a nie ukraińskiego**; ich dowodem jest jeden wieczór wobec
 jednego punktu końcowego, co czyni je węższymi niż reszta, i jest to
 powiedziane tutaj, a nie zakopane. Szesnasta została dodana w 1.9 i wycofana w
-2.0. Kikut poniżej mówi dlaczego, bo jawnie zapisane wycofanie jest częścią
+2.0. Notatka poniżej mówi dlaczego, bo jawnie zapisane wycofanie jest częścią
 tej samej dyscypliny, o którą te właściwości proszą wydawcę. Osiemnasta i
 dziewiętnasta zostały dodane w 2.5, obie z tego, że ukraińskie źródło zmieniło
 się pod kolektorem tego projektu 2026-09-06: jedna z tego, co zmiana zepsuła,
 druga z tego, co opublikowała.
 
-**Szósta. Limit, opublikowany, i flaga mówiąca, kiedy zadziałał.** Nauczona w
-produkcji.
+**Szósta. Limit, opublikowany, i flaga mówiąca, kiedy zadziałał.** Nauczka z produkcji.
 
 Producent tutaj ogranicza swoje okno zdarzeń do 5 000 i publikuje flagę
 `truncated`. Budowanie konsumenta pokazało, dlaczego obie połowy są
@@ -473,7 +431,7 @@ konieczne. Bez limitu okno, które rośnie z jakiegokolwiek powodu - przesunięc
 zegara, uzupełnienie wstecz, zmiana schematu - to nieograniczona praca dla
 każdego czytelnika naraz; zmierzone na stronie, nieograniczone okno wyrenderowało
 stronę 5,6 MiB z 20 000 zdarzeń. Bez flagi ograniczona lista i spokojne okno
-wyglądają identycznie, co jest awarią z sekcji 4 w innym kapeluszu.
+wyglądają identycznie, a to ta sama awaria co w sekcji 4, tylko od innej strony.
 
 **Konsument musi też ograniczyć je niezależnie**, i to jest ta część, o którą
 łatwo się potknąć. Własna strona tego projektu oddelegowała ograniczenie do
@@ -481,8 +439,7 @@ producenta i go nie sprawdzała, a oboje są wdrażani osobno, ręcznie. Limit,
 który żyje tylko po stronie publikującej, to limit, który trzyma do dnia, w
 którym obie wersje się rozejdą.
 
-**Siódma. Lewa krawędź okna, opublikowana, a nie wyprowadzona.** Nauczona w
-produkcji.
+**Siódma. Lewa krawędź okna, opublikowana, a nie wyprowadzona.** Nauczka z produkcji.
 
 Feed niosący „oto przejścia z ostatnich dwudziestu minut" nie wystarcza.
 Konsument potrzebuje znacznika czasu, od którego okno się zaczyna, bo
@@ -497,7 +454,7 @@ się nie stało" a „nie widziałeś, co się stało", czyli niezmiennik sekcji
 zastosowany do czytelnika, a nie do systemu.
 
 **Ósma. Polityka wersji, która mówi, co dzieje się podczas przełączenia.**
-Nauczona w produkcji, i kosztowała okno wdrożeniowe.
+Nauczka z produkcji; kosztowała okno wdrożeniowe.
 
 Czwarta właściwość prosi o wersjonowany schemat. To konieczne i
 niewystarczające. Kiedy ten projekt przeniósł własny kontrakt z v2 na v3,
@@ -516,8 +473,8 @@ które wprowadziło v3. Pominięcie da się tu przeżyć, bo jest jeden konsumen
 ten sam autor go kontroluje. To jest dokładnie okoliczność, której publiczny
 feed nie ma.
 
-**Dziewiąta. Jeśli nie ma bicia serca, konsument winien je sam sobie.**
-Nauczona w produkcji, a naprawa została zbudowana, zanim to zapisano.
+**Dziewiąta. Jeśli feed nie daje sygnału życia, konsument musi go sobie wystawić sam.**
+Nauczka z produkcji; naprawa powstała, zanim to zapisano.
 
 Piąta właściwość należy do wydawcy. Konsument stojący przed feedem, który jej
 nie ma, nie jest zwolniony z niezmiennika sekcji 4, a odpowiednikiem po
@@ -538,18 +495,18 @@ została zapisana. Z nim rozróżnialne są trzy stany zamiast dwóch:
 
 **Nieudane odpytanie jest zapisywane jako próba bez wyniku, a nie jako próba,
 która zwróciła zero.** Schemat musi uczynić te dwie rzeczy reprezentowalnymi
-osobno, inaczej rozróżnienie zapada się z powrotem przy pierwszym timeoucie:
+osobno, inaczej rozróżnienie znika przy pierwszym timeoucie:
 w próbniku ADS-B tego projektu liczba wyników jest null dla niepowodzenia i
 zero dla pustej odpowiedzi, i istnieje test regresji, którego dane potrafią je
 odróżnić. Ten próbnik jest miejscem, gdzie tej właściwości się nauczono, i
 dlatego przychodzi w 1.5, a nie wcześniej.
 
-Ta jedna generalizuje się najdalej z dziesięciu. Kosztuje jedną tabelę i jest
-winna od każdego konsumenta każdego feedu bez bicia serca, włącznie z własnym
-tego projektu.
+Ta jedna ma najszersze zastosowanie z dziesięciu. Kosztuje jedną tabelę i
+obowiązuje każdego konsumenta każdego feedu bez sygnału życia, łącznie z
+konsumentem tego projektu.
 
 **Dziesiąta. Zadeklarowany budżet dostępu, jeśli istnieje, i oświadczenie,
-jeśli nie.** Nauczona w produkcji.
+jeśli nie.** Nauczka z produkcji.
 
 Feed, który limituje dostęp, czyni **pokrycie** konsumenta funkcją jego
 przydziału. Konsument odpytujący według harmonogramu wobec dziennego limitu
@@ -569,20 +526,20 @@ jakiejkolwiek bramki. Właściwość łamie limit, który istnieje i nie jest
 zadeklarowany, bo konsument odkrywa go przez odcięcie.
 
 **Uwaga do właściwości pierwszej, z tego samego doświadczenia.** Sekcja 3
-argumentuje, że procedura wnioskowa to reżim zezwoleń z ikoną RSS. Ten projekt
+argumentuje, że procedura wnioskowa to system zezwoleń z ikoną RSS. Ten projekt
 skonsumował od tamtej pory ten drugi rodzaj na warunkach odwoływalnych bez
-podania przyczyny, a koszt jest ostrzejszy, niż sugerowało pierwotne
+podania przyczyny, a koszt jest dotkliwszy, niż sugerowało pierwotne
 sformułowanie: **odtwarzalność staje się właściwością interfejsu, a nie
 staranności konsumenta.** Drugi czytelnik nie może powtórzyć pomiaru, który
 stoi na umowie, której nie był stroną i której może nie dostać. Pomiary
 ukraińskiego kanału w sekcji 1 są sprawdzalne dla każdego. Te, które stoją na
 interfejsie z kluczem, są sprawdzalne dla tego, kto klucz trzyma.
 
-**Jedenasta. Kategoria musi mówić, czego nie rozróżnia.** Nauczona w
-produkcji, przez pomyłkę.
+**Jedenasta. Kategoria musi mówić, czego nie rozróżnia.** Nauczka z produkcji, z
+własnej pomyłki.
 
-Feed, który etykietuje alarm kategorią, zaprasza każdego konsumenta do
-traktowania kategorii jako opisu zagrożenia. Zwykle nim nie jest, a luka jest
+Feed, który opatruje alarm kategorią, sprawia, że każdy konsument bierze tę
+kategorię za opis zagrożenia. Zwykle nim nie jest, a luka jest
 niewidoczna z samego pola.
 
 Konkretny przypadek. Zaplecze ukraińskich aplikacji alarmowych publikuje pięć
@@ -594,21 +551,21 @@ balistyczny, start MiG-31K czy zagrożenie od strony morza. Wszystko to jest
 pytanie, na które kategoria nie odpowiada, i nic w polu, jego nazwie ani
 dokumentacji tego nie mówi.
 
-Ten projekt dwukrotnie wydał wysiłek na założenie, że odpowiada: raz planując
+Ten projekt dwa razy zmarnował pracę na założeniu, że odpowiada: raz planując
 wypełnić lukę we własnej klasyfikacji z tego pola, i raz w pisemnej
 rekomendacji, zanim ktokolwiek przeczytał, co znaczą wartości. Za każdym razem
 pole wyglądało jak odpowiedź, bo kategoria i rodzaj mają ten sam kształt -
 krótkie wyliczenie na alarmie - i nic ich nie odróżniało.
 
-**To, co wydawca jest tu winien, to jedno zdanie na kategorię, nie
-taksonomia.** „Alarm lotniczy: każde zagrożenie z powietrza, włącznie ze
+**Wydawca powinien tu napisać jedno zdanie na kategorię, a nie
+taksonomię.** „Alarm lotniczy: każde zagrożenie z powietrza, włącznie ze
 środkami, których ten feed nie rozróżnia." To zdanie nic nie kosztuje i usuwa
 klasę błędów konsumenta, której żadna staranność po stronie konsumenta nie
 zapobiegnie, bo konsument nie widzi, co kategoria zlewa.
 
-**A co jest winien konsument, i to jest trudniejsza połowa.** Kategoria nigdy
+**A czego to wymaga od konsumenta, i to jest trudniejsza połowa.** Kategoria nigdy
 nie może być renderowana jako zamknięty zbiór rodzajów, które może zawierać.
-Pokusa jest silna i wygląda jak hojność: ten projekt był bliski narysowania
+Pokusa jest silna i wygląda na życzliwość wobec czytelnika: ten projekt był bliski narysowania
 trzech ikon - dron, bomba szybująca, pocisk - obok alarmu, którego rodzaju
 nigdy nie ogłoszono, żeby czytelnik widział, co to może być. Trzy ikony
 twierdzą **„jedno z tych trzech"**. Źródło nic takiego nie powiedziało, a
@@ -621,15 +578,15 @@ symboli nie potrafi i żaden układ symboli ich nie dostarcza. Tam, gdzie
 konsument chce jednak wizualizacji dla nieogłoszonego rodzaju, uczciwa forma
 to **jeden symbol, który czyta się jako klucz, a nie jako wyliczenie**, z
 otwartym końcem wypowiedzianym słowami obok. To jest to, co ten projekt
-wysłał, a rozumowanie jest w rejestrze defektów jego konsumenta, nie tutaj,
+wdrożył, a rozumowanie jest w rejestrze defektów jego konsumenta, nie tutaj,
 bo decyzja należy do konsumenta; do specyfikacji należy właściwość, która
 uczyniła ją konieczną.
 
-**Dwunasta. Sufit klasyfikacji należy do specyfikacji, bo jest właściwością
-źródła, a nie czytelnika.** Nauczona w produkcji.
+**Dwunasta. Pułap klasyfikacji należy do specyfikacji, bo jest właściwością
+źródła, a nie czytelnika.** Nauczka z produkcji.
 
 Na 61 041 wiadomościach przez 118 dni ten kanał niósł stan alarmowy w 52 589 z
-nich i znacznik środka ataku w 7 428. Osiem rdzeni rozwiązuje 98,3%
+nich i znacznik środka ataku w 7 428. Osiem rdzeni wyrazowych pokrywa 98,3%
 oznaczonych wiadomości; reszta to 122 wiadomości, 0,2% korpusu, a ich odczyt
 pokazuje, że wszystkie są odwołaniami niosącymi listy kontynuacji, które nie
 nazywają żadnego środka, bo nie ma czego nazwać. Pokrycie złączenia w całym
@@ -659,22 +616,22 @@ dopuszczającym null a polem, które zwykle jest null.
 
 **Dla konsumenta.** Przypadek nieogłoszony jest przypadkiem *normalnym* i musi
 być zaprojektowany jako taki, a nie obsługiwany jako wyjątek. To znaczy, że
-słowa „źródło nie powiedziało" to nośny tekst interfejsu, widziany częściej
+słowa „źródło nie powiedziało" to główny tekst interfejsu, widziany częściej
 niż jakakolwiek nazwa rodzaju, a nie zapasowa formułka. To znaczy też, że
 chęć bogatszego szczegółu jest pytaniem o **źródła**, nie o parsowanie: kiedy
-sufit wyznacza to, co kanał pisze, jedyną drogą przez niego jest inny kanał, z
-tym, co to kosztuje w zależnościach, warunkach i postawie prywatności. Lepsze
-parsowanie tego samego feedu nie kupi tego, czego feed nie zawiera.
+pułap wyznacza to, co kanał pisze, jedyną drogą przez niego jest inny kanał, z
+tym, co to kosztuje w zależnościach, warunkach i w kwestii prywatności. Lepsze
+parsowanie tego samego feedu nie da tego, czego feed nie zawiera.
 
 
 **Trzynasta. Jeden null, jedno znaczenie - a tam, gdzie nieobecność jest
-drugim faktem, potrzebuje drugiego pola.** Nauczona w produkcji.
+drugim faktem, potrzebuje drugiego pola.** Nauczka z produkcji.
 
 Feed tego projektu niesie `last_alert_ended_at` per obwód wewnątrz okna
 kroczącego. Null oznacza tam, że *żaden epizod nie zamknął się wewnątrz
 okna*, co nie jest tym samym, co *ten obwód w ogóle nie został policzony*, a
 tych dwóch rzeczy nie da się odróżnić z samego pola. Konsument potrzebuje obu
-faktów, żeby napisać uczciwe zdanie: renderuje „żaden alarm nie zamknął się w
+faktów, żeby napisać uczciwe zdanie: wypisuje „żaden alarm nie zamknął się w
 tym oknie" dla pierwszego i milczy dla drugiego, a odróżnia je tylko przez
 odczyt pola licznika obok. To działa, i działa przez przypadek: schemat nigdy
 tego nie powiedział, a konsument rozumujący z samego znacznika czasu
@@ -685,7 +642,7 @@ inny fakt niż jego null, powiedz, które inne pole go niesie. Alternatywą jest
 to, co stało się tutaj: poprawna implementacja, która równie dobrze mogła być
 niepoprawna, bez niczego w kontrakcie, co by rozstrzygało.
 
-**Wniosek uboczny wart własnej linii: pole, którego nikt nie czyta, to
+**Wniosek uboczny wart osobnego akapitu: pole, którego nikt nie czyta, to
 nieprzetestowana powierzchnia kontraktu.** `last_alert_ended_at` był wysyłany
 w każdym ładunku od dnia, w którym powstały liczniki kroczące, i żadna linia
 konsumenta nigdy go nie czytała - nie błąd po żadnej ze stron, tylko
@@ -697,39 +654,38 @@ drugi kosztuje skrypt: przejść ładunek i wymagać, żeby każdy klucz był al
 czytany, albo jawnie wymieniony jako tolerowany z podaniem powodu.
 
 **Czternasta. Liczba publikuje swój mianownik jako pole, obok siebie.**
-Nauczona w produkcji.
+Nauczka z produkcji.
 
 Ten sam feed publikuje liczbę alarmów w oknie kroczącym i długość okna jako
 `window_days`. To jest słuszne, a powód widać w tym, co się stało, gdy
 konsument potrzebował obu: przez dwa wydania liczba istniała na stronie tylko
-wewnątrz zdania prozy, więc pierwszy interfejs, który chciałby tej liczby,
+wewnątrz zdania, więc pierwszy interfejs, który chciałby tej liczby,
 musiałby sparsować zdanie, żeby ją dostać - a zdanie zawiera też długość okna,
 więc oczywiste parsowanie zwraca złą liczbę.
 
-Reguła generalizuje się poza ten feed. Każdy agregat - liczba, wskaźnik,
+Reguła obowiązuje szerzej niż ten feed. Każdy agregat - liczba, wskaźnik,
 maksimum - jest bez znaczenia bez interwału, na którym go wzięto, a interwał
-należy do danych jako pole, a nie do etykiety. Proza jest dla czytelników;
-konsument, który musi czytać prozę, żeby odzyskać liczbę, to konsument, który
-kiedyś odzyska złą.
+należy do danych jako pole, a nie do etykiety. Zdania są dla ludzi;
+konsument, który musi czytać zdanie, żeby wyłuskać z niego liczbę, kiedyś
+wyłuska złą.
 
 
 **Piętnasta. Kategoria jest właściwością rekordu albo nie istnieje.**
-Nauczona przez odczyt strumienia RSO 2026-08-22.
+Nauczka z odczytu strumienia RSO 2026-08-22.
 
 Polski feed RSO publikuje pięć kategorii. Są prawdziwe: dzielą dane, pojawiają
 się w adresie, a własna dokumentacja wydawcy wymienia ich slugi pod
-dedykowanym punktem końcowym. **Żadna z nich nie pojawia się w komunikacie.**
+osobnym punktem końcowym. **Żadna z nich nie pojawia się w komunikacie.**
 Zmierzone na 156 wiadomościach, które zwraca zakres „wszystkie": ani jedna nie
 niosła pola kategorii: `type` jest obecne i puste we wszystkich 156,
 `rso_icon` tak samo. Jedyny sposób, w jaki konsument wie, czym jest wiersz,
 to pamiętać, który URL go zwrócił.
 
 To samo dotyczy autora. Od kwietnia 2024 Rządowe Centrum Bezpieczeństwa
-publikuje do tego feedu, a właściciel systemu wskazuje je, wraz z
-ministerstwem, jako odpowiedzialne za wiadomości ogólnokrajowe, podczas gdy
-wojewódzkie centra zarządzania kryzysowego publikują resztę. Ten podział to
-własny opis systemu przez jego właściciela, a nie coś, co ten projekt
-zmierzył. **Żadne pole ich nie odróżnia.** Konsument, który chce oznaczyć
+publikuje do tego feedu, a opublikowany opis samego systemu wskazuje je,
+obok ministerstwa, jako odpowiedzialne za wiadomości ogólnokrajowe, podczas
+gdy wojewódzkie centra zarządzania kryzysowego publikują resztę. Ten podział
+to, co wydawca publikuje sam o sobie, a nie coś, co ten projekt zmierzył. **Żadne pole ich nie odróżnia.** Konsument, który chce oznaczyć
 ostrzeżenie tym, kto je wydał, nie może, a konsument, który oznacza cały blok
 nazwą jednego wydawcy, myli się co do większości.
 
@@ -740,7 +696,7 @@ kosztował: w rekordzie. Jedno pole na wiadomość, wzięte z listy, która już
 istnieje.
 
 **Ile konsumenta kosztuje obejście, dokładnie.** Pięć żądań zamiast jednego,
-plus księgowość, żeby pamiętać, które żądanie dało który wiersz, plus pewność,
+plus dodatkowa ewidencja, żeby pamiętać, które żądanie dało który wiersz, plus pewność,
 że każdy konsument, który nie wie, że ma to robić, po cichu źle oznaczył
 wszystko. Obejście istnieje. To, że istnieje, nie jest argumentem przeciw
 polu; jest miarą tego, ile brakujące pole kosztuje, pomnożoną przez każdego
@@ -762,8 +718,8 @@ To, co z niego przetrwało, jest po stronie konsumenta i żyje w rejestrze
 defektów tego repozytorium, a nie tutaj: rozwiązanie nazwy to nie to samo, co
 odpowiedź hosta, a w logu wyglądają tak samo.
 
-**Siedemnasta. Parametr, którego serwer nie honoruje, musi być odrzucony, nie
-przyjęty.** Nauczona przez odczyt strumienia RSO 2026-08-22, i są to trzy
+**Siedemnasta. Parametr, którego serwer nie obsługuje, musi być odrzucony, nie
+przyjęty.** Nauczka z odczytu strumienia RSO 2026-08-22; są to trzy
 ustalenia w jednym kształcie.
 
 Trzy sposoby, w jakie ten feed zwrócił częściową odpowiedź nieodróżnialną od
@@ -796,7 +752,7 @@ kompletnej, w jeden wieczór jego czytania:
 Trzecie jest najgorsze, bo najtańsze do zapobieżenia. **Nierozpoznany
 parametr powinien dać 400, nie 200.** Ciche zignorowanie go zamienia pomyłkę
 konsumenta w fałszywe przekonanie konsumenta, a fałszywe przekonanie
-przeżywa każde sprawdzenie, jakie konsument umie uruchomić: żądanie się
+przechodzi każde sprawdzenie, jakie konsument umie uruchomić: żądanie się
 powiodło, dane się sparsowały, liczba była rozsądna.
 
 Właściwość ogólna: **tam, gdzie żądanie może być zrealizowane częściowo,
@@ -811,14 +767,14 @@ Tam cisza nie może znaczyć bezpieczeństwa. Tu **częściowa odpowiedź nie mo
 wyglądać na kompletną.**
 
 **Osiemnasta. Pole, które zmienia znaczenie, zmienia nazwę, a konsument liczy
-klucze, których nie umie czytać.** Nauczona 2026-09-08 na ukraińskim API, dwa
+klucze, których nie umie czytać.** Nauczka z ukraińskiego API, 2026-09-08, dwa
 dni po tym, jak zmieniło się pod kolektorem tego projektu `[zmierzone]`.
 
 2026-09-06 API dołączyło do każdego alarmu listę rekordów poziomu -
 dwustopniowy schemat wprowadzony uchwałą rządu Ukrainy nr 1092 z 2026-09-04 -
-i zaczęło podbijać istniejący stempel `lastUpdate` alarmu przy każdej zmianie
+i zaczęło podbijać istniejący znacznik `lastUpdate` alarmu przy każdej zmianie
 poziomu. Od przełączenia adapter czytał `lastUpdate` jako początek alarmu,
-poprawnie: do tego dnia nic nie aktualizowało alarmu w miejscu. Zmierzone
+poprawnie: do tego dnia nic nie zmieniało alarmu w trakcie jego trwania. Zmierzone
 2026-09-08: miasto poszło na żółto o 17:22:35 i na czerwono o 18:01:01, a jego
 `lastUpdate` czytało się 18:01:00. Siedem alarmów w jednym ładunku było
 datowanych od eskalacji, a nie od początku, i ani jedno sprawdzenie nie
@@ -831,17 +787,17 @@ czytnik przez dwie wersje minor - ma to jako swoją drugą stronę, a kosztem
 jest nazwa. Konsumenta: kanarek. Każdy klucz na rekordzie, dla którego parser
 nie ma odczytu, jest liczony per odpytanie, drukowany w podsumowaniu i
 utrwalany z wierszem próby, żeby następny niezapowiedziany klucz był widoczny
-w dniu, w którym ląduje, a nie w dniu, w którym ktoś otworzy ładunek ręcznie.
+w dniu, w którym się pojawi, a nie w dniu, w którym ktoś otworzy ładunek ręcznie.
 Obie połowy są tanie; dwa dni między zmianą a jej odkryciem nie były.
 
 **Dziewiętnasta. Poziom zagrożenia jest słowem wydawcy, niesie własny
-znacznik czasu, siedzi obok stanu i nigdy wewnątrz tożsamości.** Nauczona na
-tej samej zmianie, czytanej dla tego, co publikuje, a nie dla tego, co
+znacznik czasu, siedzi obok stanu i nigdy wewnątrz tożsamości.** Nauczka z tej
+samej zmiany, czytanej pod kątem tego, co publikuje, a nie dla tego, co
 zepsuła `[zmierzone: jeden przechwycony ładunek czterdziestu alarmów i wiersze
 zapisane od tamtej pory]`.
 
 Rekordy poziomu to lista per alarm; kolejność listy nie koduje czasu; każdy
-rekord niesie poziom, wolnotekstowy powód, który mniej więcej tak samo często
+rekord ma poziom, powód w wolnym tekście, który mniej więcej tak samo często
 powtarza poziom w nawiasie, jak mówi cokolwiek, i moment utworzenia rekordu.
 Poziom zmienia się wewnątrz alarmu bez zdarzenia końca i bez nowego alarmu.
 Sześć z czterdziestu alarmów niosło `Red` datowane między 2022 a sierpniem
@@ -851,7 +807,7 @@ Co to rozstrzyga o polu poziomu zagrożenia, w czterech zdaniach, które wydawca
 może przyjąć:
 
 - **Słowo jest publikowane dosłownie, a słownik jest otwarty.** Konsument
-  odzwierciedla łańcuch wydawcy i traktuje ten, którego nie rozpoznaje, jako
+  powtarza słowo wydawcy dosłownie, a tego, którego nie rozpoznaje, traktuje jako
   nieznany, nigdy jako najbliższy kolor, który zna: reguła właściwości
   jedenastej, zastosowana do drugiego pola.
 - **Każdy rekord poziomu niesie moment, w którym go ogłoszono.** Poziom bez
@@ -881,7 +837,7 @@ mówi, czyj to będzie poziom.
 Zarzut zasługuje na odpowiedź, a nie na zbycie, i odpowiedź istnieje.
 
 Ukraina publikuje znacznie mniej, niż prosi sekcja 3 - publiczny kanał z
-konwencją nazewniczą, bez kodów rejestru, bez schematu, bez bicia serca - i
+konwencją nazewniczą, bez kodów rejestru, bez schematu, bez sygnału życia - i
 robi to przez całą wojnę, pod przeciwnikiem atakującym codziennie. Tam ten
 zarzut ma największą siłę i tam odpowiedź na niego jest testowana w praktyce,
 a nie argumentowana.
@@ -900,13 +856,15 @@ Jeśli jakieś konkretne pole naprawdę niesie ryzyko, odpowiedzią jest
 wyspecyfikowanie tego pola poza feed i powiedzenie tego, bo do tego jest
 specyfikacja. Nie jest to argument przeciw publikowaniu reszty.
 
-## 6. O co ten dokument nie prosi
+## 6. Czego ten dokument nie postuluje
 
-- **Nie o nowy system.** RSO istnieje, jest prowadzone i emituje CAP od czerwca
-  2026. Prośba dotyczy tego, które kategorie niesie i kto może czytać postać
-  ustrukturyzowaną.
-- **Nie o nową ustawę.** Art. 71 ust. 2 pkt 6 ustawy z 5 grudnia 2024 już
-  przewiduje tę klasę systemu.
+- **Nie o nowy system.** RSO istnieje, jest prowadzone, a jego strona
+  integracyjna dokumentuje zasób CAP. Prośba dotyczy tego, które kategorie
+  niesie i kto może czytać postać ustrukturyzowaną.
+- **Nie o nową ustawę.** Ustawa z 5 grudnia 2024 o ochronie ludności i
+  obronie cywilnej przewiduje ostrzeganie publiczne szybką transmisją
+  cyfrową; sekcja 9 zapisuje, że jej opublikowane brzmienie nie zostało
+  odczytane na tle tego twierdzenia.
 - **Nie o zmianę tego, kto decyduje.** Państwo decyduje, czym jest alarm i
   kiedy go ogłosić. To dotyczy formatu, w jakim już podjęta decyzja jest
   publikowana.
@@ -918,7 +876,7 @@ specyfikacja. Nie jest to argument przeciw publikowaniu reszty.
 - **Nie o zastąpienie czegokolwiek.** Syreny pozostaną najszybszym kanałem do
   śpiącego człowieka i nic tutaj tego nie zmienia.
 
-## 7. Jak się z tym dokumentem nie zgodzić
+## 7. Jak z tym dokumentem polemizować
 
 Napisany jako specyfikacja, a nie opinia, żeby niezgoda mogła być konkretna.
 Użyteczne formy:
@@ -930,9 +888,8 @@ Użyteczne formy:
 - Konkretny powód, dla którego kody TERYT w ładunku są trudniejsze, niż
   wyglądają.
 - Wskazanie polskiego źródła, które już spełnia część tego i którego autor nie
-  znalazł. **To była najbardziej użyteczna odpowiedź ze wszystkich** i
-  nadeszła: sekcja 8 ją zapisuje. T8a w backlogu trzyma teraz odczyt, który ta
-  odpowiedź umożliwia.
+  znalazł. **To najbardziej użyteczna odpowiedź, jaką ten dokument może
+  dostać**, a sekcja 8 mówi, co się dzieje, kiedy taka nadejdzie.
 - Odpowiedź na którekolwiek z trzech pytań zostawionych otwartymi na końcu
   sekcji 2.
 - Dowód, że zarzut bezpieczeństwa z sekcji 5 ma mocniejszą postać niż ta, na
@@ -943,67 +900,73 @@ repozytorium: co było błędne, kto to znalazł i co się zmieniło.
 
 ## 8. Rejestr korekt
 
-Sekcja 7 obiecała, że wskazanie istniejącego polskiego źródła będzie
-najbardziej użyteczną odpowiedzią, jaką ten dokument może otrzymać, i że
-korekta zostanie zapisana jak każde inne ustalenie: co było błędne, kto to
-znalazł, co się zmieniło.
+Sekcja 7 mówi, że wskazanie istniejącego polskiego źródła to najbardziej
+użyteczna odpowiedź, jaką ten dokument może dostać, i że korekta zostanie
+zapisana jak każde inne ustalenie: co było błędne, kto to znalazł, co się
+zmieniło.
 
 | Pole | Wpis |
 | --- | --- |
 | Wydania skorygowane | 1.0 / 2026-08-09 do 2.3 / 2026-08-31 |
 | Korekta wydana | 2.4 / 2026-09-04 |
-| Znalazł | Robert Klonowski, zastępca dyrektora, DOLiZK |
-| Instytucja | Ministerstwo Spraw Wewnętrznych i Administracji |
-| Źródło | Pismo sygn. DOLiZK-ZK.052.49.2026(2), Warszawa, 2 września 2026 |
-| W odpowiedzi na | Korespondencję z 28 sierpnia 2026 |
+| Znalazł | własny odczyt tego projektu i odpowiedź spoza niego |
+| Odtworzone tutaj | odczyt tak, odpowiedź nie |
 
-**Co było błędne.** Każde wydanie do 2.3 zaczynało się od stwierdzenia, że
-nie ma na czym budować, a od 1.9 to zdanie stało nad sekcją, która już
-znalazła i zmierzyła strumień RSO (F142). Żadne wydanie nie cytowało podstawy
-ustawowej, która dla tej klasy systemu istnieje. Żadne wydanie nie wiedziało,
-że RSO niesie CAP od czerwca 2026 ani że kategoria, za którą ten dokument
-argumentuje, jest już w testach.
+**Co było błędne.** Każde wydanie do 2.3 zaczynało się od stwierdzenia, że nie
+ma na czym budować, a od 1.9 to zdanie stało nad sekcją, która już znalazła i
+zmierzyła strumień RSO (F142). Ta korekta należy do sekcji 2 i stoi na
+odczycie, który każdy może powtórzyć.
 
-**Co się zmieniło.** Nagłówek i uwaga. Sekcja 2: trzy wiersze, blok czterech
-raportowanych faktów, procedura dostępu i trzy pytania, które pismo zostawia
-otwarte. Sekcja 3: tabela statusu wobec RSO i właściwość pierwsza rozszerzona
-o związanie z IP. Sekcja 6: dwie pozycje. Sekcja 7: dotrzymana obietnica.
-Sekcje 1, 4, 4a i 5 bez zmian co do treści.
+**Druga korekta przyszła spoza tego projektu i nie jest tu odtworzona.**
+Przyszła jako korespondencja, nie jako publikacja. To, co instytucja mówi o
+własnych systemach w odpowiedzi do jednej osoby, należy do niej i to ona
+decyduje o publikacji; specyfikacja argumentująca za danymi publicznymi jest
+złym miejscem, żeby zrobić to za nią, a argument poniżej tego nie potrzebuje.
+Wydania od 2.4 do 3.1 odtwarzały tę treść. To był błąd, materiał znika w 3.2,
+a ten akapit jest jego zapisem, bo wcześniejsze wydania są publiczne i
+udawanie, że tak nie było, byłoby drugim błędem. Zostaje to, co ten projekt
+zmierzył sam, i to, co jego wydawca publikuje.
 
-**Co się nie zmieniło.** Pięć właściwości. Prośba stała się mniejsza, niż
-sugerowało 2.3, a nie większa: kategoria jest budowana, cztery z pięciu
-właściwości da się spełnić wewnątrz CAP bez projektowania czegokolwiek, a to,
-co zostaje, to dostęp i bicie serca.
+**Co się nie zmieniło.** Pięć właściwości i nic w sekcjach 1 do 7, czego
+usunięcie by dotknęło: argument stoi na odczycie z 2026-08-22 i na własnym
+standardzie państwa, a jedno i drugie każdy może sprawdzić.
 
 **Uwaga do wydania 3.0.** Nie korekta. Dodano część II i wydanie polskie
 obok. Nic w sekcjach 1 do 9 nie zmieniło się co do treści; zmieniły się
-nagłówek i spis treści. Powodem dodania jest adresat, którego nazwało pismo w
-tej sekcji: departament, który już prowadzi interfejs CAP i dokłada
-kategorię, za którą ten dokument argumentuje. Dla takiego czytelnika argument
-jest mniej użyteczny niż instrukcja, a instrukcja po angielsku mniej
-użyteczna niż po polsku.
+nagłówek i spis treści. Powodem dodania jest odbiorca: instytucja, która już
+publikuje CAP i to ona niosłaby kategorię tego rodzaju. Dla takiego
+czytelnika argument jest mniej użyteczny niż instrukcja, a instrukcja po
+angielsku mniej użyteczna niż po polsku.
+
+**Uwaga do wydania 3.1.** Wydanie polskie napisane od nowa. W postaci z 3.0
+było tłumaczeniem, a nie dokumentem: niosło angielską frazeologię w polskich
+słowach, a jeden termin - sygnał życia z sekcji 4 - oddany był zwrotem z
+anatomii. Sprawdzenie parzystości w buildzie tego repozytorium trzyma oba
+wydania przy tej samej strukturze i tych samych liczbach, i nie ma nic do
+powiedzenia o tym, czy któreś z nich czyta się jak tekst napisany w swoim
+języku; ten limit jest tu wypowiedziany, bo wydanie 3.0 przeszło bramkę i
+mimo to wymagało czytelnika.
+
+**Uwaga do wydania 3.2.** Dwa usunięcia i cztery poprawki, żadna z nich w
+argumencie. Część II wycofała rekomendację, na którą nie miała podstawy,
+poprawiła dwa zdania o samej strukturze CAP, poprawiła zmierzoną liczbę,
+którą podała źle, i wycofała twierdzenie o własnej polityce wersji tego
+projektu, któremu właściwość ósma przeczy dwie sekcje wcześniej. Dokument,
+który prosi wydawcę, żeby mówił, czego jego pola nie rozróżniają, musi
+trzymać ten sam standard w części, która mówi wydawcy, co ma zbudować.
 
 ## 9. Źródła
 
-- Pismo sygn. DOLiZK-ZK.052.49.2026(2) z 2 września 2026, Departament Ochrony
-  Ludności i Zarządzania Kryzysowego, Ministerstwo Spraw Wewnętrznych i
-  Administracji, podpisane przez zastępcę dyrektora Roberta Klonowskiego
-  kwalifikowanym podpisem elektronicznym. Cytowane dla: podstawy ustawowej,
-  operatora RSO, dostępności CAP od czerwca 2026, wymogu tokena i czterech
-  torów prac w analizie.
-- Korespondencja z tego samego departamentu z 2 września 2026, pod tą samą
-  sygnaturą. Cytowana dla: braku kategorii uderzeń z powietrza w RSO w tym
-  dniu, prac nad nią w środowisku testowym i zadeklarowanego celu
-  produkcyjnego oraz procedury uzyskania dostępu do CAP.
 - Dokumentacja integracyjna RSO, <https://komunikaty.tvp.pl/Info/Integration>,
   czytana 2026-08-22 i 2026-09-02. Cytowana dla: publicznej dostępności
   zasobów XML i JSON oraz tokena na zasobie CAP.
 - Common Alerting Protocol, OASIS, wersja bieżąca. Cytowany dla elementów
   nazwanych w sekcji 3.
-- Ustawa z 5 grudnia 2024 o ochronie ludności i obronie cywilnej, art. 71 ust.
-  2 pkt 6, cytowana tak, jak zacytowano ją w powyższym piśmie. Opublikowane
-  brzmienie nie zostało jeszcze odczytane na tle cytatu, a zdanie w sekcji 2
-  stoi na piśmie, dopóki nie zostanie.
+- Ustawa z 5 grudnia 2024 o ochronie ludności i obronie cywilnej. Cytowana w
+  sekcji 6 dla istnienia podstawy ustawowej dla ostrzegania publicznego
+  szybką transmisją cyfrową. Jej opublikowane brzmienie nie zostało odczytane
+  na tle tego cytatu, a zdanie stoi jako `[unverified]`, dopóki nie
+  zostanie.
 - [`docs/CHANNEL.md`](CHANNEL.md), dla każdego pomiaru w sekcji 1.
 
 ---
@@ -1019,7 +982,7 @@ format, prosiłaby o nowy system, a sekcja 6 mówi, że nie prosi. Nic poniżej
 nie wymaga opuszczenia CAP. Dwie rzeczy poniżej wymagają dodania do niego i
 obie są powiedziane otwarcie.
 
-## 10. Feed na jednej stronie
+## 10. Cały feed na jednej stronie
 
 Feed tego rodzaju to trzy rzeczy, a drugiej z nich CAP nie daje.
 
@@ -1030,7 +993,7 @@ czym, żeby konsument nie musiał zgadywać. Profil to sekcja 10.1.
 
 **Indeks.** Jeden mały dokument, generowany na nowo w stałym rytmie
 niezależnie od tego, czy coś się wydarzyło, wymieniający każdy alarm obecnie
-obowiązujący i moment, w którym lista powstała. To bicie serca z sekcji 4 i
+obowiązujący i moment, w którym lista powstała. To sygnał życia z sekcji 4 i
 migawka pełnego stanu, o którą prosi właściwość siódma, w jednym pliku. CAP go
 nie definiuje i nie musi; siedzi obok wiadomości, nie w nich. To sekcja 10.2 i
 to jest ten jeden dodatek, przy którym ten dokument się upiera.
@@ -1043,31 +1006,31 @@ Sekcja 15.
 
 ### 10.1 Profil wiadomości
 
-CAP 1.2 ma trzydzieści kilka elementów i większość jest opcjonalna. Profil
+CAP 1.2 ma długą listę elementów i większość z nich jest opcjonalna. Profil
 mówi, które z nich ten feed zawsze wypełnia i co w nich jest. Tabela poniżej
 to całość; akapity po niej to powody, każdy wskazujący właściwość z części I.
 
-| Element | Zawsze | Wypełniany | Stoi na |
+| Element | Zawsze | Czym wypełniany | Podstawa |
 | --- | --- | --- | --- |
-| `identifier` | tak | jeden łańcuch, unikalny przez całe życie feedu, nigdy nieużywany ponownie | sekcja 13 |
+| `identifier` | tak | jeden ciąg znaków, unikalny przez całe życie feedu, nigdy nieużywany ponownie | sekcja 13 |
 | `sender`, `senderName` | tak | organ wydający, jako adres i jako nazwa; dwa organy, dwie wartości | właściwość piętnasta |
 | `sent` | tak | moment wydania tej wiadomości, ISO 8601 z przesunięciem UTC, nigdy czas lokalny bez niego | sekcja 12 |
 | `status` | tak | `Actual` dla prawdziwego alarmu; `Test` i `Exercise` to legalne wartości, które konsument musi umieć odrzucić | sekcja 16 |
 | `msgType` | tak | `Alert`, gdy się zaczyna, `Update`, gdy się zmienia, `Cancel`, gdy się kończy | sekcja 11 |
 | `references` | przy `Update` i `Cancel` | `identifier`, `sender` i `sent` wiadomości, którą ta zmienia albo kończy | sekcja 13 |
-| `category` | tak | `Safety` dla zagrożenia uderzeniem z powietrza; jedna kategoria na wiadomość | właściwość piętnasta |
-| `event` | tak | stały łańcuch z opublikowanej listy, jeden na rodzaj alarmu; słownik jest dokumentem, nie zwyczajem | właściwość jedenasta |
+| `category` | tak | jedna wartość z listy samego CAP, nazwana w profilu; `Safety` i `Security` obie pasują do zagrożenia uderzeniem z powietrza, więc wybór należy do wydawcy i ma być zapisany | właściwość piętnasta |
+| `event` | tak | stały ciąg znaków z opublikowanej listy, jeden na rodzaj alarmu; słownik jest dokumentem, nie zwyczajem | właściwość jedenasta |
 | `urgency`, `severity`, `certainty` | tak | własne słowa CAP, dosłownie; `Unknown` jest wartością legalną i jest używana, gdy jest prawdziwa | sekcja 13, właściwość dziewiętnasta |
-| `effective`, `expires` | tak | kiedy alarm wszedł w życie i kiedy wygaśnie, jeśli nic więcej nie zostanie powiedziane; `expires` to sufit, nie zdarzenie końca | sekcja 11 |
+| `effective`, `expires` | tak | kiedy alarm wszedł w życie i kiedy wygaśnie, jeśli nic więcej nie zostanie powiedziane; `expires` to pułap, nie zdarzenie końca | sekcja 11 |
 | `area/geocode` | tak, co najmniej jeden | `valueName` = `TERYT`, `value` = kod rejestru dotkniętej jednostki, jeden element `area` na jednostkę | sekcja 14 |
 | `area/areaDesc` | tak | nazwa jednostki, dla ludzi; nigdy jako jedyny sposób podania obszaru | sekcja 14 |
 | `polygon`, `circle` | opcjonalnie | kształt, jeśli decyzję podjęto na kształcie; nigdy zamiast kodu | sekcja 14 |
-| `headline`, `description`, `instruction` | tak | tekst, który czyta człowiek; wolny, po polsku, z ustawionym `language` | sekcja 11 |
+| `headline`, `description`, `instruction` | tak | tekst, który czyta człowiek; wolny, po polsku, z `language` ustawionym na obejmującym bloku `info` | sekcja 11 |
 
 **Dlaczego `identifier` nigdy nie wraca.** Konsument trzyma to, co widział,
-po tym łańcuchu. Ponownie użyty identyfikator to dwa alarmy pod jedną nazwą i
+po tym ciągu znaków. Ponownie użyty identyfikator to dwa alarmy pod jedną nazwą i
 każdy konsument, który deduplikuje - czyli każdy, który działał dłużej niż
-dobę - upuści ten drugi na podłogę. Sekcja 13 ma pomiar.
+dobę - po prostu zgubi ten drugi. Sekcja 13 ma pomiar.
 
 **Dlaczego `Update` odwołuje się do oryginału, a go nie zastępuje.** Alarm,
 który zmienia poziom, to ten sam alarm. Sekcja 11 go przeprowadza. Element
@@ -1080,8 +1043,9 @@ Właściwość jedenasta: kategoria mówi konsumentowi, że coś ogłoszono, a n
 i nic w polu tego nie mówi. Lekarstwem jest jedno zdanie na wartość `event` w
 dokumencie, który konsument może przeczytać, w rodzaju „zagrożenie uderzeniem
 z powietrza: każdy środek z powietrza, włącznie ze środkami, których ten feed
-nie rozróżnia". Lista jest krótka. Napisanie jej to jedno popołudnie.
-Nienapisanie to każdy konsument zgadujący, w różnych kierunkach.
+nie rozróżnia". Lista jest krótka, a napisanie jej to mniejsza praca niż odpowiadanie na
+pytania, które rodzi jej brak. Nienapisanie to każdy konsument zgadujący, w
+różnych kierunkach.
 
 **Dlaczego `Unknown` jest używane, kiedy jest prawdziwe.** CAP pozwala, żeby
 `severity`, `urgency` i `certainty` mówiły `Unknown`. Feed, który zawsze
@@ -1122,13 +1086,13 @@ zdecydował.
 
 Czytaj pole po polu, bo każde jest właściwością z części I z przypiętą nazwą.
 
-- `generated_at` to bicie serca. Porusza się przy każdym wygenerowaniu, w
+- `generated_at` to sygnał życia. Zmienia się przy każdym wygenerowaniu, w
   rytmie, który wydawca deklaruje, niezależnie od tego, czy lista jest pusta.
   Konsument, który widzi, że przestało się poruszać, wie, że feed jest ślepy,
   i może to powiedzieć. Pusta lista `active` ze świeżym `generated_at` to
   spokojne niebo. Ta sama lista z nieaktualnym to nic w ogóle. Sekcja 4, w
   jednym polu.
-- `valid_for_s` to sufit, który wydawca nakłada na własną ciszę: liczba sekund
+- `valid_for_s` to pułap, który wydawca nakłada na własną ciszę: liczba sekund
   po `generated_at`, po której konsument musi przestać traktować obraz jako
   bieżący. Jest publikowany, a nie wnioskowany, bo konsument, który zgaduje
   rytm, zgaduje źle w dniu, w którym rytm się zmienia.
@@ -1139,7 +1103,7 @@ Czytaj pole po polu, bo każde jest właściwością z części I z przypiętą 
   migawka istniała, a końce trzeba było z niej syntetyzować.
 - `severity_at` to moment ogłoszenia poziomu, który nie jest momentem
   początku alarmu ani momentem powstania indeksu. Właściwość dziewiętnasta.
-  Poziom bez własnego stempla to kolor o nieznanym wieku.
+  Poziom bez własnego znacznika to kolor o nieznanym wieku.
 - `window` to interwał, który ten dokument obejmuje, a `truncated` mówi, czy
   został obcięty. Obie połowy właściwości szóstej i lewa krawędź właściwości
   siódmej, opublikowane, a nie wyprowadzone.
@@ -1150,11 +1114,12 @@ Czytaj pole po polu, bo każde jest właściwością z części I z przypiętą 
   zero nie mogą dzielić jednej pisowni.
 
 **Czym indeks nie jest.** Nie jest zamiennikiem wiadomości, a konsument,
-który czyta tylko indeks, traci tekst, instrukcję i historię. Nie jest duży:
-w skali stanu alarmowego kraju to kilka kilobajtów w złą noc. Nie jest
-sprytny. To plik, który ten projekt publikuje jako `state.json`, ze zmienionymi
-nazwami, i utrzymał on mapę uczciwą przez dwie przerwy u wydawcy, które feed z
-samymi wiadomościami zamieniłby w spokój.
+który czyta tylko indeks, traci tekst, instrukcję i historię. Nie jest duży: jedna linia
+na każdy obowiązujący alarm i nic poza tym. Nie jest sprytny. Jest bliski
+plikowi, który ten projekt publikuje jako `state.json`, a który niesie
+znacznik wygenerowania, okno i jego flagę obcięcia, i nie niesie poziomu ani
+znacznika dla niego; ten plik utrzymał mapę uczciwą przez dwie przerwy u
+wydawcy, które feed z samymi wiadomościami zamieniłby w spokój.
 
 ### 10.3 Co CAP daje, a czego nie, w jednej tabeli
 
@@ -1164,7 +1129,7 @@ samymi wiadomościami zamieniłby w spokój.
 | Druga: obszar kodem | `geocode` istnieje | `TERYT` jako `valueName`, zawsze wypełnione |
 | Trzecia: przejścia w obie strony | `Alert`, `Update`, `Cancel` | `Cancel` faktycznie wysyłany, nie `expires` zostawiony do wygaśnięcia |
 | Czwarta: wersjonowany schemat | CAP jest wersjonowany | sam profil, opublikowany, z wersją |
-| Piąta: bicie serca | nic | indeks, sekcja 10.2 |
+| Piąta: sygnał życia | nic | indeks, sekcja 10.2 |
 | Szósta: limit i flaga | nic | `window.truncated` w indeksie |
 | Siódma: lewa krawędź okna | nic | `window.from` w indeksie |
 | Ósma: polityka przełączenia | nic | sekcja 15 |
@@ -1173,14 +1138,14 @@ samymi wiadomościami zamieniłby w spokój.
 | Piętnasta: kategoria i autor w rekordzie | `category`, `sender` | oba zawsze wypełnione |
 | Siedemnasta: częściowe odpowiedzi mówią o tym | nic | sekcja 15, o protokole |
 | Osiemnasta: zmienione znaczenie to nowa nazwa | nic | sekcja 15 |
-| Dziewiętnasta: poziom z własnym stemplem | `severity`; bez stempla | `severity_at` w indeksie, `sent` na `Update` |
+| Dziewiętnasta: poziom z własnym znacznikiem | `severity`; bez znacznika | `severity_at` w indeksie, `sent` na `Update` |
 
 Pięć wierszy mówi *nic*. To nie jest defekt CAP. CAP opisuje wiadomość; ten
 dokument opisuje strumień, a sekcja 4 mówi, dlaczego te dwie rzeczy
 potrzebują różnych gwarancji. Dodatki to jeden dokument i garść reguł
 wypełniania elementów, które CAP już ma.
 
-## 11. Życie jednego alarmu na łączu
+## 11. Jak jeden alarm przechodzi przez feed
 
 Jeden alarm, od chwili, gdy organ decyduje, do chwili, gdy czytelnik może
 przestać się martwić, w postaci, w jakiej widzi go konsument. Każda strzałka
@@ -1203,7 +1168,7 @@ stateDiagram-v2
 
 **Ogłoszony.** Organ wydaje CAP `Alert`. `identifier` powstaje tutaj i żyje
 tak długo jak feed. `sent` to teraz. `effective` to moment, w którym alarm
-nabiera mocy, zwykle ten sam. `expires` to sufit: moment, po którym, jeśli
+nabiera mocy, zwykle ten sam. `expires` to pułap: moment, po którym, jeśli
 nic więcej nie zostanie powiedziane, alarm nie powinien być traktowany jako
 bieżący. Nie jest przewidywaniem, kiedy zagrożenie się skończy, i nie jest
 zdarzeniem końca.
@@ -1247,19 +1212,19 @@ zmieniło; zmienił się feed. Konsument, który ma indeks starszy niż
 może odwołać niczego na podstawie ciszy. To jest stan, o którym jest sekcja 4,
 i jest narysowany na diagramie, bo cykl życia, który go pomija, opisuje feed,
 który nigdy nie zawodzi, a takiego feedu nie ma: źródło strażnicze tego
-projektu zamilkło dwa razy w dziesięć dni, na trzydzieści cztery godziny, a
-potem na ponad czterdzieści.
+projektu zamilkło dwa razy w dziesięć dni: pierwszy raz na trzydzieści cztery
+godziny, drugi na dłużej niż dobę.
 
 **Co konsument robi przy każdej strzałce.** Ogłoszony: zapisz wiadomość, dodaj
 wiersz, pokaż alarm z `sent` jako początkiem. Trwający: odśwież wiek z
 `generated_at`, nic więcej. Zmieniony: zapisz `Update`, przeczytaj wiersz na
-nowo, pokaż nowy poziom z `sent` tego `Update` jako stemplem; nie otwieraj
+nowo, pokaż nowy poziom ze znacznikiem `sent` tego `Update`; nie otwieraj
 drugiego wiersza. Zakończony: zapisz `Cancel`, zamknij wiersz, pokaż koniec z
 `sent` tego `Cancel`. Wygasły: zamknij wiersz, pokaż koniec jako *wygasł o*,
 a nie *zakończył się o*, bo to różne fakty. Ślepy: zatrzymaj zegar na
 wszystkim, powiedz, że obraz jest stary, trzymaj każdy wiersz otwarty. Wiersze
 to pamięć konsumenta; indeks to pamięć wydawcy; kiedy się nie zgadzają,
-indeks jest nowszy i wygrywa, chyba że indeks sam jest starszy niż jego sufit,
+indeks jest nowszy i wygrywa, chyba że indeks sam jest starszy niż jego pułap,
 i wtedy nie wygrywa nic, a strona to mówi.
 
 ## 12. Trzy zegary, jeden format
@@ -1279,13 +1244,13 @@ wiadomości; `generated_at` na indeksie. Dla wiadomości te dwa zegary zwykle
 zgadzają się co do sekundy; dla indeksu nigdy, bo indeks jest przerabiany co
 dwie minuty, a alarmy w nim ogłoszono wtedy, kiedy je ogłoszono. Zmierzone
 2026-09-09 we własnym magazynie tego projektu: wiersz indeksu zapisany o 11:21
-niósł ogłoszenie sprzed dwóch dni. Oba stemple są prawdziwe. Czytelnik, któremu
+niósł ogłoszenie sprzed dwóch dni. Oba znaczniki są prawdziwe. Czytelnik, któremu
 pokazano niewłaściwy, widzi dwudniowe zagrożenie jako świeże.
 
-**Obserwacja.** Kiedy konsument to przeczytał. Nigdy na łączu; konsument
+**Obserwacja.** Kiedy konsument to przeczytał. Tego w feedzie nie ma; konsument
 zapisuje ją we własnym magazynie obok tego, co przeczytał. Tak konsument
 odróżnia „wydawca milczał" od „nie słuchałem", o czym jest właściwość
-dziewiąta, i to jest stempel, który czyni własne przerwy konsumenta widocznymi
+dziewiąta, i to ten znacznik czyni własne przerwy konsumenta widocznymi
 w jego własnym zapisie.
 
 **Jeden format.** ISO 8601, z wypisanym przesunięciem UTC, zawsze:
@@ -1300,20 +1265,20 @@ czytelnika minus `sent`, policzone na urządzeniu czytelnika, tykające. Feed,
 który publikuje wiek, publikuje liczbę błędną w chwili zapisania i bardziej
 błędną z każdą sekundą. Publikuj moment; niech czytelnik odejmuje.
 
-**Sufit to liczba w feedzie.** `valid_for_s` na indeksie i `expires` na
+**Pułap to liczba w feedzie.** `valid_for_s` na indeksie i `expires` na
 wiadomości to dwa miejsca, w których wydawca mówi, jak długo można ufać jego
 własnej ciszy. Żadne z nich nie jest obietnicą o świecie; oba są obietnicami
 o feedzie. Konsument trzyma się ich dosłownie, a wydawca, który zmienia rytm,
 zmienia liczbę w tym samym wydaniu, bo konsument nie widzi rytmu, tylko
-stempel.
+znacznik.
 
-## 13. Co sprawia, że jeden alarm jest jednym alarmem
+## 13. Kiedy dwa odczyty to ten sam alarm
 
 Tożsamość alarmu to rzecz, na której kluczuje każdy konsument, i musi ją
 ustalić wydawca, raz, na piśmie, bo każdy konsument, który ustala ją sam,
 ustala ją inaczej.
 
-**Tożsamością jest identyfikator.** Jeden łańcuch, nadany przy `Alert`,
+**Tożsamością jest identyfikator.** Jeden ciąg znaków, nadany przy `Alert`,
 niesiony przez każdy `Update` i `Cancel` w `references`, nigdy nieużywany
 ponownie. To własny projekt CAP i jest słuszny. Wszystko inne w alarmie jest
 jego właściwością i może się zmieniać: poziom, obszar, wygaśnięcie, tekst.
@@ -1328,11 +1293,11 @@ dziewiętnasta naliczyła siedem widm w jednym ładunku. Czas obserwacji też ni
 jest tożsamością: ten sam alarm czytany czterysta razy dziennie to jeden
 alarm, a magazyn, który nie odróżni czterechsetnego odczytu od pierwszego,
 zapełnia się tym samym faktem. Zmierzone 2026-09-09, w pierwszym cyklu po tym,
-jak ten projekt zaczął zapisywać poziomy: trzydzieści otwartych alarmów oddało
-swoją bieżącą deklarację, magazyn zachował po jednym wierszu dla każdego; w
-następnym cyklu trzydzieści oddano ponownie, a magazyn zachował dwa, te dwa,
-które się zmieniły. Tak działa poprawna tożsamość. Wszystko, co nie jest
-tożsamością, haszuje się do wiersza, który już istnieje.
+jak ten projekt zaczął zapisywać poziomy: dwadzieścia osiem otwartych alarmów
+oddało swoją bieżącą deklarację i magazyn zachował po jednym wierszu dla
+każdego; dwie minuty później oddano trzydzieści, a magazyn zachował dwa, te
+dwa, które się zmieniły. Tak działa poprawna tożsamość. Wszystko, co nie jest
+tożsamością, daje hasz wiersza, który już istnieje.
 
 **Idempotencja to dowód konsumenta, że tożsamość jest właściwa.** Odtworzenie
 dnia wiadomości do magazynu musi zostawić magazyn bez zmian. Jeśli rośnie, coś,
@@ -1341,29 +1306,30 @@ w swoim buildzie, na każdym strumieniu, który zapisuje, a jeden z trzynastu
 ataków w jego uprzęży jest dokładnie tym: odtwórz feed, sprawdź, że dziennik
 nie urósł.
 
-**Hasz po tożsamości, opublikowany, to prezent.** CAP go nie wymaga, a wydawca,
+**Opublikowany hasz po tożsamości oszczędza pracę wszystkim.** CAP go nie wymaga, a wydawca,
 który go dodaje - stabilny skrót elementów, które czynią wiadomość tą
 wiadomością - pozwala każdemu konsumentowi deduplikować bez uzgadniania, które
 to elementy. To jedno pole. Jego brak kosztuje każdego konsumenta to samo
 popołudnie decydowania, a decydują różnie.
 
-## 14. Gdzie: obszar jako kod
+## 14. Gdzie: obszar jako kod rejestru
 
 **Obszar to kod TERYT, jeden element `geocode` na jednostkę, z `valueName`
 ustawionym na `TERYT`.** Nazwa idzie do `areaDesc` dla ludzi. Wielokąt może
 iść obok kodu, jeśli decyzję podjęto na wielokącie. Czego nie może być, to
 sama nazwa albo sam wielokąt, bo oba zmuszają każdego konsumenta do zbudowania
-resolvera, a każdy resolver jest subtelnie błędny: ten projekt zmierzył
+mechanizmu dopasowywania, a każdy taki mechanizm myli się w subtelny
+sposób: ten projekt zmierzył
 dopasowywanie nazw do rejestru na mniej więcej sześciu na sto tam, gdzie
 własne ustrukturyzowane etykiety źródła osiągnęły ponad dziewięćdziesiąt
 dziewięć, i to przy etykietach w spójnej konwencji. Właściwość druga ma
 dokładne liczby.
 
 **Pole złączenia to kod, nigdy nazwa wyświetlana.** Własny konsument tego
-projektu wysłał wydanie, w którym mapa nie rysowała nic, a lista obok
+projektu wypuścił wydanie, w którym mapa nie rysowała nic, a lista obok
 rysowała wszystko, bo pole, po którym mapa łączyła, niosło nazwę przeznaczoną
 do czytania, a geometria była kluczowana slugiem. Oba były poprawne; były
-poprawne co do różnych rzeczy. Kod to ten sam łańcuch w geometrii, w
+poprawne co do różnych rzeczy. Kod to ten sam ciąg znaków w geometrii, w
 rejestrze i w wiadomości, a nazwa nie.
 
 **Publikuj na poziomie, na którym podjęto decyzję, i pozwól konsumentowi
@@ -1385,9 +1351,9 @@ był, gdy wiadomość wysłano, a feed, który nie mówi, które wydanie rejestr
 na myśli, zostawia konsumentowi zgadywanie w dniu, w którym kod zostanie
 wycofany. Jedna linia w profilu, aktualizowana wtedy, gdy rejestr.
 
-## 15. Serwowanie i późniejsze zmiany
+## 15. Udostępnianie i późniejsze zmiany
 
-**Serwuj pliki.** Indeks i wiadomości to dokumenty; połóż je za HTTPS pod
+**Udostępniaj pliki.** Indeks i wiadomości to dokumenty; udostępnij je przez HTTPS pod
 stałymi adresami i pozwól serwerowi WWW je serwować. Bez sesji, bez ciasteczka,
 bez parametru w adresie, który zmienia to, co zwracane, w sposób, którego
 odpowiedź nie deklaruje. Indeks pod jednym adresem, zawsze bieżący; każda
@@ -1397,7 +1363,7 @@ przez API na poziomie otwartości 3, i to jest zarazem najtańsza rzecz, jaką
 wydawca może prowadzić: statyczny plik za pamięcią podręczną przeżyje
 obciążenie, które położyłoby bazę danych.
 
-**Mów, jak świeże to jest, w nagłówkach i w treści.** `Last-Modified` i
+**Mów, jak świeże są dane, w nagłówkach i w treści.** `Last-Modified` i
 `ETag` na każdej odpowiedzi, żeby konsument mógł zapytać „czy to się
 zmieniło" za cenę nagłówka i usłyszeć „nie". `Cache-Control: max-age` nie
 dłuższe niż rytm, żeby pośrednik nigdy nie serwował nieaktualnego indeksu jako
@@ -1413,41 +1379,42 @@ dziesiąta: łamie ją limit, który istnieje i nie jest zadeklarowany, bo
 konsument znajduje go przez odcięcie, a luka, którą zostawia, jest
 nieprzypisywalna.
 
-**Odrzucaj to, czego nie honorujesz.** Żądanie niosące parametr, którego
+**Odrzucaj to, czego nie obsługujesz.** Żądanie niosące parametr, którego
 serwer nie implementuje, dostaje `400`, a nie `200` z parametrem
 zignorowanym. Zakres nazwany *wszystkie* zwraca wszystko albo nie nazywa się
 *wszystkie*. Licznik nazwany od sumy liczy sumę. Właściwość siedemnasta
 zmierzyła wszystkie trzy awarie na jednym polskim punkcie końcowym w jeden
 wieczór, a trzecia jest najtańsza do zapobieżenia i najgorsza do zniesienia,
-bo pomyłka konsumenta staje się fałszywym przekonaniem konsumenta i przeżywa
+bo pomyłka konsumenta staje się fałszywym przekonaniem konsumenta i przechodzi
 każde sprawdzenie, jakie konsument umie uruchomić.
 
 **Zadeklaruj retencję.** Wiadomości są przechowywane przez okres, który
 profil nazywa, a lista mówi, jak daleko wstecz sięga. Sekcja 2 zmierzyła
-alternatywę: strumień, którego historia chudnie do garści wierszy na tydzień,
+alternatywę: strumień, którego historia kurczy się do garstki wierszy na tydzień,
 w skali całego kraju, tak że tygodnia, który miał największe znaczenie, nie
 dało się odczytać wstecz. Liczba w profilu - dziewięćdziesiąt dni, rok, na
-zawsze - jest warta więcej niż najlepsze intencje, bo konsument może planować
-wokół liczby, a nie może planować wokół intencji.
+zawsze - jest warta więcej niż najlepsze intencje, bo konsument może się
+przygotować do liczby, a do intencji nie.
 
 **Zmieniaj przez dodawanie.** Nowy element jest dodawany; nic nie jest
 usuwane i nic nie zmienia znaczenia. Konsument, który czyta tylko elementy,
 które zna, dalej działa. Kiedy coś musi zostać usunięte albo zmienić
-znaczenie, to jest nowa wersja profilu: wersja jest łańcuchem w indeksie
+znaczenie, to jest nowa wersja profilu: wersja jest ciągiem znaków w indeksie
 (`schema`) i w dokumencie profilu, a stara wersja jest nadal serwowana przez
 zadeklarowany okres po pojawieniu się nowej. Właściwość ósma: ten projekt
 przesunął własny kontrakt o jedną wersję z ładunkiem będącym ścisłym
 nadzbiorem i mimo to był ślepy przez minuty między dwoma wdrożeniami, bo
 konsument odrzuca wersje, których nie zna, poprawnie, a nic nie powiedziało mu
-o nakładaniu się. Dwie wersje minor nakładania się, zadeklarowane, to reguła,
-której ten projekt trzyma się sam. Publiczny feed ma konsumentów, których
-nigdy nie spotkał; nakładanie się jest dla nich.
+o nakładaniu się. Ten projekt też własnej polityki nakładania się nie
+napisał, co zapisuje właściwość ósma; reguła, której trzyma się sam, jest
+węższa i dotyczy czytników, a nie serwowania. Publiczny feed ma konsumentów,
+których nigdy nie spotkał; nakładanie się jest dla nich.
 
 **Pole, które zmienia znaczenie, zmienia nazwę.** Właściwość osiemnasta, i to
 jest reguła, której polityka dodawania powyżej nie obejmuje, bo znaczenie może
 się zmienić bez dodania ani usunięcia żadnego elementu. Ukraińskie API zaczęło
-podbijać istniejący stempel przy nowym zdarzeniu i każdy konsument, który
-czytał ten stempel jako „kiedy się zaczęło", był po cichu w błędzie. Jeśli
+podbijać istniejący znacznik przy nowym zdarzeniu i każdy konsument, który
+czytał ten znacznik jako „kiedy się zaczęło", był po cichu w błędzie. Jeśli
 `sent` kiedykolwiek ma znaczyć coś nowego, to jest nowy element z nową nazwą,
 a `sent` znaczy dalej to, co znaczyło. Po stronie konsumenta odpowiadająca
 reguła to kanarek: każdy element, dla którego parser nie ma odczytu, jest
@@ -1457,10 +1424,10 @@ dni później.
 
 ## 16. Lista kontrolna zgodności
 
-Napisana tak, żeby każda linia mogła być testem. Własny build wydawcy powinien
+Napisana tak, żeby każdy punkt mógł być testem. Własny build wydawcy powinien
 przepuścić je przez kandydata na feed, zanim przeczyta go ktokolwiek spoza
-budynku, a ten projekt uruchomiłby te same linie, z zewnątrz, tak jak opisuje
-to odczyt T8a w jego backlogu. Każda linia nazywa, na czym stoi. *Indeks*
+budynku, a ten projekt mógłby sprawdzić te same punkty z zewnątrz, i to właśnie
+opisuje odczyt T8a w jego backlogu. Każdy punkt nazywa, na czym stoi. *Indeks*
 oznacza dokument z sekcji 10.2; *wiadomość* oznacza dokument CAP według
 profilu z sekcji 10.1.
 
@@ -1494,7 +1461,7 @@ profilu z sekcji 10.1.
 10. Odtworzenie jednego dnia wiadomości do magazynu konsumenta zostawia
     magazyn bez zmian. Sekcja 13.
 11. Zmiana poziomu nie tworzy nowego alarmu po stronie konsumenta, a `sent`
-    tego `Update` jest stemplem poziomu. Właściwość dziewiętnasta.
+    tego `Update` jest znacznikiem poziomu. Właściwość dziewiętnasta.
 
 **Czas**
 
@@ -1550,8 +1517,8 @@ profilu z sekcji 10.1.
 28. Wiadomości ze `status` `Test` i `Exercise` są publikowane tak, żeby
     konsument mógł je odrzucić bez czytania tekstu. Sekcja 10.1.
 
-Dwadzieścia osiem linii. Feed, który je przechodzi, to feed, który ten projekt
-mógłby czytać w dniu jego pojawienia się, kodem, który już uruchamia, i każdy
-inny też. Feed, który nie przechodzi jakiejś linii, nie jest złym feedem; jest
-feedem ze znaną luką, czyli jedynym rodzajem, na którym konsument może
-uczciwie budować, a linia mówi, czym ta luka jest.
+Dwadzieścia osiem punktów. Feed, który je spełnia, ten projekt mógłby czytać
+w dniu jego uruchomienia, kodem, który już działa, i każdy inny też. Feed,
+który któregoś punktu nie spełnia, nie jest złym feedem; jest feedem ze znaną
+luką, czyli jedynym, na jakim konsument może budować uczciwie, a punkt mówi,
+czym ta luka jest.

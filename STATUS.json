@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.53.5.0",
+  "version": "0.53.5.1",
   "python_requires": ">=3.11",
   "sprint_test_files": [
     0,
@@ -18,18 +18,18 @@
   "gate": "make verify",
   "documents": {
     "docs/ARCHITECTURE.md": "2.5",
-    "docs/BRIEF-PL.md": "2.9",
-    "docs/BRIEF.md": "2.9",
+    "docs/BRIEF-PL.md": "2.11",
+    "docs/BRIEF.md": "2.11",
     "docs/CHANNEL.md": "1.7",
     "docs/COMPUTATION.md": "1.1",
     "docs/DATA-FLOW.md": "1.4",
     "docs/DECISIONS.md": "2.24",
-    "docs/DEPLOYMENT.md": "1.30",
-    "docs/FEED-SPEC.md": "3.0",
+    "docs/DEPLOYMENT.md": "1.31",
+    "docs/FEED-SPEC.md": "3.2",
     "docs/FOUNDATIONS.md": "1.2",
     "docs/MANUAL.md": "3.7",
     "docs/MECHANISMS.md": "2.2",
-    "docs/METHODOLOGY.md": "2.50",
+    "docs/METHODOLOGY.md": "2.52",
     "docs/MOBILE.md": "1.5",
     "docs/MVP.md": "3.10",
     "docs/OBSERVABILITY.md": "1.1",
@@ -82,7 +82,7 @@
     "docs/reviews/0.51.0.0.md": "1.0",
     "docs/reviews/0.52.0.0.md": "1.0",
     "docs/reviews/0.53.0.0.md": "1.0",
-    "docs/FEED-SPEC-PL.md": "3.0"
+    "docs/FEED-SPEC-PL.md": "3.2"
   },
   "threat_model_rows": 14,
   "harness_attacks": 13,
@@ -168,13 +168,13 @@
     "package_files": 23,
     "test_lines": 13859,
     "test_files": 66,
-    "tool_lines": 7951,
+    "tool_lines": 7954,
     "tool_files": 28,
-    "documentation_lines": 31517,
+    "documentation_lines": 31617,
     "documentation_files": 73,
     "runtime_dependencies": 0
   },
-  "defects_logged": 129,
+  "defects_logged": 131,
   "decisions_recorded": 49,
-  "releases": 139
+  "releases": 140
 }
