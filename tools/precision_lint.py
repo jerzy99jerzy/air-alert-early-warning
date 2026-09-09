@@ -185,6 +185,11 @@ CEILINGS: dict[str, int] = {
     "docs/DECISIONS.md": 32,
     "docs/DEPLOYMENT.md": 10,
     "docs/FEED-SPEC.md": 6,
+    # 0.53.5.0: the Polish edition. The same six figures as the English one,
+    # three of which carry exactly two decimals and are counted by FIGURE_PL;
+    # the other three carry three and are not, which is the pattern's own
+    # rule. The parity gate holds the two editions figure for figure.
+    "docs/FEED-SPEC-PL.md": 3,
     "docs/FOUNDATIONS.md": 7,
     # 19 -> 20 at 0.43.0.0: the rewritten 4.5 (F127) quotes the channel's
     # hashtag coverage, 99.34%, the figure the sprint-7 redesign stands on.

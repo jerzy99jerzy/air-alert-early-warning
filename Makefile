@@ -4,7 +4,7 @@ PKG := mavo
 
 .PHONY: verify figures private-artifacts lint-adapters lint-precision manifest-completeness manifest manifest-write coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain docs-audit manual-audit contract-check todo-index brief-check harness-mutation clean
 
-verify: private-artifacts manifest-completeness coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain lint-adapters lint-precision figures docs-audit manual-audit contract-check todo-index brief-check harness-mutation
+verify: private-artifacts manifest-completeness coverage lint lint-limitations lint-hygiene lint-mermaid lint-domain lint-adapters lint-precision figures docs-audit manual-audit contract-check todo-index brief-check feed-spec-check harness-mutation
 	@echo "verify: OK"
 
 # pytest exits 5 when nothing is collected. That exit code is NOT swallowed:
@@ -87,6 +87,10 @@ todo-index:
 # otherwise would be worse than the honest gap.
 brief-check:
 	$(PY) tools/brief_check.py
+
+# The two editions of FEED-SPEC are one document (0.53.5.0).
+feed-spec-check:
+	$(PY) tools/feed_spec_check.py
 
 # F14, paid after two slips. A harness that has never been observed failing is
 # not evidence. This copies the tree and runs pytest once per mutation, measured
