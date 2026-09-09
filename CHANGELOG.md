@@ -16,6 +16,88 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.54.0.0 - 2026-09-10
+
+**Sprint S9 is closed, on an amended criterion, with the amendment recorded.
+The instrument its last clause depended on turned out not to be one.**
+
+- **D-051: S9 closes with two of D-032's three clauses met and the third
+  withdrawn.** The window closed clean on 2026-08-20 - zero restarts against
+  the two permitted, 7,850 attempts at 33.0 s, continuity measured. The
+  latency row in `docs/CHANNEL.md` 8a is **not** written and 8a stays empty:
+  the clause was drafted while the Telegram channel was the source, and since
+  2026-08-30 it is the watchman. Filling the row to close the sprint is the
+  act the plan exists to prevent, so it is withdrawn the way S8 withdrew its
+  hand-checked sample. What that costs - every claim about how late the
+  picture is remains unmeasured - is stated in the decision, in `docs/MVP.md`
+  and in the README rather than absorbed.
+- **T84: D-038 applied to its class, twenty-three releases after it was
+  adopted.** `latency.py` reads the store and stayed in `tools/`, which the
+  wheel does not install, so T40's instrument had never been runnable where
+  its input lives. It ships as `mavo latency`, `tools/latency.py` is a
+  forwarding shim, and `lint_domain.check_no_tool_reads_the_store` now
+  enumerates the modules under `tools/` that open the store and fails on any
+  that remain - read from the syntax tree, so a comment naming `EventStore`
+  is not an instrument and the two shims are not either, which is why the
+  check carries no exemption list. Verified red against `tools/latency.py` as
+  it stood at 0.53.5.1.
+- **F154, found by the first run of the moved instrument against a store the
+  package writes.** It read `events` and `kinds`; `mavo/store.py` creates
+  `events` and `kind_events` and has never created a `kinds`. The miss sat
+  under `except sqlite3.OperationalError: continue` labelled as backwards
+  compatibility, so a whole stream was skipped in silence: **nine
+  observations measured where there were eighteen.** Eleven regressions could
+  not see it because the fixture created the table the module named rather
+  than the one the schema holds. `test_the_schema_here_is_the_stores_schema`
+  now builds a real `EventStore` and asserts the instrument's table tuple
+  against it; an absent table is returned and printed rather than swallowed.
+- **F155: the same instrument pooled two feeds that measure different
+  quantities.** The store holds the channel era and the API era. A post
+  timestamp against receipt and an alert's declared start against the snapshot
+  that first listed it are not one distribution, and API all-clear rows carry
+  `ts_source = ts_ingest` by construction, which put a spike of zeroes under
+  every percentile. Distributions are now reported per `source_id` and never
+  pooled, `--source` selects one, and constructed stamps are counted and held
+  out rather than entered as measured zeroes. Same shape as the source
+  blindness `compose()` carried until 0.53.0.0, one layer out.
+- **T37 closed, and it was met in sprint 8.** `classify_message`,
+  `AreaRole.CONTINUATION`, the end-to-end regression and MT15 have all been
+  in the tree since then; two rows of `docs/DATA-FLOW.md` went on calling both
+  losses *currently invisible* for twenty-nine releases and the backlog kept
+  the task `ready` beside them. **F156**, the fourth instance of F118: nothing
+  prompts anybody to look for good news.
+- **T47 is `moved` to `mavo-site`.** Items 1 and 3 ship here and are held by
+  the gate; item 2 is a label and a glyph on a page this repository does not
+  own. Carrying it kept a consumer task in a producer's tier 1 where nothing
+  could act on it.
+- **T39 and T40 leave the sprint board** and keep tier 1. T39 needs a probe at
+  production cadence over hours on the host; T40 needs one command, now that
+  the instrument runs where the store is.
+- **`docs/MANUAL.md` had two sections numbered 4.9** - `report` and `attempts`
+  - since 0.43.0.0. Renumbered to 4.10 and 4.11, `mavo latency` documented as
+  4.12, contents rebuilt. `precision_lint` then read the new identifiers as
+  five claims of false precision, so section numbers are excluded by context
+  the way document versions are: a number that opens a heading, or a
+  cross-reference to a heading the same document carries. A reference to a
+  heading that does not exist still counts, so the exclusion cannot be used to
+  hide a figure by putting it in brackets.
+- **DECISIONS** (2.25): D-051, and D-038 gains the paragraph recording its
+  application to the class. **MVP** (3.11): the S9 row, both diagrams, and what
+  the withdrawal costs. **CHANNEL** (1.8): 8a names `mavo latency`, says why it
+  is empty, and states the one command and the caveat that fills it.
+  **DATA-FLOW** (1.5): the two rows. **METHODOLOGY** (2.53): F154, F155, F156.
+  **MANUAL** (3.8): section 4.12 and the renumbering. **MOBILE** (1.6): the
+  audience gate names T36 and T40 rather than S8 and S9, which are now closed
+  sprints whose amendments withdrew exactly those two measurements - a gate
+  written against a sprint would read as satisfied by the sprint closing.
+  **DEPLOYMENT** (1.32), **BRIEF, BRIEF-PL** (2.12): 134 defects, 50 decisions.
+  `docs/reviews/0.54.0.0.md`, as D-021 requires on a second-component bump.
+- **Coverage 95.60 to 95.50 and 729 tests to 751.** `mavo/latency.py` joins the
+  measured package and brings 124 statements with it; the twenty-two new tests
+  are the nine on the D-038 class check and the section-number exclusion, and
+  thirteen on the instrument, including every branch that reports a row it held
+  out. The floor stays 95 and is not lowered.
+
 ## 0.53.5.1 - 2026-09-09
 
 **The Polish edition of FEED-SPEC was a translation; it is now a document.**

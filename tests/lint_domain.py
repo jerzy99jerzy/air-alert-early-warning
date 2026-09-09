@@ -7,6 +7,7 @@ structural claim going stale, so the structure is asserted.
 
 from __future__ import annotations
 
+import ast
 import sys
 from pathlib import Path
 
@@ -85,6 +86,72 @@ def check_the_pipeline_does_not_import_its_reader() -> list[str]:
     return problems
 
 
+def _opens_the_store(source: str) -> bool:
+    """True when this module reaches the event store itself.
+
+    Read from the syntax tree rather than by substring, and the difference is
+    not fastidiousness: `tools/manual_audit.py` names `EventStore` in a comment
+    about which commands construct one, and a grep-shaped check would have
+    called that an instrument and demanded it move. Two signals count, and both
+    are acts rather than mentions: a call to ``sqlite3.connect``, and an import
+    from ``mavo.store``. A forwarding shim does neither - it imports the module
+    that does - which is why the two shims in `tools/` need no exemption entry,
+    and an exemption list nobody has to maintain cannot rot into one.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        # An unparseable module is somebody else's failure and this check has
+        # nothing to say about it; `lint` fails on it one target earlier.
+        return False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("mavo.store"):
+            return True
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "connect"
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "sqlite3"
+        ):
+            return True
+    return False
+
+
+def check_no_tool_reads_the_store(root: Path | None = None) -> list[str]:
+    """D-038 against the population it governs, not against one worked example.
+
+    The decision says an instrument whose input is the **store** ships as a
+    `mavo` subcommand, and one whose input is the **tree** stays in `tools/`.
+    It was adopted after `attempts.py` was found unrunnable on the host that
+    holds a store, `attempts.py` was moved, and `latency.py` - same connection,
+    same file, same host - was left where it was for twenty-three releases. The
+    stated blocker on T40 was a discharged one the whole time; the real one was
+    this, and it was invisible because a rule with one worked example looks
+    satisfied. Nothing compared the decision against its population, so this
+    does, and T84 is the entry that asked for it.
+
+    What it cannot see: an instrument that reads the store through a subprocess,
+    or over SSH, or by a path this function does not recognise as a connection.
+    The check is narrower than the decision and saying so here is cheaper than
+    a reader assuming otherwise.
+    """
+    tree_root = root if root is not None else ROOT
+    tools = tree_root / "tools"
+    if not tools.is_dir():
+        return [f"{tools} is not a directory; this check reads the tools tree"]
+    problems = []
+    for module in sorted(tools.rglob("*.py")):
+        if _opens_the_store(module.read_text(encoding="utf-8")):
+            problems.append(
+                f"{module.relative_to(tree_root)} opens the event store from "
+                "`tools/`, which the wheel does not install, so it cannot run "
+                "on the host that holds one (D-038). Ship it as a `mavo` "
+                "subcommand and leave a forwarding shim"
+            )
+    return problems
+
+
 def main() -> int:
     """Run every domain invariant. Returns a process exit code."""
     problems = (
@@ -93,6 +160,7 @@ def main() -> int:
         + check_every_sprint_has_a_regression_file()
         + check_docs_case_convention()
         + check_the_pipeline_does_not_import_its_reader()
+        + check_no_tool_reads_the_store()
     )
     for problem in problems:
         print(f"lint-domain: {problem}", file=sys.stderr)

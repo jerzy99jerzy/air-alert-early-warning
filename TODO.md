@@ -4,13 +4,13 @@
 
 ### Where the backlog stands
 
-**36 of 82 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**39 of 82 closed, 43 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
-| `done` | 32 | Finished, with the release that closed it named in the entry |
-| `moved` | 4 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 36 | Nothing external blocks it; it needs a session |
+| `done` | 34 | Finished, with the release that closed it named in the entry |
+| `moved` | 5 | Owned by another repository; the entry here is a pointer, not a copy |
+| `ready` | 33 | Nothing external blocks it; it needs a session |
 | `decision` | 5 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -25,9 +25,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 12 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T47](#t47-two-threat-kinds-the-consumer-cannot-name), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does)
+**Tier 1, 11 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does)
 
-**Tier 2, 20 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T84](#t84-d-038-was-applied-to-one-instrument-rather-than-to-its-class), [T82](#t82-the-channels-silence-measured-as-a-distribution)
+**Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T82](#t82-the-channels-silence-measured-as-a-distribution)
 
 **Tier 3, 14 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers)
 
@@ -38,11 +38,10 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | Sprint | Open tasks |
 | --- | --- |
 | **S7** | [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record) |
-| **S9** | [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T37](#t37-the-pipeline-discards-areas-it-was-told-about), [T47](#t47-two-threat-kinds-the-consumer-cannot-name) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T84](#t84-d-038-was-applied-to-one-instrument-rather-than-to-its-class), [T82](#t82-the-channels-silence-measured-as-a-distribution) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T82](#t82-the-channels-silence-measured-as-a-distribution) |
 
 <!-- index:end -->
 
@@ -64,36 +63,46 @@ did, and it is the part a reader reaches first. Anyone editing here restates
 the version they wrote it at, so the next drift is visible rather than
 inferred.
 
-**Sprint S9, declared partial and still open.** Its window is closed and half
-its criterion is met; `tools/todo_index.py` reads the first sentence of this
-paragraph literally, which is why that sentence survives rewrites that the
-rest of the paragraph does not. The D-032 window ran to 2026-08-20 11:02:06
-UTC and closed clean: zero
-restarts against the two the amendment permitted, 7,850 attempts at a 33.0 s
-cadence, continuity measured rather than assumed. The other half - the latency
-distribution written into `docs/CHANNEL.md` 8a - is taken and still unwritten.
-S9 exits when the row exists, not when the window does.
+**Sprint S10, declared open.** `tools/todo_index.py` reads the first sentence
+of this paragraph literally and compares it against the sprint rows in
+`docs/MVP.md`, which is why that sentence survives rewrites the rest of the
+paragraph does not. Nothing of S10 has been built: it is delivery, and there is
+no delivery path.
 
-**Why that row has not been written, read at 0.50.0.0 rather than inherited.**
-The entry said it was waiting on T66. T66 has been `done` since 0.41.0.0, so
-that blocker was discharged nine releases ago and nobody re-read the sentence
-it was blocking - the F118 shape in reverse, where the good news is what goes
-unnoticed. The real obstacle is structural and was invisible while the stated
-one stood: `tools/latency.py` reads the event store, and `tools/` is not
-installed on the host that holds one, so the instrument has never been
-runnable where its input lives. That is **D-038 exactly**, the decision that
-moved `attempts.py` into the package for this reason and was applied to one
-file rather than to its class. The third obstacle expired on its own: T40
-needed a week of continuous collection and the channel supplied fifteen days
-before falling silent, so the window is now closed history rather than
-something to wait for.
+**S9 closed at 0.54.0.0, on an amended criterion and recorded as amended, the
+way S7 and S8 were.** The amendment is D-051 and it withdraws one clause rather
+than declaring it met. Two of D-032's three clauses are met and measured: the
+window ran to 2026-08-20 11:02:06 UTC and closed clean, zero restarts against
+the two the amendment permitted, 7,850 attempts at a 33.0 s cadence, continuity
+measured rather than assumed. The third - the latency distribution written into
+`docs/CHANNEL.md` 8a - **is withdrawn from this sprint and not met**, and
+section 8a stays empty rather than being filled to close a row. What that costs
+is stated in D-051 and in `docs/MVP.md` section 7 beside S8's western asterisk:
+every claim in this repository about how late the picture is remains an
+unmeasured assumption, and closing the sprint does not change that by one
+second.
 
-**And S9's criterion now points at a source that stopped publishing.** The row
-measures the channel, which since 2026-08-30 is the watchman rather than the
-source. Writing it remains worth doing, because `docs/CHANNEL.md` is a corpus
-document and its 2026-08-31 status note already says so. But whether S9 *exits*
-on a historical row is a judgement, not work, and it should be recorded as an
-amendment the way S7 and S8 were rather than settled quietly.
+**Why the row was not written, and only one of the three reasons was ever
+real.** The entry said it was waiting on T66, `done` since 0.41.0.0, so that
+blocker was discharged nine releases before anybody re-read the sentence it was
+blocking - the F118 shape in reverse, where the good news is what goes
+unnoticed. The real obstacle was structural: `tools/latency.py` read the event
+store while living in a directory the wheel does not install, so the instrument
+had never been runnable where its input lives. **That is repaired at 0.54.0.0**
+(T84, D-038 applied to its class), and running it against a store immediately
+found two defects that would have gone into the row: it read a table the schema
+does not have (F154) and it pooled two feeds measuring different quantities
+(F155). The third obstacle expired on its own: T40 needed a week of continuous
+collection and the channel supplied fifteen days before falling silent, so the
+window is closed history rather than something to wait for.
+
+**The clause was withdrawn rather than met because the row would no longer
+measure what the criterion meant by it.** Since 2026-08-30 the channel is the
+watchman and `api.ukrainealarm.com` is the source (D-040). A distribution over
+channel rows is a true statement about the channel and not about how late this
+instrument's picture is, and the equivalent figure for the API has never been
+taken. Writing the row is still worth doing and is one command now rather than
+a wait; it is T40, off the sprint board and tier 1 where it belongs.
 
 **S8 closed on 2026-08-17, on an amended criterion and recorded as amended**,
 the way S7 did. The report composes, the command runs, the contract ships and
@@ -192,8 +201,11 @@ with the point of failure recorded. Not "it looks correct".
 
 
 ## T39. Tolerated poll rate under continuous operation
-Status: `ready` [tier 1], **S9**. *Raised from tier 2 on 2026-08-11: the first
-field measurement is not what this entry expected.*
+Status: `ready` [tier 1]. *Raised from tier 2 on 2026-08-11: the first
+field measurement is not what this entry expected.* *Off S9 at 0.54.0.0: the
+next step is a probe at production cadence over hours on the host, which is
+operator time rather than engineering, and D-032 never named it as a clause
+of the sprint's criterion.*
 
 **Measured on the cloud host, 2026-08-11, 20:18 to 22:37 UTC** [measured, one
 window, n=60 polls at a ~130 s interval]:
@@ -328,19 +340,28 @@ moving.
 
 
 ## T40. How late is the channel, measured
-Status: `ready`, instrument at 0.30.0.0, distribution taken 2026-08-19, the row
-still unwritten [tier 1], **S9**
+Status: `ready`, instrument shipped as `mavo latency` at 0.54.0.0, the row
+still unwritten [tier 1]
 
-**The stated blocker is discharged and the real one was underneath it, read at
-0.50.0.0.** This entry said "waiting on T66"; T66 closed at 0.41.0.0. What
-actually blocks the row is that `tools/latency.py` reads the event store while
-living in `tools/`, which the wheel does not ship, so it cannot run on the only
-machine that holds a store. D-038 decided this exact placement question on
-2026-08-29 and was applied to `attempts.py` alone; a decision applied to one
-instance rather than to its class is the shape this repository logs about
-itself. **T84 carries the repair.** The "host and a week" clause is also spent:
-the channel ran 15 days at the corrected cadence before falling silent, so the
-window is closed history.
+**Both structural blockers are discharged at 0.54.0.0 and what remains is one
+command on the host.** This entry said "waiting on T66"; T66 closed at
+0.41.0.0, nine releases before anybody re-read the sentence it was blocking.
+Underneath it was D-038 applied to one instance rather than to its class:
+`tools/latency.py` read the event store from a directory the wheel does not
+ship, so it could not run on the only machine that holds a store. T84 moved it
+into the package. **The first run against a real store then found two defects
+that would have gone straight into the row**: the instrument read a table
+`mavo/store.py` has never created and skipped the kind stream in silence
+(F154, measured: nine observations where there were eighteen), and it pooled
+the channel era and the API era into one median (F155). Both are repaired
+here. *Off S9 at 0.54.0.0 under D-051, which withdraws this clause from the
+sprint rather than declaring it met.*
+
+**What remains, exactly.** `mavo latency --store /var/lib/mavo/events
+--interval-s 33 --source telegram` on `vm-mavo`, and the row pasted into
+`docs/CHANNEL.md` 8a with its collection dates. The store holds the channel era
+continuously from 2026-08-11, which is longer than the seven days the
+instrument insists on, so this is closed history rather than a wait.
 
 **Caveat that must reach section 8a with the number.** The distribution's
 window opens 2026-08-11 17:25 and D-027's thirty seconds is true only from
@@ -1082,7 +1103,7 @@ map, and it is recorded either way. Until this exists S7 stays open and
 
 
 ## T37. The pipeline discards areas it was told about
-Status: `ready`, **S9** [tier 2]
+Status: `done` (sprint 8, and the entry stayed open until 0.54.0.0) [tier 2]
 *Moved from S8 at 0.32.9.0, when S8 closed. It is a store and schema repair
 rather than a report one, and holding a closed sprint open for it would have
 misreported both.*
@@ -1094,11 +1115,20 @@ comparable messages, 4,064 area mentions in the design window, none of them
 recorded anywhere.
 The second is the worse one. A report whose stated product is completeness is
 dropping the half of the message that says *still dangerous there*.
-**Acceptance:** every area named by a message reaches the store with its own
-state, continuation areas included and distinguishable from the subject of the
-all-clear; the two rows in `docs/DATA-FLOW.md` move from invisible to visible;
-and a regression asserts that a message with a continuation list produces more
-than one event.
+**Acceptance met, and it was met in sprint 8.** `classify_message` returns one
+mention per named area; `AreaRole.CONTINUATION` carries the continuation case
+as its own event, distinguishable by a field a consumer can match on rather
+than by a note in `raw_fields`; the role crosses the `state.json` contract
+under D-024; `test_t37_a_continuation_list_produces_more_than_one_event`
+asserts the criterion end to end through `poll`, and MT15 kills the mutation
+that removes the behaviour.
+
+**The third item - the two rows in `docs/DATA-FLOW.md` - was outstanding for
+twenty-nine releases and is closed at 0.54.0.0.** The ledger of what this
+pipeline drops went on calling both losses *currently invisible* after both had
+been closed, and this entry stayed `ready` beside it, so two hand-maintained
+artefacts agreed with each other and both disagreed with the code. F156, and
+the fourth instance of F118: nothing prompts anybody to look for good news.
 
 
 ## T42. Operating intensity of the Jasionka hub, measured from ADS-B
@@ -1422,8 +1452,12 @@ same run: two changes, one measurement, no attribution.
 
 
 ## T47. Two threat kinds the consumer cannot name
-Status: `ready`, **two of three met, and the third is the consumer's** [tier 1], **S9**
-*Moved from S8 at 0.32.9.0, when S8 closed.*
+Status: `moved` to `mavo-site` at 0.54.0.0 [tier 1]
+*Moved from S8 at 0.32.9.0, when S8 closed, and off S9 at 0.54.0.0 when S9
+closed. Items 1 and 3 shipped here and are held by the gate; item 2 is a label
+and a glyph on a page this repository does not own, and carrying it in the
+producer's backlog kept a consumer task in a producer's tier 1 where nothing
+could act on it - the state `moved` exists for exactly this.*
 
 **Item 1 was met before this entry was read, and the entry did not know.**
 `check_every_kind_is_documented` is in `tools/contract_check.py`, is called
@@ -2531,7 +2565,7 @@ it was chosen against, and the reopen condition.
 
 
 ## T84. D-038 was applied to one instrument rather than to its class
-Status: `ready` [tier 2], found while reading S9 at 0.50.0.0, blocks T40
+Status: `done` at 0.54.0.0 [tier 2], found while reading S9 at 0.50.0.0
 
 D-038 says an instrument whose input is the event store ships as a `mavo`
 subcommand, and one whose input is the tree stays in `tools/`. It was adopted
@@ -2541,11 +2575,24 @@ by the same `sqlite3` connection to the same file, and was left where it was.
 Nothing in the gate compares the decision against the population it governs, so
 a rule with one worked example looks satisfied.
 
-**Acceptance:** `latency.py` ships in the package as `mavo latency`, documented
-in the manual and policed by the manual audit, with `tools/` keeping only
-instruments that read the tree; and a check enumerates the modules under
-`tools/` that open the store, failing on any that remain. Verified red by
-leaving one behind.
+**Acceptance met at 0.54.0.0.** `mavo latency` ships in the wheel, has its own
+section in `docs/MANUAL.md` and is policed by the manual audit; `tools/latency.py` is a
+forwarding shim like `tools/attempts.py`; and
+`lint_domain.check_no_tool_reads_the_store` enumerates the modules under
+`tools/` that open the store and fails on any that remain. Verified red by
+leaving one behind, using `tools/latency.py` as it stood at 0.53.5.1 as the
+fixture. The check reads imports and connection calls from the syntax tree, so
+`tools/manual_audit.py` naming `EventStore` in a comment is not an instrument
+and the two forwarding shims are not either - which is why it needs no
+exemption list, and an exemption list nobody maintains cannot rot into one.
+
+**What the move immediately found, and it is the argument for the decision
+rather than a footnote.** The instrument had never been run against a store the
+package writes. The first run found F154 - it read a table `mavo/store.py` has
+never created, and the miss was swallowed as backwards compatibility - and
+F155, no source dimension across the channel era and the API era. An instrument
+kept where it cannot reach its input is not merely inconvenient; it is
+untested against the thing it measures.
 
 ## T83. Unknown type strings on the primary source are folded without a counter
 Status: `done` at 0.52.0.0 [tier 2], found while paying F135 at 0.49.0.0

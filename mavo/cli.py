@@ -25,6 +25,7 @@ from mavo.backfill import (
 )
 from mavo.errors import SourceUnavailable
 from mavo.evaluate import run_policy, run_rule
+from mavo.latency import main as latency_main
 from mavo.liveness import PRODUCTION_FEEDS, EventStamps, FeedLiveness
 from mavo.liveness import liveness as measure_liveness
 from mavo.obs import from_environment as sink_from_environment
@@ -411,6 +412,22 @@ def _cmd_attempts(args: argparse.Namespace) -> int:
     if args.until:
         argv += ["--until", args.until]
     return attempts_main(argv)
+
+
+def _cmd_latency(args: argparse.Namespace) -> int:
+    """Delegate to the instrument, the same way `attempts` does (T84).
+
+    Rebuilding the argv rather than reaching into the module keeps one owner
+    for the option surface. The flags are passed through unchanged, including
+    `--allow-short`, because a dry run over an afternoon is a legitimate thing
+    to want and the instrument is the thing that marks it as not a measurement.
+    """
+    argv = ["--store", args.store, "--interval-s", str(args.interval_s)]
+    if args.allow_short:
+        argv.append("--allow-short")
+    if args.json:
+        argv.append("--json")
+    return latency_main(argv)
 
 
 
@@ -1073,6 +1090,27 @@ def build_parser() -> argparse.ArgumentParser:
     attempts.add_argument("--since", help="ISO timestamp with an offset, inclusive")
     attempts.add_argument("--until", help="ISO timestamp with an offset, exclusive")
     attempts.set_defaults(func=_cmd_attempts)
+
+    latency = subparsers.add_parser(
+        "latency",
+        help="post timestamp against receipt, as a distribution over the "
+             "store's window; an upper bound on the upstream, never a "
+             "measurement of it (T40, D-038)",
+    )
+    latency.add_argument("--store", required=True, help="path to the event store")
+    latency.add_argument(
+        "--interval-s", type=float, default=30.0,
+        help="the poll interval the collector ran at, in seconds. The measured "
+             "lag contains it, which is why the figure is a bound on the "
+             "upstream rather than a reading of it",
+    )
+    latency.add_argument(
+        "--allow-short", action="store_true",
+        help="print a summary for a window under a week, marked as not a T40 "
+             "measurement",
+    )
+    latency.add_argument("--json", action="store_true", help="machine-readable")
+    latency.set_defaults(func=_cmd_latency)
 
     report_cmd = subparsers.add_parser(
         "report", help="render the current picture from a store"

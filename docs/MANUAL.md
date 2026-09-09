@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.7
+Document:  docs/MANUAL.md, version 3.8
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -44,7 +44,9 @@ Note:      every constant, exit code and output line here was read out of the
    7. [`mavo collect-api`](#47-mavo-collect-api---built)
    8. [`mavo watch`](#48-mavo-watch---not-built-sprint-7)
    9. [`mavo report`](#49-mavo-report---built)
-   10. [`mavo reconcile`](#410-mavo-reconcile---built)
+   10. [`mavo attempts`](#410-mavo-attempts---built)
+   11. [`mavo reconcile`](#411-mavo-reconcile---built)
+   12. [`mavo latency`](#412-mavo-latency---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -326,7 +328,7 @@ the previous paragraph tells you to watch.
 **With `--store`, the command also logs itself.** Every invocation writes one
 row to `feed_attempts` - read or refusal, with latency and the page's id
 bounds (D-036) - so a dead collector is distinguishable from a quiet channel
-after the fact, and `mavo attempts` (4.9) can audit the record. On the first
+after the fact, and `mavo attempts` (4.10) can audit the record. On the first
 run against a store from an older release it prints one `[STORE-MIGRATED]`
 line per column it appends, once, and never again; the same line on every
 poll means the migration is not sticking and is worth stopping for.
@@ -542,9 +544,11 @@ exists to publish.
 **`--valid-for` is an assumption, not a measurement.** The default of 600
 seconds is five times the two-minute polling requirement derived from the page
 window arithmetic (T39). Neither the poll interval nor the rate the source
-tolerates has been measured yet, which is S9's work.
+tolerates has been measured yet. That was S9's work until 0.54.0.0, when S9
+closed without it (D-051); it is T39, unassigned, and the assumption stands
+until somebody runs the probe.
 
-### 4.9 `mavo attempts` - BUILT
+### 4.10 `mavo attempts` - BUILT
 
 Attempt completeness for one feed: how many polls were made, how many were
 refused, which stretches of the window contain neither, and how many messages
@@ -579,7 +583,7 @@ The reader streams one row at a time (the latency vector aside, kept whole for
 the median), so the command's memory does not grow with the age of a store
 that currently has no retention.
 
-### 4.10 `mavo reconcile` - BUILT
+### 4.11 `mavo reconcile` - BUILT
 
 Closes channel-era episodes a fresh API snapshot licenses closing, and names
 the ones it refuses to touch. Exists because on 2026-08-30 twelve areas were
@@ -624,6 +628,51 @@ later reader must be able to tell them apart.
 Exit codes match the collectors, plus one of this command's own: 3 when the
 snapshot licenses nothing, 4 when closing without `--unmask` would take a live
 area dark, 7 when the store fails, 0 otherwise.
+
+### 4.12 `mavo latency` - BUILT
+
+The post's own timestamp against the moment this collector parsed it, as a
+distribution over the window the store covers: count, span in days, median,
+p90, p99, maximum, and negative lags reported separately. T40's instrument,
+and it ships here rather than in `tools/` for the reason 4.10 gives - its
+input is the store, the store lives on the host, and `tools/` is not
+installed there (D-038, T84).
+
+```
+mavo latency --store /var/lib/mavo/events --interval-s 33
+```
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--store` | required | Path to the event store. Both `events` and `kinds` are read; they share a transport, so pooling them is a statement about that transport |
+| `--interval-s` | 30.0 | The interval the collector ran at. Printed beside the figures rather than subtracted from them, because the measured lag contains it |
+| `--allow-short` | off | Print a window under seven days anyway, marked as not a T40 measurement |
+| `--json` | off | Machine-readable, same fields |
+
+**What the number is not, and the command says so in its own output.** The lag
+is the sum of the source's publishing delay, the public view's, and our own
+poll interval, and only the third is known exactly. What is reported is an
+upper bound on everything upstream of this collector, labelled `[inference]`,
+never a reading of the channel's own latency. A window shorter than a week is
+refused rather than printed small: a distribution over one afternoon is an
+anecdote with percentiles on it.
+
+**Negative lags are printed, not clamped.** A post received before its own
+timestamp means the two clocks disagree, which is a finding about the
+measurement and not an outlier to be tidied away.
+
+On the host the store belongs to the service user, so the invocation is:
+
+    sudo -u mavo /opt/mavo/venv/bin/mavo latency --store /var/lib/mavo/events --interval-s 33
+
+**One caveat belongs with any figure this produces over the channel era, and
+it is not the command's to print.** D-027's thirty seconds is true only from
+2026-08-13 08:59:43, the drop-in's own mtime; before that the timer fired
+roughly every 141 s. A window opening earlier is a mixture of two
+configurations, and the direction is safe - a slower poll only inflates our
+own share of the wait, so an upper bound stays an upper bound - but a row
+quoting the median without saying this is quoting a figure its label does not
+fit.
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)
 

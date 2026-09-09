@@ -75,6 +75,31 @@ _INTERPRETERS = r"3\.1[1-4]"
 _VERSION_CONTEXT = re.compile(
     r"(?:[Vv]ersion|[Rr]evision|wersja)[:\s]\s*v?\d+\.\d+(?:\.\d+)*"
 )
+#: Section numbers, excluded by *context* for the same reason versions are, and
+#: found the same way: by a ceiling moving without a claim behind it. Repairing
+#: the duplicate `4.9` in `docs/MANUAL.md` at 0.54.0.0 produced sections 4.10 to
+#: 4.12, and this counter read five identifiers as five new claims of false
+#: precision. A section number is a name, `4.10` is not more precise than
+#: `4.9`, and no shape rule separates the two - so the discriminator is again
+#: the context: the number opens a heading, or it is a cross-reference in
+#: brackets or after the word *section* to a heading this same document
+#: carries. A reference to a heading that does not exist keeps counting, which
+#: means this exclusion cannot be used to hide a figure by wrapping it in
+#: brackets.
+_HEADING_NUMBER = re.compile(r"^(#{2,6})\s+(\d+\.\d+)(?=\s)", re.M)
+
+
+def _blank_section_numbers(text: str) -> str:
+    """Replace this document's own section numbers with a word."""
+    numbers = {match.group(2) for match in _HEADING_NUMBER.finditer(text)}
+    text = _HEADING_NUMBER.sub(lambda m: f"{m.group(1)} section", text)
+    for number in sorted(numbers):
+        escaped = re.escape(number)
+        text = re.sub(rf"\({escaped}\)", "(section)", text)
+        text = re.sub(rf"(?<=[Ss]ection )({escaped})(?!\d)", "reference", text)
+    return text
+
+
 FIGURE = re.compile(
     rf"(?<![\w.])(?!{_INTERPRETERS}(?!\d))\d+\.\d{{2,}}(?!\.\d)(?!\w)"
 )
@@ -240,6 +265,7 @@ def count(path: Path) -> int:
     # Blanked rather than skipped: a line may carry a document version and a
     # real figure, and dropping the whole line would hide the second.
     text = _VERSION_CONTEXT.sub("version", text)
+    text = _blank_section_numbers(text)
     found = len(FIGURE.findall(text))
     if path.name.endswith("-PL.md"):
         found += len(FIGURE_PL.findall(text))

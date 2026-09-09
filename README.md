@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 729](https://img.shields.io/badge/tests-729-brightgreen)](tests/)
-[![coverage 95.60%](https://img.shields.io/badge/coverage-95.60%25-brightgreen)](Makefile)
+[![tests 751](https://img.shields.io/badge/tests-751-brightgreen)](tests/)
+[![coverage 95.50%](https://img.shields.io/badge/coverage-95.50%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 131](https://img.shields.io/badge/defects%20logged-131-informational)](docs/METHODOLOGY.md)
+[![defects logged 134](https://img.shields.io/badge/defects%20logged-134-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -33,7 +33,7 @@ import namespace is `mavo` because it must be unique rather than descriptive. Th
 codename lives in documentation and conversation. Stated here rather than left
 implicit, because that is where the inconsistency otherwise lives.
 
-Status: pre-alpha, **three sprints from beta** (S9, S10, S11) on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate.
+Status: pre-alpha, **two sprints from beta** (S10, S11) on the plan in [`docs/MVP.md`](docs/MVP.md), which carries no dates on purpose: this is a weekend project and a schedule built on assumed availability is an unmeasured number of exactly the kind this repository removes from its own gate.
 
 **Deployed and publicly reachable since 2026-08-12, at [mavo.org.pl/en](https://mavo.org.pl/en)** (Polish: [mavo.org.pl/pl](https://mavo.org.pl/pl)). The address is printed here because a README that says "publicly reachable" without saying where is asking to be trusted on the one claim a reader could check in a second.
 
@@ -43,7 +43,7 @@ That is the cheaper half of beta: the instrument is live. The other half has bee
 
 Running is not the same as measured, and this repository's defect log is largely a record of what happens when the two are read as one thing.
 
-**Fourteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `sprint_test_files` in `STATUS.json` lists ten of them, S0 through S9; the four that are missing are missing deliberately, because adding them would read as an assertion that S10 through S13 met their exit criteria, which is a larger claim than a test file can carry. The field was renamed to what it counts after F93, and the gap it now leaves is visible rather than averaged away. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S7.** S8 is half met and declared half met: the distance column is verified three ways, the hand-checked sample is twenty eastern messages from one afternoon. S9 is open on one remaining clause: its seventy-two-hour half closed on 2026-08-20 with zero restarts and every cycle accounted for, its latency distribution is taken, and `docs/CHANNEL.md` section 8a is deliberately still empty of it, because one term in the tail is unattributed and a row that assigned our own blindness to the source would be worse than no row. "Unattended" turned out to need a definition of its own - the store has three stretches of an hour or more with nothing recorded in it, and only one is provably an outage rather than a quiet channel. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
+**Fourteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `sprint_test_files` in `STATUS.json` lists ten of them, S0 through S9; the four that are missing are missing deliberately, because adding them would read as an assertion that S10 through S13 met their exit criteria, which is a larger claim than a test file can carry. The field was renamed to what it counts after F93, and the gap it now leaves is visible rather than averaged away. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S9, and all three of S7, S8 and S9 closed on amended criteria that are recorded as amended.** S8's distance column is verified three ways and its hand-checked sample is twenty eastern messages from one afternoon, withdrawn to S12 rather than counted. S9 closed at 0.54.0.0 under D-051 with two of three clauses met and measured - the seventy-two-hour window closed on 2026-08-20 with zero restarts and every cycle accounted for - and **the third withdrawn rather than met**: `docs/CHANNEL.md` section 8a is still empty of a latency row, so every claim here that touches how late the picture is remains an unmeasured assumption. "Unattended" turned out to need a definition of its own - the store has three stretches of an hour or more with nothing recorded in it, and only one is provably an outage rather than a quiet channel. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
 
 Area resolution works against real channel content and the number that used to
 sit here was wrong. **20 of 20 real messages resolve their area to a unique code
@@ -797,10 +797,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 23 | 9,665 |
-| Tests | 66 | 13,859 |
-| Tools | 28 | 7,954 |
-| Documentation | 73 | 31,617 |
+| Package `mavo/` | 24 | 10,062 |
+| Tests | 67 | 14,309 |
+| Tools | 28 | 7,788 |
+| Documentation | 74 | 32,123 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -811,13 +811,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 729, of which 13 are scripted attacks |
-| Coverage | 95.60% against a floor of 95, a ratchet that is never lowered |
+| Tests | 751, of which 13 are scripted attacks |
+| Coverage | 95.50% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 14, each with a control or a named acceptance |
-| Defects logged with their class | 131, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 49, counted from the log itself |
-| Releases | 140 in the changelog; tags are fewer and some are cumulative (A11) |
+| Defects logged with their class | 134, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 50, counted from the log itself |
+| Releases | 141 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation

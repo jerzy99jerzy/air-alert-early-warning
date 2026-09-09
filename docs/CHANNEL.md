@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.7 / 2026-09-09
+Version: 1.8 / 2026-09-09
 What the source emits, measured on 48,540 real messages, and what that changes.
 
 **Status, 2026-08-31.** The channel stopped publishing on 2026-08-29 at 04:55
@@ -314,10 +314,17 @@ T40 asks for the median, p90 and maximum of post timestamp to receipt, over at
 least a week, with the collection dates and the poll interval used. **The
 instrument shipped at 0.30.0.0 and the table below is empty on purpose.**
 
-`tools/latency.py --store <store>` reads `ts_source` and `ts_ingest` from both
+`mavo latency --store <store>` reads `ts_source` and `ts_ingest` from both
 the `events` and the `kinds` tables and reports the distribution. Three
 properties are worth stating here rather than only in its docstring, because
 they decide what the eventual number means.
+
+**It is `mavo latency` from 0.54.0.0 and was `tools/latency.py` before, and
+that is the whole reason this table is still empty.** The instrument shipped
+at 0.30.0.0 in a directory the wheel does not install, so it could not be run
+on the host that holds a store; the blocker recorded against it was a
+different one, discharged nine releases earlier, and nobody re-read the
+sentence it was blocking. D-038 and T84 carry the repair.
 
 **It refuses a window shorter than seven days.** A distribution over one
 afternoon is an anecdote with percentiles on it, and this repository already
@@ -341,6 +348,25 @@ measurement rather than an outlier to be tidied away.
 Until that row is filled, every latency claim in this repository, including the
 argument that thirty seconds is a defensible poll interval, rests on an
 unmeasured assumption about the term it is being compared against.
+
+**What fills it, and it is one command rather than a wait.** The store holds
+the channel era: collection ran continuously from 2026-08-11 to the channel's
+silence, which is a window longer than the seven days the instrument insists
+on, so this row is closed history and not something to wait for. The reading is
+`mavo latency --store /var/lib/mavo/events --interval-s 33` on `vm-mavo`, and
+whoever pastes the result here pastes the caveat with it: the window opens
+before D-027's thirty seconds was in force, so the first day and a half was
+collected by a timer firing roughly every 141 s and the median is a mixture of
+two configurations. The direction is safe and the label is not, which is why
+the caveat travels with the number rather than beside it.
+
+**And the row will measure the watchman, not the source.** Since 2026-08-30 the
+channel is the fallback and `api.ukrainealarm.com` is the primary feed (D-040).
+A distribution taken over channel rows is a true statement about the channel
+and no longer a statement about how late this instrument's picture is. The
+equivalent measurement for the API is a different quantity - a snapshot poll
+has no post timestamp to subtract - and nothing in this repository has taken it
+`[nieustalone]`.
 
 ## 9. What is still unknown
 

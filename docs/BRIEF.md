@@ -6,7 +6,7 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.11
+Document:  docs/BRIEF.md, version 2.12
 Measured:  2026-08-31, against STATUS.json at 0.50.0.0, and this time the
            figures were recomputed rather than carried over. Version 2.4 bore
            the same line while four figures inside it came from 0.32.9.0; what
@@ -199,10 +199,10 @@ With a private project this weighs more than the technology, so specifics
 instead of assurances. Every one of them can be checked without asking the
 author for an opinion.
 
-**The defect log holds 131 entries.** Each states what broke, why nobody
+**The defect log holds 134 entries.** Each states what broke, why nobody
 noticed, and what class of error it was. Entries against the project's own
 interest are in there too, including the 0 of 20 above, and one where the
-documentation claimed something was checked and it was not. Separately, **49
+documentation claimed something was checked and it was not. Separately, **50
 design decisions** are recorded, each with the condition that would reopen it.
 
 **Part of the data was sealed before anyone read any of it.** 20.01% of the
@@ -217,9 +217,9 @@ reported, inferred, assumed. The 57% above is somebody else's figure and is
 labelled as such, including a note that the source may have meant a different
 area than this project does.
 
-**The gate is single and mechanical.** One command runs 729 tests, of which 13
+**The gate is single and mechanical.** One command runs 751 tests, of which 13
 are scripted attacks against the project's own controls; code coverage is
-95.60% against a floor of 95% that is never lowered. The attacks are themselves
+95.50% against a floor of 95% that is never lowered. The attacks are themselves
 checked: 12 of 13 were verified by deliberately breaking the control they guard
 and requiring the attack to catch it. The one without such verification is
 printed as unverified on every run rather than passed over.

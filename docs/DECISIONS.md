@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.24
+Document:  docs/DECISIONS.md, version 2.25
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1481,6 +1481,21 @@ CLI gains a subcommand; the wheel stays dependency-free. `tools/attempts.py`
 remains as a one-screen forwarding shim so a written-down command line keeps
 working, and prints where the instrument went.
 
+**Applied to its class at 0.54.0.0, twenty-three releases late, and the delay
+is the finding.** `tools/latency.py` opened the same store by the same
+`sqlite3` connection on the same host and was left in `tools/` when
+`attempts.py` moved, because the decision was carried out on the instance that
+prompted it rather than on the population it names. It ships as `mavo latency`
+from this release, with the same forwarding shim. The cost was not
+hypothetical: T40's row went unwritten for nine releases behind a *stated*
+blocker that had been discharged, while the real one was this and nobody was
+looking at it. `tests/lint_domain.py` now enumerates the modules under
+`tools/` that open the store and fails on any that remain, so the next
+instance is caught by the gate rather than by a reading of the backlog. That
+check reads imports and connection calls from the syntax tree, so it sees an
+instrument and not a mention; what it cannot see is a store reached through a
+subprocess or over SSH, and the narrower scope is stated in the check itself.
+
 **Reopen if:** an instrument turns up that reads both the store and the tree,
 which this discriminator cannot file; or the host gains a repository checkout
 for some other reason, which would make `tools/` reachable and the move
@@ -2063,3 +2078,53 @@ the release that first shows a level.
 
 **Reopening condition.** The API renaming or restructuring `activeAlertLevels`,
 which the unknown-key canary is there to print on the day it happens.
+
+## D-051. S9 closes on an amended criterion, and the amendment withdraws the latency row rather than declaring it met
+Date: 2026-09-10. Status: adopted
+
+**Decision.** Sprint S9 is closed. Two of D-032's three clauses are met and
+measured; the third - the first end-to-end latency measurement as a
+distribution, written into `docs/CHANNEL.md` 8a - is **withdrawn from the
+sprint and not met**. Section 8a stays empty. The task that carries the row is
+T40, which leaves the sprint board and keeps tier 1.
+
+**Why this is an amendment and not a completion.** S7 closed on an amended
+criterion and said so; S8 closed on an amended criterion, withdrew its
+hand-checked accuracy sample to S12, and said so. This is the third of the same
+shape and it is recorded the same way, because the alternative was worse in
+both directions: leaving S9 open indefinitely on a clause whose referent has
+changed, or filling the row to close the sprint. Filling it is the act this
+plan exists to prevent - a criterion satisfied by producing an artefact rather
+than by measuring the thing the artefact was for.
+
+**What changed under the clause.** D-032 was written on 2026-08-17, while the
+Telegram channel was the source. Since 2026-08-30 the channel is the watchman
+and `api.ukrainealarm.com` is the source (D-040). A distribution over channel
+rows remains a true statement about the channel; it is no longer a statement
+about how late this instrument's picture is. The equivalent quantity on the API
+path is not the same measurement - an alert's declared start against the
+snapshot that first listed it, with all-clear rows stamped at the observation
+because the source never says when an alert ended - and nobody has taken it.
+
+**What the withdrawal costs, stated rather than absorbed.** Every argument in
+this repository that touches lateness still rests on an unmeasured term:
+whether thirty seconds is a defensible poll interval, how much of the wait is
+ours, whether the warning budget has room. Closing the sprint does not measure
+it and this entry is not permission to stop asking.
+
+**The instrument was not ready to be believed until this release, which is the
+strongest argument for withdrawing rather than hurrying.** `latency.py` lived
+where it could not reach a store (D-038, T84). Moved into the package at
+0.54.0.0 and run against a store the package writes, it was found to be reading
+a table `mavo/store.py` has never created - skipping an entire stream in
+silence, nine observations where there were eighteen (F154) - and pooling two
+feeds that measure different quantities into one median (F155). A row taken
+before this release would have been wrong twice over and would have closed a
+sprint.
+
+**Reopen if:** the channel resumes publishing as a source rather than a
+watchman, which would make the withdrawn clause measurable in the sense it was
+written; or a latency measurement is taken on the API path, at which point the
+question is whether S9's criterion or S10's is the right home for it. Neither
+reopens the sprint's closure; both reopen what the closure was allowed to
+claim.

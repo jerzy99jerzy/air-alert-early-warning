@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 3.10 / 2026-08-31
+Document:  docs/MVP.md, version 3.11 / 2026-09-10
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -186,7 +186,7 @@ than absorbed into the next one.
 | --- | --- | --- | --- |
 | **S7** | closed 9 Aug | Area resolution: the tag parse, the 127-row map, the alias table (T33) and the untagged remainder (T34). Smaller than planned, because the channel tags 99.34% of messages with the area and unit type (`docs/CHANNEL.md`) | Met on an amended criterion, recorded as amended. Every tag resolves or is explicitly unresolved, and tag and prose agree on 38,520 of 38,521 comparable messages. The hand sample is retargeted at the population that check cannot see (T36) |
 | **S8** | closed 17 Aug | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | **Met on an amended criterion, recorded as amended, the way S7 was.** Shipped and held by regressions: the composition, `mavo report`, the `state.json` contract, the publishing loop. The distance column is verified three ways, worst divergence 0.04 km between simplifications and 1.1 km against an independent geometry and method (`docs/METHODOLOGY.md`). **The hand-checked accuracy sample is withdrawn from this sprint** and moves to S12: it cannot be drawn against the population this product exists for until that population appears in the data, and no engineering week brings that forward. See the note below the table |
-| **S9** | **N/A** | Real time. The run log attached to the publishing loop (T23, T24), interval jitter (T27), the host decision (T25, D-031). `mavo watch` is **not** shipping: `mavo report --watch` was already the loop | **Amended 2026-08-17, mid-window, and the amendment is D-032.** 72 hours of uninterrupted **collection**, every cycle accounted for and every pause named with its cause; **at most two planned restarts of the report loop**, each reported as its own segment; the first end-to-end latency measurement as a distribution rather than a best case. The original clause said only "72 hours unattended", which was declared before any figure in this plan existed |
+| **S9** | closed 10 Sep | Real time. The run log attached to the publishing loop (T23, T24), interval jitter (T27), the host decision (T25, D-031). `mavo watch` is **not** shipping: `mavo report --watch` was already the loop | **Amended twice, and met on the second amendment.** D-032, 2026-08-17, mid-window: 72 hours of uninterrupted **collection**, every cycle accounted for and every pause named with its cause; **at most two planned restarts of the report loop**; the first end-to-end latency measurement as a distribution rather than a best case. The original clause said only "72 hours unattended", declared before any figure in this plan existed. **D-051, 2026-09-10, closing: the first two clauses are met and measured** - the window closed clean on 2026-08-20 with zero restarts, 7,850 attempts at 33.0 s, continuity measured rather than assumed - **and the third is withdrawn rather than met.** `docs/CHANNEL.md` 8a stays empty; the row it asks for would now measure the watchman rather than the source, and filling it to close a sprint is the act this plan exists to prevent. What the withdrawal costs is stated in D-051 and in the note below the table |
 | **S10** | **N/A** | Delivery. Self-hosted ntfy, the three message classes, blindness reporting, per-recipient topics (M1) | A synthetic report reaches a phone through Do-Not-Disturb within a measured time; killing the feed produces a blindness message within one interval; the delivery ledger and the phone agree over a week |
 | **S11** | **N/A** | Hardening to beta. Threat-model rows for the delivery path with tests, the clean-clone probe (T7), the identifier lint (T22), the disengagement instrument (T29) | `make verify` green from a clean clone on a machine with nothing installed, every new threat row carrying a test, and T6 recorded |
 | **S12** | **cannot be scheduled** | Nothing. **This sprint ships no code.** It is the verification that the instrument works on the case it was built for, performed on real data when that data exists | **The project is not finished until this is met, and this is the only sprint whose window depends on an event outside the project.** Four checks, all against a real alert episode over western Ukraine: (1) a hand-labelled sample drawn from western rows with a stated error rate and its Wilson bound (T36); (2) the whole chain observed once end to end during that episode, source to rendered page, with the latency measured rather than modelled; (3) the distance column checked against the areas that actually declared, not only against geometry; (4) the staleness machine observed crossing on a real host during real load (T54) |
@@ -234,7 +234,7 @@ is a diagram that goes stale, and this one carries five words per node.
 flowchart LR
     S7["S7 area resolution<br/>closed 9 Aug, amended"]
     S8["S8 the report<br/>closed 17 Aug, amended"]
-    S9["S9 real time<br/>window closed 20 Aug, 8a row outstanding"]
+    S9["S9 real time<br/>closed 10 Sep, amended twice"]
     S10["S10 delivery<br/>not started"]
     S11["S11 hardening<br/>not started"]
     BETA{{"BETA<br/>built and delivered"}}
@@ -249,20 +249,20 @@ flowchart LR
     classDef blocked fill:#6f2b2b,stroke:#3b1616,color:#ffffff
     classDef gate fill:#22303c,stroke:#0f1720,color:#cdd6de
 
-    class S7,S8 met
-    class S9 running
-    class S10,S11 todo
+    class S7,S8,S9 met
+    class S10 running
+    class S11 todo
     class S12 blocked
     class BETA,DONE gate
 ```
 
 ```mermaid
 flowchart LR
-    subgraph P["five sprints to beta: 2 of 5 met"]
+    subgraph P["five sprints to beta: 3 of 5 met"]
         direction LR
         A["S7 met"]
         B["S8 met"]
-        C["S9 open"]
+        C["S9 met"]
         D["S10"]
         E["S11"]
     end
@@ -277,45 +277,62 @@ flowchart LR
     classDef todo fill:#2b3138,stroke:#161a1f,color:#cdd6de
     classDef blocked fill:#6f2b2b,stroke:#3b1616,color:#ffffff
 
-    class A,B met
-    class C running
-    class D,E todo
+    class A,B,C met
+    class D running
+    class E todo
     class F blocked
 ```
 
-**Read the second bar as two of five, not as 40% of the work.** Sprints are
+**Read the second bar as three of five, not as 60% of the work.** Sprints are
 ordered by dependency, not sized by effort, and S10 carries a delivery path
-that does not exist yet. A percentage here would be a number nobody measured,
+that does not exist yet. **All three green blocks are amended criteria**, which
+is a weaker claim than three met sprints and is the claim this plan makes. A percentage here would be a number nobody measured,
 which is the kind this document removes rather than adds.
 
-**S9's block is amber because the window closed and the row did not.** The
-D-032 window opened 2026-08-17 11:02:06 UTC and closed 2026-08-20 11:02:06 UTC,
-clean: zero restarts against the two the amendment permitted, 7,850 attempts at
-a 33.0 s cadence, continuity measured rather than assumed. That is half the
-criterion. The other half is the latency distribution written into
-`docs/CHANNEL.md` 8a, which is taken and still unwritten, and **S9 exits when
-the row exists, not when the window does**.
+**S9's block is green at 0.54.0.0 and the criterion it met is not the one it
+started with.** The D-032 window opened 2026-08-17 11:02:06 UTC and closed
+2026-08-20 11:02:06 UTC, clean: zero restarts against the two the amendment
+permitted, 7,850 attempts at a 33.0 s cadence, continuity measured rather than
+assumed. Two clauses of three, met and measured. **The third - the latency
+distribution written into `docs/CHANNEL.md` 8a - is withdrawn by D-051 rather
+than met**, and section 8a is still empty of a row on purpose.
 
-Until this revision the paragraph read *one hour into seventy-two* and *nothing about it
-can be reported until it does*, eleven days after the window closed and while
-`TODO.md` reported exactly what this document said could not be reported. The
-header carried the current date throughout. Same mechanism as F140, and it is
-recorded here rather than quietly overwritten.
+**What the withdrawal costs, stated the way S8's western asterisk is.** Every
+argument in this repository that touches lateness - that thirty seconds is a
+defensible poll interval, that our own share of the wait is small, that the
+warning budget has room in it - still rests on an unmeasured term. Closing the
+sprint does not measure it. A reader who wants to know how late the picture is
+should be told there is no answer, and this paragraph is that telling.
 
-**Why the row is unwritten**, and only one of the three reasons is real. The
-stated blocker was T66, `done` since 0.41.0.0, so it was discharged nine
-releases before anyone re-read the sentence it was blocking. The real one is
-structural: `tools/latency.py` reads the event store and `tools/` is not
-installed on the host that holds one, so the instrument has never been runnable
-where its input lives. That is D-038 applied to one file rather than to its
-class, filed as T84. The third expired on its own when the channel supplied
-fifteen days of continuous collection before falling silent.
+**Why the row was not written, and only one of the three reasons was real.**
+The stated blocker was T66, `done` since 0.41.0.0, discharged nine releases
+before anybody re-read the sentence it was blocking. The real one was
+structural: `tools/latency.py` read the event store from `tools/`, which the
+wheel does not install, so the instrument had never been runnable where its
+input lives - D-038 applied to one file rather than to its class, filed as T84
+and repaired at 0.54.0.0. The third expired on its own when the channel
+supplied fifteen days of continuous collection before falling silent.
 
-**And the criterion now points at a source that stopped publishing.** The row
-measures the channel, which since 2026-08-30 is the watchman rather than the
-source. Whether S9 exits on a historical row is a judgement rather than work,
-and it is an open amendment to be recorded the way S7's and S8's were, not
-settled quietly.
+**The repair immediately justified itself, which is the part worth keeping.**
+The first run of the moved instrument against a store the package writes found
+that it read a table `mavo/store.py` has never created and skipped a whole
+stream in silence (F154), and that it pooled the channel era and the API era
+into one median (F155). A row written before 0.54.0.0 would have carried both.
+That is the argument for withdrawing rather than rushing it: the criterion
+asked for a measurement, and the instrument was not yet one.
+
+**And the criterion had stopped pointing at the source.** Since 2026-08-30 the
+channel is the watchman and `api.ukrainealarm.com` is the source (D-040). A
+distribution over channel rows is a true statement about the channel and no
+longer a statement about how late this instrument's picture is; the equivalent
+figure for the API is a different quantity and has never been taken. T40
+carries the row, off the sprint board, tier 1, and one command away.
+
+Until 0.50.0.0 the paragraph this replaces read *one hour into seventy-two* and
+*nothing about it can be reported until it does*, eleven days after the window
+closed and while `TODO.md` reported exactly what this document said could not
+be reported. The header carried the current date throughout. Same mechanism as
+F140, and it is recorded here rather than quietly overwritten.
 
 **The one date that stays, and it is not an estimate of effort.** T6, the legal
 position, is due **at the beginning of September**. It is a decision blocker:

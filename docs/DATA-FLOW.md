@@ -6,7 +6,7 @@ the companion document and answers the other question, which components exist
 and what may talk to what.
 
 ```
-Document:  docs/DATA-FLOW.md, version 1.4
+Document:  docs/DATA-FLOW.md, version 1.5
 Audience:  a contributor about to change a transformation, a schema field, or
            anything that decides what is kept and what is dropped
 Companion: ARCHITECTURE (components and boundaries), MECHANISMS (why each
@@ -431,8 +431,8 @@ project exists to attack.**
 | Transport | Content past 4 MB | `SourceUnavailable` | A truncated page would parse as a short one |
 | Page window | Messages beyond 20 between polls | `skipped=N`, or `unknown` | A skip would read as a quiet channel (MT12) |
 | Message regex | A page whose structure changed | `messages=0` | A restructured page would read as no news |
-| Classification | Every area but the first, in a message naming several | **Nothing. This loss is currently invisible** | 13.3% of comparable messages name two to eight areas, and only the first reaches an event (T37) |
-| Classification | The continuation list of an all-clear: areas where the alert is still running | **Nothing. This loss is currently invisible** | 5.2% of comparable messages carry one, naming 4,064 areas in the design window. The message says *still dangerous there* and nothing records it. For a report whose product is completeness this is the sharpest loss in this table (T37) |
+| Classification | Nothing, since sprint 8 | one event per area named, `classify_message` (T37) | 13.3% of comparable messages name two to eight areas, and until T37 only the first reached an event |
+| Classification | Nothing, since sprint 8 | `AreaRole.CONTINUATION` on its own event, carried through the store to `state.json` (T37, D-024, MT15) | 5.2% of comparable messages carry a continuation list, naming 4,064 areas in the design window. Until T37 the message said *still dangerous there* and nothing recorded it, which was the sharpest loss in this table |
 | Classifier | Any wording the table lacks | `unparsed` count, kept as text | A stale table would read as a quiet channel (F23) |
 | State layer | The difference between silence and contradiction | `UNKNOWN` against `PARTIAL_CLEAR` | An ambiguous all-clear would read as an all-clear (F26) |
 | Store | Nothing | | |

@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.52
+Document:  docs/METHODOLOGY.md, version 2.53
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4749,6 +4749,112 @@ release, and cannot be repaired.** No wire artefact exists from before
 2026-09-08, so there is nothing to recompute the affected starts from. The
 figures for those days are what the store holds, and this paragraph is the
 record that they are late rather than wrong by an unknown amount.
+
+### F156, 0.54.0.0. Two rows of the loss table said a loss was invisible for twenty-nine releases after the loss was closed
+
+`docs/DATA-FLOW.md` section 11 is this project's own ledger of what each stage
+can drop and whether the drop is visible. Two of its rows read **Nothing. This
+loss is currently invisible** against the classifier: every area but the first
+in a message naming several, and the continuation list of an all-clear naming
+areas where the alert is still running.
+
+**Both were closed in sprint 8 and both rows stood.** `classify_message`
+returns one mention per named area, `AreaRole.CONTINUATION` carries the second
+case as its own event, `test_t37_a_continuation_list_produces_more_than_one_event`
+asserts the acceptance criterion end to end through `poll`, and MT15 kills the
+mutation that removes it. The store, the report layer and the `state.json`
+contract have carried the role since 0.25.0.0, where the changelog describes
+the loss as one *this repository made once already before T37* - past tense, in
+a release that shipped while the ledger still called it current.
+
+**Why it survived.** F118's mechanism exactly, and this is its fourth instance
+after T62, T72 and T47's first item: nothing prompts anybody to look for good
+news. A defect gets found because something fails; a defect that has been fixed
+produces no failure, so the sentence describing it is never re-read. The
+backlog kept T37 `ready` for the same reason, which meant two artefacts agreed
+with each other and both disagreed with the code - the shape this repository
+names every time it finds two hand-maintained numbers matching.
+
+**What it cost.** The ledger is the document a reviewer reads to ask *what does
+this pipeline drop*, and for twenty-nine releases it overstated the answer in
+the direction of alarm. That is the safer direction and it is still wrong: a
+project whose product is honest reporting of what it does not know cannot have
+a stale entry in the register of what it does not know.
+
+**Repair.** Both rows now name the mechanism that closed them and keep the
+measured figures as history, T37 is `done` at this release, and the row that
+records a loss as invisible is now the exception in that table rather than a
+pair of them.
+
+**Reopen condition:** any row of section 11 whose *Visible as* column names a
+mechanism the tree does not contain, or any entry in `TODO.md` whose acceptance
+is asserted by a test that passes.
+
+### F155, 0.54.0.0. The latency instrument pooled two feeds that measure different quantities into one median
+
+`mavo latency` reports the interval between a row's source timestamp and the
+moment this collector wrote it. Written when one feed existed, it read every
+row in the store into a single distribution.
+
+**Two feeds exist now.** The channel's `ts_source` is a post's own timestamp;
+the API's is the alert's declared start, and its all-clear rows carry
+`ts_source = ts_ingest` by construction, because the API never says when an
+alert ended and dating the end from the start would report an all-clear as
+having happened hours before anything observed it. One median over that
+mixture names none of the three populations, and the constructed stamps put a
+spike at zero that drags every percentile down.
+
+**The class is the one 0.53.0.0 closed one layer up.** `compose()` kept
+freshness in `(area_id, kind)` with no source dimension and therefore could not
+see one feed dying while another delivered. This is the same blindness in the
+instrument built to measure how late the feeds are, and it was reachable
+because the instrument had never been run where a store with two eras exists -
+which is F154's territory and D-038's.
+
+**Repair.** Distributions are reported per `source_id` and never pooled;
+`--source` selects one; rows whose source timestamp is the observation itself
+are counted as `constructed_stamps` and held out of the distribution rather
+than entered as measured zeroes, which is the unknown-never-zero invariant
+applied inside the instrument.
+
+**Reopen condition:** a third feed whose source timestamp means a third thing,
+or a request for a pooled figure across sources, which this instrument should
+refuse rather than compute.
+
+### F154, 0.54.0.0. The latency instrument read a table the store has never created, and its own error handling turned the miss into a silent skip
+
+`tools/latency.py` read `events` and `kinds`. `mavo/store.py` creates `events`
+and **`kind_events`**, and has never created a table called `kinds`. The read
+sat under `except sqlite3.OperationalError: continue`, commented *a store
+written before this table existed*, so on every real store the second stream
+was skipped without a word.
+
+**Measured, 2026-09-10**, on a store built by `EventStore` with nine rows in
+`events` and nine in `kind_events`: the instrument reported nine observations.
+After the repair, eighteen. The docstring said throughout that both streams
+were pooled and gave the reason.
+
+**Why eleven regressions could not see it.** The fixture created a table named
+`kinds`, because it was written from the module rather than from the schema the
+module claims to read. Test data chosen by the implementation rather than
+against it is the class this repository has logged four times; here it hid a
+defect for twenty-four releases and would have hidden it indefinitely, since
+nothing else in the tree reads that name.
+
+**Why it mattered now rather than then.** The instrument had never been runnable
+on a machine holding a real store: it lived in `tools/`, which the wheel does
+not install. D-038 and T84 are that story. Moving it to the package is what put
+it in front of a store the package itself writes, and the first run against one
+found this in a single command.
+
+**Repair.** The table names are read from the schema's vocabulary and pinned by
+`test_the_schema_here_is_the_stores_schema`, which builds a real `EventStore`
+and asserts the instrument's table tuple is a subset of what that store holds.
+An absent table is now returned and printed rather than swallowed, so a typo
+and a genuine schema gap can no longer produce the same silence.
+
+**Reopen condition:** any reader in this repository that names a store table as
+a string literal without a test that resolves the name against `mavo/store.py`.
 
 ### F153, 2.4 of FEED-SPEC. A public specification reproduced the content of private correspondence, and the repository's provenance rules had nothing to say about it
 

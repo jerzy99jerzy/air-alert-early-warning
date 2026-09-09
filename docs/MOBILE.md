@@ -1,6 +1,6 @@
 # The notification channel: technology choice and MVP
 
-Version: 1.5 / 2026-08-21
+Version: 1.6 / 2026-09-10
 Diagram correction at 1.4: the node named `mavo watch daemon` never shipped.
 Diagram correction at 1.5: the source node caught up with D-040; the channel
 feeds the watchman path, the API feeds the primary one.
@@ -310,7 +310,7 @@ is a condition, not a preference:
 | Gate | Blocks | Why it cannot be skipped |
 | --- | --- | --- |
 | Area resolution working (S7) | any message naming a place | A report that names the wrong rajon is worse than no report, because it is actionable |
-| Measured correctness and latency (S8, S9) | recipients beyond the operator | Until then the only honest claim is that the machinery works, not that the report is right or fast |
+| Measured correctness and latency (T36, T40) | recipients beyond the operator | Until then the only honest claim is that the machinery works, not that the report is right or fast. **Named as tasks rather than as sprints from 0.54.0.0**: S8 and S9 are both closed, on amended criteria that withdrew exactly these two measurements, so a gate written against the sprints would now read as satisfied by their closure |
 | T6, the legal position | any recipient who is not the operator | Sending warnings to strangers is a different undertaking from notifying yourself, and it does not become smaller by being unexamined |
 | T29, disengagement measured | nothing, but shipping without it repeats the assumption D-014 removed | A public tier with no instrument for mute and unsubscribe cannot tell a healthy channel from an abandoned one |
 
