@@ -6,7 +6,7 @@ the companion document and answers the other question, which components exist
 and what may talk to what.
 
 ```
-Document:  docs/DATA-FLOW.md, version 1.3
+Document:  docs/DATA-FLOW.md, version 1.4
 Audience:  a contributor about to change a transformation, a schema field, or
            anything that decides what is kept and what is dropped
 Companion: ARCHITECTURE (components and boundaries), MECHANISMS (why each
@@ -61,6 +61,8 @@ flowchart TD
     RED --> STORE
     ACT --> STORE[("EventStore<br/>identity: area, kind, state, moment, source (D-045)")]
     CLR --> STORE
+    CUR -->|"every open key with a readable level (D-050)"| LVL["LevelEvent<br/>the source's word, dated by its own createdAt<br/>identity: area, kind, word, moment - never the observation"]
+    LVL -->|"content hash: a standing level is one row,<br/>a change is a second"| STORE
     CUR -->|"after the store accepted"| PREV
     REC["reconcile<br/>per-kind ghosts closed, masked keys raised<br/>only under a fresh snapshot"] -.-> STORE
 ```
@@ -82,12 +84,17 @@ payload - so the earliest is taken by value, never by position. Two alerts of
 one kind on one area are one row in the store, keyed `(area_id, kind)`, and
 the row takes the earliest of their starts rather than whichever came later
 in the payload (F147); the fold is counted in `overlapping` and named in the
-recap, because a fold nobody can see is a silence. The level itself is not
-read into any event: a level change happens inside an alert, without an end
+recap, because a fold nobody can see is a silence. The level is not read
+into the alert event: a level change happens inside an alert, without an end
 event and without a new key, so the level cannot join the row's identity
-without turning every escalation into a ghost. What is done with it is a
-decision reserved in session and not yet in `docs/DECISIONS.md`; until it is,
-the level is not read.
+without turning every escalation into a ghost, and the opening row's
+`api_level` is the level at the start, never rewritten. Since 0.53.4.0 the
+level is its own stream (D-050, the second half): every open key's current
+declaration is handed over on every poll, keyed on the word and the source's
+stamp, so the store holds one row per declaration and a change is a second
+row without the adapter remembering anything. Nothing reads that table into
+the contract yet; `newest_level_by_area_kind` is the read the release that
+first shows a level will make.
 
 ### The watchman path: the channel page
 

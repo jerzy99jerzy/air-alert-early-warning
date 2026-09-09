@@ -113,7 +113,13 @@ def render(status: dict[str, object], text: str) -> str:
     assert isinstance(stats, dict) and isinstance(measured, dict)
     defects = status["defects_logged"]
     tests = measured["tests_passing"]
-    coverage = measured["coverage_percent"]
+    # Two decimals, always: `docs_audit.check_badges_match_the_pins` expects
+    # the badge as `:.2f`, and this writer had been printing the raw float.
+    # The two agreed on every coverage figure this tree ever had until a run
+    # landed on 95.6, when the badge went out as `95.6%` and the audit asked
+    # for `95.60` - a gate unrunnable on a one-decimal number (found at
+    # 0.53.4.0). One format, here, and the audit's expectation is the reader.
+    coverage = f"{float(measured['coverage_percent']):.2f}"
 
     releases_count = status["releases"]
     decisions_count = status["decisions_recorded"]

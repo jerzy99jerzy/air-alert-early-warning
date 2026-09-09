@@ -467,6 +467,7 @@ def test_collect_api_stores_events_and_the_attempt(
         unmapped_types: dict[str, tuple[str, ...]] = {}
         overlapping: dict[tuple[str, str], int] = {}
         unknown_keys: dict[str, int] = {}
+        levels: tuple[object, ...] = ()
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -518,6 +519,7 @@ def test_collect_api_records_a_refusal_and_says_the_source_was_unreachable(
         unmapped_types: dict[str, tuple[str, ...]] = {}
         overlapping: dict[tuple[str, str], int] = {}
         unknown_keys: dict[str, int] = {}
+        levels: tuple[object, ...] = ()
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -552,6 +554,7 @@ def test_collect_api_reads_the_key_from_a_file(
         unmapped_types: dict[str, tuple[str, ...]] = {}
         overlapping: dict[tuple[str, str], int] = {}
         unknown_keys: dict[str, int] = {}
+        levels: tuple[object, ...] = ()
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -591,6 +594,7 @@ def test_collect_api_names_an_unmapped_type_and_persists_it(
         unmapped_types: dict[str, tuple[str, ...]] = {"BALLISTIC": ("Володимирський район",)}
         overlapping: dict[tuple[str, str], int] = {}
         unknown_keys: dict[str, int] = {}
+        levels: tuple[object, ...] = ()
         snapshot_state = "disabled"
         snapshot_age_s: float | None = None
 
@@ -616,3 +620,58 @@ def test_collect_api_names_an_unmapped_type_and_persists_it(
         ).fetchall()
     conn.close()
     assert rows == [("read", "unmapped types: BALLISTIC")]
+
+
+def test_collect_api_records_the_declarations_it_saw_and_counts_only_new_ones(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """D-050, the second half, on the command: the recap says how many
+    declarations were observed and how many the store had not seen, and the
+    second run of the same picture stores none."""
+    from mavo import cli
+    from mavo.schema import LevelEvent, ThreatKind
+    from mavo.store import EventStore
+
+    class _Stub:
+        source_id = "ukrainealarm"
+        unresolved: tuple[str, ...] = ()
+        declined: tuple[str, ...] = ()
+        unparsed: tuple[str, ...] = ()
+        informational: tuple[str, ...] = ()
+        unmapped_types: dict[str, tuple[str, ...]] = {}
+        overlapping: dict[tuple[str, str], int] = {}
+        unknown_keys: dict[str, int] = {}
+        snapshot_state = "disabled"
+        snapshot_age_s: float | None = None
+
+        def __init__(self, key: str, snapshot: Path | None = None) -> None:
+            self.levels: tuple[LevelEvent, ...] = ()
+
+        def save_snapshot(self) -> None:
+            return None
+
+        def poll(self) -> tuple[ThreatEvent, ...]:
+            self.levels = (LevelEvent(
+                area_id="UA46060000000000000", kind=ThreatKind.UNKNOWN, level="Yellow",
+                level_at=datetime(2026, 9, 8, 17, 22, 35, tzinfo=UTC),
+                ts_ingest=datetime(2026, 9, 8, 17, 24, tzinfo=UTC),
+                source_id="ukrainealarm", oblast="Львівська",
+            ),)
+            return (ThreatEvent(
+                area_id="UA46060000000000000",
+                state=AlertState.ACTIVE,
+                ts_source=datetime(2026, 9, 8, 17, 22, 35, tzinfo=UTC),
+                ts_ingest=datetime(2026, 9, 8, 17, 24, tzinfo=UTC),
+                source_id="ukrainealarm",
+                oblast="Львівська",
+            ),)
+
+    monkeypatch.setenv("MAVO_UKRAINEALARM_KEY", "k")
+    monkeypatch.setattr(cli, "UkrainealarmSource", _Stub)
+    store = tmp_path / "events"
+
+    assert main(["collect-api", "--store", str(store)]) == 0
+    assert "levels=1 new declaration(s) (observed=1;" in capsys.readouterr().out
+    assert main(["collect-api", "--store", str(store)]) == 0
+    assert "levels=0 new declaration(s) (observed=1;" in capsys.readouterr().out
+    assert EventStore(store).count_levels() == 1

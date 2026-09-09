@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.6
+Document:  docs/MANUAL.md, version 3.7
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -416,6 +416,17 @@ independent *delivery path*, and that is the failure it addresses.
 | `--key-file` | none | File holding the API key, `0600` and owned by the polling user. Omitted, the key is read from `MAVO_UKRAINEALARM_KEY`, which anything running as the same user can read from `/proc/<pid>/environ` |
 | `--store` | none | Append the events and log the attempt, successful or not |
 | `--snapshot` | none | File carrying the previous snapshot across runs. Production runs this command as a `oneshot` under a timer, so every poll is a new process; without this flag every poll is a first poll, and an alert this source raises never clears |
+
+**Two counts on every stored run, and the second is usually zero.**
+`stored=N new events` is the alert stream. `levels=N new declaration(s)
+(observed=M; ...)` is the level stream (D-050, the second half, 0.53.4.0):
+`observed` is every open alert the poll saw with a readable level, `new` is
+how many of those declarations the store had not seen. A standing level is
+one row however many polls see it, so zero is the ordinary reading and a
+positive count is an escalation, a de-escalation, or an alert first seen with
+a level. The first run after the 0.53.4.0 install prints one more line,
+`[STORE-MIGRATED] created alert_levels, empty until the first cycle writes it`,
+once.
 
 **All-clears are synthesised, and the rule that makes that safe is the one this
 project holds everywhere else.** The API lists what is alerting now and says

@@ -16,6 +16,82 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.53.4.0 - 2026-09-09
+
+**The level of an alert changes inside the alert, and the only place the
+tree kept it was frozen at the start.** D-050, the second half. 0.53.2.0 put
+the source's word on the ACTIVE row, and the row is written once: ten of ten
+rows on the host carried `api_level_at` equal to `began` to the microsecond,
+so an alert that went red after opening read `Yellow` in the store for as
+long as it stood (P2, review of 2026-09-08). A reader shown that field would
+have been shown the colour the alarm started with. The level is now its own
+stream, and the stream is a change log by construction rather than by
+bookkeeping.
+
+- **schema**: `LevelEvent` - area, kind, the word verbatim, the record's own
+  `createdAt`, the observation, the source. Its identity is the word and the
+  moment and excludes the observation, so the same declaration seen on the
+  next poll hashes to the row the store already holds.
+- **store**: `alert_levels`, the fourth table, recorded rather than derived
+  (nothing archives the API's snapshots, so no corpus rebuilds it); extended
+  additively like the other recorded tables; a covering index on
+  `(area_id, kind, level_at)`. `append_levels` returns the number of
+  declarations the store had not seen, `replay_levels` walks them by the
+  source's stamp, `newest_level_by_area_kind` picks the current one by that
+  stamp and never by arrival, and `count_levels` counts. A store written
+  before this release gains the table on open and `migrations_applied`
+  names it - `alert_levels (table)` - so the collector prints it once,
+  because a schema move that leaves no trace is the silent repair this
+  project refuses everywhere else (F124).
+- **ukrainealarm_source**: `levels`, every open key's current declaration on
+  the last poll, not only the new keys. Handing over the standing
+  declaration costs nothing and handing over a changed one is what records
+  the escalation; the adapter remembers nothing.
+- **cli**: `collect-api` appends the declarations after the alert rows and
+  prints `levels=N new declaration(s) (observed=M; ...)` on every stored
+  run; `_announce_migrations` says `created alert_levels, empty until the
+  first cycle writes it` for a table and keeps the NULL sentence for a
+  column, because "NULL for every earlier row" said about a table would be
+  a claim about rows that do not exist.
+- **Nothing reads the table into the contract.** `state.json`, `feed.json`
+  and `history.json` are unchanged, and so is the consumer. The week of rows
+  D-050 asks for fills first; the release that shows a level moves the
+  contract and is D-021's.
+- **tests**: eleven. The identity excludes the observation and differs by
+  word, moment and area; a standing declaration is one row and a change a
+  second; the newest is chosen by stamp with the red record arriving first;
+  an empty append writes nothing; a store with the previous schema gains
+  the table and says so, once; the adapter repeats the standing declaration
+  on a steady poll and hands over the change on an escalation with no
+  episode event (the 0.53.3.0 regression control, completed); no readable
+  level, no declaration; adapter and store together read `[1, 0, 1, 0]`
+  over four polls; the two announcement shapes; and the command's recap on
+  a first and a second run.
+- **DECISIONS** (2.23): D-050 carries its second half and what is still not
+  taken. **DATA-FLOW** (1.4): the primary-path diagram gains the stream, and
+  a sentence that had said the level's fate was "not yet in DECISIONS" -
+  stale since 0.53.2.0 - says what is done with it. **MANUAL** (3.7): the
+  two counts and the one-time migration line. **DEPLOYMENT** (1.29): the
+  install ceremony for a schema move, written before it runs - return point
+  with digests equal or nothing else happens, baseline 0 and after 12 for
+  `alert_levels` in the installed `store.py`, the two journal lines that
+  prove the move. **BRIEF, BRIEF-PL** (2.8): 716 tests, 95.60%.
+- **figures**: a gap in the gate, found because this release's coverage
+  landed on a one-decimal number. `tools/figures.py` wrote the README's
+  coverage badge and row from the raw float, and
+  `docs_audit.check_badges_match_the_pins` reads the badge as `:.2f`; the
+  two agreed on every figure the tree ever had, and on 95.6 the badge went
+  out as `95.6%`, the audit asked for `95.60`, and the precision lint asked
+  for a lower README ceiling because three figures had lost a digit - a
+  gate that could not run on a number. One format now, two decimals,
+  written by the generator; one test writes 95.6 into a scratch tree and
+  reads `95.60` back. The audit's row check had the same disagreement one
+  function over - it compared the pin's spelling with the row's and refused
+  `95.60` against a pin of 95.6, a row it had just asked the generator to
+  write - and now compares numbers (`_same_number`), the spelling first and
+  the value when the spelling differs. The defect is left for the register
+  to number.
+
 ## 0.53.3.0 - 2026-09-09
 
 **The most executed lines in the tree had no test.** P1, from the review of

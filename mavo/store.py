@@ -21,6 +21,7 @@ from mavo.schema import (
     AreaRole,
     KindEvent,
     KindState,
+    LevelEvent,
     Provenance,
     ThreatEvent,
     ThreatKind,
@@ -50,7 +51,10 @@ _QUERY_CHUNK = 500
 # what a guard is for. The two lists below are therefore separate, and
 # `_refuse_an_older_schema` treats them differently: see D-036.
 DERIVED_TABLES = ("events", "kind_events")
-RECORDED_TABLES = ("communiques", "feed_attempts")
+#: `alert_levels` is recorded, not derived (0.53.4.0): a level declaration
+#: comes off an API snapshot this project does not archive, so no corpus
+#: rebuilds it. It is extended additively like the other two, never refused.
+RECORDED_TABLES = ("communiques", "feed_attempts", "alert_levels")
 
 EXPECTED_KIND_COLUMNS = (
     "content_hash", "area_id", "oblast", "kind", "state",
@@ -67,6 +71,9 @@ EXPECTED_ATTEMPT_COLUMNS = (
     "started_at", "feed", "url", "outcome", "items", "unreadable", "detail",
     "elapsed_s", "first_id", "last_id",
 )
+EXPECTED_LEVEL_COLUMNS = (
+    "content_hash", "area_id", "oblast", "kind", "level", "level_at", "ts_ingest", "source_id",
+)
 
 #: Column definitions for the recorded tables, so a column missing from an
 #: older store can be added rather than refused. Every one of them is nullable
@@ -81,6 +88,7 @@ RECORDED_COLUMN_TYPES: dict[str, dict[str, str]] = {
         "first_id": "INTEGER",
         "last_id": "INTEGER",
     },
+    "alert_levels": {},
 }
 
 _SCHEMA = """
@@ -166,6 +174,22 @@ CREATE TABLE IF NOT EXISTS communiques (
 --
 -- NULL on a refusal and on a page carrying no ids, which is what a hostile or
 -- restructured page looks like. A zero would claim the channel is at post 0.
+-- D-050, the second half taken (0.53.4.0). The fourth stream, in its own
+-- table for the reason the second one has its own: a level is a property of
+-- an open alert and changes inside it, so it is neither a transition of the
+-- alert nor a column of the alert row, where it would be frozen at the start
+-- (P2). One row per declaration the source made, keyed on the word and the
+-- moment; a declaration that stands is one row however many polls see it.
+CREATE TABLE IF NOT EXISTS alert_levels (
+    content_hash TEXT PRIMARY KEY,
+    area_id      TEXT NOT NULL,
+    oblast       TEXT NOT NULL,
+    kind         TEXT NOT NULL,
+    level        TEXT NOT NULL,
+    level_at     TEXT NOT NULL,
+    ts_ingest    TEXT NOT NULL,
+    source_id    TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS feed_attempts (
     started_at TEXT NOT NULL,
     feed       TEXT NOT NULL,
@@ -203,6 +227,9 @@ CREATE INDEX IF NOT EXISTS idx_attempts_feed ON feed_attempts (feed, started_at)
 -- (955,570 rows) against ~0 ms with it. Covering, so the read never touches
 -- the table at all.
 CREATE INDEX IF NOT EXISTS idx_attempts_feed_last ON feed_attempts (feed, last_id);
+-- 0.53.4.0. The newest declaration per `(area, kind)` is the read every
+-- compose cycle will make once a level is shown; covering, like the one above.
+CREATE INDEX IF NOT EXISTS idx_levels_area_kind ON alert_levels (area_id, kind, level_at);
 """
 
 
@@ -239,12 +266,35 @@ class EventStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.migrations_applied = ()
         with closing(self._connect()) as conn:
+            # A table this version creates in a store an older version wrote
+            # is a schema move, and a schema move that leaves no trace is the
+            # silent repair this module refuses (0.53.4.0). Read before the
+            # script that would create it, so the fact is not lost to
+            # `IF NOT EXISTS`.
+            created = self._tables_this_version_adds(conn)
             conn.executescript(_SCHEMA)
             conn.commit()
             self._refuse_an_older_schema(conn)
-            self.migrations_applied = self._extend_the_recorded_tables(conn)
+            self.migrations_applied = created + self._extend_the_recorded_tables(conn)
             conn.executescript(_INDEXES)
             conn.commit()
+
+    @staticmethod
+    def _tables_this_version_adds(conn: sqlite3.Connection) -> tuple[str, ...]:
+        """Recorded tables absent from a store that already holds the others.
+
+        Empty on a fresh store (nothing is a migration when nothing existed)
+        and on a store this version has already opened. Named like a column
+        migration - `alert_levels (table)` - so the caller prints it on the
+        same line it prints those.
+        """
+        present = {
+            str(row[0])
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+        }
+        if "events" not in present:
+            return ()
+        return tuple(f"{table} (table)" for table in RECORDED_TABLES if table not in present)
 
     @staticmethod
     def _refuse_an_older_schema(conn: sqlite3.Connection) -> None:
@@ -302,6 +352,7 @@ class EventStore:
         for table, expected in (
             ("communiques", EXPECTED_COMMUNIQUE_COLUMNS),
             ("feed_attempts", EXPECTED_ATTEMPT_COLUMNS),
+            ("alert_levels", EXPECTED_LEVEL_COLUMNS),
         ):
             present = tuple(row[1] for row in conn.execute(f"PRAGMA table_info({table})"))
             for column in expected:
@@ -617,6 +668,83 @@ class EventStore:
                     source_id=row[6],
                     raw_fields=json.loads(row[7]),
                 )
+
+    def append_levels(self, events: Iterable[LevelEvent]) -> int:
+        """Persist level declarations. One row per declaration, however often seen.
+
+        Idempotent by content hash like the other streams, and here the
+        idempotence is the mechanism rather than a safeguard: the adapter
+        hands over every open alert's current declaration on every poll, and
+        a hash the table already holds is the declaration standing unchanged.
+        The return value is therefore the number of *new* declarations - a
+        level change, or an alert first seen with a level - and zero is the
+        ordinary reading.
+        """
+        rows = [
+            (
+                event.content_hash,
+                event.area_id,
+                event.oblast,
+                event.kind.value,
+                event.level,
+                _stored_form(event.level_at, "level_at"),
+                _stored_form(event.ts_ingest, "ts_ingest"),
+                event.source_id,
+            )
+            for event in events
+        ]
+        if not rows:
+            return 0
+        with closing(self._connect()) as conn:
+            before = conn.execute("SELECT COUNT(*) FROM alert_levels").fetchone()[0]
+            conn.executemany(
+                "INSERT OR IGNORE INTO alert_levels (content_hash, area_id, oblast, kind, "
+                "level, level_at, ts_ingest, source_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                rows,
+            )
+            conn.commit()
+            after = conn.execute("SELECT COUNT(*) FROM alert_levels").fetchone()[0]
+        return int(after - before)
+
+    def replay_levels(self) -> Iterator[LevelEvent]:
+        """Every declaration, oldest declared first, then by first observation."""
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT area_id, oblast, kind, level, level_at, ts_ingest, source_id "
+                "FROM alert_levels ORDER BY level_at, ts_ingest"
+            ).fetchall()
+        for row in rows:
+            yield LevelEvent(
+                area_id=row[0],
+                oblast=row[1],
+                kind=ThreatKind(row[2]),
+                level=row[3],
+                level_at=datetime.fromisoformat(row[4]),
+                ts_ingest=datetime.fromisoformat(row[5]),
+                source_id=row[6],
+            )
+
+    def newest_level_by_area_kind(self) -> dict[tuple[str, ThreatKind], LevelEvent]:
+        """The most recent declaration for every `(area, kind)` that ever had one.
+
+        Newest by `level_at`, the source's stamp, never by observation order:
+        two declarations can be observed in one poll and the later-declared
+        one is current whichever the payload listed first (D-050). Nothing
+        here says whether the alert is still open - that is the alert
+        stream's question - so a caller joins this against the open episodes
+        and shows a level only beside an alert that has one.
+        """
+        newest: dict[tuple[str, ThreatKind], LevelEvent] = {}
+        for event in self.replay_levels():
+            key = (event.area_id, event.kind)
+            held = newest.get(key)
+            if held is None or event.level_at > held.level_at:
+                newest[key] = event
+        return newest
+
+    def count_levels(self) -> int:
+        with closing(self._connect()) as conn:
+            return int(conn.execute("SELECT COUNT(*) FROM alert_levels").fetchone()[0])
 
     def append_communiques(self, feed: str, communiques: Iterable[Any]) -> int:
         """Insert communiques, ignoring ones already present. Returns rows added.
