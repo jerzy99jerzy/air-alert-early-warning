@@ -16,6 +16,67 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.53.2.1 - 2026-09-09
+
+**Documents only: the standard named the projects it was learned in, two
+documents named the wrong instrument for a publisher's return, and the
+specification was two properties behind the source.**
+
+- **ENGINEERING** (1.2): every sibling repository's name is gone, and the
+  defects the rules were paid for by are described by class instead. A rule
+  that needs its origin named to be understood is not yet a rule; the file
+  says it is portable, and a reader in another tree had to know five
+  codenames to follow it. Section 2 gains the branch-protection step designed
+  on 2026-09-08 - required pull request with zero approvals, required
+  interpreter statuses, squash only, administrator bypass kept and written
+  down, "up to date" decided by what CI costs - as the mechanism that makes
+  "tag after green" a gate rather than a habit, and the intro stops claiming
+  there is no pull-request ceremony. Four rules learned since 1.1 join their
+  sections: the missing-lines list is read for the code the scheduler runs
+  most (P1's shape); a field that changes meaning changes name, and a consumer
+  counts the keys it cannot read (F148); a deployment is proven by a content
+  count fixed before the host is read, and a schema move takes a restore
+  point first; a fact changed where it is argued is changed where it is used
+  in passing (F117's shape, the "silent since" sentence). The short version
+  is twelve rules. The same generalisation reaches the six sentences outside
+  the file that named a sibling: METHODOLOGY (2.49, three), MECHANISMS (2.2),
+  ARCHITECTURE (2.5), DECISIONS (2.22, D-006's licence reasoning without the
+  repository it matched), DEPLOYMENT (one clause).
+- **DEPLOYMENT** (1.28): the installed-package table rewritten to the 0.53.2.0
+  deploy from the session record, not from a fresh host read, and it says so:
+  22:08 UTC, wheel `8f5cc1de…fb41d7` from the tag's worktree, snapshot 56 s at
+  timer stop, one-cycle gap, discriminator `api_level` 0 before and 2 after
+  with the 2 fixed from the tree before the host was read, ten of ten ACTIVE
+  rows after the install carrying a level (all `Yellow`, each stamped at its
+  own start - the frozen-level trap, P2, stated in the row so the next
+  release reads it), the contract read by the consumer's doctor at 22:50. The
+  deploy history gains 0.53.2.0; `Behind by` is one. The return-point row
+  states the rule it had only implied: a release that moves the store's schema
+  names the copy taken before `pip` or did not happen.
+- **The instrument for the watchman's return was wrong in two documents,
+  released the day before (P3).** `docs/CHANNEL.md` 1.6 and
+  `docs/DEPLOYMENT.md` 1.27 said the first `telegram` row in `events` after
+  the stop would settle whether the publisher is back. `events` holds only
+  the messages that classified as alarms, so a publisher returning with
+  content the classifier does not read would leave it empty and be back all
+  the same. What settles it is `feed_attempts.last_id` for the `channel` feed
+  moving past 338380. Both documents say so now (CHANNEL 1.7 as a third
+  status note under the first two, so the 2026-09-08 note stays readable as
+  what was known then; DEPLOYMENT 1.28 in the watchman row), with the reading
+  of 2026-09-08 23:02 UTC: 43 posts in the 69 minutes before the stop, then
+  the same identifier through 4,463 consecutive reads, 592 identifiers in the
+  control day, no refusals in the window.
+- **FEED-SPEC** (2.5): the source changed under the collector on 2026-09-06
+  and the specification did not know. Property eighteen: a field that changes
+  meaning changes name, and a consumer counts the keys it cannot read, from
+  F147 and F148. Property nineteen: a severity is the publisher's word,
+  timestamped, beside the state and never in the identity, from D-050's
+  measurement of the level records. Section 4 gains a third measurement: the
+  second silence, proven from the attempt log rather than the sky, and the
+  per-source block the state file carries since 0.53.0.0.
+
+No code line changes.
+
 ## 0.53.2.0 - 2026-09-08
 
 **What the source says about an alert's level is now kept, and nothing reads

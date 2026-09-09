@@ -6,7 +6,7 @@ break. `DATA-FLOW.md` is the companion and answers the other question, what
 happens to a message as it travels.
 
 ```
-Document:  docs/ARCHITECTURE.md, version 2.4
+Document:  docs/ARCHITECTURE.md, version 2.5
 Audience:  a contributor about to add a module, a dependency, or a process
 Companion: DATA-FLOW (what happens to the data), MECHANISMS (why each mechanism
            is built the way it is), METHODOLOGY (what may be claimed)
@@ -325,8 +325,9 @@ that disables the control, with the attack going red under it, or an entry in
 
 A bullet in the README's limitations section **and** a check in
 `tests/lint_limitations.py`, in the same commit. This is the one principle in
-`CONTRIBUTING.md`, and it exists because the portfolio's founding defect was a
-README describing a protection the tree did not implement.
+`CONTRIBUTING.md`, and it exists because the founding defect of
+`ENGINEERING.md` was a README describing a protection the tree did not
+implement.
 
 ### Adding a dependency
 

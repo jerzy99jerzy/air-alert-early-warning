@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.48
+Document:  docs/METHODOLOGY.md, version 2.49
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -68,9 +68,9 @@ A hundred and eighteen entries, four shapes, and the count in this sentence read
 most of what this repository is fussy about, and will recognise the next one
 faster than the last one was recognised.
 
-**Class 1: a document describing a tree that has moved on.** The portfolio's
-founding defect (ANANKE's README claiming a protection the code lacked) and four
-of this repository's own: F32, F33, F42, F43. Every check in the gate that
+**Class 1: a document describing a tree that has moved on.** The founding
+defect of `ENGINEERING.md` (a README claiming a protection the code lacked, in
+an earlier project) and four of this repository's own: F32, F33, F42, F43. Every check in the gate that
 touches documentation checks *shape* rather than *reference* (counts, numbering,
 parseability, version pins), and prose stays uncovered. The citation resolver in
 `docs_audit` is the first check that resolves a claim to the thing it names.
@@ -440,8 +440,8 @@ registered in `tests/lint_limitations.py`. The lint verifies exactly what it was
 told to verify, and the "Measured claims" section, which exists precisely to
 carry numbers, is not on its list.
 
-Class: the ANANKE README failure, in the repository that quotes it as the
-founding defect. Prose about the tree that is not registered as a check drifts,
+Class: the founding defect of `ENGINEERING.md` - a README claiming what the
+tree did not do - in the repository that quotes it as such. Prose about the tree that is not registered as a check drifts,
 reliably, within two releases.
 
 ### F33, 0.3.2.0 audit. A threat-model row cited a decision that was never written
@@ -597,8 +597,8 @@ Why it survived: `lint_mermaid` validates that diagrams parse, not that they
 describe the tree. A diagram that is syntactically clean and semantically two
 releases old passes every check in the gate.
 
-Class: the ANANKE class again, in the document whose entire job is to say what
-talks to what. Recorded rather than quietly redrawn: this is the third document
+Class: the founding defect's class again, in the document whose entire job is
+to say what talks to what. Recorded rather than quietly redrawn: this is the third document
 in three releases found describing an earlier version of the tree, which is
 evidence about the process and not about any one file.
 

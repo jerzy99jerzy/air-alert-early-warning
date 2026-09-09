@@ -4,7 +4,7 @@ Every mechanism in MAVO: what it is, where it lives, the alternative that was
 rejected, the failure it prevents, and the test that keeps it honest.
 
 ```
-Document:  docs/MECHANISMS.md, version 2.1
+Document:  docs/MECHANISMS.md, version 2.2
 Audience:  a contributor about to change how something works, and anyone asking
            "why is it done this way rather than the obvious way"
 Companion: ARCHITECTURE (what talks to what), DATA-FLOW (what happens to a
@@ -610,9 +610,9 @@ same commit or does not go in.
 | `no_ml_dependency` | No machine-learning dependency is declared |
 | `network_reach_is_one_file` | Exactly one module imports a network client |
 
-**This is the founding defect of the portfolio, in one mechanism.** ANANKE's
-README described a protection the tree did not implement, and it survived because
-prose is not executable.
+**This is the founding defect of `ENGINEERING.md`, in one mechanism.** An
+earlier project's README described a protection the tree did not implement, and
+it survived because prose is not executable.
 
 **The honest measure of how far this reaches:** four of this repository's own
 defects (F32, F33, F42, F43) are the same class, found in documents the lint does

@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.6 / 2026-09-08
+Version: 1.7 / 2026-09-09
 What the source emits, measured on 48,540 real messages, and what that changes.
 
 **Status, 2026-08-31.** The channel stopped publishing on 2026-08-29 at 04:55
@@ -16,10 +16,25 @@ day into the store beside the API (D-049's daily counts), and the sentence
 above stood unchanged through it `[unknown, the date of the return]`. It
 stopped again at 2026-09-07 06:09:04 UTC and was still silent 33 h 50 min
 later, at the last read this tree holds (F146, the outage the contract could
-not name); whether it has resumed since is `[unknown]`, and the first
-`telegram` row in `events` after that stamp is what settles it. The watchman
+not name); whether it has resumed since is `[unknown]`. The watchman
 is intermittent, not dead, and its health is now read from `feed_attempts`
 per pipe rather than from the age of the newest event anywhere.
+
+**Status, 2026-09-09.** The second silence, measured with the instrument that
+settles it. The note above named the first `telegram` row in `events` as the
+reading of the publisher's return; that is the wrong instrument, and it is
+corrected here rather than there so the note stays readable as what was known
+then. `events` holds only the messages that classified as alarms, so a
+publisher that returns with content the classifier does not read leaves it
+empty and is back all the same. What settles a return is `feed_attempts.last_id`
+for the `channel` feed moving past the identifier it stopped at. Read
+2026-09-08 23:02 UTC `[measured]`: the bound went 338337 to 338380 between
+05:00:14 and 06:09:07 UTC on 2026-09-07 (43 posts in 69 minutes, ordinary
+traffic), then stayed at 338380 through 4,463 consecutive successful reads;
+the control day before carried 592 identifiers; every attempt in the window
+was a `read` and none a refusal. A healthy pipe reading a silent publisher
+(D-049), 40 h 53 min into the silence at that read. The date of the return
+from the first silence remains `[unknown]`.
 Companion: `docs/DATA-FLOW.md` (how a message becomes an event),
 `docs/METHODOLOGY.md` (F23 and F59), `docs/DECISIONS.md` (D-016, geocoding).
 
