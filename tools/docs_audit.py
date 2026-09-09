@@ -456,6 +456,21 @@ def check_every_document_is_pinned(status: dict[str, object]) -> list[str]:
     return problems
 
 
+def _same_number(value: object, spellings: set[str]) -> bool:
+    """True when `value` and some spelling on the row name one number."""
+    try:
+        wanted = float(str(value))
+    except ValueError:
+        return False
+    for spelling in spellings:
+        try:
+            if float(spelling) == wanted:
+                return True
+        except ValueError:
+            continue
+    return False
+
+
 def check_readme_tables_match_the_pins(status: dict[str, object]) -> list[str]:
     """The numbers in the README's own tables equal the pins beside them.
 
@@ -504,7 +519,12 @@ def check_readme_tables_match_the_pins(status: dict[str, object]) -> list[str]:
         row = rows[0]
         digits = {figure.replace(",", "") for figure in re.findall(r"\d[\d,]*\.?\d*", row)}
         for value in values:
-            if str(value) not in digits:
+            # Compared as numbers, not as spellings: the coverage row is
+            # written by `figures.py` with two decimals, and a pin of 95.6 is
+            # the same measurement as `95.60` on the page. Read as strings,
+            # the check refused a row it had just asked the generator to
+            # write (found at 0.53.4.0, the first one-decimal coverage).
+            if str(value) not in digits and not _same_number(value, digits):
                 problems.append(f"README row {row.strip()!r} does not carry the pin {value}")
     return problems
 

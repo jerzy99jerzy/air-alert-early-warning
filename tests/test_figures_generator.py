@@ -194,3 +194,27 @@ def test_the_real_tree_is_in_the_state_the_gate_expects() -> None:
         capture_output=True, text=True,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_a_one_decimal_coverage_is_written_with_two(tree: Path) -> None:
+    """The writer and the audit disagreed on the shape of one number.
+
+    `docs_audit.check_badges_match_the_pins` expects the coverage badge as
+    `:.2f` and this writer printed the raw float; they agreed on every
+    coverage figure the tree ever had until a run landed on a one-decimal
+    value, and then `make verify` could not run: the badge said `95.6%`, the
+    audit asked for `95.60`, and the precision lint asked for a lower ceiling
+    because three figures had lost a digit. Found at 0.53.4.0, on the first
+    such run. One format, written here, read there.
+    """
+    status = status_of(tree)
+    measured = status["measured"]
+    assert isinstance(measured, dict)
+    measured["coverage_percent"] = 95.6
+    (tree / "STATUS.json").write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
+    assert figures.main([]) == 0
+    readme = (tree / "README.md").read_text(encoding="utf-8")
+    badge = "[![coverage 95.60%](https://img.shields.io/badge/coverage-95.60%25-brightgreen)]"
+    assert badge in readme
+    assert "| Coverage | 95.60% against" in readme
+    assert "95.6%" not in readme

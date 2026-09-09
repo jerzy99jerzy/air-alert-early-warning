@@ -173,6 +173,23 @@ def _cmd_backfill(args: argparse.Namespace) -> int:
 API_FEED = "ukrainealarm"
 API_URL = f"{API_BASE}/alerts"
 
+def _announce_migrations(store: EventStore) -> None:
+    """One line per schema move the open just made, in the journal a person greps.
+
+    Two shapes since 0.53.4.0: a column added to a recorded table reads NULL
+    for every row written before it, and a table added to a recorded store
+    is empty until the first cycle writes it. The two sentences differ
+    because the two facts do, and "NULL for every earlier row" said about a
+    table would be a claim about rows that do not exist.
+    """
+    for entry in store.migrations_applied:
+        if entry.endswith(" (table)"):
+            print(f"[STORE-MIGRATED] created {entry[: -len(' (table)')]}, "
+                  "empty until the first cycle writes it")
+        else:
+            print(f"[STORE-MIGRATED] added {entry}, NULL for every earlier row")
+
+
 def _vocabulary_detail(source: UkrainealarmSource) -> str | None:
     """What the last poll saw and could not read, for the attempt row (T83).
 
@@ -250,11 +267,10 @@ def _cmd_collect(args: argparse.Namespace) -> int:
         except Exception as failure:  # noqa: BLE001
             print(f"[STORE-FAILED] {failure}")
             return 7
-        for column in store.migrations_applied:
-            # Once, at the moment it happens, in the journal a person greps.
-            # A schema change that leaves no trace is the silent repair this
-            # project refuses everywhere else (F124).
-            print(f"[STORE-MIGRATED] added {column}, NULL for every earlier row")
+        # Once, at the moment it happens, in the journal a person greps. A
+        # schema change that leaves no trace is the silent repair this project
+        # refuses everywhere else (F124).
+        _announce_migrations(store)
     # F123. The baseline for `skipped`, read from the store before the fetch
     # because a `oneshot` has no previous poll of its own. None on the very
     # first poll against a fresh store, and that case stays `unknown` rather
@@ -422,8 +438,7 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
         except Exception as failure:  # noqa: BLE001
             print(f"[STORE-FAILED] {failure}")
             return 7
-        for column in store.migrations_applied:
-            print(f"[STORE-MIGRATED] added {column}, NULL for every earlier row")
+        _announce_migrations(store)
     try:
         key = read_key(path=Path(args.key_file) if args.key_file else None)
     except (SourceUnavailable, OSError) as missing:
@@ -544,11 +559,20 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
                 print(f"  re-asserted {reasserted} alarm(s) dated by observation: "
                       "the API repeated an alert this pipeline had already cleared")
             appended = store.append(redated)
+            # After the alert rows, and independent of them: a declaration is
+            # recorded for every open alert the poll saw with a level, and the
+            # store keeps only the ones it has not seen. Zero new rows on a
+            # quiet cycle is the ordinary reading; a positive count is an
+            # escalation, a de-escalation, or an alert first seen with a
+            # level (D-050, the second half).
+            levels_new = store.append_levels(source.levels)
         except Exception as failure:  # noqa: BLE001
             print(f"[STORE-FAILED] {failure}")
             return 7
         print(f"stored={appended} new events (seen={len(events)}; "
               "the difference is idempotence, not loss)")
+        print(f"levels={levels_new} new declaration(s) (observed={len(source.levels)}; "
+              "a declaration that stands is one row however many polls see it)")
     # After the append, deliberately: a failed store keeps the old snapshot
     # standing, so the next run derives the same clears again rather than
     # losing them. The duplicate that retry can produce only nudges an

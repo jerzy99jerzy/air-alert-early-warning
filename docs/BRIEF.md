@@ -6,7 +6,7 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.7
+Document:  docs/BRIEF.md, version 2.8
 Measured:  2026-08-31, against STATUS.json at 0.50.0.0, and this time the
            figures were recomputed rather than carried over. Version 2.4 bore
            the same line while four figures inside it came from 0.32.9.0; what
@@ -217,9 +217,9 @@ reported, inferred, assumed. The 57% above is somebody else's figure and is
 labelled as such, including a note that the source may have meant a different
 area than this project does.
 
-**The gate is single and mechanical.** One command runs 704 tests, of which 13
+**The gate is single and mechanical.** One command runs 716 tests, of which 13
 are scripted attacks against the project's own controls; code coverage is
-95.45% against a floor of 95% that is never lowered. The attacks are themselves
+95.60% against a floor of 95% that is never lowered. The attacks are themselves
 checked: 12 of 13 were verified by deliberately breaking the control they guard
 and requiring the attack to catch it. The one without such verification is
 printed as unverified on every run rather than passed over.

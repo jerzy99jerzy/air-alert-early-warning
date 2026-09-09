@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.28 / 2026-09-09
+Version: 1.29 / 2026-09-09
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -59,8 +59,8 @@ never a decision until D-031 wrote it down.
 | Reconcile after the polls | not run at this install `[unknown]`; the one-cycle gap gave it nothing to examine, and the 0.52.0.0 reading (`ghosts=2 masked=0`, both closed with `--apply`) is in the deploy history below |
 | Contract after | `[reported, the consumer half of the same session]` `mavosite-doctor` on the production `state.json` at about 22:50 UTC: `schema v3 accepted`, `contract complete: state=ok, 35 areas, window 7 d`, `no vocabulary drift`, exit 0 |
 | `Самарівський район` | in `unresolved` at 20:25:11 and again at 22:09:59, one of the five names the map does not place at the second read. A row for `data/reference/tag_map.csv`, and open (P7) |
-| `main` | 0.53.3.0 |
-| Behind by | **two** releases: 0.53.2.1 and 0.53.3.0, and neither changes a line under `mavo/` (documents, then tests). The judgement the row carries is unchanged - a release that changes `mavo/` is installed before the release after it is cut - and it held for 0.53.2.0, which was on the host before this record was written |
+| `main` | 0.53.4.0 |
+| Behind by | **three** releases: 0.53.2.1 (documents) and 0.53.3.0 (tests) change no line under `mavo/`; 0.53.4.0 does, and it moves the store's schema - `alert_levels`, the fourth stream (D-050, the second half) - so its install is the first since 0.52.0.0 that takes a return point before `pip`, and the ceremony below says how. The judgement the row carries is unchanged - a release that changes `mavo/` is installed before the release after it is cut - and it held for 0.53.2.0, which was on the host before this record was written |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -903,6 +903,64 @@ must show `cleared=` greater than zero at least once, with
 on the previous release could ever produce, and the reason 0.44.0.0 exists. Absence of that
 line after a day of real alert traffic reopens the bloker, whatever the
 exit codes say. `[to be read]`
+
+## Installing 0.53.4.0: the schema moves, so the store is copied first
+
+Written before it runs, as the D-040 section above was. Everything here is a
+command with its stop condition; the numbers to compare against are fixed
+from the tree in this revision, before any host is read.
+
+**1. Return point, or nothing else happens.** As the account that can read
+`/var/lib/mavo`:
+
+```
+sudo cp -p /var/lib/mavo/events /var/lib/mavo/events.pre-0.53.4.0
+sudo sha256sum /var/lib/mavo/events /var/lib/mavo/events.pre-0.53.4.0
+```
+
+Stop unless the two digests are equal. The copy is taken with the timer
+stopped (step 2 of the D-040 ceremony), so no write lands between the copy
+and the digest. The WAL file beside the store, if present, is checkpointed
+by the collector's own close before the timer stops; a non-empty `events-wal`
+at this point is a reason to wait one cycle, not to copy it.
+
+**2. Baseline from the installed source, before the wheel.**
+
+```
+grep -c alert_levels /opt/mavo/venv/lib/python3.11/site-packages/mavo/store.py
+```
+
+Reads **0** on 0.53.2.0. The count after is fixed from this tree: **12**
+lines. A read of anything but 0 before or 12 after stops the install.
+
+**3. Install and restart**, as the D-040 ceremony has it: wheel built from
+the tag's worktree, base64 over the ssh control channel to a `.partial`
+name, `sha256sum` equal on both sides, rename, `sudo /opt/mavo/venv/bin/pip
+install --no-index --no-deps --force-reinstall`, timer restarted. Snapshot
+under 360 s at the stop.
+
+**4. The reading that proves the move.** The first cycle's journal carries,
+once, `[STORE-MIGRATED] created alert_levels, empty until the first cycle
+writes it`, and every cycle from then on carries `levels=N new
+declaration(s) (observed=M; ...)`, a line no earlier release prints. On the
+first cycle `new` equals `observed` (every declaration is new to an empty
+table); on the second, `new` is zero unless a level changed in the 121 s
+between. Then, read-only, the table itself, through the base64-over-ssh
+probe pattern with the store opened as `file:...?mode=ro` - never a quoted
+one-liner inside `--command`, whose apostrophes do not survive the hop:
+
+```
+select count(*), min(level_at), max(level_at) from alert_levels
+```
+
+A count equal to the first cycle's `observed` is the reading. The return
+point stays on the host until the week of rows D-050 asks for has been read;
+P6's retention rule, still unwritten, decides its fate after that.
+
+**5. What is not read.** Nothing consumes the table yet, so `state.json` is
+unchanged by this install and the consumer's doctor reads the same contract
+it read at 22:50 on 2026-09-08. That is the point: the stream fills for a
+week before anything decides what a reader sees.
 
 ## The release order, and why the obvious one cannot run
 

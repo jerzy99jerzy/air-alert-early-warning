@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.22
+Document:  docs/DECISIONS.md, version 2.23
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1984,7 +1984,7 @@ production; swapping a working detector for an unproven one in one release is
 how a page loses a check it had.
 
 ## D-050. The alert level is captured as the source's word and not yet read
-Date: 2026-09-08. Status: adopted in part; the reading is open
+Date: 2026-09-08, second half 2026-09-09. Status: adopted in part; the reading is open
 
 **Decision, the half taken.** From 0.53.2.0 the adapter carries an alert's
 current level on the ACTIVE row's `raw_fields`, as `api_level` (the API's own
@@ -2022,7 +2022,27 @@ between - a ghost per escalation, seven in the payload above. The level lives
 on the row and can be re-read; the row's identity is the alarm, which did not
 change when its colour did.
 
-**What settles the open half.** A store with rows carrying `api_level` across
+**Decision, the second half taken (0.53.4.0).** The level is its own stream.
+`alert_levels` holds one row per declaration the source made - area, kind,
+the word verbatim, the record's own `createdAt`, and when this pipeline first
+saw it - keyed on the word and the moment and never on the observation, so a
+declaration that stands is one row however many polls see it and a change is
+a second row with a second stamp. The adapter hands over every open alert's
+current declaration on every poll and the store's hash does the rest; the
+adapter remembers nothing. `newest_level_by_area_kind` answers the question
+a reader will be shown, by the source's stamp and never by arrival order.
+The table is recorded rather than derived: nothing archives the API's
+snapshots, so no corpus rebuilds it, and an older store gains it additively
+and says so once (F124's split, applied to a table). The alert row's
+`api_level` stays what the capture half made it, the level at the start, and
+is read as nothing else (P2, review of 2026-09-08): a reader shown that
+field would be shown yellow over an alarm that went red.
+
+**Still not taken.** Nothing in `state.json`, `feed.json` or `history.json`
+reads the table, and no reader is shown a level. That is the release after
+the week of rows below, and it moves the contract (D-021).
+
+**What settles the open half.** A store with rows in `alert_levels` across
 at least one week, read for: how often a level changes inside an episode, how
 old the `Red` records the map does not draw are, and whether the thresholds
 the resolution says are set weekly move the meaning of a colour between

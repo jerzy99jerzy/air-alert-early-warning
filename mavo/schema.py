@@ -283,6 +283,50 @@ class KindEvent:
 
 
 @dataclass(frozen=True, slots=True)
+class LevelEvent:
+    """One declared level for one open alert, as the source's own word (D-050).
+
+    The fourth stream, and the first whose row is a property of an episode
+    rather than a transition of it. An alert's level changes inside the alert
+    - no end event, no new key - so it cannot live in the alert row's
+    identity (a level there opens a ghost per escalation) and it cannot be
+    read off the opening row either, which carries the level at the start
+    and is never rewritten. Each declaration is therefore its own row: the
+    area, the kind, the word the source used and the moment the source says
+    it used it. `ts_ingest` is when this pipeline first saw that declaration.
+
+    `level` is verbatim and the vocabulary is open. Mapping `Red` to a value
+    of this project's own would put a word on the row the source never said,
+    and a string the source has not used yet is a row this store keeps and a
+    reader treats as unknown, never as the nearest colour it knows.
+    """
+
+    area_id: str
+    kind: ThreatKind
+    level: str
+    level_at: datetime
+    ts_ingest: datetime
+    source_id: str
+    oblast: str = ""
+
+    @property
+    def content_hash(self) -> str:
+        """Identity: this word, declared at this moment, for this area and kind.
+
+        `ts_ingest` is deliberately outside the hash. The adapter observes
+        every open alert's current declaration on every poll, and the store
+        keeps one row per declaration by ignoring a hash it already holds: a
+        level that stands for six hours is one row, and a level that changes
+        is a second row with a second stamp. One row per change, without the
+        adapter remembering anything.
+        """
+        ts = self.level_at
+        stamp = (ts.astimezone(UTC) if ts.tzinfo is not None else ts).isoformat()
+        payload = "|".join([self.area_id, self.kind.value, self.level, stamp, self.source_id])
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True, slots=True)
 class ThreatEvent:
     """One observed state transition for one area, from one source.
 

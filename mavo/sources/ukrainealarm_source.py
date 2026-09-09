@@ -47,7 +47,7 @@ from pathlib import Path
 
 from mavo.areas import AreaTable
 from mavo.errors import SourceUnavailable
-from mavo.schema import AlertState, Provenance, ThreatEvent, ThreatKind
+from mavo.schema import AlertState, LevelEvent, Provenance, ThreatEvent, ThreatKind
 from mavo.sources.ukrainealarm import API_BASE, TIMEOUT_S, ApiAlert, parse_alerts
 from mavo.transport import Transport, UrllibTransport
 
@@ -255,6 +255,13 @@ class UkrainealarmSource:
         #: without failing a single check; the next such change should at
         #: least be printed on the day it lands.
         self.unknown_keys: dict[str, int] = {}
+        #: The current level declaration of every alert open on the last
+        #: poll that carried a readable one (D-050, the second half). Every
+        #: open key, not only the new ones: the store keeps one row per
+        #: declaration by hash, so handing over the standing declaration
+        #: again costs nothing and handing over a changed one is what
+        #: records the escalation. Empty until the first successful poll.
+        self.levels: tuple[LevelEvent, ...] = ()
 
     def poll(self) -> Sequence[ThreatEvent]:
         """Transitions since the previous successful poll.
@@ -357,6 +364,19 @@ class UkrainealarmSource:
         }
         self.overlapping = dict(sorted(overlapping.items()))
         self.unknown_keys = dict(sorted(unknown.items()))
+        self.levels = tuple(
+            LevelEvent(
+                area_id=area_id,
+                kind=kind,
+                level=level_of[(area_id, kind)][0],
+                level_at=level_of[(area_id, kind)][1],
+                ts_ingest=now,
+                source_id=self.source_id,
+                oblast=oblast_of[(area_id, kind)],
+            )
+            for (area_id, kind) in current
+            if (area_id, kind) in level_of
+        )
 
         previous = self._previous
         events: list[ThreatEvent] = []
