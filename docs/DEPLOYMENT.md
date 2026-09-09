@@ -59,8 +59,8 @@ never a decision until D-031 wrote it down.
 | Reconcile after the polls | not run at this install `[unknown]`; the one-cycle gap gave it nothing to examine, and the 0.52.0.0 reading (`ghosts=2 masked=0`, both closed with `--apply`) is in the deploy history below |
 | Contract after | `[reported, the consumer half of the same session]` `mavosite-doctor` on the production `state.json` at about 22:50 UTC: `schema v3 accepted`, `contract complete: state=ok, 35 areas, window 7 d`, `no vocabulary drift`, exit 0 |
 | `Самарівський район` | in `unresolved` at 20:25:11 and again at 22:09:59, one of the five names the map does not place at the second read. A row for `data/reference/tag_map.csv`, and open (P7) |
-| `main` | 0.53.2.1 |
-| Behind by | **one** release: 0.53.2.1 changes no line under `mavo/`. The judgement the row carries is unchanged - a release that changes `mavo/` is installed before the release after it is cut - and it held for 0.53.2.0, which was on the host before this record was written |
+| `main` | 0.53.3.0 |
+| Behind by | **two** releases: 0.53.2.1 and 0.53.3.0, and neither changes a line under `mavo/` (documents, then tests). The judgement the row carries is unchanged - a release that changes `mavo/` is installed before the release after it is cut - and it held for 0.53.2.0, which was on the host before this record was written |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

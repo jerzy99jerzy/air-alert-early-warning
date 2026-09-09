@@ -159,6 +159,139 @@ def test_a_region_the_map_does_not_know_is_counted_not_dropped() -> None:
     assert source.unresolved == ("Марсіанський район",)
 
 
+def test_a_key_present_on_consecutive_polls_is_neither_reopened_nor_cleared() -> None:
+    """The steady state, which production runs tens of thousands of times a day.
+
+    Until 0.53.3.0 no test polled twice with the same key: the suite walked a
+    key appearing and a key disappearing, never a key that simply is, and the
+    two `continue` lines that make an open alert stay one open alert were
+    executed by nothing (P1, the review of 2026-09-08). A defect there has the
+    worst shape this project knows: an ACTIVE re-issued for an alert already
+    open would announce the alarm again on the map and count one episode as
+    two in the register; a CLEAR issued for a key still listed would end an
+    alert that had not ended. A neighbour that comes and goes around the
+    steady key is what separates the two `continue`s from their absence.
+    """
+    transport = SequenceTransport(
+        [
+            _snapshot((LVIV, "AIR")),
+            _snapshot((LVIV, "AIR"), (VOLODYMYR, "AIR")),
+            _snapshot((LVIV, "AIR")),
+            _snapshot((LVIV, "AIR")),
+        ]
+    )
+    source = _source(transport)
+
+    first = source.poll()
+    second = source.poll()
+    third = source.poll()
+    fourth = source.poll()
+
+    assert [(e.area_id[:2], e.state) for e in first] == [("UA", AlertState.ACTIVE)]
+    assert [e.state for e in second] == [AlertState.ACTIVE]
+    assert second[0].area_id != first[0].area_id
+    assert [e.state for e in third] == [AlertState.CLEAR]
+    assert third[0].area_id == second[0].area_id
+    assert fourth == ()
+    assert source._previous is not None
+    assert list(source._previous) == [(first[0].area_id, ThreatKind.UNKNOWN)]
+    assert source._previous[(first[0].area_id, ThreatKind.UNKNOWN)] == first[0].ts_source
+
+
+def test_a_key_that_leaves_and_returns_is_two_episodes() -> None:
+    """A gap in the listing is an end and a new beginning, in that order.
+
+    The steady-state test above holds a key that never leaves. This one
+    holds the key that does: absent for one poll, present again on the next,
+    which the API expresses by listing it, not listing it, and listing it
+    again. The adapter must say CLEAR then ACTIVE - two rows, two episodes -
+    and must not carry the first episode's start onto the second.
+    """
+    later = json.loads(_snapshot((LVIV, "AIR")))
+    later[0]["lastUpdate"] = "2026-08-30T15:00:00Z"
+    later[0]["activeAlerts"][0]["lastUpdate"] = "2026-08-30T15:00:00Z"
+    transport = SequenceTransport(
+        [_snapshot((LVIV, "AIR")), _snapshot(), json.dumps(later)]
+    )
+    source = _source(transport)
+
+    first = source.poll()
+    second = source.poll()
+    third = source.poll()
+
+    assert [e.state for e in first] == [AlertState.ACTIVE]
+    assert [e.state for e in second] == [AlertState.CLEAR]
+    assert [e.state for e in third] == [AlertState.ACTIVE]
+    assert third[0].ts_source.isoformat() == "2026-08-30T15:00:00+00:00"
+    assert third[0].ts_source > first[0].ts_source
+    assert third[0].content_hash != first[0].content_hash
+
+
+def _levelled(name: str, start: str, *levels: tuple[str, str]) -> str:
+    """One alert on `name` begun at `start`, carrying the given level records."""
+    return json.dumps([{
+        "regionId": "1293", "regionType": "State", "regionName": name,
+        "lastUpdate": start,
+        "activeAlerts": [{
+            "regionId": "1293", "regionType": "State", "type": "AIR",
+            "lastUpdate": start,
+            "activeAlertLevels": [
+                {"alertLevel": level, "reason": "", "createdAt": at} for level, at in levels
+            ],
+        }],
+    }])
+
+
+def test_a_continuing_key_whose_level_changed_produces_no_episode_event() -> None:
+    """An escalation is not a new alert, and the episode row is not rewritten.
+
+    D-050: the level joins no identity, so yellow to red inside one alert
+    opens no row and closes none. This is the regression control for the
+    release that records level changes as their own stream: whatever that
+    release adds, the episode side of `poll()` must still answer nothing
+    here, and the opening row must keep the level it opened with (P2 says
+    that field is the level at the start, and is read as nothing else).
+    """
+    yellow, red = "2026-09-08T17:22:35Z", "2026-09-08T18:01:01Z"
+    transport = SequenceTransport(
+        [
+            _levelled(LVIV, yellow, ("Yellow", yellow)),
+            _levelled(LVIV, yellow, ("Yellow", yellow), ("Red", red)),
+        ]
+    )
+    source = _source(transport)
+
+    first = source.poll()
+    second = source.poll()
+
+    assert [e.state for e in first] == [AlertState.ACTIVE]
+    assert first[0].raw_fields["api_level"] == "Yellow"
+    assert second == ()
+    assert source._previous is not None
+    assert len(source._previous) == 1
+
+
+def test_a_declined_region_is_counted_apart_from_an_unknown_one() -> None:
+    """F131 through `poll()`: a name the register holds and will not resolve.
+
+    `resolve_prose_detail` had its own tests for the declined half; the
+    adapter's branch that reads that answer and files the name under
+    `declined` rather than `unresolved` had none, while production prints
+    `declined=1` on every cycle. The two counters have different repairs -
+    settle an ambiguity, add a row - and a name filed under the wrong one
+    sends the operator to the wrong file.
+    """
+    source = _source(
+        SequenceTransport([_snapshot(("Покровська територіальна громада", "ARTILLERY"))])
+    )
+
+    events = source.poll()
+
+    assert events == ()
+    assert source.declined == ("Покровська територіальна громада",)
+    assert source.unresolved == ()
+
+
 def _persisted(
     transport: SequenceTransport, path: Path, max_age_s: float = 360.0
 ) -> UkrainealarmSource:
