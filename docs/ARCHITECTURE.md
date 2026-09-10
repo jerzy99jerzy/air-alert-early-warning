@@ -6,7 +6,7 @@ break. `DATA-FLOW.md` is the companion and answers the other question, what
 happens to a message as it travels.
 
 ```
-Document:  docs/ARCHITECTURE.md, version 2.5
+Document:  docs/ARCHITECTURE.md, version 2.6
 Audience:  a contributor about to add a module, a dependency, or a process
 Companion: DATA-FLOW (what happens to the data), MECHANISMS (why each mechanism
            is built the way it is), METHODOLOGY (what may be claimed)
@@ -367,7 +367,14 @@ Named so that their absence is a decision rather than an oversight:
   not exist yet, which means the drone regime currently goes nowhere.
 - **No API adapters.** alerts.in.ua and ukrainealarm are drawn as dashed edges
   because the boundary is real and the implementations are not.
-- **No scheduler.** Continuous collection is a cron entry the operator writes,
-  until `mavo watch` exists. That daemon is phase M0 of the notification plan,
-  and it is a prerequisite for the skipped-message counter to be a measurement
-  rather than `unknown`, because a one-shot poll has no previous poll.
+- **No daemon, and a scheduler that is not cron.** Five systemd units and
+  timers run the collection (D-031: a timer plus a `oneshot` collector, which
+  `docs/DEPLOYMENT.md` enumerates); nothing is resident. This bullet said
+  *continuous collection is a cron entry the operator writes* and made the
+  absent daemon a **prerequisite for the skipped-message counter to be a
+  measurement rather than `unknown`** - two false links in one sentence, and
+  the second is a causal chain rather than a description (F166). F123
+  persists the window bounds in `feed_attempts`, so a later poll compares
+  against the stored `last_id` and the count is a measurement across
+  processes with nothing resident. What still reports `unknown` is a first
+  poll against a fresh store, and a page without ids.

@@ -2171,7 +2171,10 @@ Status: `ready` [tier 2]
 `mavo/sources/rso.py` parses the MSWiA feed run by TVP: pagination, the
 communique fields, voivodeship scope, empty-versus-absent, and a conversion
 that takes its zone from the caller and refuses an hour the zone maps twice.
-It has no `poll`, no store, no timer and no caller.
+It has no `ThreatSource.poll`, no timer and no place in the pipeline. **It
+does have a caller**: `mavo/cli.py` imports `poll_once as rso_poll_once` and
+`mavo rso` is documented BUILT in the manual, which this line denied until
+0.54.8.0 (F166).
 
 **What remains, and it is not typing.** A page fetched over the wire rather
 than from a fixture, a table of its own because a communique has a different

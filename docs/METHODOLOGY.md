@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.59
+Document:  docs/METHODOLOGY.md, version 2.60
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,61 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F166, 0.54.8.0. The absence query run across every document, and three more sentences denying things the tree has
+
+F164 was found by asking a document what it claims is *absent* rather than
+what it claims exists, on three files. This is the same query run across every
+tracked `.md` in the repository. The method, so it can be repeated: match
+absence phrasing - *not implemented*, *nothing yet*, *does not exist*, *not
+built*, *has no*, *there is no*, *never been run* - on lines that also name
+something in backticks, because a named thing is a checkable thing. Sixty
+lines matched; `CHANGELOG.md` and this file were set aside as records of past
+states by design, leaving thirty-four to resolve against the tree
+`[measured 2026-09-10]`.
+
+**Three were wrong.**
+
+*`README.md` indexes `docs/OBSERVABILITY.md` as "Plan, not built".* The
+document itself says **partly built**, `mavo/obs.py` is the sink, `mavo/cli.py`
+constructs it and announces `run-log=<path>`, and the host has been writing
+`run.jsonl` since 0.32.7.0 - 39,524 lines of it. The index row was two steps
+behind the document it indexes, and T23 closed twenty-two releases ago.
+
+*`docs/ARCHITECTURE.md` carried two false links in one bullet.* **No
+scheduler. Continuous collection is a cron entry the operator writes** - it is
+five systemd units and timers, which D-031 chose and `docs/DEPLOYMENT.md`
+enumerates. And **a prerequisite for the skipped-message counter to be a
+measurement rather than `unknown`** - F123 made it a measurement across
+processes with nothing resident. The second is worse than the first because it
+is a causal chain: an absent daemon was made the reason a counter cannot work,
+so a reader inherits both a wrong fact and a wrong dependency. This is F164's
+skipped-count sentence in a second document, which is how a claim of absence
+spreads: it is copied as background rather than checked as a claim.
+
+*`TODO.md` said `mavo/sources/rso.py` has "no `poll`, no store, no timer and
+no caller".* `mavo/cli.py` imports `poll_once as rso_poll_once` and `mavo rso`
+is documented BUILT. What is true is the rest of the list, and the entry now
+says which.
+
+**Thirty-one resolved correctly**, and the negative result is worth as much as
+the three: this repository is mostly accurate about its own gaps. Spot-checked
+by hand: `deploy/` genuinely does not exist; `mavo/errors.py` genuinely defines
+no warning type; `tests/test_sprint10.py` exists and the notifier it describes
+genuinely does not; MT15's precondition holds as written; the API latency row
+is genuinely absent for the reason `docs/CHANNEL.md` gives.
+
+**Why the whole class is invisible to the gate, stated once here rather than
+per instance.** Every check in this repository resolves a claim of *presence*:
+cited identifiers exist, cited tests exist, pinned figures match the tree,
+documented options exist on the parser. A sentence saying a thing is missing
+resolves nothing and passes everything. The asymmetry is structural and the
+answer is not another checker - it is that this query is cheap, takes one
+command, and now has a recorded form.
+
+**Reopen condition:** run the query above at any release that closes a task,
+and treat a matching line naming a shipped identifier as a defect rather than
+as prose.
 
 ### F164, 0.54.7.0. The document whose subject is the mechanisms said two of them were unbuilt, long after they were built
 

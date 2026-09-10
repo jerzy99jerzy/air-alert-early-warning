@@ -6,7 +6,7 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.18
+Document:  docs/BRIEF.md, version 2.19
 Measured:  2026-08-31, against STATUS.json at 0.50.0.0, and this time the
            figures were recomputed rather than carried over. Version 2.4 bore
            the same line while four figures inside it came from 0.32.9.0; what
@@ -199,7 +199,7 @@ With a private project this weighs more than the technology, so specifics
 instead of assurances. Every one of them can be checked without asking the
 author for an opinion.
 
-**The defect log holds 143 entries.** Each states what broke, why nobody
+**The defect log holds 144 entries.** Each states what broke, why nobody
 noticed, and what class of error it was. Entries against the project's own
 interest are in there too, including the 0 of 20 above, and one where the
 documentation claimed something was checked and it was not. Separately, **51

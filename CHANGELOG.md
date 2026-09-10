@@ -16,6 +16,39 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.54.8.0 - 2026-09-10
+
+**The absence query, run across every tracked document rather than three.**
+F166. Sixty lines matched; the changelog and the defect register were set
+aside as records of past states by design; thirty-four resolved against the
+tree, and three were wrong.
+
+- **`README.md` indexed `docs/OBSERVABILITY.md` as "Plan, not built".** The
+  document says *partly built*, `mavo/obs.py` is the sink, the publishing loop
+  constructs it and announces `run-log=<path>`, and the host has been writing
+  `run.jsonl` since 0.32.7.0. T23 closed twenty-two releases ago; the index row
+  was two steps behind the document it indexes.
+- **`docs/ARCHITECTURE.md` carried two false links in one bullet.** *No
+  scheduler. Continuous collection is a cron entry the operator writes* - it is
+  five systemd units and timers (D-031). And *a prerequisite for the
+  skipped-message counter to be a measurement rather than `unknown`* - F123
+  made it a measurement across processes with nothing resident. The second is
+  the worse one: an absent daemon was made the **reason** a counter cannot
+  work, so a reader inherits a wrong dependency and not just a wrong fact. It
+  is F164's sentence in a second document, which is how an absence claim
+  spreads - copied as background rather than checked as a claim.
+- **`TODO.md` said `mavo/sources/rso.py` has "no caller".** `mavo/cli.py`
+  imports `poll_once as rso_poll_once` and `mavo rso` is documented BUILT. The
+  rest of that list is true and the entry now says which part.
+- **Thirty-one resolved correctly, and that is the more useful result.**
+  `deploy/` genuinely does not exist; `mavo/errors.py` defines no warning type;
+  `tests/test_sprint10.py` exists and its notifier does not; the API latency
+  row is absent for the reason `docs/CHANNEL.md` gives.
+- **`ENGINEERING.md` 1.4** carries the query as a standing rule. Every check
+  here resolves a claim of *presence*, so a sentence saying a thing is missing
+  passes everything - the asymmetry is structural, and the answer is a cheap
+  recurring query rather than another checker.
+
 ## 0.54.7.0 - 2026-09-10
 
 **Fourth read-back, aimed at the three documents nobody had touched this

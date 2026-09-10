@@ -2,7 +2,7 @@
 
 **Portable engineering standard. Copy into any repository.**
 
-Version 1.3, 2026-09-10. Distilled from several single-maintainer repositories
+Version 1.4, 2026-09-10. Distilled from several single-maintainer repositories
 and from what went wrong in each. The 1.2 edition removes the names of the
 repositories the rules were learned in: a rule that needs its origin named to
 be understood is not yet a rule, and the defects below are described by their
@@ -355,6 +355,16 @@ default: `False` is what a naive implementation returns.
 
 **Version comparison uses a zero-padded numeric key, never string comparison.**
 `"3.5"` sorts below `"3.10"`. This also shipped once.
+
+**Ask your documents what they say is *missing*, not only what they say
+exists.** Every gate check resolves claims of presence - cited symbols, cited
+tests, pinned figures - and none of them can fail on a sentence saying a thing
+is absent. So an absence claim is the one kind that rots silently, and it rots
+in the direction of understating the project. The query is one command: match
+*not implemented*, *nothing yet*, *does not exist*, *has no*, *there is no* on
+lines that also name something in backticks, and resolve each name against the
+tree. Run it whenever a task closes. It found five wrong sentences across two
+passes of a repository that is otherwise careful about its own gaps.
 
 **A span, a count or an ordinal is a measurement and gets counted, not
 recalled.** "Twenty-three releases late", "the fourth instance", "thirty-one
