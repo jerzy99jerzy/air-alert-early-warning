@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.7 / 2026-09-04
+Version: 3.8 / 2026-09-10
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -291,7 +291,7 @@ corpus: `drone` 2,756 declarations, `glide_bomb` 2,104, `artillery` 934,
 three thousand declarations arrive named and render as *typ nieznany*. That
 collapses two different facts, "the source said nothing" and "the source said
 something this page has no word for", which is `AlertState.UNKNOWN` against
-`PARTIAL_CLEAR` one layer out. T47 carries the fix.
+`PARTIAL_CLEAR` one layer out. T47 carries the fix, and from 0.54.0.0 it is the **consumer's** entry rather than the producer's: the producer's two items shipped and are held by the gate, which fails when a `ThreatKind` member is not named in this document, and what is outstanding is a label and a glyph on a page this repository does not own.
 
 Glide bombs are worth a category of their own even though they do not reach
 Poland: they are the largest class in the corpus and they say which oblast is

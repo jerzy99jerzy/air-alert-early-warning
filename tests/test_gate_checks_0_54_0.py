@@ -165,3 +165,24 @@ def test_a_reference_to_a_heading_that_does_not_exist_still_counts(
     document = tmp_path / "MANUAL.md"
     document.write_text(UNANCHORED_REFERENCE, encoding="utf-8")
     assert precision_lint.count(document) == 2
+
+
+IMPORTS_A_LOOKALIKE = """
+from mavo.storefront import Window
+
+
+def render(tree):
+    return Window(tree).draw()
+"""
+
+
+def test_a_module_whose_name_merely_starts_with_store_is_not_a_store(
+        tmp_path: Path) -> None:
+    """The first version matched `mavo.store` by prefix.
+
+    A hypothetical `mavo.storefront` would have been reported as a store
+    reader, which is harmless until somebody adds one and cannot work out why
+    the gate wants it shipped as a subcommand.
+    """
+    root = _tree(tmp_path, "render.py", IMPORTS_A_LOOKALIKE)
+    assert lint_domain.check_no_tool_reads_the_store(root) == []

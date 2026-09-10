@@ -1302,11 +1302,21 @@ def check_cited_identifiers_exist(root: Path | None = None) -> list[str]:
     underscore in it. Everything else in backticks - shell, paths, JSON keys,
     unit names, SQL, prose in code font - is left alone, because a pattern wide
     enough to catch all of them would produce an allow-list longer than the
-    check and a gate step nobody reads. Measured on the tree at 0.54.1.0: eight
-    names outside the package across thirty-one documents, six of them
-    genuinely foreign and listed above with reasons, two of them defects in
-    this function that were repaired rather than listed - Python builtins, and
-    names bound by an `import ... as` alias.
+    check and a gate step nobody reads.
+
+    **Measured on the tree, 2026-09-10, and the first version of this paragraph
+    was not (F158).** The documents read are 19 under `docs/` plus the README:
+    **20**, not the thirty-one the first draft asserted. The first working
+    draft of this check flagged **nine** names; three were defects in the check
+    and were repaired rather than listed - two Python builtins and one name
+    bound by an `import ... as` alias, which binds a name without defining one
+    - leaving the **six** in `CITED_BUT_NOT_OURS`. Re-measurable in one call
+    with the allow-list emptied, which is how these figures were taken.
+
+    `root` swaps the *documents* only. The names are always read from this
+    repository's own tree, because the question is whether a document cites a
+    symbol this package has, and a scratch package would answer a different
+    question.
     """
     tree_root = root if root is not None else ROOT
     names, modules = _names_the_tree_defines()

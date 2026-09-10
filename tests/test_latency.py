@@ -354,3 +354,43 @@ def test_the_json_form_carries_the_same_fields(
     assert payload["sources"][0]["source"] == "telegram"
     assert payload["sources"][0]["median_s"] == 40.0
     assert payload["absent_tables"] == []
+
+
+def test_the_subcommand_forwards_every_flag_the_instrument_has(
+        tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """F157. `--source` existed in the instrument and not on the parser.
+
+    Two documents told an operator to run `mavo latency --source telegram`, and
+    that command exited 2 with `unrecognized arguments`. The instrument's own
+    regressions could not see it, because they call `main` directly and the
+    defect was in the wrapper - a test of the module is not a test of the
+    command, and this one goes through `mavo.cli` for exactly that reason.
+    """
+    from mavo.cli import main as cli_main
+
+    store = _store(tmp_path, [10.0] * 10, span_days=9.0, source="telegram")
+    _store(tmp_path, [600.0] * 10, span_days=9.0, source="ukrainealarm",
+           path=store)
+    assert cli_main(["latency", "--store", str(store), "--interval-s", "33",
+                     "--source", "telegram"]) == 0
+    out = capsys.readouterr().out
+    assert "source telegram" in out
+    assert "source ukrainealarm" not in out
+
+
+def test_an_unreadable_timestamp_is_counted_rather_than_fatal(
+        tmp_path: Path) -> None:
+    """One corrupt row must not take the reading down with it.
+
+    Inherited from the version in `tools/`, where `fromisoformat` was called
+    without a guard, and not noticed when this function was rewritten. A store
+    that dies on the row it cannot parse reports nothing about the rows it can.
+    """
+    store = _store(tmp_path, [40.0] * 10, span_days=9.0)
+    with closing(sqlite3.connect(store)) as conn, conn:
+        conn.execute(
+            "INSERT INTO events VALUES ('h','UA46','s',?,?,'telegram')",
+            ("not-a-timestamp", BASE.isoformat()))
+    lags = _lags(store)
+    assert lags.unparsed == 1
+    assert len(lags.forward) == 10

@@ -122,8 +122,11 @@ added the event stream, the threat-kind measurement, the latency instrument
 (T40, built and unread), the corpus census, the privacy gate and the tooling
 that keeps this file honest. Useful, and orthogonal to the sprint plan.
 
-**The host is current now** - 0.36.0.1 installed 2026-08-21, verified by
-symbol and digest, `docs/DEPLOYMENT.md` holds the deploy history - and the
+**The host was current when this paragraph was written and is not now** -
+0.36.0.1 installed 2026-08-21 was the reading then; `docs/DEPLOYMENT.md`
+records 0.53.4.0 installed 2026-09-09 and four releases outstanding behind it.
+The sentence is corrected rather than deleted because a narrative that quietly
+re-dates itself is how F140 happened. The week it describes produced the
 week since the sentence this one replaces was written produced the project's
 densest run of field findings: F108 through F110 in the register, the 0.076%
 pin withdrawn against a measured 9.9%, the packet-loss hypothesis closed at
@@ -359,9 +362,14 @@ sprint rather than declaring it met.*
 
 **What remains, exactly.** `mavo latency --store /var/lib/mavo/events
 --interval-s 33 --source telegram` on `vm-mavo`, and the row pasted into
-`docs/CHANNEL.md` 8a with its collection dates. The store holds the channel era
-continuously from 2026-08-11, which is longer than the seven days the
-instrument insists on, so this is closed history rather than a wait.
+`docs/CHANNEL.md` 8a with the span the instrument reports. That command exited
+2 until 0.54.2.0, because `--source` reached the instrument's parser and not
+the subcommand's (**F157**), so anyone who tried it between the two releases
+was told `unrecognized arguments`. The store holds the channel era from
+2026-08-11 to the silence of 2026-08-29, past the seven days the instrument
+insists on, so this is closed history rather than a wait - but *continuous* is
+not a claim this entry can make, since three stretches of an hour or more sit
+in the store with nothing in them and only one is provably an outage.
 
 **Caveat that must reach section 8a with the number.** The distribution's
 window opens 2026-08-11 17:25 and D-027's thirty seconds is true only from
@@ -782,14 +790,16 @@ underscore - and resolves each against every name bound anywhere under `mavo/`,
 `tools/` and `tests/`, read from the syntax tree. Verified red on scratch copies
 citing a fabricated call, a fabricated constant and a fabricated module path.
 
-**The narrowness is the design and it was measured rather than guessed.** A
-pattern wide enough to cover every backticked token would have to swallow
-shell, paths, JSON keys, unit names and SQL, and would produce an allow-list
-longer than the check. These three shapes leave **eight** names outside the
-package across thirty-one documents. Two were defects in the checker and were
-repaired instead of listed: Python builtins, and names bound by an
-`import ... as` alias, which binds a name without defining one. The remaining
-six are in `CITED_BUT_NOT_OURS`, each with its reason, and a test fails on an
+**The narrowness is the design, and the figures below were measured at
+0.54.2.0 after the first draft of this paragraph asserted two of them from
+memory (F158).** A pattern wide enough to cover every backticked token would
+have to swallow shell, paths, JSON keys, unit names and SQL, and would produce
+an allow-list longer than the check. Across **20** documents - 19 under `docs/`
+plus the README - the first working draft of the check flagged **nine** names.
+Three were defects in the checker and were repaired instead of listed: two
+Python builtins, and one name bound by an `import ... as` alias, which binds a
+name without defining one. The remaining **six** are in `CITED_BUT_NOT_OURS`,
+each with its reason, and a test fails on an
 entry whose reason is missing or perfunctory - an allow-list is where a check
 goes to die, so the list is policed by the same gate as the tree.
 
@@ -1142,8 +1152,12 @@ under D-024; `test_t37_a_continuation_list_produces_more_than_one_event`
 asserts the criterion end to end through `poll`, and MT15 kills the mutation
 that removes the behaviour.
 
-**The third item - the two rows in `docs/DATA-FLOW.md` - was outstanding for
-twenty-nine releases and is closed at 0.54.0.0.** The ledger of what this
+**The third item - the two rows in `docs/DATA-FLOW.md` - was outstanding for at
+least seventy-four releases and is closed at 0.54.0.0.** The bound is measured
+from the 0.25.0.0 changelog entry, which speaks of this loss in the past tense;
+no release entry records the behaviour landing at all, and the code comments
+saying 0.12.0.0 and sprint 8 are comments rather than release records (F156,
+F158). The ledger of what this
 pipeline drops went on calling both losses *currently invisible* after both had
 been closed, and this entry stayed `ready` beside it, so two hand-maintained
 artefacts agreed with each other and both disagreed with the code. F156, and

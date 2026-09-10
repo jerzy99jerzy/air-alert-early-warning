@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.25
+Document:  docs/DECISIONS.md, version 2.26
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -1481,15 +1481,18 @@ CLI gains a subcommand; the wheel stays dependency-free. `tools/attempts.py`
 remains as a one-screen forwarding shim so a written-down command line keeps
 working, and prints where the instrument went.
 
-**Applied to its class at 0.54.0.0, twenty-three releases late, and the delay
-is the finding.** `tools/latency.py` opened the same store by the same
+**Applied to its class at 0.54.0.0, twenty-six releases late, and the delay
+is the finding.** (Twenty-six is counted from the changelog: this decision
+was adopted at 0.43.0.0. The first draft of this paragraph said
+twenty-three, from memory, in a repository whose subject is that figures
+come from measurement - F158.) `tools/latency.py` opened the same store by the same
 `sqlite3` connection on the same host and was left in `tools/` when
 `attempts.py` moved, because the decision was carried out on the instance that
 prompted it rather than on the population it names. It ships as `mavo latency`
 from this release, with the same forwarding shim. The cost was not
-hypothetical: T40's row went unwritten for nine releases behind a *stated*
-blocker that had been discharged, while the real one was this and nobody was
-looking at it. `tests/lint_domain.py` now enumerates the modules under
+hypothetical: T40's row went unwritten for twenty-eight releases behind a
+*stated* blocker that had been discharged at 0.41.0.0, while the real one was
+this and nobody was looking at it. `tests/lint_domain.py` now enumerates the modules under
 `tools/` that open the store and fails on any that remain, so the next
 instance is caught by the gate rather than by a reading of the backlog. That
 check reads imports and connection calls from the syntax tree, so it sees an

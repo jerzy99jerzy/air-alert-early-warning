@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.8 / 2026-09-09
+Version: 1.9 / 2026-09-09
 What the source emits, measured on 48,540 real messages, and what that changes.
 
 **Status, 2026-08-31.** The channel stopped publishing on 2026-08-29 at 04:55
@@ -320,11 +320,16 @@ properties are worth stating here rather than only in its docstring, because
 they decide what the eventual number means.
 
 **It is `mavo latency` from 0.54.0.0 and was `tools/latency.py` before, and
-that is the whole reason this table is still empty.** The instrument shipped
-at 0.30.0.0 in a directory the wheel does not install, so it could not be run
-on the host that holds a store; the blocker recorded against it was a
-different one, discharged nine releases earlier, and nobody re-read the
-sentence it was blocking. D-038 and T84 carry the repair.
+that is one of the reasons this table is empty.** The instrument shipped at
+0.30.0.0 in a directory the wheel does not install, so it could not be run on
+the host that holds a store; the blocker recorded against it was a different
+one, discharged nine releases earlier, and nobody re-read the sentence it was
+blocking. D-038 and T84 carry that repair. **The README gives a different
+reason** - that a distribution was taken and withheld because one term in the
+tail was unattributed - and no median, p90, p99 or maximum appears anywhere in
+this tree `[measured 2026-09-10, grep over docs, changelog and STATUS.json]`.
+Which account is right is `[nieustalone]`, and the first draft of this
+paragraph asserted this one as the whole story.
 
 **It refuses a window shorter than seven days.** A distribution over one
 afternoon is an anecdote with percentiles on it, and this repository already
@@ -350,10 +355,16 @@ argument that thirty seconds is a defensible poll interval, rests on an
 unmeasured assumption about the term it is being compared against.
 
 **What fills it, and it is one command rather than a wait.** The store holds
-the channel era: collection ran continuously from 2026-08-11 to the channel's
-silence, which is a window longer than the seven days the instrument insists
-on, so this row is closed history and not something to wait for. The reading is
-`mavo latency --store /var/lib/mavo/events --interval-s 33` on `vm-mavo`, and
+the channel era. Collection began 2026-08-11 and the channel fell silent on
+2026-08-29, so the span is comfortably past the seven days the instrument
+insists on - though *continuous* is a word this document has no business
+using of it, since `docs/DEPLOYMENT.md` records three stretches of an hour or
+more with nothing in the store and only one of them provably an outage. The
+instrument reports the span it actually found, which is the number to quote.
+The reading is
+`mavo latency --store /var/lib/mavo/events --interval-s 33 --source telegram`
+on `vm-mavo` - `--source` matters, because a pooled figure over two eras is
+F155 - and
 whoever pastes the result here pastes the caveat with it: the window opens
 before D-027's thirty seconds was in force, so the first day and a half was
 collected by a timer firing roughly every 141 s and the median is a mixture of

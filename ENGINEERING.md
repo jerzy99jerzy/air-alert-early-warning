@@ -2,7 +2,7 @@
 
 **Portable engineering standard. Copy into any repository.**
 
-Version 1.2, 2026-09-09. Distilled from several single-maintainer repositories
+Version 1.3, 2026-09-10. Distilled from several single-maintainer repositories
 and from what went wrong in each. The 1.2 edition removes the names of the
 repositories the rules were learned in: a rule that needs its origin named to
 be understood is not yet a rule, and the defects below are described by their
@@ -355,6 +355,16 @@ default: `False` is what a naive implementation returns.
 
 **Version comparison uses a zero-padded numeric key, never string comparison.**
 `"3.5"` sorts below `"3.10"`. This also shipped once.
+
+**A span, a count or an ordinal is a measurement and gets counted, not
+recalled.** "Twenty-three releases late", "the fourth instance", "thirty-one
+documents": each of these is one command against the changelog, the register or
+the filesystem, and each has been written from a sense of how long ago
+something felt instead. It happened most recently in a release whose own
+subject was a check against citing what cannot be verified, which is the useful
+part of the story: a control covers a shape, not a subject, and a number
+spelled in words falls outside every pattern a linter can hold. Write the
+command that produced the figure beside the figure.
 
 ---
 

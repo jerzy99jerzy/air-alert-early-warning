@@ -163,8 +163,18 @@ def _read_lags(store: Path) -> tuple[dict[str, SourceLags], list[str]]:
             for raw_source, raw_ingest, source_id in rows:
                 name = source_id or "unattributed"
                 lags = per_source[name]
-                source = datetime.fromisoformat(raw_source)
-                ingest = datetime.fromisoformat(raw_ingest)
+                try:
+                    source = datetime.fromisoformat(raw_source)
+                    ingest = datetime.fromisoformat(raw_ingest)
+                except (TypeError, ValueError):
+                    # Inherited from the version in `tools/` and not noticed
+                    # when this function was rewritten: one unreadable row
+                    # killed the whole reading with a traceback. An instrument
+                    # that dies on a row it cannot parse reports nothing about
+                    # the rows it can, which is the opposite of counting the
+                    # unparseable rather than dropping it.
+                    lags.unparsed += 1
+                    continue
                 if source.tzinfo is None or ingest.tzinfo is None:
                     # F61's class: a naive timestamp is not a value. Counted
                     # rather than assumed to be UTC.

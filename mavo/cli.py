@@ -423,6 +423,8 @@ def _cmd_latency(args: argparse.Namespace) -> int:
     to want and the instrument is the thing that marks it as not a measurement.
     """
     argv = ["--store", args.store, "--interval-s", str(args.interval_s)]
+    if args.source is not None:
+        argv += ["--source", args.source]
     if args.allow_short:
         argv.append("--allow-short")
     if args.json:
@@ -1103,6 +1105,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="the poll interval the collector ran at, in seconds. The measured "
              "lag contains it, which is why the figure is a bound on the "
              "upstream rather than a reading of it",
+    )
+    latency.add_argument(
+        "--source", default=None,
+        help="report one source_id rather than every one. F157: this flag "
+             "existed in the instrument and not on this parser for one "
+             "release, while two documents told an operator to use it",
     )
     latency.add_argument(
         "--allow-short", action="store_true",

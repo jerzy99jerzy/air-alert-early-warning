@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.53
+Document:  docs/METHODOLOGY.md, version 2.54
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4750,7 +4750,94 @@ release, and cannot be repaired.** No wire artefact exists from before
 figures for those days are what the store holds, and this paragraph is the
 record that they are late rather than wrong by an unknown amount.
 
-### F156, 0.54.0.0. Two rows of the loss table said a loss was invisible for twenty-nine releases after the loss was closed
+### F157, 0.54.2.0. Two documents told an operator to run a command that exits with `unrecognized arguments`
+
+`mavo latency` was given a `--source` option at 0.54.0.0, so that the channel
+era and the API era could be reported apart rather than pooled (F155). The
+option was added to the instrument's own parser. It was **not** added to the
+subcommand's parser in `mavo/cli.py`, and `_cmd_latency` did not forward it.
+
+`TODO.md` T40 and `docs/CHANNEL.md` 8a both name the exact command that fills
+the row S9's criterion asked for:
+
+```
+mavo latency --store /var/lib/mavo/events --interval-s 33 --source telegram
+```
+
+**That command exits 2.** `[measured 2026-09-10]` The one instruction written
+for the one outstanding measurement in the sprint that had just been closed
+could not be executed.
+
+**Why nothing caught it.** The instrument carried twenty-four regressions at
+0.54.1.0 (twenty-six now, counted with `--collect-only`) and every one of them
+called `main` directly, so they exercise the module's parser and never
+the command's. `tools/manual_audit.py` checks that every subcommand has a
+section in the manual; it does not read option tables, so the manual's own list
+of four flags matched a parser with four flags and agreed with itself. The
+defect lived in the seam between two parsers that describe one command, and
+every check was on one side or the other of it.
+
+**The class.** An instrument tested only through its module is untested as a
+command - the same shape as F154 one layer up, where an instrument tested only
+against its own fixture was untested against the schema. Both were found the
+moment somebody ran the thing the way an operator would.
+
+**Repair.** `--source` on the subcommand and forwarded;
+`test_the_subcommand_forwards_every_flag_the_instrument_has` drives
+`mavo.cli.main` rather than `latency.main`, and the manual's option table gains
+the row it was missing.
+
+**Reopen condition:** any subcommand in `mavo/cli.py` that rebuilds an argv for
+a module whose parser it does not mirror, with no test going through
+`mavo.cli.main`.
+
+### F158, 0.54.2.0. The release that shipped a check against citing what cannot be verified asserted five figures nobody had counted
+
+0.54.1.0 closed T22 with `check_cited_identifiers_exist`, whose subject is that
+a document may not cite a symbol the tree does not have. The prose written
+around that check, and around the two entries in 0.54.0.0, carried five figures
+taken from memory:
+
+| Written | Measured | Where |
+| --- | --- | --- |
+| D-038 applied "twenty-three releases late" | **26** (adopted 0.43.0.0) | `docs/DECISIONS.md` |
+| F154 hid a defect "for twenty-four releases" | **60** (shipped 0.30.0.0) | `docs/METHODOLOGY.md` |
+| F156's rows stood "twenty-nine releases" | **at least 74**, upper bound unrecorded | `docs/METHODOLOGY.md`, `TODO.md` |
+| "eight names outside the package" | **six** in the residue, nine in the first draft's output | `tools/docs_audit.py`, `TODO.md`, `CHANGELOG.md` |
+| "thirty-one documents" | **20** (19 under `docs/` plus the README) | the same three files |
+
+**Every one was countable in a single command**, and each was written instead
+from a sense of how long ago something felt. The changelog holds every release
+header; `len(list(Path("docs").glob("*.md")))` is the document count; emptying
+the allow-list and re-running the check gives the residue exactly. Nothing here
+was hard to measure, which is the point: the failure is not difficulty, it is
+that a plausible number stops the reflex to check.
+
+**Found by the operator**, who asked for the patch to be read back for
+assumptions treated as fact. Not by the gate, and the gate would not have found
+it: `precision_lint` counts decimals, `figures.py` regenerates the counts it
+owns, `docs_audit` resolves cited identifiers - and a spelled-out ordinal in a
+sentence is none of those things.
+
+**Why it is the same class as F55 rather than sloppiness.** F55 is two figures
+in the documents written from memory, and it is the defect T22's check was
+built to prevent recurring. The check works on the shape it covers, symbols in
+backticks; a number spelled in words is outside its pattern by design, so the
+release that closed F55's check reproduced F55's defect one field over. A
+control's coverage is not its subject.
+
+**Repair.** All five corrected against measurement, each with the count's
+source named in place so a reader can repeat it. No new gate step: a check for
+"spans stated in prose match the changelog" would need to parse an English
+ordinal against an implied pair of releases, and a check that cannot be trusted
+is worse here than a stated hole. What is written instead is this entry and one
+sentence in `ENGINEERING.md`: a span in releases is a measurement and gets
+counted, not recalled.
+
+**Reopen condition:** any span, count or ordinal in a document that no command
+in this repository can reproduce.
+
+### F156, 0.54.0.0. Two rows of the loss table said a loss was invisible for at least seventy-four releases after the loss was closed
 
 `docs/DATA-FLOW.md` section 11 is this project's own ledger of what each stage
 can drop and whether the drop is visible. Two of its rows read **Nothing. This
@@ -4758,7 +4845,17 @@ loss is currently invisible** against the classifier: every area but the first
 in a message naming several, and the continuation list of an all-clear naming
 areas where the alert is still running.
 
-**Both were closed in sprint 8 and both rows stood.** `classify_message`
+**Both were closed, and both rows stood.** *When* they were closed is not
+recorded anywhere in the release history, which is a second finding rather than
+a detail: `classify_message`, `AreaRole` and `CONTINUATION` appear in no
+changelog entry before 0.54.0.0's own. What can be measured is a bound. The
+0.25.0.0 entry describes the loss in the past tense, as one *this repository
+made once already before T37*, so the behaviour was in place by 0.25.0.0 at the
+latest - **seventy-four releases** before this one. `mavo/schema.py` says
+`0.12.0.0` and the `AreaRole` docstring says sprint 8; those are code comments
+rather than release records, and if the earlier of them is right the span is a
+hundred and seven. The first draft of this entry asserted sprint 8 and
+twenty-nine releases as fact, with neither measured (F158). `classify_message`
 returns one mention per named area, `AreaRole.CONTINUATION` carries the second
 case as its own event, `test_t37_a_continuation_list_produces_more_than_one_event`
 asserts the acceptance criterion end to end through `poll`, and MT15 kills the
@@ -4776,8 +4873,8 @@ with each other and both disagreed with the code - the shape this repository
 names every time it finds two hand-maintained numbers matching.
 
 **What it cost.** The ledger is the document a reviewer reads to ask *what does
-this pipeline drop*, and for twenty-nine releases it overstated the answer in
-the direction of alarm. That is the safer direction and it is still wrong: a
+this pipeline drop*, and for at least seventy-four releases it overstated the
+answer in the direction of alarm. That is the safer direction and it is still wrong: a
 project whose product is honest reporting of what it does not know cannot have
 a stale entry in the register of what it does not know.
 
@@ -4837,9 +4934,13 @@ were pooled and gave the reason.
 **Why eleven regressions could not see it.** The fixture created a table named
 `kinds`, because it was written from the module rather than from the schema the
 module claims to read. Test data chosen by the implementation rather than
-against it is the class this repository has logged four times; here it hid a
-defect for twenty-four releases and would have hidden it indefinitely, since
-nothing else in the tree reads that name.
+against it is the class of **F90, F110 and F121**, and this is its fourth
+entry. Here it hid a defect for **sixty releases** - the instrument shipped at
+0.30.0.0 and `kind_events` has existed since 0.14.0.0, so the name was wrong on
+the day it was written - and would have hidden it indefinitely, since nothing
+else in the tree reads that name. *The first draft of this entry said
+twenty-four releases and named no prior instance; both were written from memory
+and are corrected at 0.54.2.0 (F158).*
 
 **Why it mattered now rather than then.** The instrument had never been runnable
 on a machine holding a real store: it lived in `tools/`, which the wheel does

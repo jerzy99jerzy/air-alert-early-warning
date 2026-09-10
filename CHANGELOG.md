@@ -16,6 +16,60 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.54.2.0 - 2026-09-10
+
+**A read-back of the two previous releases, requested by the operator: where
+was an assumption written as a fact.** Five figures, one command that did not
+run, one crash on a row it could not parse, and three documents describing a
+project that had moved.
+
+- **F157: `mavo latency --source` was documented and not wired.** The option
+  reached the instrument's parser at 0.54.0.0 and never reached the
+  subcommand's, and `_cmd_latency` did not forward it. `TODO.md` T40 and
+  `docs/CHANNEL.md` 8a both printed the exact command for the one outstanding
+  measurement of the sprint just closed, and that command exited 2 with
+  `unrecognized arguments` `[measured]`. The instrument carried twenty-four
+  regressions and every one called `main` directly, so the defect lived in the
+  seam between two parsers describing one command. The new regression
+  drives `mavo.cli.main`; the manual's option table gains the row it lacked.
+- **F158: five figures written from memory, in the pair of releases whose
+  subject was checking what cannot be verified.** "Twenty-three releases late"
+  was 26; "twenty-four releases" was 60; "twenty-nine releases" is a bound of
+  at least 74 with no upper bound recorded anywhere; "eight names across
+  thirty-one documents" was six names in the residue, nine in the first draft's
+  output, across 20 documents. Each was one command away. All five are
+  corrected with the count's source named beside it, and `ENGINEERING.md` 1.3
+  gains the standing rule: a span, a count or an ordinal is a measurement and
+  gets counted, not recalled.
+- **T37's landing release is not recorded anywhere and the entry now says so.**
+  `classify_message`, `AreaRole` and `CONTINUATION` appear in no changelog entry
+  before 0.54.0.0's own. The 0.25.0.0 entry describes the loss in the past
+  tense, which is the measurable bound; `mavo/schema.py` says 0.12.0.0 and the
+  `AreaRole` docstring says sprint 8, and both are comments rather than release
+  records. 0.54.0.0 asserted sprint 8 as fact.
+- **An unreadable timestamp no longer takes the whole reading down.**
+  `datetime.fromisoformat` was called without a guard - inherited from the
+  version in `tools/` and not noticed when `_read_lags` was rewritten - so one
+  corrupt row raised `ValueError` and the instrument reported nothing about the
+  rows it could read. Counted as `unparsed` now, which is what the docstring
+  already claimed happened.
+- **`docs/CHANNEL.md` 8a retracted an overstatement of its own.** It said the
+  instrument's placement was "the whole reason" the table is empty. The README
+  gives a different reason - a distribution taken and withheld over an
+  unattributed term in the tail - and no median, p90, p99 or maximum exists
+  anywhere in this tree. Which account is right is `[nieustalone]` and is now
+  written as such. The claim that collection ran *continuously* from 2026-08-11
+  is withdrawn too: `docs/DEPLOYMENT.md` records three stretches of an hour or
+  more with nothing in the store, only one provably an outage.
+- **`TODO.md` said the host was current.** It was, on 2026-08-21, at 0.36.0.1.
+  `docs/DEPLOYMENT.md` records 0.53.4.0 installed 2026-09-09 with four releases
+  outstanding. Corrected in place rather than deleted, because a narrative that
+  quietly re-dates itself is F140.
+- **`docs/WEBAPP.md`** now says T47 is the consumer's entry and what the
+  producer already holds in its gate. **`tests/lint_domain.py`** matched
+  `mavo.store` by prefix, so a hypothetical `mavo.storefront` would have been
+  called a store reader.
+
 ## 0.54.1.0 - 2026-09-10
 
 **T22 closed: a document can no longer cite a symbol the tree does not have.**
@@ -30,10 +84,11 @@ The first tag after 0.4.0.0 is v0.5.2.0.
   from memory. Verified red on scratch copies citing a fabricated call, a
   fabricated constant and a fabricated module path.
 - **The pattern is narrow and the width was measured, not guessed.** Across
-  thirty-one documents these three shapes leave eight names outside the
-  package. Two were defects in the checker and were repaired rather than
-  listed: Python builtins, and names bound by `import ... as`, which binds a
-  name without defining one. The remaining six sit in `CITED_BUT_NOT_OURS` with
+  twenty documents - 19 under `docs/` plus the README - these three shapes
+  flagged nine names in the check's first working draft. Three were defects in
+  the checker and were repaired rather than listed: two Python builtins, and
+  one name bound by `import ... as`, which binds a name without defining one.
+  The remaining six sit in `CITED_BUT_NOT_OURS` with
   a written reason each - Android's constants, the consumer's `SLUG_ALIASES`,
   the provider's networking vocabulary, the project's own hostname, and F55's
   own removed constant, because a register of defects that cannot name what is
@@ -58,10 +113,11 @@ The instrument its last clause depended on turned out not to be one.**
   hand-checked sample. What that costs - every claim about how late the
   picture is remains unmeasured - is stated in the decision, in `docs/MVP.md`
   and in the README rather than absorbed.
-- **T84: D-038 applied to its class, twenty-three releases after it was
-  adopted.** `latency.py` reads the store and stayed in `tools/`, which the
-  wheel does not install, so T40's instrument had never been runnable where
-  its input lives. It ships as `mavo latency`, `tools/latency.py` is a
+- **T84: D-038 applied to its class, twenty-six releases after it was
+  adopted at 0.43.0.0** (counted from the changelog at 0.54.2.0; this entry
+  first said twenty-three, from memory - F158). `latency.py` reads the store
+  and stayed in `tools/`, which the wheel does not install, so T40's
+  instrument had never been runnable where its input lives. It ships as `mavo latency`, `tools/latency.py` is a
   forwarding shim, and `lint_domain.check_no_tool_reads_the_store` now
   enumerates the modules under `tools/` that open the store and fails on any
   that remain - read from the syntax tree, so a comment naming `EventStore`
@@ -90,7 +146,8 @@ The instrument its last clause depended on turned out not to be one.**
 - **T37 closed, and it was met in sprint 8.** `classify_message`,
   `AreaRole.CONTINUATION`, the end-to-end regression and MT15 have all been
   in the tree since then; two rows of `docs/DATA-FLOW.md` went on calling both
-  losses *currently invisible* for twenty-nine releases and the backlog kept
+  losses *currently invisible* for at least seventy-four releases and the
+  backlog kept
   the task `ready` beside them. **F156**, the fourth instance of F118: nothing
   prompts anybody to look for good news.
 - **T47 is `moved` to `mavo-site`.** Items 1 and 3 ship here and are held by

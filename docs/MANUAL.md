@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.8
+Document:  docs/MANUAL.md, version 3.9
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -639,13 +639,14 @@ input is the store, the store lives on the host, and `tools/` is not
 installed there (D-038, T84).
 
 ```
-mavo latency --store /var/lib/mavo/events --interval-s 33
+mavo latency --store /var/lib/mavo/events --interval-s 33 --source telegram
 ```
 
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `--store` | required | Path to the event store. Both `events` and `kinds` are read; they share a transport, so pooling them is a statement about that transport |
 | `--interval-s` | 30.0 | The interval the collector ran at. Printed beside the figures rather than subtracted from them, because the measured lag contains it |
+| `--source` | every source | Report one `source_id` - `telegram` or `ukrainealarm` - rather than all of them. Sources are never pooled either way; this narrows the output to one |
 | `--allow-short` | off | Print a window under seven days anyway, marked as not a T40 measurement |
 | `--json` | off | Machine-readable, same fields |
 

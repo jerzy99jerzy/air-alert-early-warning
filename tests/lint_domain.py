@@ -105,8 +105,14 @@ def _opens_the_store(source: str) -> bool:
         # nothing to say about it; `lint` fails on it one target earlier.
         return False
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("mavo.store"):
-            return True
+        if isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            # Exact, or a submodule of it. `startswith` alone would call a
+            # hypothetical `mavo.storefront` a store reader, which is a small
+            # thing until the day somebody adds one and cannot work out why
+            # the gate is asking them to ship it as a subcommand.
+            if module == "mavo.store" or module.startswith("mavo.store."):
+                return True
         if (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
