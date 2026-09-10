@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.9 / 2026-09-09
+Version: 1.10 / 2026-09-09
 What the source emits, measured on 48,540 real messages, and what that changes.
 
 **Status, 2026-08-31.** The channel stopped publishing on 2026-08-29 at 04:55
@@ -348,7 +348,53 @@ measurement rather than an outlier to be tidied away.
 
 | Collected | Interval | n | Median | p90 | p99 | Max |
 | --- | --- | --- | --- | --- | --- | --- |
-| *not yet run* | | | | | | |
+| 2026-08-11 17:25:24 → 2026-09-07 06:09:04, 26.53 days | 33.0 s | 19,475 | **18.7 s** | **34.7 s** | **195.7 s** | 179,591.7 s |
+
+**Read 2026-09-10 on `vm-mavo` with `mavo latency --store /var/lib/mavo/events
+--interval-s 33 --source telegram`** `[measured]`. The `telegram` source only:
+the API era is a different quantity and has no row here, for the reason below.
+
+**Four things the row does not say on its own.**
+
+*The maximum is not a latency.* Sixteen rows share one `ts_ingest`,
+2026-08-31 06:22:53.714763, against `ts_source` spread over 2026-08-29 04:29 to
+04:55 - the last of them 04:55:28, which is the second the channel fell silent.
+`last_id` on the public view did not move across that read or the six around it
+(334726-334745, `items=20` each time), so the page served the same window
+before, during and after. Those sixteen messages became events two days after
+the collector had already read the page carrying them, and what changed on
+2026-08-31 is `[nieustalone]`; a reclassification after the install of that
+morning is the shape of it, and no wire artefact survives to settle it.
+**Without those sixteen rows: n=17,539, median 18.7 s, p90 34.7 s, p99 189.7 s,
+max 3,179.6 s** `[measured]`. The median and p90 do not move at all.
+
+*The window opens before D-027.* Thirty seconds is in force only from
+2026-08-13 08:59:43, the drop-in's own mtime; before that the timer fired every
+~141 s. The first day and a half is a mixture of two configurations. The
+direction is safe - a slower poll inflates our own share of the wait, so an
+upper bound stays an upper bound - and the label is not, which is why this
+sentence travels with the number.
+
+*Our own poll interval is most of it.* A 33.0 s cadence contributes a uniform 0
+to 33 s to every lag above, median 16.5 s. The instrument reports **2.2 s** as
+the upper bound on everything upstream of this collector `[wniosek]`. That is a
+bound, not a reading of the channel: the source's own publishing delay and the
+public view's are inside it and are not separable from here.
+
+*822 observations sit at or below the 2.0 s clock floor*, where the two
+unsynchronised clocks are the dominant term rather than the transport.
+
+**And there is no row for the API, deliberately.** Run over `ukrainealarm` the
+instrument reports a 143.49-day window opening 2026-04-19, four months before
+this project collected anything: `ts_source` on an API row is the alert's
+*declared start*, so an alarm standing since April yields a "lag" of 137 days
+at the first snapshot that listed it. Detection and inheritance are two
+populations in one column and nothing in the store separates them -
+`ts_source_origin` is absent on all 8,275 API rows `[measured 2026-09-10]`.
+Separating them needs a threshold, which is a decision rather than a repair.
+The all-clear half is already held out by the instrument: 4,095 rows whose
+source time is the observation itself, median 0.0 s, counted as constructed
+stamps rather than as measured zeroes.
 
 Until that row is filled, every latency claim in this repository, including the
 argument that thirty seconds is a defensible poll interval, rests on an

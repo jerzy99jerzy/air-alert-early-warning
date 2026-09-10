@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.34 / 2026-09-10
+Version: 1.35 / 2026-09-10
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -10,7 +10,7 @@ written after the fact rather than before, and says so.
 
 ## What is installed on the hosts, and how far behind it is
 
-Host state measured: 2026-09-08
+Host state measured: 2026-09-10
 
 **This section is the state. The rest of this document is the shape**, and the
 two diverged silently once already (F102), which is why the line above exists
@@ -45,7 +45,7 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.53.4.0`, `/opt/mavo/venv`, python3.11 `[measured 2026-09-09 11:20 UTC, from the operator's terminal: pip's own `Successfully installed air-alert-early-warning-0.53.4.0`, followed by the content read below]` |
+| Installed | `air-alert-early-warning 0.54.2.0`, **installed 2026-09-10 08:02 UTC** `[measured]`. Wheel `air_alert_early_warning-0.54.2.0-py3-none-any.whl`, sha256 `de5dd320…c06684`, built from a worktree of tag `v0.54.2.0`, moved by base64 over the ssh control channel to a `.partial` name, digest equal on both sides, renamed, then `sudo /opt/mavo/venv/bin/pip install --no-index --no-deps --force-reinstall`. No schema change, so no point of return was taken and the store was not stopped for a copy; `mavo-report.service` was restarted and returned `active` with `run-log=/var/lib/mavo/run.jsonl` and `feed=ok` on its next cycle. **Content discriminator, not the version string**: `mavo/latency.py` did not exist under `site-packages` before the install and after it carries `def _summary_of` once and `kind_events` twice `[measured]`. Previously: `air-alert-early-warning 0.53.4.0`, `/opt/mavo/venv`, python3.11 `[measured 2026-09-09 11:20 UTC, from the operator's terminal: pip's own `Successfully installed air-alert-early-warning-0.53.4.0`, followed by the content read below]` |
 | Installed at | **2026-09-09 11:20 UTC** `[measured]`. Baseline before the install: `grep -c alert_levels` over the installed `mavo/store.py` read **0**; the count for after was fixed from the tree as **12** before the host was read, and the host read 12 after `pip` |
 | Wheel | `air_alert_early_warning-0.53.4.0-py3-none-any.whl`, sha256 `ebd973be…a1a78d`, built with `python3 -m build --wheel` from a worktree of tag `v0.53.4.0`, moved by base64 over the ssh control channel to a `.partial` name, `sha256sum` equal on both sides, renamed, then `sudo /opt/mavo/venv/bin/pip install --no-index --no-deps --force-reinstall`. The wheel was removed from `/tmp` on the host after the install |
 | Point of return | **`events.pre-0.53.4.0`**, 35,614,720 B, sha256 `6fd094ceda9cfbb450fe0e69f5ebf8a6e36c6941011b68fa6978d00fb3288eaa`, taken with `cp -p` at 11:20 UTC with the timer stopped and no `events-wal` beside the store; `sha256sum` over the store and the copy read the same digest before `pip` ran `[measured]`. This is the first install since 0.52.0.0 to move the schema, and the first for which this row was a precondition rather than a record: the rule stated two revisions of this document earlier held. Nine earlier return points sit beside it on the host, from `events.pre-0.42.0.0` to `events.pre-0.52.1.0`, 188 MB between them; their retention is P6, still unwritten |
@@ -59,8 +59,9 @@ never a decision until D-031 wrote it down.
 | Reconcile after the polls | not run at this install `[unknown]`; the one-cycle gap gave it nothing to examine, and the 0.52.0.0 reading (`ghosts=2 masked=0`, both closed with `--apply`) is in the deploy history below |
 | Contract after | `[reported, the consumer half of the same session]` `mavosite-doctor` on the production `state.json` at about 22:50 UTC: `schema v3 accepted`, `contract complete: state=ok, 35 areas, window 7 d`, `no vocabulary drift`, exit 0 |
 | `Самарівський район` | in `unresolved` at 20:25:11 and again at 22:09:59, one of the five names the map does not place at the second read. A row for `data/reference/tag_map.csv`, and open (P7) |
-| `main` | 0.54.2.0 |
-| Behind by | **five** releases: 0.53.5.0 adds a gate, two documents and one decision's condition; 0.53.5.1 rewrites the Polish edition of FEED-SPEC; 0.54.0.0 closes S9, moves the latency instrument into the package as `mavo latency` and repairs two defects in it (F154, F155). The first two change nothing under `mavo/` but the version string. **The third does**, and the instrument it ships is the one that has to be run on this host to write the row `docs/CHANNEL.md` 8a is missing, so this install is not optional bookkeeping. 0.54.1.0 adds one gate step and changes nothing under `mavo/` but the version string; 0.54.2.0 wires `--source` onto `mavo latency`, without which the command this document and `docs/CHANNEL.md` both print exits 2 (F157) |
+| `feed_attempts` coverage | **begins 2026-08-29 14:39:05 UTC, for every feed** `[measured 2026-09-10]`. Collection began 2026-08-11, so the table is eighteen days younger than the store it sits in and a query before that date returns an empty set rather than a silence. The refusal-rate figures above are journald's, not this table's, which is what makes them valid for a window this table does not reach (F159) |
+| `main` | 0.54.3.0 |
+| Behind by | **1** release, 0.54.3.0, which writes T40's row into `docs/CHANNEL.md` from the reading this host produced and changes nothing under `mavo/`. Superseded rows, kept for the record: **five** releases were outstanding before the 2026-09-10 install: 0.53.5.0 adds a gate, two documents and one decision's condition; 0.53.5.1 rewrites the Polish edition of FEED-SPEC; 0.54.0.0 closes S9, moves the latency instrument into the package as `mavo latency` and repairs two defects in it (F154, F155). The first two change nothing under `mavo/` but the version string. **The third does**, and the instrument it ships is the one that has to be run on this host to write the row `docs/CHANNEL.md` 8a is missing, so this install is not optional bookkeeping. 0.54.1.0 adds one gate step and changes nothing under `mavo/` but the version string; 0.54.2.0 wires `--source` onto `mavo latency`, without which the command this document and `docs/CHANNEL.md` both print exits 2 (F157) |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

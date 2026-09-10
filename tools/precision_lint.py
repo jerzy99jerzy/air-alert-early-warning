@@ -198,16 +198,34 @@ CEILINGS: dict[str, int] = {
     # to hold a task written because the counter counts the wrong things, which
     # is the clearest statement of the problem available and is left standing
     # here rather than tidied away.
-    "TODO.md": 32,
+    # 32 -> 33 at 0.54.3.0. T40's closing entry quotes the window its own
+    # measurement covers, 26.53 days, and rounding it here while quoting it
+    # exactly in `docs/CHANNEL.md` would put two spans in the tree for one
+    # reading. The same exception as the CHANNEL raise in the same release.
+    "TODO.md": 33,
     "docs/BRIEF-PL.md": 6,
     "docs/BRIEF.md": 6,
-    "docs/CHANNEL.md": 19,
+    # 19 -> 22 at 0.54.3.0. Section 8a finally carries T40's row, and the
+    # three new figures are the instrument's own: two window spans in days to
+    # two decimals (26.53 and 143.49, printed by `mavo latency` and quoted
+    # rather than rounded, because rounding a span changes whether it clears
+    # the seven-day acceptance) and one more inside the caveat that reports
+    # the same distribution with sixteen backfilled rows removed. A row this
+    # document waited nine releases for is the one place where quoting the
+    # instrument exactly is the point.
+    "docs/CHANNEL.md": 22,
     "docs/COMPUTATION.md": 20,
     "docs/DATA-FLOW.md": 6,
     # 32 -> 33 at 0.43.0.0: D-039 quotes the measured poll latency, 0.26 s,
     # because the no-lock arithmetic rests on it and rounding a load-bearing
     # figure to "fast" is how arithmetic becomes hope.
-    "docs/DECISIONS.md": 32,
+    # 32 -> 36 at 0.54.3.0. D-052 is a decision *about this counter*, and it
+    # cannot state its own rule without quoting the tokens the rule turns on:
+    # `7.84` as the measurement a shape-based exclusion would swallow, `3.15`
+    # and `4.20` as version-shaped tokens that must keep counting. Same
+    # exception as METHODOLOGY quoting `0.076`, for the same reason: the
+    # contrast is the record.
+    "docs/DECISIONS.md": 36,
     "docs/DEPLOYMENT.md": 10,
     "docs/FEED-SPEC.md": 6,
     # 0.53.5.0: the Polish edition. The same six figures as the English one,

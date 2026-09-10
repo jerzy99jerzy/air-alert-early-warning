@@ -16,6 +16,53 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.54.3.0 - 2026-09-10
+
+**T40 is closed with a measurement. Section 8a of `docs/CHANNEL.md` has a row
+in it for the first time since the question was asked.**
+
+- **The channel's post-to-receipt lag, read on `vm-mavo`**: 19,475
+  observations over 26.53 days, **median 18.7 s, p90 34.7 s, p99 195.7 s**
+  `[measured 2026-09-10]`. A 33.0 s cadence contributes a uniform 0 to 33 s of
+  that, so the upper bound on everything upstream of this collector is
+  **2.2 s** `[wniosek]`. Every latency argument in this repository rested on an
+  unmeasured term until this release; the term is now measured, and it is
+  small.
+- **Three caveats ship with the row rather than after it.** The maximum of
+  179,591.7 s is sixteen rows sharing one `ts_ingest` two days after the
+  collector had already read the page carrying them, with `last_id` unmoved
+  across that read and the six around it - not a latency, and what changed that
+  morning is `[nieustalone]`. Without them: n=17,539, median 18.7 s unchanged,
+  p90 34.7 s unchanged, max 3,179.6 s. The window opens before D-027, so the
+  first day and a half is a ~141 s cadence mixed in. And **there is no row for
+  the API**: `ts_source` there is an alert's declared start, a standing alarm
+  from April reads as a 137-day "lag", and nothing in the store separates
+  inheritance from detection - `ts_source_origin` is absent on all 8,275 API
+  rows. The instrument's `constructed_stamps` already holds out the 4,095
+  all-clear rows whose source time is the observation itself.
+- **T77 closed on a third answer (D-052).** Its two branches were both wrong:
+  excluding version-shaped tokens by shape swallows genuine two-decimal
+  measurements, and counting them deliberately is what raised two ceilings at
+  0.39.1.0 for reasons the module is not about. Interpreters are excluded by an
+  explicit list, document versions and section numbers by context, four-part
+  versions by shape. The cost of a list is paid by
+  `test_the_exclusion_covers_every_interpreter_the_matrix_names`, which reads
+  the CI matrix and fails when an interpreter runs there and is not named.
+- **F159: `feed_attempts` begins 2026-08-29 14:39:05, eighteen days after
+  collection began**, and no document said so. Three claims were read out of
+  the empty region in one session, all by the assistant: that the S9 window's
+  7,850 attempts were impossible (they are journald's, as the line above the
+  table states); that the collector never stopped, because a gap scan found
+  nothing (it found nothing because the table does not reach the period); and
+  that the cadence fell to ~85 s on 2026-08-29 (the day is partial in the
+  table; the measured cadence is median 33.0 s). All three are withdrawn.
+  **S9's evidence is unaffected.** The boundary is now a row in
+  `docs/DEPLOYMENT.md`.
+- Two ceilings rose in `tools/precision_lint.py` with reasons: `docs/CHANNEL.md`
+  19 to 22, for the instrument's own window spans, and `docs/DECISIONS.md` 32
+  to 36, because a decision about the figure counter cannot state its rule
+  without quoting the tokens the rule turns on.
+
 ## 0.54.2.0 - 2026-09-10
 
 **A read-back of the two previous releases, requested by the operator: where

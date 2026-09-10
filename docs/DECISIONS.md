@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.26
+Document:  docs/DECISIONS.md, version 2.27
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2131,3 +2131,39 @@ written; or a latency measurement is taken on the API path, at which point the
 question is whether S9's criterion or S10's is the right home for it. Neither
 reopens the sprint's closure; both reopen what the closure was allowed to
 claim.
+
+## D-052. Version-shaped tokens are excluded from the precision counter by name and by context, never by shape
+Date: 2026-09-10. Status: adopted
+
+**Decision.** `tools/precision_lint.py` counts figures written to two or more
+decimals. Four-part version strings are excluded by shape; document versions
+(`Version: 1.16`) and section numbers are excluded by *context*; CPython
+interpreter tokens are excluded by an explicit, dated *list of names*. No rule
+excludes a token because it merely looks like a version.
+
+**Reasoning, and it is T77's third answer rather than either of the two the
+entry offered.** T77 asked for exclusion by shape or a decision that
+version-shaped tokens are counted deliberately. Neither is right. A shape wide
+enough to catch `3.14` catches `7.84`, and `7.84` is exactly the kind of figure
+this counter exists to find - a measurement carrying two decimals it has not
+earned. Counting interpreter tokens deliberately is no better: it made two
+ceilings rise at 0.39.1.0 for reasons the module is not about, and a ceiling
+that rises for the wrong cause stops measuring.
+
+**The cost of naming rather than shaping, stated because it is real.** A list
+falls behind the thing it names. That cost is payable once, by a check:
+`test_the_exclusion_covers_every_interpreter_the_matrix_names` reads the CI
+matrix out of `.github/workflows/` and fails when an interpreter runs there and
+is not in `_INTERPRETERS`. The list cannot silently rot, and a version added to
+the matrix must be added here in the same commit.
+
+**What this does not license.** A token is excluded because it is on the list
+or because the words around it say *version* or *section*, never because it has
+two digits and a dot. `test_a_version_shaped_token_that_is_not_an_interpreter_still_counts`
+holds that line: `3.15` in a ratio is a figure until CPython 3.15 is in the
+matrix, at which point it is a figure everywhere except beside an interpreter.
+
+**Reopen if:** the interpreter matrix grows past a handful of entries, at which
+point a list becomes a maintenance surface rather than a footnote; or a
+document needs to quote an interpreter version as a measurement, which this
+exclusion would then hide.

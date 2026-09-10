@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.54
+Document:  docs/METHODOLOGY.md, version 2.55
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4790,6 +4790,55 @@ the row it was missing.
 **Reopen condition:** any subcommand in `mavo/cli.py` that rebuilds an argv for
 a module whose parser it does not mirror, with no test going through
 `mavo.cli.main`.
+
+### F159, 0.54.3.0. The attempt log is eighteen days younger than the collection it appears to cover, and three claims were read out of the empty part
+
+`feed_attempts` holds one row per poll and is the table `mavo attempts` reads.
+Its earliest row, for any feed, is **2026-08-29 14:39:05 UTC**
+`[measured 2026-09-10, on the production store]`. Collection began 2026-08-11.
+Eighteen days of polling produced events and no attempt rows, because the table
+arrived with a later release, and no document says so. A reader querying it for
+2026-08-17 gets an empty result and no indication that emptiness is the table's
+age rather than the collector's silence - the shape MT11 exists to prevent one
+layer down, where an outage must not read as a quiet sky.
+
+**Three claims were drawn out of that empty region in one session, all by the
+assistant, all in the space of twenty minutes.**
+
+*That the S9 window's 7,850 attempts were impossible.* They were not: that
+figure is journald's, and `docs/DEPLOYMENT.md` says so two lines above the
+table - attempts are `Finished mavo-collect` plus `Failed to start` with
+`status=3`. The provenance was written down and was inferred instead of read.
+S9's evidence stands unaltered.
+
+*That the collector never stopped, because no gap over 600 s appears between
+channel attempts.* The scan found no gap because the table does not reach the
+period it was scanned for. Absence of rows was read as presence of polling,
+which is the same error as the one above with the sign reversed.
+
+*That the cadence on 2026-08-29 fell to about 85 s, from 1,021 attempts against
+2,610 on neighbouring days.* The day is partial in the table - it begins at
+14:39 - and the cadence that day is median 33.0 s, p90 35.0 s, max 42.5 s
+`[measured]`. A rate was computed by dividing a real numerator by an assumed
+denominator.
+
+**The class, and why it is worth three paragraphs.** Each is a claim about
+where a number came from, made without opening the thing it came from. F158 was
+the same failure about *how large* a number is; this is the same failure about
+*what a number is of*. Both are cheap to avoid and neither is caught by any
+check here, because provenance lives in prose.
+
+**Repair.** `docs/DEPLOYMENT.md` records the table's start date beside the
+store description, so the next reader meets the boundary before querying
+across it. The three claims are withdrawn in this entry rather than deleted
+from the session record. No new gate step: a check that a query window lies
+inside a table's coverage belongs in the instrument that queries, and
+`mavo attempts` already reports its own window - what was missing was a reader
+who looked at it.
+
+**Reopen condition:** any figure taken from `feed_attempts` for a period before
+2026-08-29, or any instrument that reports a count over a window without
+reporting the window its input actually covers.
 
 ### F158, 0.54.2.0. The release that shipped a check against citing what cannot be verified asserted five figures nobody had counted
 
