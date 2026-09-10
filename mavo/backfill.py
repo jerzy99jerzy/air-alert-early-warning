@@ -18,6 +18,7 @@ evidence. Parsing happens later, from disk, as many times as the redesign needs.
 
 from __future__ import annotations
 
+import fcntl
 import os
 import re
 import time
@@ -261,18 +262,40 @@ class DirectoryBusy(RuntimeError):
 
 
 class DirectoryLock:
-    """Advisory lock over an output directory, holding the owning pid.
+    """Advisory lock over an output directory, held by the kernel on a descriptor.
 
     Advisory rather than enforced by the filesystem: this guards against the
     operator starting a second run, which is what happened, and not against an
-    adversary. A stale lock from a killed process is detected by checking
-    whether that pid is alive, and is taken over rather than requiring a manual
-    cleanup step nobody will remember at 02:00.
+    adversary.
+
+    **The exclusion is `flock`, and the pid in the file is a label rather than
+    the mechanism (T26).** Until 0.54.4.0 the lock was a pid written to a file
+    and a liveness test on it, and a pid is meaningless outside the namespace
+    that issued it. Reproduced 2026-09-10 rather than reasoned about: a holder
+    at pid 483 in the host namespace, a second process under
+    `unshare --pid --fork` on the same directory, `os.kill(483, 0)` raising
+    `ProcessLookupError` because that namespace has no pid 483, and the second
+    process taking the lock as stale. Two runs against one directory, which
+    doubles the request rate against a service whose tolerance was measured
+    over a burst of twenty.
+
+    `flock` is a property of the open file description against the **inode**,
+    so two containers sharing one mounted volume contend correctly with no
+    notion of pid at all. It also retires the liveness heuristic outright: a
+    killed process releases its descriptor, so a lock is never stale and never
+    needs a takeover rule. The pid is still written, because
+    `DirectoryBusy` naming a number an operator can look up is worth a line.
+
+    **Where this does not hold**, stated rather than discovered later: `flock`
+    over NFS is implementation-dependent and this is a local volume; and two
+    *hard links* to one inode still contend, while two bind mounts of different
+    inodes do not. The stated scope is one directory on one volume.
     """
 
     def __init__(self, directory: Path) -> None:
         self.path = directory / ".backfill.lock"
         self.acquired = False
+        self._handle: int | None = None
 
     def _holder(self) -> int | None:
         try:
@@ -280,49 +303,41 @@ class DirectoryLock:
         except (OSError, ValueError):
             return None
 
-    @staticmethod
-    def _alive(pid: int) -> bool:
-        try:
-            os.kill(pid, 0)
-        except ProcessLookupError:
-            return False
-        except PermissionError:
-            return True
-        return True
-
     def acquire(self, pid: int | None = None) -> None:
         """Take the lock, or raise ``DirectoryBusy`` naming the holder.
 
-        Creation is ``O_CREAT | O_EXCL``, so two processes racing an absent lock
-        cannot both win: exactly one creates the file, the other lands in the
-        holder check. The previous check-then-write had that window open; within
-        the stated scope (operator error, not an adversary) it never fired, but
-        the atomic form costs three lines and closes it outright.
+        The descriptor is opened first and locked second. A failure to lock is
+        the only refusal: no check-then-act window remains, and nothing is
+        inferred from the contents of the file, which any process can write.
         """
         self.path.parent.mkdir(parents=True, exist_ok=True)
         me = pid or os.getpid()
+        handle = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o644)
         try:
-            handle = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
             holder = self._holder()
-            if holder is not None and holder != me and self._alive(holder):
-                raise DirectoryBusy(
-                    f"{self.path.parent} is held by pid {holder}. Two runs against one "
-                    "directory double the request rate against a service whose tolerance "
-                    "was measured over a burst of twenty"
-                ) from None
-            # Stale (dead pid) or our own: take over rather than demanding a
-            # manual cleanup step nobody will remember at 02:00.
-            self.path.write_text(str(me), encoding="utf-8")
-        else:
-            with os.fdopen(handle, "w", encoding="utf-8") as lockfile:
-                lockfile.write(str(me))
+            os.close(handle)
+            named = f"pid {holder}" if holder is not None else "another process"
+            raise DirectoryBusy(
+                f"{self.path.parent} is held by {named}. Two runs against one "
+                "directory double the request rate against a service whose tolerance "
+                "was measured over a burst of twenty"
+            ) from None
+        os.ftruncate(handle, 0)
+        os.write(handle, str(me).encode("utf-8"))
+        os.fsync(handle)
+        self._handle = handle
         self.acquired = True
 
     def release(self) -> None:
         """Drop the lock if this object took it."""
         if self.acquired:
             self.path.unlink(missing_ok=True)
+            if self._handle is not None:
+                fcntl.flock(self._handle, fcntl.LOCK_UN)
+                os.close(self._handle)
+                self._handle = None
             self.acquired = False
 
     def __enter__(self) -> DirectoryLock:

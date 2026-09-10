@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.55
+Document:  docs/METHODOLOGY.md, version 2.56
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4790,6 +4790,49 @@ the row it was missing.
 **Reopen condition:** any subcommand in `mavo/cli.py` that rebuilds an argv for
 a module whose parser it does not mirror, with no test going through
 `mavo.cli.main`.
+
+### F160, 0.54.4.0. The lock protecting the upstream from a doubled request rate was a number any process could write, and a second pid namespace walked through it
+
+`DirectoryLock` wrote the owning pid into `.backfill.lock` and, on finding an
+existing lock, decided whether to respect it by calling `os.kill(pid, 0)`.
+Pids are per namespace. Two containers on one mounted volume each count from
+one, so the number in the file means nothing to the process reading it.
+
+**Reproduced 2026-09-10, having been carried as `[inference, unreproduced]`
+since 0.43.0.0.** A holder took the lock at pid 483 in the host namespace; a
+second process under `unshare --pid --fork`, against the same directory, found
+no pid 483, classified the lock as stale and took it `[measured]`. Both runs
+would have proceeded, against a service whose tolerance this project measured
+over a single burst of twenty.
+
+**The entry that carried it was right to refuse itself a threat-model row.**
+`docs/DEPLOYMENT.md` section 9 said the hole "does not become a threat-model
+row on the strength of my reasoning" and filed T26 to reproduce it first, with
+the negative result to be recorded if it did not reproduce. It did, so MT15
+exists now on the strength of an observation. That refusal is worth more than
+the fix: a threat model populated from reasoning is a document of fears.
+
+**The narrow reading of the defect would have missed it.** Framed as *pids are
+per namespace*, the repair is a namespace identifier beside the pid, and the
+control stays a comparison of things written in a file by whoever holds the
+pen. The actual defect is that liveness of a self-reported number was the whole
+exclusion. `flock` on a descriptor against the inode makes exclusion the
+kernel's, retires the stale-lock rule entirely - a killed process drops its
+descriptor - and works across namespaces because it never mentions one.
+
+**What the repair does not cover, written into the class docstring rather than
+discovered later.** `flock` over NFS is implementation-dependent; two bind
+mounts of different inodes do not contend; the scope remains one directory on
+one volume.
+
+**Noticed while adding the row and not fixed here:** `MT` numbers a
+threat-model row in `docs/THREAT-MODEL.md` and also a mutation in the harness
+register, and the two sequences are independent. Both now reach 15 and mean
+different things. That is the F31 shape and it deserves its own entry rather
+than a paragraph in this one.
+
+**Reopen condition:** any exclusion in this repository that decides ownership
+by reading a value the contending party could have written.
 
 ### F159, 0.54.3.0. The attempt log is eighteen days younger than the collection it appears to cover, and three claims were read out of the empty part
 

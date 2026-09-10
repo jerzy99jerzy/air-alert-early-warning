@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.35 / 2026-09-10
+Version: 1.36 / 2026-09-10
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -60,8 +60,8 @@ never a decision until D-031 wrote it down.
 | Contract after | `[reported, the consumer half of the same session]` `mavosite-doctor` on the production `state.json` at about 22:50 UTC: `schema v3 accepted`, `contract complete: state=ok, 35 areas, window 7 d`, `no vocabulary drift`, exit 0 |
 | `Самарівський район` | in `unresolved` at 20:25:11 and again at 22:09:59, one of the five names the map does not place at the second read. A row for `data/reference/tag_map.csv`, and open (P7) |
 | `feed_attempts` coverage | **begins 2026-08-29 14:39:05 UTC, for every feed** `[measured 2026-09-10]`. Collection began 2026-08-11, so the table is eighteen days younger than the store it sits in and a query before that date returns an empty set rather than a silence. The refusal-rate figures above are journald's, not this table's, which is what makes them valid for a window this table does not reach (F159) |
-| `main` | 0.54.3.0 |
-| Behind by | **1** release, 0.54.3.0, which writes T40's row into `docs/CHANNEL.md` from the reading this host produced and changes nothing under `mavo/`. Superseded rows, kept for the record: **five** releases were outstanding before the 2026-09-10 install: 0.53.5.0 adds a gate, two documents and one decision's condition; 0.53.5.1 rewrites the Polish edition of FEED-SPEC; 0.54.0.0 closes S9, moves the latency instrument into the package as `mavo latency` and repairs two defects in it (F154, F155). The first two change nothing under `mavo/` but the version string. **The third does**, and the instrument it ships is the one that has to be run on this host to write the row `docs/CHANNEL.md` 8a is missing, so this install is not optional bookkeeping. 0.54.1.0 adds one gate step and changes nothing under `mavo/` but the version string; 0.54.2.0 wires `--source` onto `mavo latency`, without which the command this document and `docs/CHANNEL.md` both print exits 2 (F157) |
+| `main` | 0.54.4.0 |
+| Behind by | **2** releases: 0.54.3.0 writes T40's row into `docs/CHANNEL.md` from the reading this host produced and changes nothing under `mavo/`; 0.54.4.0 replaces the backfill directory lock with `flock` (T26, F160), which touches `mavo/backfill.py` and matters only if a second collector is ever run against one directory - not the current shape, and the reason this install is not urgent. Superseded rows, kept for the record: **five** releases were outstanding before the 2026-09-10 install: 0.53.5.0 adds a gate, two documents and one decision's condition; 0.53.5.1 rewrites the Polish edition of FEED-SPEC; 0.54.0.0 closes S9, moves the latency instrument into the package as `mavo latency` and repairs two defects in it (F154, F155). The first two change nothing under `mavo/` but the version string. **The third does**, and the instrument it ships is the one that has to be run on this host to write the row `docs/CHANNEL.md` 8a is missing, so this install is not optional bookkeeping. 0.54.1.0 adds one gate step and changes nothing under `mavo/` but the version string; 0.54.2.0 wires `--source` onto `mavo latency`, without which the command this document and `docs/CHANNEL.md` both print exits 2 (F157) |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -789,15 +789,20 @@ count pids from 1, so process `7` in container A reads a lock held by `7`,
 concludes it is its own, and takes it. The control that protects the upstream
 becomes silently false, in the one deployment shape that would need it most.
 
-[inference, unreproduced: derived from the code and from pid namespace
-semantics. Two containers on one volume have not been run to observe it. This
-does not become a threat-model row on the strength of my reasoning; T26 is to
-reproduce it first, and if it does not reproduce, that result is recorded too.]
+**[measured 2026-09-10, and the reasoning was right.]** A holder took the lock
+at pid 483 in the host namespace; a second process under
+`unshare --pid --fork` against the same directory found no pid 483, treated the
+lock as stale and took it. Both would have run. The reproduction is
+`tests/test_t26_directory_lock.py` and the row it earned is MT16 - it became a
+threat-model row on the strength of an observation, which is what the previous
+revision of this paragraph said it would take.
 
-The fix is small and belongs **before** any containerised or multi-host run, not
-after: carry a host identifier alongside the pid, or take the lock with `flock`
-on a descriptor so liveness is the kernel's problem rather than a numeric
-comparison.
+**Fixed at 0.54.4.0.** The lock is `flock` on a descriptor against the inode,
+so two containers on one volume contend in the kernel and no pid is consulted.
+The liveness heuristic is gone rather than unused, and a regression fails if
+`os.kill` returns to the module. Where this does not hold is stated in the
+class docstring: `flock` over NFS is implementation-dependent, and two bind
+mounts of different inodes do not contend.
 
 ## 10. Open decisions
 

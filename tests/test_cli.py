@@ -142,17 +142,27 @@ def test_backfill_resume_on_an_empty_directory_says_so(
 def test_backfill_refuses_a_directory_another_run_holds(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    import os
+    from mavo.backfill import DirectoryLock
+
     out = tmp_path / "corpus"
     out.mkdir()
-    # The parent process: alive, and not us. pid+1 is usually neither, and a
-    # lock naming a dead holder is taken over by design.
-    (out / ".backfill.lock").write_text(str(os.getppid()), encoding="utf-8")
-    page = tmp_path / "page.html"
-    page.write_text("<html></html>", encoding="utf-8")
-    assert main(["backfill", "--out", str(out), "--pages", "1", "--delay", "0",
-                 "--stub", str(page)]) == 6
-    assert "REFUSED" in capsys.readouterr().out
+    # Rewritten at 0.54.4.0. This test used to write a live pid into the lock
+    # file and expect a refusal, which tested the *mechanism* - a number in a
+    # file - rather than the property. When T26 replaced that mechanism with
+    # `flock`, the test failed while the behaviour it names got stronger. A
+    # regression that breaks because the implementation improved was written
+    # against the implementation; it now holds a real lock and asserts what an
+    # operator cares about, which is that the second run does not start.
+    held = DirectoryLock(out)
+    held.acquire()
+    try:
+        page = tmp_path / "page.html"
+        page.write_text("<html></html>", encoding="utf-8")
+        assert main(["backfill", "--out", str(out), "--pages", "1", "--delay", "0",
+                     "--stub", str(page)]) == 6
+        assert "REFUSED" in capsys.readouterr().out
+    finally:
+        held.release()
 
 
 def test_backfill_releases_the_lock_when_it_finishes(tmp_path: Path) -> None:

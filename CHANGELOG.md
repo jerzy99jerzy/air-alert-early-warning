@@ -16,6 +16,41 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.54.4.0 - 2026-09-10
+
+**T26: the pid-namespace hole in `DirectoryLock` was reproduced, and then the
+lock stopped being a number in a file.**
+
+- **Reproduced 2026-09-10, after eleven releases as `[inference,
+  unreproduced]`.** Holder at pid 483 in the host namespace; a second process
+  under `unshare --pid --fork` against the same directory found no pid 483,
+  classified the lock as stale and took it `[measured]`. Two runs against one
+  output directory double the request rate against a service whose tolerance
+  this project measured over a single burst of twenty.
+- **The exclusion is now `flock` on a descriptor against the inode.** Two
+  containers on one mounted volume contend in the kernel and no pid is
+  consulted. The stale-lock rule is retired rather than repaired - a killed
+  process drops its descriptor, so a lock is never stale and never needs a
+  takeover heuristic, and that heuristic was the hole. The pid is still written
+  as a label, because `DirectoryBusy` naming a number an operator can look up
+  is worth a line.
+- **The narrow repair was declined.** Framed as *pids are per namespace*, the
+  fix is a namespace id beside the pid, and ownership stays a comparison of
+  values the contending party could have written. F160 states the wider defect.
+- **Five regressions, and the load-bearing one needs no containers**: hold a
+  live lock, overwrite the file with a dead pid, require the refusal to stand.
+  Red against every implementation before this one, and portable to a laptop
+  where `unshare` does not exist. The literal namespace reproduction sits
+  beside it and skips where it cannot run. One test fails if `os.kill` returns
+  to the module.
+- **MT15** in `docs/THREAT-MODEL.md`, earned by observation rather than by
+  reasoning, which is what the previous revision of `docs/DEPLOYMENT.md`
+  section 9 said it would take. That section now records the measurement and
+  the limits of `flock` - NFS, and bind mounts of different inodes.
+- Noticed and not fixed: `MT` numbers both a threat-model row and a harness
+  mutation, in two independent sequences that now both reach 15. F31's shape,
+  and it gets its own entry rather than a footnote here.
+
 ## 0.54.3.0 - 2026-09-10
 
 **T40 is closed with a measurement. Section 8a of `docs/CHANNEL.md` has a row

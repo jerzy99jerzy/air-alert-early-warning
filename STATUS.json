@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.54.3.0",
+  "version": "0.54.4.0",
   "python_requires": ">=3.11",
   "sprint_test_files": [
     0,
@@ -18,22 +18,22 @@
   "gate": "make verify",
   "documents": {
     "docs/ARCHITECTURE.md": "2.5",
-    "docs/BRIEF-PL.md": "2.15",
-    "docs/BRIEF.md": "2.15",
+    "docs/BRIEF-PL.md": "2.16",
+    "docs/BRIEF.md": "2.16",
     "docs/CHANNEL.md": "1.10",
     "docs/COMPUTATION.md": "1.1",
     "docs/DATA-FLOW.md": "1.5",
     "docs/DECISIONS.md": "2.27",
-    "docs/DEPLOYMENT.md": "1.35",
+    "docs/DEPLOYMENT.md": "1.36",
     "docs/FEED-SPEC.md": "3.2",
     "docs/FOUNDATIONS.md": "1.2",
     "docs/MANUAL.md": "3.9",
     "docs/MECHANISMS.md": "2.2",
-    "docs/METHODOLOGY.md": "2.55",
+    "docs/METHODOLOGY.md": "2.56",
     "docs/MOBILE.md": "1.6",
     "docs/MVP.md": "3.11",
     "docs/OBSERVABILITY.md": "1.1",
-    "docs/THREAT-MODEL.md": "2.3",
+    "docs/THREAT-MODEL.md": "2.4",
     "docs/WEBAPP.md": "3.8",
     "docs/reviews/0.10.1.0.md": "1.0",
     "docs/reviews/0.11.1.0.md": "1.0",
@@ -85,11 +85,11 @@
     "docs/FEED-SPEC-PL.md": "3.2",
     "docs/reviews/0.54.0.0.md": "1.0"
   },
-  "threat_model_rows": 14,
+  "threat_model_rows": 15,
   "harness_attacks": 13,
   "measured": {
-    "tests_passing": 768,
-    "coverage_percent": 95.63,
+    "tests_passing": 773,
+    "coverage_percent": 95.61,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 1,
     "policy_combined_alarms_per_week": 1.96,
@@ -165,17 +165,17 @@
     "taken_at": "2026-08-11"
   },
   "statistics": {
-    "package_lines": 10080,
+    "package_lines": 10095,
     "package_files": 24,
-    "test_lines": 14555,
-    "test_files": 69,
+    "test_lines": 14699,
+    "test_files": 70,
     "tool_lines": 7952,
     "tool_files": 28,
-    "documentation_lines": 32570,
+    "documentation_lines": 32671,
     "documentation_files": 74,
     "runtime_dependencies": 0
   },
-  "defects_logged": 137,
+  "defects_logged": 138,
   "decisions_recorded": 51,
-  "releases": 144
+  "releases": 145
 }
