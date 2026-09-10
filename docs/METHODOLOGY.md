@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.58
+Document:  docs/METHODOLOGY.md, version 2.59
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4771,11 +4771,18 @@ could not be executed.
 **Why nothing caught it.** The instrument carried twenty-four regressions at
 0.54.1.0 (twenty-six now, counted with `--collect-only`) and every one of them
 called `main` directly, so they exercise the module's parser and never
-the command's. `tools/manual_audit.py` checks that every subcommand has a
-section in the manual; it does not read option tables, so the manual's own list
-of four flags matched a parser with four flags and agreed with itself. The
-defect lived in the seam between two parsers that describe one command, and
-every check was on one side or the other of it.
+the command's. The defect lived in the seam between two parsers that describe
+one command, and every check was on one side or the other of it.
+
+**This paragraph originally said `tools/manual_audit.py` "does not read option
+tables". It does** - `check_every_option_documented` walks the CLI parser and
+requires each flag to have a row in the manual, and it exists because four
+options had gone undocumented before it. The claim was written without opening
+the module, which is F158's habit inside F157's own entry, and it is corrected
+at 0.54.7.0 (F165). The check is directional rather than absent: it walks
+*parser to manual*, so a flag that never reaches the parser is outside its
+walk, and the manual agreed with the parser because both were missing the same
+one. The unwalked edge was *module to parser*.
 
 **The class.** An instrument tested only through its module is untested as a
 command - the same shape as F154 one layer up, where an instrument tested only
@@ -4787,9 +4794,78 @@ moment somebody ran the thing the way an operator would.
 `mavo.cli.main` rather than `latency.main`, and the manual's option table gains
 the row it was missing.
 
-**Reopen condition:** any subcommand in `mavo/cli.py` that rebuilds an argv for
-a module whose parser it does not mirror, with no test going through
-`mavo.cli.main`.
+**Reopen condition:** closed by a check at 0.54.7.0 rather than left as a
+condition - `lint_domain.check_a_delegating_subcommand_mirrors_its_module`
+reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
+`add_argument` literals, and fails on a flag the subcommand does not accept.
+One direction only, deliberately: a subcommand may add an option its module
+lacks, and `attempts` may yet want one.
+
+### F164, 0.54.7.0. The document whose subject is the mechanisms said two of them were unbuilt, long after they were built
+
+`docs/MECHANISMS.md` is where each control is described and pointed at its
+guard. Two of its sections described a present tense that had passed.
+
+**The tag parse.** The area-resolution section ended *Guarded by: nothing yet,
+and that is the honest state. The tag parse is not implemented.*
+`mavo/areas.py` opens with the line *Area resolution by the channel's own
+hashtags*; `docs/ARCHITECTURE.md` records the mechanism as running since S7;
+MT14 cites a control over it by test name. Three artefacts described a built
+mechanism while the document about that mechanism called it unbuilt and
+unguarded `[measured 2026-09-10]`.
+
+**The skipped-message count.** *Current limitation: no command is resident, so
+`mavo collect` prints `skipped=unknown` every time. The count becomes a
+measurement under `mavo watch`, which does not exist.* F123 persists the window
+bounds in `feed_attempts`, so a later poll compares against the stored
+`last_id` and the count is a measurement across processes with no resident
+command at all. `docs/DATA-FLOW.md` states that and `docs/DEPLOYMENT.md`
+records the production reading that closed F123.
+
+**Why both survived, and it is F118's mechanism with a document-shaped edge.**
+A section that understates what exists fails nothing. The gate checks that
+cited identifiers resolve, that cited tests exist, that figures match the tree
+- all of which pass on a sentence saying a thing is absent. Nothing reads a
+*claim of absence* against the tree, and a claim of absence is the one kind of
+sentence that gets more wrong the more the project does.
+
+**Repair.** Both sections now say what is built, what guards it, and what the
+previous text claimed. No gate step, because a check for "does this sentence
+deny something that exists" is a check on prose. What was done instead is the
+query: `grep -nE "not implemented|nothing yet|does not exist"` across the three
+documents untouched this session returned five hits, two of them wrong.
+
+**Reopen condition:** any sentence in a document asserting that a named
+mechanism is absent, unbuilt or unguarded.
+
+### F165, 0.54.7.0. An entry explaining why no check caught a defect named a check that exists and does close to the opposite of what it was accused of
+
+F157 recorded that `mavo latency --source` was documented and unwired, and
+explained the miss with: *`tools/manual_audit.py` checks that every subcommand
+has a section in the manual; it does not read option tables.* It does.
+`check_every_option_documented` walks the CLI parser and requires every flag to
+have a row in the manual, and it exists because four options had gone
+undocumented before it.
+
+**The claim was written without opening the module** - F158's habit, committed
+inside the entry for F157, in a release whose whole subject was reading things
+back rather than recalling them. The pattern has now appeared in each of the
+four read-backs, and each time in the sentence explaining *why nothing caught
+it*. That sentence is the most tempting place in a defect entry to reason
+instead of read, because a plausible account of the gap is what makes the entry
+feel finished.
+
+**The correction is more useful than the accusation.** The check is
+directional: parser to manual. The manual and the parser agreed because both
+lacked `--source`. The unwalked edge is module to parser, and
+`lint_domain.check_a_delegating_subcommand_mirrors_its_module` now walks it -
+delegating pairs from `mavo/cli.py`'s own imports, module flags from
+`add_argument` literals, and a flag the subcommand cannot accept fails the
+gate. Verified red by stripping `--source` from the subparser, which is exactly
+the state 0.54.0.0 shipped.
+
+**Reopen condition:** any defect entry whose *why nothing caught it* paragraph
+names the behaviour of a check without quoting it.
 
 ### F162, 0.54.6.0. The lock that had just been made the kernel's could still be held twice, because the fix kept an `unlink` the old design had needed
 

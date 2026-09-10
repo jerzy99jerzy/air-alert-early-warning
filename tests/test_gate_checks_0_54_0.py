@@ -186,3 +186,40 @@ def test_a_module_whose_name_merely_starts_with_store_is_not_a_store(
     """
     root = _tree(tmp_path, "render.py", IMPORTS_A_LOOKALIKE)
     assert lint_domain.check_no_tool_reads_the_store(root) == []
+
+
+def test_the_delegating_subcommand_check_passes_today() -> None:
+    """Green on the tree, after F157 was repaired by hand at 0.54.2.0."""
+    assert lint_domain.check_a_delegating_subcommand_mirrors_its_module() == []
+
+
+def test_a_subcommand_missing_one_of_its_modules_flags_is_caught(
+        monkeypatch) -> None:
+    """The red direction, using F157's own shape.
+
+    The subparser is stripped of `--source` in place, which is exactly the
+    state `mavo/cli.py` shipped in at 0.54.0.0 and 0.54.1.0.
+    """
+    import argparse
+    import sys
+    from pathlib import Path as _Path
+
+    sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+    from mavo import cli
+
+    real = cli.build_parser
+
+    def stripped() -> argparse.ArgumentParser:
+        parser = real()
+        for action in parser._actions:
+            choices = getattr(action, "choices", None)
+            if isinstance(choices, dict) and "latency" in choices:
+                sub = choices["latency"]
+                sub._actions = [a for a in sub._actions
+                                if "--source" not in a.option_strings]
+        return parser
+
+    monkeypatch.setattr(cli, "build_parser", stripped)
+    problems = lint_domain.check_a_delegating_subcommand_mirrors_its_module()
+    assert len(problems) == 1
+    assert "--source" in problems[0] and "F157" in problems[0]

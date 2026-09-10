@@ -4,7 +4,7 @@ Every mechanism in MAVO: what it is, where it lives, the alternative that was
 rejected, the failure it prevents, and the test that keeps it honest.
 
 ```
-Document:  docs/MECHANISMS.md, version 2.2
+Document:  docs/MECHANISMS.md, version 2.3
 Audience:  a contributor about to change how something works, and anyone asking
            "why is it done this way rather than the obvious way"
 Companion: ARCHITECTURE (what talks to what), DATA-FLOW (what happens to a
@@ -453,9 +453,20 @@ messages" and "we cannot see the window" stay distinguishable.
 **Guarded by:** harness A11, mutation-verified. Defaulting `skipped` to 0 turns
 A11 red.
 
-**Current limitation:** no command is resident, so `mavo collect` has no previous
-poll and prints `skipped=unknown` every time. The count becomes a measurement
-under `mavo watch`, which does not exist.
+**Former limitation, lifted by F123 and not noticed here until 0.54.7.0
+(F164).** The paragraph this replaces said no command is resident, so
+`mavo collect` prints `skipped=unknown` every time, and the count would become
+a measurement only under `mavo watch`, which still does not exist. It does not
+need to: F123 persists the window bounds in `feed_attempts`, so a later poll
+compares against the stored `last_id` and `skipped` is a measurement **across
+processes**. `docs/DATA-FLOW.md` says so and `docs/DEPLOYMENT.md` records the
+production reading - the first poll after deployment printed
+`skipped=unknown` with `no earlier page bound`, the second printed `skipped=0`,
+which is what closed F123 on the host.
+
+**What remains true:** the first poll of a fresh store, and any page without
+ids, still report `unknown` rather than zero, which is MT12's control column
+and the reason that row is about visibility rather than about the count.
 
 ---
 
@@ -694,6 +705,14 @@ worse than one with no parameter at all.
 carrying the unit word, but embedded in prose and apparently accompanying the
 tags rather than replacing them. Kept as a cross-check, not a parse target.
 
-**Guarded by:** nothing yet, and that is the honest state. The tag parse is not
-implemented; this section records the decided mechanism and its measurement so
-that S7 implements what was measured rather than what was remembered.
+**Guarded by:** MT14 and
+`test_areas.py::test_f60_an_unknown_tag_does_not_fall_back_to_the_oblast_table`,
+plus harness A13, mutation-verified.
+
+**This paragraph said "nothing yet" and "the tag parse is not implemented"
+until 0.54.7.0, and both were false from S7 onward (F164).** `mavo/areas.py`
+opens with *Area resolution by the channel's own hashtags*, `docs/ARCHITECTURE.md`
+records the mechanism as running since S7, and the threat model cites a control
+over it. Three artefacts described a built mechanism while the document whose
+subject is that mechanism called it unbuilt and unguarded. Nothing failed,
+because nothing fails when a document understates what exists.

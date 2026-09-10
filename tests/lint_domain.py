@@ -7,6 +7,7 @@ structural claim going stale, so the structure is asserted.
 
 from __future__ import annotations
 
+import argparse
 import ast
 import sys
 from pathlib import Path
@@ -158,6 +159,93 @@ def check_no_tool_reads_the_store(root: Path | None = None) -> list[str]:
     return problems
 
 
+def _delegating_subcommands(root: Path) -> dict[str, Path]:
+    """Subcommands whose work is a module's own `main`, found from the imports.
+
+    `mavo/cli.py` writes `from mavo.latency import main as latency_main`, so
+    the pairing is in the syntax tree and needs no hand-maintained list - a
+    list here would be the thing that rots while the check reports green.
+    """
+    source = (root / "mavo" / "cli.py").read_text(encoding="utf-8")
+    found: dict[str, Path] = {}
+    for node in ast.walk(ast.parse(source)):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        module_name = node.module or ""
+        if not module_name.startswith("mavo."):
+            continue
+        stem = module_name.split(".")[-1]
+        for alias in node.names:
+            if alias.name == "main" and alias.asname == f"{stem}_main":
+                module = root / "mavo" / f"{stem}.py"
+                if module.exists():
+                    found[stem] = module
+    return found
+
+
+def _options_declared_in(module: Path) -> set[str]:
+    """Every `--flag` the module's own parser accepts, read from the source."""
+    flags: set[str] = set()
+    for node in ast.walk(ast.parse(module.read_text(encoding="utf-8"))):
+        if (isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "add_argument"):
+            for arg in node.args:
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str) \
+                        and arg.value.startswith("--"):
+                    flags.add(arg.value)
+    return flags
+
+
+def check_a_delegating_subcommand_mirrors_its_module(root: Path | None = None) -> list[str]:
+    """F157. Two parsers describe one command and must accept the same flags.
+
+    `mavo latency` rebuilds an argv and hands it to `mavo/latency.py`. The
+    module grew `--source` at 0.54.0.0 and the subcommand did not, so the
+    command two documents printed for the one outstanding measurement of a
+    just-closed sprint exited 2 with `unrecognized arguments`.
+
+    Nothing caught it, and the reason is directional rather than absent.
+    `manual_audit.check_every_option_documented` walks the *CLI parser* and
+    requires each flag to appear in the manual; a flag that never reaches the
+    CLI parser is outside its walk, and the manual agreed with the parser
+    because both were missing the same one. Twenty-four regressions covered
+    the module and every one called `main` directly. The seam between the two
+    parsers had no reader; this is it.
+
+    Only one direction is enforced, deliberately: every flag the module
+    accepts must be reachable through the subcommand. The reverse would forbid
+    a subcommand adding an option of its own, and `attempts` may yet want one.
+    """
+    tree_root = root if root is not None else ROOT
+    sys.path.insert(0, str(tree_root))
+    from mavo.cli import build_parser
+
+    subparsers: dict[str, argparse.ArgumentParser] = {}
+    for action in build_parser()._actions:
+        choices = getattr(action, "choices", None)
+        if isinstance(choices, dict):
+            subparsers.update(choices)
+
+    problems: list[str] = []
+    for name, module in sorted(_delegating_subcommands(tree_root).items()):
+        sub = subparsers.get(name)
+        if sub is None:
+            problems.append(
+                f"mavo/cli.py imports {module.name}'s main as {name}_main and "
+                f"registers no `{name}` subcommand"
+            )
+            continue
+        exposed = {flag for option in sub._actions for flag in option.option_strings}
+        for flag in sorted(_options_declared_in(module) - exposed):
+            problems.append(
+                f"`mavo {name}` does not accept {flag}, which mavo/{module.name} "
+                "accepts. A caller reading the module's usage gets "
+                "`unrecognized arguments` (F157)"
+            )
+    return problems
+
+
 def main() -> int:
     """Run every domain invariant. Returns a process exit code."""
     problems = (
@@ -167,6 +255,7 @@ def main() -> int:
         + check_docs_case_convention()
         + check_the_pipeline_does_not_import_its_reader()
         + check_no_tool_reads_the_store()
+        + check_a_delegating_subcommand_mirrors_its_module()
     )
     for problem in problems:
         print(f"lint-domain: {problem}", file=sys.stderr)

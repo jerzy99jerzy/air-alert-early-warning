@@ -16,6 +16,44 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.54.7.0 - 2026-09-10
+
+**Fourth read-back, aimed at the three documents nobody had touched this
+session: FOUNDATIONS, MECHANISMS, ARCHITECTURE.** The productive query turned
+out to be the opposite of the previous rounds': not *what does this claim
+exists*, but *what does this claim is absent*.
+
+- **F164: `docs/MECHANISMS.md` said two of its own mechanisms were unbuilt.**
+  The area-resolution section ended *Guarded by: nothing yet. The tag parse is
+  not implemented* - while `mavo/areas.py` opens with *Area resolution by the
+  channel's own hashtags*, `docs/ARCHITECTURE.md` records it running since S7,
+  and MT14 cites a control over it by test name. The skipped-message section
+  said the count *becomes a measurement under `mavo watch`, which does not
+  exist* - while F123 made it a measurement across processes and
+  `docs/DEPLOYMENT.md` records the production reading that closed F123.
+  A section that understates what exists fails nothing: every gate check here
+  passes on a sentence saying a thing is absent.
+- **F165: F157's own entry named a check that exists.** It said
+  `tools/manual_audit.py` "does not read option tables".
+  `check_every_option_documented` does exactly that. The check is
+  *directional* - parser to manual - and the manual agreed with the parser
+  because both were missing `--source`. The claim was written without opening
+  the module, in the release whose subject was reading rather than recalling,
+  and it lived in the *why nothing caught it* paragraph, which is where each of
+  the four read-backs has now found this same habit.
+- **The unwalked edge is now walked.**
+  `lint_domain.check_a_delegating_subcommand_mirrors_its_module` reads the
+  delegating pairs out of `mavo/cli.py`'s own imports - no hand-maintained
+  list, because a list is what rots while the check reports green - reads each
+  module's `add_argument` literals, and fails on a flag the subcommand cannot
+  accept. One direction only: a subcommand may add an option its module lacks.
+  Verified red by stripping `--source` from the subparser, which is the state
+  0.54.0.0 shipped.
+- Checked and clean: every `mavo/`, `tools/`, `tests/` and `data/` path cited
+  across the three documents resolves; MT5 is a retired row rather than a gap;
+  the 16.56% "upper bound" in MECHANISMS is one, since excluding colliding
+  stems can only lower it.
+
 ## 0.54.6.0 - 2026-09-10
 
 **A third read-back, aimed at the pattern the second one named. Two of the
