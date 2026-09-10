@@ -16,6 +16,33 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.54.1.0 - 2026-09-10
+
+**T22 closed: a document can no longer cite a symbol the tree does not have.**
+
+- `check_cited_identifiers_exist` in `tools/docs_audit.py` reads three shapes
+  out of `docs/*.md` and the README - a call written `name()`, a
+  module-qualified `mavo.x.y`, and a constant in capitals carrying an
+  underscore - and resolves each against every name bound under `mavo/`,
+  `tools/` and `tests/`, read from the syntax tree rather than by grep. Closes
+  **F55**, where `docs/COMPUTATION.md` cited a constant that did not exist, in
+  the document whose subject is that figures come from measurement rather than
+  from memory. Verified red on scratch copies citing a fabricated call, a
+  fabricated constant and a fabricated module path.
+- **The pattern is narrow and the width was measured, not guessed.** Across
+  thirty-one documents these three shapes leave eight names outside the
+  package. Two were defects in the checker and were repaired rather than
+  listed: Python builtins, and names bound by `import ... as`, which binds a
+  name without defining one. The remaining six sit in `CITED_BUT_NOT_OURS` with
+  a written reason each - Android's constants, the consumer's `SLUG_ALIASES`,
+  the provider's networking vocabulary, the project's own hostname, and F55's
+  own removed constant, because a register of defects that cannot name what is
+  gone is a register of the present only. A test fails on an entry whose reason
+  is missing or perfunctory: an allow-list is where a check goes to die.
+- Eleven regressions, and four of them are the quiet directions - a builtin, an
+  environment variable, an alias-bound name and an allow-listed name - because
+  a check that fires on those would be switched off within a release.
+
 ## 0.54.0.0 - 2026-09-10
 
 **Sprint S9 is closed, on an amended criterion, with the amendment recorded.

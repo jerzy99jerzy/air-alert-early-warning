@@ -10,6 +10,8 @@ Convention borrowed from `pirx/tools/docs_audit.py`.
 
 from __future__ import annotations
 
+import ast
+import builtins
 import json
 import re
 import sys
@@ -1215,6 +1217,139 @@ def check_the_coverage_floor_stays_a_ratchet(status: dict[str, object]) -> list[
     return []
 
 
+#: Names a document cites in backticks that are deliberately not this package's.
+#: T22's acceptance asks for this list and it is short on purpose: an allow-list
+#: is where a check goes to die, so every entry carries the reason it is here and
+#: an entry without one is a bug in this dictionary rather than in the tree.
+CITED_BUT_NOT_OURS = {
+    "MAX_ALARMS_PER_WEEK": "F55's own constant, cited by `docs/COMPUTATION.md` "
+                           "and the defect entry as a name that was removed. A "
+                           "register of defects must be able to name what is "
+                           "gone; that is what makes it a register",
+    "SLUG_ALIASES": "the consumer's, in `docs/WEBAPP.md`. It exists, in "
+                    "`mavo-site`, and this repository cannot see that tree",
+    "IMPORTANCE_HIGH": "Android's, in `docs/MOBILE.md`",
+    "USE_FULL_SCREEN_INTENT": "Android's, in `docs/MOBILE.md`",
+    "ONE_TO_ONE_NAT": "the cloud provider's networking vocabulary, in "
+                      "`docs/DEPLOYMENT.md`",
+    "mavo.org.pl": "the hostname. It has the shape of a module path and is a "
+                   "domain, which is the one collision this pattern cannot "
+                   "resolve from shape alone",
+}
+
+#: A call written in prose: `compose()`. Three characters minimum, because `f()`
+#: in a formula is not a citation.
+_CITED_CALL = re.compile(r"`([a-z_][a-z0-9_]{2,})\(\)`")
+
+#: A module-qualified reference: `mavo.obs.from_environment`.
+_CITED_DOTTED = re.compile(
+    r"`(mavo(?:\.[a-z_][a-z0-9_]*)+(?:\.[A-Za-z_][A-Za-z0-9_]*)?)(?:\(\))?`"
+)
+
+#: A constant: `MINIMUM_DAYS`. At least one underscore, so `UTC` and `API` in
+#: prose are not read as citations. `MAVO_` names are environment variables and
+#: are excluded by prefix rather than by entry, because the population grows.
+_CITED_CONSTANT = re.compile(r"`([A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)`")
+
+
+def _names_the_tree_defines() -> tuple[set[str], set[str]]:
+    """Every name bound anywhere in the source, and every module path.
+
+    Read from the syntax tree of `mavo/`, `tools/` and `tests/`. Wide on
+    purpose: the question this check answers is *does this name exist here at
+    all*, not *is it public*. A narrower definition would fail on a document
+    correctly citing a private helper, and a document citing a helper by its
+    real name is not the defect T22 is about.
+    """
+    names: set[str] = set()
+    modules: set[str] = set()
+    for source in sorted(ROOT.glob("mavo/**/*.py")):
+        dotted = str(source.relative_to(ROOT)).removesuffix(".py").replace("/", ".")
+        modules.add(dotted)
+        modules.add(dotted.removesuffix(".__init__"))
+    trees = (list(ROOT.glob("mavo/**/*.py")) + list(ROOT.glob("tools/*.py"))
+             + list(ROOT.glob("tests/*.py")))
+    for source in sorted(trees):
+        try:
+            parsed = ast.parse(source.read_text(encoding="utf-8"))
+        except SyntaxError:  # somebody else's failure; `lint` reports it
+            continue
+        for node in ast.walk(parsed):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+                names.add(node.name)
+            elif isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+                names.add(node.id)
+            elif isinstance(node, ast.arg):
+                names.add(node.arg)
+            elif isinstance(node, ast.Attribute):
+                names.add(node.attr)
+            elif isinstance(node, ast.alias):
+                names.add((node.asname or node.name).split(".")[-1])
+    return names, modules
+
+
+def check_cited_identifiers_exist(root: Path | None = None) -> list[str]:
+    """T22. A document may not cite a symbol the tree does not have.
+
+    F55 is the entry this closes: `docs/COMPUTATION.md` cited a constant that
+    did not exist, in the document whose whole subject is that figures come
+    from measurement rather than from memory. The audits already check cited
+    test names, pinned counts and defect identifiers; the rest of the
+    backticked names in thirty documents were checked by nobody.
+
+    Three shapes are read, and the narrowness is the design. A call written as
+    `name()`, a module-qualified `mavo.x.y`, and a constant in capitals with an
+    underscore in it. Everything else in backticks - shell, paths, JSON keys,
+    unit names, SQL, prose in code font - is left alone, because a pattern wide
+    enough to catch all of them would produce an allow-list longer than the
+    check and a gate step nobody reads. Measured on the tree at 0.54.1.0: eight
+    names outside the package across thirty-one documents, six of them
+    genuinely foreign and listed above with reasons, two of them defects in
+    this function that were repaired rather than listed - Python builtins, and
+    names bound by an `import ... as` alias.
+    """
+    tree_root = root if root is not None else ROOT
+    names, modules = _names_the_tree_defines()
+    documents = sorted(tree_root.glob("docs/*.md")) + [tree_root / "README.md"]
+    problems: list[str] = []
+    for document in documents:
+        if not document.exists():
+            continue
+        text = document.read_text(encoding="utf-8")
+        where = document.relative_to(tree_root)
+        for cited in sorted(set(_CITED_CALL.findall(text))):
+            if cited in names or cited in CITED_BUT_NOT_OURS:
+                continue
+            if hasattr(builtins, cited):
+                continue
+            problems.append(
+                f"{where} cites `{cited}()` and no source under mavo/, tools/ "
+                "or tests/ defines that name"
+            )
+        for cited in sorted(set(_CITED_DOTTED.findall(text))):
+            if cited in modules or cited in CITED_BUT_NOT_OURS:
+                continue
+            head, _, tail = cited.rpartition(".")
+            if head in modules and tail in names:
+                continue
+            problems.append(
+                f"{where} cites `{cited}` and it resolves to no module or "
+                "attribute in the package"
+            )
+        for cited in sorted(set(_CITED_CONSTANT.findall(text))):
+            if cited.startswith("MAVO_") or cited in names:
+                continue
+            if cited in CITED_BUT_NOT_OURS:
+                continue
+            problems.append(
+                f"{where} cites `{cited}` and no source under mavo/, tools/ "
+                "or tests/ binds that name; if it is deliberately foreign or "
+                "deliberately gone, name it in CITED_BUT_NOT_OURS with the "
+                "reason"
+            )
+    return problems
+
+
 def main() -> int:
     """Run every audit. Returns a process exit code."""
     status = _status()
@@ -1247,6 +1382,7 @@ def main() -> int:
         + check_the_host_version_row_matches_the_pin(status)
         + check_the_host_release_distance_is_counted(status)
         + check_the_coverage_floor_stays_a_ratchet(status)
+        + check_cited_identifiers_exist()
     )
     for problem in problems:
         print(f"docs-audit: {problem}", file=sys.stderr)

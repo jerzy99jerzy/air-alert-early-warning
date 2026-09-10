@@ -4,13 +4,13 @@
 
 ### Where the backlog stands
 
-**39 of 82 closed, 43 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**40 of 82 closed, 42 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
-| `done` | 34 | Finished, with the release that closed it named in the entry |
+| `done` | 35 | Finished, with the release that closed it named in the entry |
 | `moved` | 5 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 33 | Nothing external blocks it; it needs a session |
+| `ready` | 32 | Nothing external blocks it; it needs a session |
 | `decision` | 5 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -27,7 +27,7 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 
 **Tier 1, 11 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does)
 
-**Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T82](#t82-the-channels-silence-measured-as-a-distribution)
+**Tier 2, 17 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T82](#t82-the-channels-silence-measured-as-a-distribution)
 
 **Tier 3, 14 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers)
 
@@ -39,7 +39,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | --- | --- |
 | **S7** | [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record) |
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
-| **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T22](#t22-fail-the-build-when-a-document-cites-an-identifier-the-package-lacks), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
+| **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
 | **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T40](#t40-how-late-is-the-channel-measured), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T26](#t26-reproduce-the-pid-namespace-hole-in-directorylock-then-fix-it), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T77](#t77-the-false-precision-counter-counts-version-numbers), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T82](#t82-the-channels-silence-measured-as-a-distribution) |
 
@@ -770,14 +770,33 @@ rather than a base rate.
 
 
 ## T22. Fail the build when a document cites an identifier the package lacks
-Status: `ready`, **S11** [tier 2]
+Status: `done` at 0.54.1.0 [tier 2]
 F55: `docs/COMPUTATION.md` cited a constant that does not exist, in the document
 whose subject is that figures come from measurement. The audits check cited test
-names and pinned counts; nothing checks the rest of the backticked identifiers.
-**Acceptance:** `tools/docs_audit.py` extracts backtick-quoted names matching an
-identifier pattern from `docs/*.md` and the README, and fails on any that appear
-in no package source, with an explicit allow-list for names that are deliberately
-hypothetical. Verified red by citing a fabricated symbol in a scratch copy.
+names and pinned counts; nothing checked the rest of the backticked identifiers.
+
+**Acceptance met.** `check_cited_identifiers_exist` in `tools/docs_audit.py`
+reads three shapes out of `docs/*.md` and the README - a call written `name()`,
+a module-qualified `mavo.x.y`, and a constant in capitals carrying an
+underscore - and resolves each against every name bound anywhere under `mavo/`,
+`tools/` and `tests/`, read from the syntax tree. Verified red on scratch copies
+citing a fabricated call, a fabricated constant and a fabricated module path.
+
+**The narrowness is the design and it was measured rather than guessed.** A
+pattern wide enough to cover every backticked token would have to swallow
+shell, paths, JSON keys, unit names and SQL, and would produce an allow-list
+longer than the check. These three shapes leave **eight** names outside the
+package across thirty-one documents. Two were defects in the checker and were
+repaired instead of listed: Python builtins, and names bound by an
+`import ... as` alias, which binds a name without defining one. The remaining
+six are in `CITED_BUT_NOT_OURS`, each with its reason, and a test fails on an
+entry whose reason is missing or perfunctory - an allow-list is where a check
+goes to die, so the list is policed by the same gate as the tree.
+
+**One of the six is F55's own constant.** `MAX_ALARMS_PER_WEEK` is cited by
+`docs/COMPUTATION.md` and by the defect entry as a name that was removed. A
+register of defects that could not name what is gone would be a register of
+the present only, which is the opposite of its job.
 
 
 ## T23. Attach the observability sink, which existed and was not connected

@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.32 / 2026-09-10
+Version: 1.33 / 2026-09-10
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -59,8 +59,8 @@ never a decision until D-031 wrote it down.
 | Reconcile after the polls | not run at this install `[unknown]`; the one-cycle gap gave it nothing to examine, and the 0.52.0.0 reading (`ghosts=2 masked=0`, both closed with `--apply`) is in the deploy history below |
 | Contract after | `[reported, the consumer half of the same session]` `mavosite-doctor` on the production `state.json` at about 22:50 UTC: `schema v3 accepted`, `contract complete: state=ok, 35 areas, window 7 d`, `no vocabulary drift`, exit 0 |
 | `Самарівський район` | in `unresolved` at 20:25:11 and again at 22:09:59, one of the five names the map does not place at the second read. A row for `data/reference/tag_map.csv`, and open (P7) |
-| `main` | 0.54.0.0 |
-| Behind by | **three** releases: 0.53.5.0 adds a gate, two documents and one decision's condition; 0.53.5.1 rewrites the Polish edition of FEED-SPEC; 0.54.0.0 closes S9, moves the latency instrument into the package as `mavo latency` and repairs two defects in it (F154, F155). The first two change nothing under `mavo/` but the version string. **The third does**, and the instrument it ships is the one that has to be run on this host to write the row `docs/CHANNEL.md` 8a is missing, so this install is not optional bookkeeping |
+| `main` | 0.54.1.0 |
+| Behind by | **four** releases: 0.53.5.0 adds a gate, two documents and one decision's condition; 0.53.5.1 rewrites the Polish edition of FEED-SPEC; 0.54.0.0 closes S9, moves the latency instrument into the package as `mavo latency` and repairs two defects in it (F154, F155). The first two change nothing under `mavo/` but the version string. **The third does**, and the instrument it ships is the one that has to be run on this host to write the row `docs/CHANNEL.md` 8a is missing, so this install is not optional bookkeeping. 0.54.1.0 adds one gate step and changes nothing under `mavo/` but the version string |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by

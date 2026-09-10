@@ -7,7 +7,7 @@ powiadomienia.**
 Dokument dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.12
+Document:  docs/BRIEF-PL.md, version 2.13
 Measured:  2026-08-31, against STATUS.json at 0.50.0.0, i tym razem liczby
            faktycznie przeliczono zamiast przepisać. Wersja 2.4 nosiła tę samą
            linijkę, a cztery liczby w środku pochodziły z 0.32.9.0; co to
@@ -211,7 +211,7 @@ wywnioskowane, założone. Te 57% z akapitu wyżej jest liczbą cudzą i tak jes
 oznaczone, łącznie z uwagą, że źródło mogło mieć na myśli inny obszar niż ten
 projekt.
 
-**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 751 testów,
+**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 762 testy,
 w tym 13 skryptowanych ataków na własne zabezpieczenia; pokrycie kodu wynosi
 95,50% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
 sprawdzane: 12 z 13 zweryfikowano tak, że celowo psuto chronioną kontrolę i
