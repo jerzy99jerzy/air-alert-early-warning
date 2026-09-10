@@ -16,6 +16,45 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.54.5.0 - 2026-09-10
+
+**A second read-back, on the two releases before it: where did a thesis become
+a premise. Four places, all in prose, none catchable by the gate.** F161.
+
+- **`median - interval/2` was called an upper bound and is an estimate.** It
+  equals the upstream delay exactly when that delay is constant and our wait is
+  uniform across the interval, and it reads *below* the truth if posts arrive
+  shortly before a poll - the one direction a bound may not go, and neither
+  condition is measured. The instrument now prints two figures with two labels:
+  **at most 18.7 s `[measured]`**, because our own wait is never negative, and
+  **estimated 2.2 s `[wniosek]`**. Section 8a, the backlog and the 0.54.3.0
+  entry all led with the 2.2, so the release's headline was one word stronger
+  than its evidence.
+- **"Every latency argument in this repository now rests on a measured term"
+  is withdrawn.** The measured term is under arguments about the *channel*,
+  which is the watchman. The primary source since D-040 is the API and its
+  latency has never been taken - as `docs/CHANNEL.md` says two sections below
+  the sentence that claimed otherwise.
+- **MT15 now carries its precondition.** The row asserted that two runs against
+  one directory double the request rate, as a present state. MAVO runs zero
+  containers (`docs/DEPLOYMENT.md` section 8), and within one namespace the old
+  check worked - a live holder was found alive and the second run refused. The
+  hole was real and reachable only across namespaces, so the exposure on the
+  deployment that exists was nil. The row also now says the reproduction was
+  two pid namespaces, not two containers on a mounted volume, which has still
+  never been run.
+- **Section 8a said the collector "had already read the page carrying" the
+  sixteen backfilled messages.** Nothing establishes that: the attempt log
+  begins ten hours after those messages were published, which the same release
+  had just logged as F159. The answer was in the deploy table and went unread -
+  `2026-08-31 06:22:53` is the first post-install poll under 0.48.0.0, the
+  per-kind repair, so a reclassification is now the reading rather than an open
+  question.
+- **F159's stated cause is labelled rather than asserted.** That
+  `feed_attempts` starts late "because the table arrived with a later release"
+  is `[wniosek]`, from the changelog dating it to 0.40.0.0 and the deploy table
+  recording installs from 2026-08-29.
+
 ## 0.54.4.0 - 2026-09-10
 
 **T26: the pid-namespace hole in `DirectoryLock` was reproduced, and then the

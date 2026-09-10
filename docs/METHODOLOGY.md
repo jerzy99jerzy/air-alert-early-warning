@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.56
+Document:  docs/METHODOLOGY.md, version 2.57
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4791,6 +4791,65 @@ the row it was missing.
 a module whose parser it does not mirror, with no test going through
 `mavo.cli.main`.
 
+### F161, 0.54.5.0. A point estimate was called an upper bound and became the headline of a release, and a threat row asserted harm in a deployment this project does not run
+
+Three claims from 0.54.3.0 and 0.54.4.0, each a thesis that became the premise
+of a chain rather than a labelled step in one. All three were the assistant's,
+found by the operator asking for the patch to be read back for exactly this.
+
+**The upstream figure is an estimate and was called a bound.** `mavo latency`
+reported `median - interval/2` as *an upper bound on everything before this
+collector*. It is that only if the upstream delay is constant and our own wait
+is uniform across the interval: then the subtraction is exact. If posts tend to
+arrive shortly before a poll - which a jittered 33 s timer does not rule out
+and nothing here has measured - the figure reads **below** the truth, which is
+the one direction a bound may not go. The figure that bounds the upstream with
+no assumption at all is the median itself, because our wait is never negative.
+The instrument now prints both: at most 18.7 s `[measured]`, estimated 2.2 s
+`[wniosek]`. The release entry, the backlog and section 8a all led with the
+2.2, so the whole reading was presented one word stronger than it was.
+
+**"Every latency argument in this repository now rests on a measured term."**
+Written in the changelog and the backlog; contradicted two sections below by
+`docs/CHANNEL.md`, which says the primary source since D-040 is the API and its
+latency has never been taken. The measured term is under arguments about the
+*channel*, which is the watchman. A summary sentence that contradicts the
+document it summarises is worse than no summary.
+
+**MT15 asserted a harm whose precondition does not hold here.** The row read
+*two runs against one output directory double the request rate* as a present
+state. MAVO runs zero containers, which `docs/DEPLOYMENT.md` section 8 argues
+for at length, and inside one namespace the old check worked - a live holder
+was found alive and the second run refused. The defect was real and the
+reproduction was real; the *exposure* on the deployment that exists was nil.
+The row now carries that, and says the reproduction was two pid namespaces
+rather than two containers on a mounted volume, which has still never been run.
+
+**A fourth, smaller, in the same family.** Section 8a said sixteen messages
+"became events two days after the collector had already read the page carrying
+them". Nothing establishes what the collector read on 2026-08-29: the attempt
+log begins ten hours later (F159), which the same release had just logged.
+Meanwhile the answer was in the deploy table and went unread - that ingest
+timestamp is the first post-install poll under 0.48.0.0, the per-kind repair,
+so a reclassification is now the reading rather than an open question.
+
+**The common shape, and it is not carelessness.** Each of these is a step that
+was *probably* true, promoted to a premise so the next sentence could be
+written. The chain then reads as evidence because every link is plausible. What
+distinguishes the four from honest inference is that none carried a label, and
+three had a cheaper true version available - the median, the word *channel*,
+the precondition - that would have cost one clause.
+
+**Repair.** The instrument reports two figures with two labels; the summary
+sentence is scoped to the channel; MT15 carries its precondition; the sixteen
+rows are attributed to the install the deploy table records. No gate step: a
+check for "is this sentence a bound or an estimate" is a check on prose, and
+the register is where prose is policed here.
+
+**Reopen condition:** any figure in this repository named *bound*, *ceiling* or
+*at most* whose derivation subtracts something, or any threat-model row whose
+harm is stated without the configuration it requires.
+
 ### F160, 0.54.4.0. The lock protecting the upstream from a doubled request rate was a number any process could write, and a second pid namespace walked through it
 
 `DirectoryLock` wrote the owning pid into `.backfill.lock` and, on finding an
@@ -4839,8 +4898,12 @@ by reading a value the contending party could have written.
 `feed_attempts` holds one row per poll and is the table `mavo attempts` reads.
 Its earliest row, for any feed, is **2026-08-29 14:39:05 UTC**
 `[measured 2026-09-10, on the production store]`. Collection began 2026-08-11.
-Eighteen days of polling produced events and no attempt rows, because the table
-arrived with a later release, and no document says so. A reader querying it for
+Eighteen days of polling produced events and no attempt rows. The likeliest
+reason is that the table arrived later: `feed_attempts` first appears in the
+changelog at 0.40.0.0, dated 2026-08-26, and the deploy history records installs
+from 2026-08-29 onward `[wniosek, from the changelog and the deploy table]`.
+That was asserted as fact in the first version of this entry and is now
+labelled; no document says it either way. A reader querying it for
 2026-08-17 gets an empty result and no indication that emptiness is the table's
 age rather than the collector's silence - the shape MT11 exists to prevent one
 layer down, where an outage must not read as a quiet sky.

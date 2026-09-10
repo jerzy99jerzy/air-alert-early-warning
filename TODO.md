@@ -361,10 +361,20 @@ sprint rather than declaring it met.*
 
 **Read 2026-09-10 and written into `docs/CHANNEL.md` 8a.** Over 26.53 days and
 19,475 observations the channel's post-to-receipt lag has a median of **18.7 s**
-and a p90 of **34.7 s** `[measured]`. Our own 33.0 s cadence contributes a
-uniform 0 to 33 s of that, so the upper bound on everything upstream of this
-collector is **2.2 s** `[wniosek]` - a bound, never a reading of the channel.
-**Every latency argument in this repository now rests on a measured term.**
+and a p90 of **34.7 s** `[measured]`. Everything upstream of this collector
+therefore takes **at most 18.7 s** `[measured]`, since our own wait is never
+negative; subtracting half an interval gives an estimate of **2.2 s**
+`[wniosek]`, which is exact only if the upstream delay is constant and our wait
+is uniform, and neither is measured (F161).
+
+**What this does and does not settle.** Every latency argument about *the
+channel* now has a measured term under it. The primary source since D-040 is
+the API, and its latency is still unmeasured - the same paragraph of
+`docs/CHANNEL.md` that carries this row says why - so a claim about how late
+the picture is remains unsupported for the feed the picture actually comes
+from. The first version of this entry said every latency argument now rests on
+a measured term, which the document it points at contradicts two sections
+down.
 
 Three caveats travel with the row and are written beside it rather than here:
 the maximum of 179,591.7 s is sixteen rows sharing one `ts_ingest` and is not a

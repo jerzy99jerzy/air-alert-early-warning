@@ -241,18 +241,32 @@ def test_the_poll_interval_is_named_and_the_upstream_is_only_bounded(
     main(["--store", str(store), "--interval-s", "30"])
     out = capsys.readouterr().out
     assert "poll interval 30.0 s" in out
-    assert "upper bound" in out and "[inference]" in out
+    # F161. Two numbers, and the labels are the point: the bound needs no
+    # assumption, the estimate needs two that are not measured.
+    assert "at most 40.0 s [measured]" in out
+    assert "estimated 25.0 s [wniosek]" in out
     assert "channel latency" not in out.lower()
 
 
-def test_the_upper_bound_subtracts_half_an_interval_and_never_goes_negative(
+def test_the_estimate_subtracts_half_an_interval_and_never_goes_negative(
         ) -> None:
+    """And the bound beside it subtracts nothing, because it may not.
+
+    F161: this pair used to be one field called an upper bound. The median
+    minus half an interval is the upstream delay exactly when that delay is
+    constant and the wait is uniform, and it reads *below* the truth when
+    posts arrive just before a poll. The only figure that bounds the upstream
+    without an assumption is the median itself.
+    """
     lags = SourceLags(forward=[40.0] * 10, first=BASE,
                       last=BASE + timedelta(days=8))
-    assert _summary_of("telegram", lags, 30.0)["upstream_upper_bound_s"] == 25.0
+    summary = _summary_of("telegram", lags, 30.0)
+    assert summary["upstream_estimate_s"] == 25.0
+    assert summary["upstream_bound_s"] == 40.0
     quick = SourceLags(forward=[2.0] * 10, first=BASE,
                        last=BASE + timedelta(days=8))
-    assert _summary_of("telegram", quick, 30.0)["upstream_upper_bound_s"] == 0.0
+    assert _summary_of("telegram", quick, 30.0)["upstream_estimate_s"] == 0.0
+    assert _summary_of("telegram", quick, 30.0)["upstream_bound_s"] == 2.0
 
 
 def test_the_window_test_uses_the_acceptance_figure() -> None:

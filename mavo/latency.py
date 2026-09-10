@@ -215,7 +215,8 @@ def _summary_of(name: str, lags: SourceLags, interval_s: float) -> dict[str, obj
     if not ordered:
         common.update({
             "median_s": None, "p90_s": None, "p99_s": None, "max_s": None,
-            "at_or_below_noise_floor": 0, "upstream_upper_bound_s": None,
+            "at_or_below_noise_floor": 0, "upstream_estimate_s": None,
+            "upstream_bound_s": None,
         })
         return common
     median = _quantile(ordered, 0.50)
@@ -225,7 +226,15 @@ def _summary_of(name: str, lags: SourceLags, interval_s: float) -> dict[str, obj
         "p99_s": round(_quantile(ordered, 0.99), 1),
         "max_s": round(ordered[-1], 1),
         "at_or_below_noise_floor": sum(1 for x in ordered if x <= NOISE_FLOOR_S),
-        "upstream_upper_bound_s": round(max(0.0, median - interval_s / 2.0), 1),
+        # F161. Named `..._estimate_s` from 0.54.5.0, and it was
+        # `upstream_upper_bound_s` before. `median - interval/2` is the
+        # upstream delay *exactly* when that delay is constant and our wait is
+        # uniform over the interval, and it is neither a bound nor an estimate
+        # when the wait is not uniform - posts arriving just before a poll
+        # would make it read below the truth. The bound that needs no
+        # assumption is the median itself, carried beside it.
+        "upstream_estimate_s": round(max(0.0, median - interval_s / 2.0), 1),
+        "upstream_bound_s": round(median, 1),
     })
     return common
 
@@ -265,10 +274,16 @@ def _render(summary: dict[str, object]) -> str:
                 f"  max           {block['max_s']} s",
                 f"  at or below the {NOISE_FLOOR_S} s clock floor: "
                 f"{block['at_or_below_noise_floor']}",
-                f"  upstream upper bound {block['upstream_upper_bound_s']} s "
-                "[inference]: the median minus half an interval. An upper "
-                "bound on everything before this collector, not a measurement "
-                "of the source.",
+                f"  upstream, at most {block['upstream_bound_s']} s "
+                "[measured]: our own wait is never negative, so the median lag "
+                "bounds everything before this collector with no assumption "
+                "at all.",
+                f"  upstream, estimated {block['upstream_estimate_s']} s "
+                "[wniosek]: the median minus half an interval. Exact if the "
+                "upstream delay is constant and our wait is uniform over the "
+                "interval; below the truth if posts tend to arrive just before "
+                "a poll. Neither condition is measured, so this is an estimate "
+                "under an assumption and not a bound.",
             ]
         else:
             lines.append(

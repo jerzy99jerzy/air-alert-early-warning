@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.10 / 2026-09-09
+Version: 1.11 / 2026-09-09
 What the source emits, measured on 48,540 real messages, and what that changes.
 
 **Status, 2026-08-31.** The channel stopped publishing on 2026-08-29 at 04:55
@@ -358,13 +358,22 @@ the API era is a different quantity and has no row here, for the reason below.
 
 *The maximum is not a latency.* Sixteen rows share one `ts_ingest`,
 2026-08-31 06:22:53.714763, against `ts_source` spread over 2026-08-29 04:29 to
-04:55 - the last of them 04:55:28, which is the second the channel fell silent.
-`last_id` on the public view did not move across that read or the six around it
-(334726-334745, `items=20` each time), so the page served the same window
-before, during and after. Those sixteen messages became events two days after
-the collector had already read the page carrying them, and what changed on
-2026-08-31 is `[nieustalone]`; a reclassification after the install of that
-morning is the shape of it, and no wire artefact survives to settle it.
+04:55 - the last of them 04:55:28, the second the channel fell silent, which
+`TODO.md` and the 0.53.0.0 review both record independently. **That ingest
+timestamp is the first post-install poll under 0.48.0.0**, which
+`docs/DEPLOYMENT.md` records to the second, and 0.48.0.0 is the per-kind repair
+of D-044 and D-045. Sixteen messages from the channel's last minutes becoming
+events on the first cycle of a classification change is a reclassification, and
+that is now the reading rather than `[nieustalone]`.
+
+**What is *not* established, and the first version of this paragraph asserted
+it (F161):** that the collector had already read the page carrying those
+messages on 2026-08-29. `feed_attempts` holds no row before 2026-08-29 14:39:05
+(F159), and the messages predate that by ten hours, so the store cannot say
+what the collector saw when they were published. `last_id` sat at 334726-334745
+across the 06:22:53 read and the six around it, `items=20` each time, which
+establishes only that the page window was static that morning. Whether those
+message ids fall inside that window is a probe nobody has run.
 **Without those sixteen rows: n=17,539, median 18.7 s, p90 34.7 s, p99 189.7 s,
 max 3,179.6 s** `[measured]`. The median and p90 do not move at all.
 
@@ -375,11 +384,18 @@ direction is safe - a slower poll inflates our own share of the wait, so an
 upper bound stays an upper bound - and the label is not, which is why this
 sentence travels with the number.
 
-*Our own poll interval is most of it.* A 33.0 s cadence contributes a uniform 0
-to 33 s to every lag above, median 16.5 s. The instrument reports **2.2 s** as
-the upper bound on everything upstream of this collector `[wniosek]`. That is a
-bound, not a reading of the channel: the source's own publishing delay and the
-public view's are inside it and are not separable from here.
+*Our own poll interval is most of it, and two different figures follow from
+that.* **The bound that needs no assumption is the median itself: everything
+upstream of this collector takes at most 18.7 s** `[measured]`, because our own
+wait is never negative. The instrument also reports **2.2 s** as an estimate
+`[wniosek]`, which is the median minus half an interval. That subtraction is
+exact when the upstream delay is constant and our wait is uniform across the
+interval, and it reads *below* the truth when posts tend to arrive just before
+a poll. Neither condition has been measured here, and posting is not obviously
+independent of a jittered 33 s timer. **Until 0.54.5.0 this document called
+2.2 s an upper bound** (F161); it is an estimate under two unmeasured
+assumptions, and the sentence that carried it built the release's headline on
+the stronger word.
 
 *822 observations sit at or below the 2.0 s clock floor*, where the two
 unsynchronised clocks are the dominant term rather than the transport.
