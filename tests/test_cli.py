@@ -166,14 +166,22 @@ def test_backfill_refuses_a_directory_another_run_holds(
 
 
 def test_backfill_releases_the_lock_when_it_finishes(tmp_path: Path) -> None:
-    # A lock left behind by a clean exit is a lock the next run has to reason
-    # about, which is how a control becomes a nuisance and then gets deleted.
+    # Rewritten at 0.54.6.0 (F162). This used to assert the lock *file* was
+    # gone, on the reasoning that a leftover file is one the next run has to
+    # reason about - true while the file was the lock, and the reason the
+    # first `flock` version kept an `unlink` that let two holders exist at
+    # once. Under `flock` the file is inert. What the test was after is that
+    # the next run is not blocked, and that is what it now asserts.
+    from mavo.backfill import DirectoryLock
+
     out = tmp_path / "corpus"
     page = tmp_path / "page.html"
     page.write_text("<html></html>", encoding="utf-8")
     main(["backfill", "--out", str(out), "--pages", "1", "--delay", "0",
           "--stub", str(page)])
-    assert not (out / ".backfill.lock").exists()
+    after = DirectoryLock(out)
+    after.acquire()
+    after.release()
 
 
 # --- 0.38.0.0: `mavo rso` ----------------------------------------------------

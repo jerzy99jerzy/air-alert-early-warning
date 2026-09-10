@@ -132,3 +132,44 @@ def test_a_second_pid_namespace_cannot_take_the_lock(tmp_path: Path) -> None:
         pytest.skip(f"unshare unavailable in this environment: {result.stderr.strip()}")
     assert "REFUSED" in result.stdout, result.stdout
     held.release()
+
+
+def test_two_holders_cannot_appear_through_a_recreated_lock_file(
+        tmp_path: Path) -> None:
+    """F162, and it is red against the first `flock` version of this class.
+
+    That version kept the `unlink` the pid design had needed. `flock` binds to
+    an inode, not to a path, so unlinking the path while another descriptor is
+    open on it splits the lock in two: the old inode keeps its lock and has no
+    name, and the next `open(O_CREAT)` makes a new inode that can be locked
+    independently. Two holders, each correct, each wrong about being alone.
+
+    The sequence below is the race made deterministic rather than raced for.
+    """
+    import fcntl
+
+    lock = tmp_path / ".backfill.lock"
+    first = DirectoryLock(tmp_path)
+    first.acquire()
+    contender = os.open(lock, os.O_CREAT | os.O_RDWR, 0o644)
+    try:
+        first.release()
+        fcntl.flock(contender, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        third = DirectoryLock(tmp_path)
+        with pytest.raises(DirectoryBusy):
+            third.acquire()
+        assert os.fstat(contender).st_ino == lock.stat().st_ino, (
+            "the holder's inode and the inode on disk have parted, which is "
+            "the split that lets a second holder appear"
+        )
+    finally:
+        os.close(contender)
+
+
+def test_the_lock_file_survives_release_because_it_is_not_the_lock(
+        tmp_path: Path) -> None:
+    """Deliberate, and the opposite of what this module did before 0.54.6.0."""
+    held = DirectoryLock(tmp_path)
+    held.acquire()
+    held.release()
+    assert (tmp_path / ".backfill.lock").exists()

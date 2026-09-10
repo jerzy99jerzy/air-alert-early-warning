@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 773](https://img.shields.io/badge/tests-773-brightgreen)](tests/)
+[![tests 775](https://img.shields.io/badge/tests-775-brightgreen)](tests/)
 [![coverage 95.61%](https://img.shields.io/badge/coverage-95.61%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 139](https://img.shields.io/badge/defects%20logged-139-informational)](docs/METHODOLOGY.md)
+[![defects logged 141](https://img.shields.io/badge/defects%20logged-141-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -797,10 +797,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 24 | 10,110 |
-| Tests | 70 | 14,713 |
+| Package `mavo/` | 24 | 10,125 |
+| Tests | 70 | 14,762 |
 | Tools | 28 | 7,952 |
-| Documentation | 74 | 32,799 |
+| Documentation | 74 | 32,900 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -811,13 +811,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 773, of which 13 are scripted attacks |
+| Tests | 775, of which 13 are scripted attacks |
 | Coverage | 95.61% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 15, each with a control or a named acceptance |
-| Defects logged with their class | 139, the count pinned against the log itself |
+| Defects logged with their class | 141, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 51, counted from the log itself |
-| Releases | 146 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 147 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation

@@ -274,10 +274,12 @@ def _render(summary: dict[str, object]) -> str:
                 f"  max           {block['max_s']} s",
                 f"  at or below the {NOISE_FLOOR_S} s clock floor: "
                 f"{block['at_or_below_noise_floor']}",
-                f"  upstream, at most {block['upstream_bound_s']} s "
-                "[measured]: our own wait is never negative, so the median lag "
-                "bounds everything before this collector with no assumption "
-                "at all.",
+                f"  upstream median, at most {block['upstream_bound_s']} s "
+                "[measured]: our wait adds a non-negative amount to every lag, "
+                "so the median lag bounds the median upstream delay. It bounds "
+                "the median only - the p99 above is the p99 of the sum, and "
+                "the tail is not bounded by it. The argument also needs the "
+                "negative-lag count to be zero, which is reported above.",
                 f"  upstream, estimated {block['upstream_estimate_s']} s "
                 "[wniosek]: the median minus half an interval. Exact if the "
                 "upstream delay is constant and our wait is uniform over the "

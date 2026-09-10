@@ -361,9 +361,10 @@ sprint rather than declaring it met.*
 
 **Read 2026-09-10 and written into `docs/CHANNEL.md` 8a.** Over 26.53 days and
 19,475 observations the channel's post-to-receipt lag has a median of **18.7 s**
-and a p90 of **34.7 s** `[measured]`. Everything upstream of this collector
-therefore takes **at most 18.7 s** `[measured]`, since our own wait is never
-negative; subtracting half an interval gives an estimate of **2.2 s**
+and a p90 of **34.7 s** `[measured]`. The **median** upstream delay is
+therefore **at most 18.7 s** `[measured]`, since our wait adds a non-negative
+amount to every lag - a bound on the median and on nothing else, the tail
+included; subtracting half an interval gives an estimate of **2.2 s**
 `[wniosek]`, which is exact only if the upstream delay is constant and our wait
 is uniform, and neither is measured (F161).
 

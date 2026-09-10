@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.57
+Document:  docs/METHODOLOGY.md, version 2.58
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4790,6 +4790,68 @@ the row it was missing.
 **Reopen condition:** any subcommand in `mavo/cli.py` that rebuilds an argv for
 a module whose parser it does not mirror, with no test going through
 `mavo.cli.main`.
+
+### F162, 0.54.6.0. The lock that had just been made the kernel's could still be held twice, because the fix kept an `unlink` the old design had needed
+
+F160 replaced a pid file and a liveness test with `flock` on a descriptor, and
+the entry said exclusion was now the kernel's problem. The implementation kept
+`release()` unlinking the lock file, which the pid design had needed so the
+next run would not meet a stale holder. `flock` binds to an **inode**, not to a
+path, and the two do not compose.
+
+**Demonstrated 2026-09-10, deterministically rather than raced for**
+`[measured]`: a first holder takes the lock; a second process opens the same
+path; the first releases, unlinking the path and dropping its lock; the second
+now locks an inode with no name; a third opens the path, `O_CREAT` makes a new
+inode, and it locks that. Two holders, two inodes, each correct and each wrong
+about being alone - the exact outcome F160 was written to prevent, surviving
+inside the fix for it.
+
+**The pattern is F161's, one layer in.** A property of the primitive - `flock`
+excludes - was asserted of the implementation without checking what the rest of
+the implementation did to the object the primitive binds to. The sentence
+"exclusion is the kernel's" was true of `flock` and false of this class, and
+nothing in the release read the two lines together.
+
+**The regression that had to change is the tell, and it is the second of its
+kind in three releases.** `test_backfill_releases_the_lock_when_it_finishes`
+required the file to be gone after a clean run, reasoning that a leftover lock
+is one the next run has to reason about. That was correct while the file *was*
+the lock. Under `flock` the file is inert and removing it is the defect, so a
+test written against the mechanism was holding the mechanism in place. It now
+asserts what it was after: the next run acquires. F160 rewrote
+`test_backfill_refuses_a_directory_another_run_holds` for the same reason, and
+both live in the same module.
+
+**Repair.** `release()` unlocks and closes and leaves the file. A leftover
+`.backfill.lock` blocks nobody, and the pid inside it is a label for the error
+message, which is what F160 already said it was.
+`test_two_holders_cannot_appear_through_a_recreated_lock_file` is the sequence
+above, and it fails against the 0.54.4.0 implementation.
+
+**Reopen condition:** any lock in this repository that unlinks the object it
+locks, or any claim that a primitive's property holds of code that also
+manipulates the primitive's target.
+
+### F163, 0.54.6.0. A bound on a median was written as a bound on every message
+
+Section 8a, the backlog and `mavo latency` said **everything upstream of this
+collector takes at most 18.7 s**. The arithmetic supports a narrower sentence:
+our wait adds a non-negative amount to every lag, so the *median* measured lag
+bounds the *median* upstream delay. It says nothing about the tail - the p99 in
+the same row is 195.7 s, the p99 of the sum - and it needs the negative-lag
+count to be zero, since a row received before it was stamped breaks the
+non-negativity the whole argument rests on. That count is zero here and is
+printed beside the figure, but it was not part of the claim.
+
+**Written in the release that corrected the previous version of this figure.**
+F161 changed *upper bound* to *bound and estimate* and, in the same sentence,
+mis-scoped the quantifier from a statistic to a population. The corrected
+figure was carried three places at once, which is how a phrasing error
+propagates faster than the correction that introduced it.
+
+**Reopen condition:** any statement of the form *X takes at most N* whose
+derivation is about a quantile rather than about every observation.
 
 ### F161, 0.54.5.0. A point estimate was called an upper bound and became the headline of a release, and a threat row asserted harm in a deployment this project does not run
 

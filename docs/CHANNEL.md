@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.11 / 2026-09-09
+Version: 1.12 / 2026-09-09
 What the source emits, measured on 48,540 real messages, and what that changes.
 
 **Status, 2026-08-31.** The channel stopped publishing on 2026-08-29 at 04:55
@@ -385,9 +385,14 @@ upper bound stays an upper bound - and the label is not, which is why this
 sentence travels with the number.
 
 *Our own poll interval is most of it, and two different figures follow from
-that.* **The bound that needs no assumption is the median itself: everything
-upstream of this collector takes at most 18.7 s** `[measured]`, because our own
-wait is never negative. The instrument also reports **2.2 s** as an estimate
+that.* **The bound that needs no assumption is the median itself: the median
+upstream delay is at most 18.7 s** `[measured]`, because our wait adds a
+non-negative amount to every lag. It bounds the **median** and nothing else -
+the p99 above is the p99 of the sum, and no statement about the tail follows
+from it. The argument also needs the negative-lag count to be zero, and it is.
+The first version of this paragraph said *everything upstream takes at most
+18.7 s*, which is a claim about every message and was not what the arithmetic
+supported (F162). The instrument also reports **2.2 s** as an estimate
 `[wniosek]`, which is the median minus half an interval. That subtraction is
 exact when the upstream delay is constant and our wait is uniform across the
 interval, and it reads *below* the truth when posts tend to arrive just before

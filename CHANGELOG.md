@@ -16,6 +16,39 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.54.6.0 - 2026-09-10
+
+**A third read-back, aimed at the pattern the second one named. Two of the
+three findings are inside the two releases that fixed the first two.**
+
+- **F162: the lock made "the kernel's problem" at 0.54.4.0 could still be held
+  twice.** `release()` kept unlinking the lock file, which the pid design had
+  needed and `flock` cannot survive: `flock` binds to an inode, not a path. A
+  second process that opens the path before the unlink ends up holding a lock
+  on an inode with no name, and a third that opens afterwards creates a new
+  inode and locks that. Demonstrated deterministically `[measured]`, not raced
+  for. `release()` now unlocks, closes, and leaves the file, which blocks
+  nobody because the file is not the lock.
+- **The regression that had to change is the tell.**
+  `test_backfill_releases_the_lock_when_it_finishes` required the file to be
+  gone, on reasoning that was correct while the file *was* the lock - so a
+  test written against the mechanism was holding the defect in place. Second
+  time in three releases in this one module, and the first was 0.54.4.0
+  rewriting its neighbour for the same reason.
+- **F163: a bound on a median was written as a bound on every message.**
+  *Everything upstream takes at most 18.7 s* became *the median upstream delay
+  is at most 18.7 s*, which is what the arithmetic gives. The p99 in the same
+  row is 195.7 s and no statement about the tail follows; the argument also
+  needs the negative-lag count to be zero, which it is and which is now part
+  of the claim rather than beside it. Written in the release that corrected
+  the previous version of that same figure.
+- **MT12 now says it is modelled rather than observed.** Every production
+  reading of the skipped counter is `0` or `unknown`; no overflow has ever
+  been measured. The burst counts that look larger than a page are events
+  rather than messages, because one message names several areas (T37). The row
+  stands on arithmetic, which is a good reason to keep it and a fact it should
+  have carried.
+
 ## 0.54.5.0 - 2026-09-10
 
 **A second read-back, on the two releases before it: where did a thesis become

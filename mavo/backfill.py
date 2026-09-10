@@ -331,9 +331,22 @@ class DirectoryLock:
         self.acquired = True
 
     def release(self) -> None:
-        """Drop the lock if this object took it."""
+        """Drop the lock if this object took it. **The file is not removed.**
+
+        F162. The first `flock` version kept the `unlink` the pid design had
+        needed, and the two do not compose: a second process that opens the
+        path before the unlink locks an inode that no longer has a name, while
+        a third opens the path afterwards, creates a *new* inode and locks
+        that. Both then hold the directory. Demonstrated rather than reasoned
+        about, and now `test_two_holders_cannot_appear_through_a_recreated_lock_file`.
+
+        Leaving the file is the standard answer and costs nothing here: under
+        `flock` the file is not the lock, it is where the lock lives and where
+        the holder's pid is written for the error message. A leftover file
+        blocks nobody, which is the property the test that used to require the
+        unlink was actually after.
+        """
         if self.acquired:
-            self.path.unlink(missing_ok=True)
             if self._handle is not None:
                 fcntl.flock(self._handle, fcntl.LOCK_UN)
                 os.close(self._handle)
