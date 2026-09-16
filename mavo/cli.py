@@ -74,13 +74,14 @@ from mavo.sources.ukrainealarm_source import (
     UkrainealarmSource,
     _load_snapshot,
 )
-from mavo.store import EventStore
+from mavo.store import EventStore, migration_lines
 from mavo.transport import StubTransport, Transport, UrllibTransport
 
 
 def _cmd_fixture(args: argparse.Namespace) -> int:
     nights = generate_history(weeks=args.weeks, seed=args.seed)
     store = EventStore(Path(args.out))
+    _announce_migrations(store)
     added = store.append(FixtureSource(nights).poll())
     crossings = sum(1 for night in nights if night.had_crossing)
     print(f"nights={len(nights)} events_added={added} crossings={crossings}")
@@ -184,18 +185,16 @@ API_URL = f"{API_BASE}/alerts"
 def _announce_migrations(store: EventStore) -> None:
     """One line per schema move the open just made, in the journal a person greps.
 
-    Two shapes since 0.53.4.0: a column added to a recorded table reads NULL
-    for every row written before it, and a table added to a recorded store
-    is empty until the first cycle writes it. The two sentences differ
-    because the two facts do, and "NULL for every earlier row" said about a
-    table would be a claim about rows that do not exist.
+    The sentences are `mavo.store.migration_lines`, so the two commands that
+    open a store outside this module print the same words. **Every command in
+    this module that constructs an `EventStore` calls this, and
+    `tests/lint_domain.py` fails the build when one does not** (F168): until
+    0.55.0.0 only the two collectors did, and `mavo report` - the one process
+    that runs continuously on the host - created three tables in silence when
+    it opened the store first after an install.
     """
-    for entry in store.migrations_applied:
-        if entry.endswith(" (table)"):
-            print(f"[STORE-MIGRATED] created {entry[: -len(' (table)')]}, "
-                  "empty until the first cycle writes it")
-        else:
-            print(f"[STORE-MIGRATED] added {entry}, NULL for every earlier row")
+    for line in migration_lines(store):
+        print(line, flush=True)
 
 
 def _vocabulary_detail(source: UkrainealarmSource) -> str | None:
@@ -654,6 +653,7 @@ def _cmd_reconcile(args: argparse.Namespace) -> int:
     """
     try:
         store = EventStore(Path(args.store))
+        _announce_migrations(store)
     except Exception as failure:  # noqa: BLE001
         print(f"[STORE-FAILED] {failure}")
         return 7
@@ -931,6 +931,7 @@ def _cmd_report(args: argparse.Namespace) -> int:
     silence this command exists to prevent.
     """
     store = EventStore(Path(args.store))
+    _announce_migrations(store)
     try:
         windows = parse_windows(args.windows)
     except ValueError as failure:

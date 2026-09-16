@@ -44,10 +44,11 @@ AIR_NOW = datetime(2026, 9, 14, 12, 0, tzinfo=UTC)
 RSO_NOW = datetime(2026, 9, 13, 12, 0, tzinfo=UTC)
 
 #: The consumer's test page, with the one change the producer's parser needs:
-#: every `<province>` carries a `slug`, as every province in the page recorded
-#: from the live endpoint does (`tests/fixtures/rso_page.xml`). The consumer
-#: read slugless provinces by their text; this parser keeps a province by its
-#: slug, and D-053 names that difference.
+#: every `<province>` carries a `slug`, as all three provinces in the reduced
+#: page recorded from the live endpoint do (`tests/fixtures/rso_page.xml`;
+#: three is the whole of the evidence). The consumer read slugless provinces by
+#: their text; this parser keeps a province by its slug, and D-053 names that
+#: difference and its cost.
 PAGE = """<?xml version="1.0" encoding="UTF-8"?>
 <news_list>
   <news>

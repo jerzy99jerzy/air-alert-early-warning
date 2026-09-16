@@ -16,9 +16,10 @@ recorded where the event store is, from the first day, or the scrubber's first
 week is a week of nothing.
 
 **The parser is a port and says where from.** `mavosite/airspace.py` at
-4.76.0.0, whose schema was measured on `vm-site` on 2026-09-14 against the
-live body: 382,154 bytes, `reservationStatus` PLANNED and ACTIVATED on UUP and
-PLANNED alone on AUP, every stamp carrying `Z`. The rules for what the map
+4.76.0.0. Its docstring records a schema measured on `vm-site` on 2026-09-14
+against the live body: 382,154 bytes, `reservationStatus` PLANNED and
+ACTIVATED on UUP and PLANNED alone on AUP, every stamp carrying `Z`
+`[reported: the consumer's module, not re-measured from this host]`. The rules for what the map
 draws are not in this module. They are a presentation decision (D-S82) over
 what was read, and they live in `mavo/polish.py` so that this file records
 everything the plan said and decides nothing about it, which is D-034 applied
@@ -71,10 +72,10 @@ SOURCE_URL = "https://airspace.pansa.pl/map-configuration/uup"
 #: line of defence and this is the second, for the reason `rso.poll_once` gives.
 MAX_BYTES = 4 * 1024 * 1024
 
-#: The whole request, connect to last byte. The body is two orders larger than
-#: an RSO page, and the consumer ran this read at twenty seconds without a
-#: recorded timeout from 4.75.0.0 to 4.76.0.0 [reported, consumer journal not
-#: re-read for this figure].
+#: The whole request, connect to last byte, on this package's transport. The
+#: consumer's constant for the same read, carried over because the body is two
+#: orders larger than an RSO page and nothing better is measured; whether
+#: twenty seconds was ever reached there is not known here [unmeasured].
 TIMEOUT_S = 20.0
 
 _HTML = re.compile(r"<!DOCTYPE|<html", re.IGNORECASE)

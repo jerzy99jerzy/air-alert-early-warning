@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.10
+Document:  docs/MANUAL.md, version 3.11
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -551,6 +551,13 @@ code is 0 when the loop was told to stop or was interrupted, and 7 when a
 write failed, because that is the only ending that leaves a consumer reading a
 file nobody is refreshing. `--watch` without `--json` is refused: the loop
 exists to publish.
+
+**Opening the store prints what the open changed.** One `[STORE-MIGRATED]`
+line per table or column this version added to a store an older one wrote,
+on stdout, before anything else; nothing on an ordinary open. Every command
+that opens a store prints the same lines from 0.55.0.0 (F168); until then only
+the two collectors did, and a store opened first by this command after an
+install was migrated in silence.
 
 **Under `--watch` the loop also composes the Polish keys** (D-053):
 `pl_warnings` from what `mavo rso` recorded and `pl_airspace` from what

@@ -175,3 +175,34 @@ def test_reservation_records_are_normalised_to_utc() -> None:
     assert record["starts_at"].endswith("+00:00")
     assert datetime.fromisoformat(record["starts_at"]).tzinfo is not None
     assert datetime.fromisoformat(record["ends_at"]) > datetime(2026, 9, 14, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("feature", [
+    {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[1, 2]]]},
+     "properties": {"designator": ["EPX"], "airspaceElementType": {"k": 1},
+                    "airspaceReservations": {"not": "a list"}}},
+    {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[1, 2]]]},
+     "properties": {"designator": 12, "airspaceElementType": None}},
+    {"type": "Feature", "geometry": {"type": "MultiPolygon", "coordinates": "text"},
+     "properties": {"designator": "EPX", "airspaceElementType": "D"}},
+    {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[1, 2]]]},
+     "properties": {"designator": "EPX", "airspaceElementType": "D",
+                    "airspaceReservations": [{"startDate": 5, "endDate": [],
+                                              "lowerAltitude": {}, "unit": 3,
+                                              "remarks": 9, "reservationStatus": []}]}},
+    {"type": "Feature", "geometry": [], "properties": []},
+    42,
+    None,
+])
+def test_json_of_the_wrong_shape_is_counted_and_never_escapes_as_another_exception(
+    feature: object,
+) -> None:
+    """`_cmd_airspace` catches `SourceUnavailable` and nothing else, so a shape
+    that raised `TypeError` or `KeyError` here would take the collector down
+    with a traceback and no attempt row - F110's shape, one adapter over."""
+    body = json.dumps([feature]).encode()
+    try:
+        page = pansa.parse(body)
+    except SourceUnavailable:
+        return
+    assert page.unreadable + len(page.zones) == 1

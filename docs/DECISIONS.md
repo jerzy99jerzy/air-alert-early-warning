@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.28
+Document:  docs/DECISIONS.md, version 2.29
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2215,15 +2215,20 @@ evidence.** The term lists, the airspace rules and the payload shapes are
 expected values; the outlines are compared against the GeoJSON file the
 consumer committed as its own output for the same fixture and moment.
 **Three differences are chosen, and `mavo/poland.py` names them:** the
-communique scope is `ogolne` read unpaged rather than its first page, which
-removes a cost the consumer stated; a stamp inside the doubled autumn hour is
+communique scope is `ogolne` at page 0 rather than page 1, which removes a
+cost the consumer stated if page 0 is the unpaged reading the publisher's page
+says it is `[reported, T67]`; a stamp inside the doubled autumn hour is
 passed through as the feed's text and is not an end; and a communique list
 older than an hour is `null` rather than current, because that payload has no
 field for age and the consumer's kept list, empty or not, rendered as fresh
 through any outage. One difference is inherited rather than chosen: this
 parser keeps a province only by its `slug`, where the consumer kept a slugless
-one by its text. Every province in the page recorded from the live endpoint
-carries a slug `[measured, tests/fixtures/rso_page.xml]`.
+one by its text. All three provinces in the reduced page recorded from the
+live endpoint carry one `[measured, tests/fixtures/rso_page.xml, n=3]`, which
+is evidence about three rows and not about the feed; a communique whose only
+province arrived without a slug would be recorded in `communiques` and absent
+from `pl_warnings`, and T85's first readings on the host are where that would
+show.
 
 **What does not move.** Weather, the incidents archive, the crossings and all
 rendering stay in the consumer. So does the replacement of its own
@@ -2243,9 +2248,22 @@ serves the consumer's own reading beside this package's text.
 **What it costs, stated.** `vm-mavo` gains two destinations on the address
 Cloudflare blocked once (`docs/DEPLOYMENT.md`), and one more failure domain: a
 producer outage now blanks the Polish layers too, as `null` rather than as a
-quiet sky. The plan is about 382 kilobytes per read `[measured on vm-site
-2026-09-14, by the consumer]`, which at one read per 300 s is about 110 MiB a
-day inbound `[inference from that one body]`.
+quiet sky. The plan is 382,154 bytes per read `[reported: the consumer's
+module docstring, measured there on vm-site 2026-09-14]`, which at one read
+per 300 s is about 110 MB a day inbound - 382,154 × 288, which is 105 MiB
+`[inference from that one body]`. The first revision of this entry copied the
+consumer's "110 MiB", which is the same product in the wrong unit.
+
+**What the outlines cost a reader, measured before they were put in the
+contract.** `state.json` is pushed to `vm-site` every thirty seconds over the
+internal address and is not what a reader's browser fetches: the page refreshes
+over `/fragment/` and `/events`, and the only JSON the page embeds about the
+airspace is `_airspace_summary`, which carries a count and a stamp and no
+geometry `[measured, mavo-site 4.76.0.0 render.py and server.py]`. So
+`features` costs the push and the server's read of the file, and reaches a
+browser only from the route the consumer chooses to serve it on, as
+`/airspace.json` is served today. D-024's argument about what `state.json`
+costs a phone was about a browser polling the file, and no browser does.
 
 **Reopen if:** RSO's XML is withdrawn in favour of CAP (the reader changes, this
 decision does not); a Polish layer needs data per reader rather than per host;
@@ -2269,7 +2287,9 @@ would therefore be in force for ever when composed from the store, where the
 consumer showed it only while the feed still listed it. What a page served at a
 moment is the fact both the map and the scrubber need, and it was not recorded
 anywhere. Writing the whole body per read was the alternative and it is priced
-out by the plan alone, at about 110 MiB a day `[inference, D-053]`.
+out by the plan alone, at about 110 MB a day `[inference, D-053]` into a store
+that was 35,614,720 bytes at its last copy `[measured 2026-09-09,
+docs/DEPLOYMENT.md]`.
 
 **Why the change rule is against the newest row and not a key on the list.** A
 plan that goes A, then B, then back to A is three states; a primary key on the

@@ -6,7 +6,7 @@ break. `DATA-FLOW.md` is the companion and answers the other question, what
 happens to a message as it travels.
 
 ```
-Document:  docs/ARCHITECTURE.md, version 2.7
+Document:  docs/ARCHITECTURE.md, version 2.8
 Audience:  a contributor about to add a module, a dependency, or a process
 Companion: DATA-FLOW (what happens to the data), MECHANISMS (why each mechanism
            is built the way it is), METHODOLOGY (what may be claimed)
@@ -96,6 +96,9 @@ Maintained as a table so that a rename leaves a visibly stale row.
 | API adapter | `mavo/sources/ukrainealarm_source.py` | **The primary source since D-040.** A full-state snapshot presented as the transitions the collector expects: an ended alert is synthesised from the difference between two polls, dated by the observation, and only when the previous observation actually happened - a persisted snapshot older than its ceiling licenses no clears |
 | Telegram adapter | `mavo/sources/telegram.py` | The watchman since D-040: the channel fell silent 2026-08-29 and this stays wired so a returned publisher lands labelled rather than remembered. Parses the public channel page; area resolution runs on the channel's own tags since S7 (the pre-S7 pattern table measured 0 of 20, F23, and was replaced rather than repaired), and it reports the skipped message window rather than assuming continuity |
 | `EventStore` | `mavo/store.py` | Append-only log of transitions, never snapshots. Idempotent by content hash so a re-poll costs nothing |
+| recorded tables | `mavo/store.py` | What this program did rather than what it derived: `feed_attempts`, `communiques`, `alert_levels`, and from 0.55.0.0 `feed_snapshots` (the ordered list one address served, written on change, D-054), `airspace_zones` and `airspace_geometries`. Extended additively, never refused (D-036); every open prints what it moved (F168) |
+| Polish readers | `mavo/sources/rso.py`, `mavo/sources/pansa.py` | RSO communiques and the PAŻP updated airspace use plan, on timers from 0.55.0.0 (D-053). Neither yields a `ThreatEvent`; both record everything the feed said and decide nothing about it (D-034) |
+| Polish composer | `mavo/poland.py` | `pl_warnings` and `pl_airspace` for `state.json`, from the recorded tables and the newest list per address. Decides which communique is about the air and which structure is drawn; the rules and their tests are `mavo-site` 4.76.0.0's, ported, with three named differences |
 | replay | `mavo/store.py` | Reconstructs any past moment. The backtest and the live correlator run this same path |
 | rules | `mavo/rules.py` | Explicit predicates returning the moment they fire, which is what makes lead time measurable. R1 to R4 plus the missile and drone conjunctions |
 | poison suppression | `mavo/rules.py` | Hard control against a source claiming implausibly broad simultaneous activation |

@@ -246,6 +246,67 @@ def check_a_delegating_subcommand_mirrors_its_module(root: Path | None = None) -
     return problems
 
 
+#: The modules whose functions open a store on an operator's or a unit's
+#: behalf. `mavo/store.py` is not here: it is the thing being opened.
+_STORE_OPENERS = ("mavo/cli.py", "mavo/attempts.py")
+
+
+def _calls(node: ast.AST) -> set[str]:
+    """Every name called anywhere inside `node`, plain or as an attribute."""
+    names: set[str] = set()
+    for child in ast.walk(node):
+        if not isinstance(child, ast.Call):
+            continue
+        target = child.func
+        if isinstance(target, ast.Name):
+            names.add(target.id)
+        elif isinstance(target, ast.Attribute):
+            names.add(target.attr)
+    return names
+
+
+def check_every_store_opener_announces_migrations(root: Path | None = None) -> list[str]:
+    """F168. A function that constructs an `EventStore` also prints what the open moved.
+
+    `EventStore.__init__` creates a missing recorded table and adds a missing
+    recorded column on every open, and records the fact in
+    `migrations_applied` for the caller to print - "once, at the moment it
+    happens, in the journal a person greps" (0.53.4.0). The printing was
+    beside the two collectors and nowhere else, so `mavo report`, which runs
+    on the host as a long-lived unit, created three tables without a line
+    when it opened the store first after an install. A migration announced
+    only by whichever command opens the store first is announced by chance.
+
+    Read from the syntax tree, per function: a function whose body calls
+    `EventStore` must also call `_announce_migrations` or `migration_lines`.
+    The two openers outside `cli.py` are `attempts.py`, which is listed, and
+    `latency.py`, which reads the file through `sqlite3` directly and creates
+    nothing, so it is not an opener in this sense.
+    """
+    tree_root = root if root is not None else ROOT
+    problems: list[str] = []
+    for relative in _STORE_OPENERS:
+        module = tree_root / relative
+        if not module.exists():
+            problems.append(f"{relative} is missing; this check reads it")
+            continue
+        tree = ast.parse(module.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef):
+                continue
+            called = _calls(node)
+            if "EventStore" not in called:
+                continue
+            if called & {"_announce_migrations", "migration_lines"}:
+                continue
+            problems.append(
+                f"{relative}::{node.name} constructs an EventStore and prints nothing "
+                "about what the open migrated; a table created in silence is the "
+                "repair the store refuses (F168)"
+            )
+    return problems
+
+
 def main() -> int:
     """Run every domain invariant. Returns a process exit code."""
     problems = (
@@ -256,6 +317,7 @@ def main() -> int:
         + check_the_pipeline_does_not_import_its_reader()
         + check_no_tool_reads_the_store()
         + check_a_delegating_subcommand_mirrors_its_module()
+        + check_every_store_opener_announces_migrations()
     )
     for problem in problems:
         print(f"lint-domain: {problem}", file=sys.stderr)

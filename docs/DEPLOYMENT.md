@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.41 / 2026-09-16
+Version: 1.42 / 2026-09-16
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -596,7 +596,7 @@ undocumented cannot be reasoned about by whoever runs it.
 | ntfy host (operator-controlled) | notification delivery, phase M1 onward | token, write-side only | on decision and on degradation, bounded by the alarm budget |
 | `opensky-network.org` | ADS-B state vectors over the Jasionka box, T42's sampler | OAuth2 client credentials, held on the host in `/etc/mavo-adsb/env` | one request per 60 s from 2026-08-14, 1,440 per day against a 4,000/day allowance |
 | `auth.opensky-network.org` | the token endpoint for the row above | the same credentials | once per token lifetime, roughly every 30 minutes |
-| `api.ukrainealarm.com` | the primary source since D-040, `mavo collect-api` | API key, held on the host and not named here, for the reason the service units are not reproduced | one request per timer run, 120 s configured `[measured 2026-09-08, systemctl cat, recorded in mavo/liveness.py]`. **Missing from this table from 0.44.0.0 to 0.54.8.0 (F167)** |
+| `api.ukrainealarm.com` | the primary source since D-040, `mavo collect-api` | API key, held on the host and not named here, for the reason the service units are not reproduced | one request per timer run, 120 s configured `[measured 2026-09-08, systemctl cat, recorded in mavo/liveness.py]`. **Missing from this table at 0.54.8.0, and for how long is unmeasured (F167)** |
 | `komunikaty.tvp.pl` | RSO communiques, `mavo rso`, five category addresses per run | none. The XML is public by the publisher's own statement | five requests per run, 900 s **declared** for `mavo-rso.timer` (D-053), not yet read from the host. Missing from this table until 0.55.0.0 although this document's network table measured it from `vm-mavo` on 2026-09-04 (F167) |
 | `airspace.pansa.pl` | PAŻP's updated airspace use plan, `mavo airspace` | none | one request per run, 300 s **declared** for `mavo-airspace.timer` (D-053); about 382 kilobytes per body `[measured on vm-site 2026-09-14, by the consumer]` |
 
@@ -1012,15 +1012,23 @@ readings that replace it are T85's acceptance.
 
 **The schema moves, so the store is copied first.** `feed_snapshots`,
 `airspace_zones` and `airspace_geometries` are recorded tables (D-036, D-054):
-created empty on the first open by the new version, printed once as
-`[STORE-MIGRATED] created ...` by whichever command opens the store first, and
-never refused. The point of return is `events.pre-0.55.0.0`, taken with the
-collect timers stopped, as at 0.53.4.0.
+created empty on the first open by the new version and never refused. **Which
+unit prints the `[STORE-MIGRATED] created ...` lines is not known in
+advance**: from this release every command that opens a store prints them
+(F168), so they land in the journal of whichever unit opened it first after
+`pip` - `mavo-report`, if it is restarted before a collector's timer fires,
+which at 0.53.4.0 it was not. Read all three journals for the three lines and
+expect them in exactly one. The point of return is `events.pre-0.55.0.0`,
+taken with the collect timers stopped, as at 0.53.4.0.
 
-**The two units, as this release asks for them.** The collectors on this host
-run as `User=mavo` from `/opt/mavo/venv`; the files below copy that shape and
-must be compared against `systemctl cat mavo-collect.service` before they are
-written, because this document has never quoted a collector's service unit.
+**The two units, as this release asks for them.** The units table above
+records `User=mavo` for `mavo-collect.service` and `/opt/mavo/venv` as the
+interpreter for every unit `[reported, that table]`; the files below copy that
+shape and must be compared against `systemctl cat mavo-collect.service` before
+they are written, because this document has never quoted a collector's
+service unit. **The fenced block satisfies `check_unit_claims_quote_the_unit`
+by its shape and not by its provenance**: that check reads `[Unit]` headers
+and cannot tell a reading from a proposal, and this is a proposal.
 
 ```
 # /etc/systemd/system/mavo-rso.service

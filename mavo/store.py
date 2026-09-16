@@ -304,6 +304,33 @@ def _stored_form(ts: datetime, label: str) -> str:
     return ts.astimezone(UTC).isoformat()
 
 
+def migration_lines(store: EventStore) -> list[str]:
+    """One printable line per schema move `store` made when it was opened.
+
+    Written here rather than in `cli.py` at 0.55.0.0 (F168), because the
+    sentences were beside two of the seven commands that open a store and the
+    other five - `report`, which runs on the host as a long-lived unit, among
+    them - created tables without a word. A migration announced only by the
+    command that happens to open the store first is announced by chance.
+
+    Two shapes since 0.53.4.0: a column added to a recorded table reads NULL
+    for every row written before it, and a table added to a recorded store is
+    empty until the first cycle writes it. The sentences differ because the
+    facts do, and "NULL for every earlier row" said about a table would be a
+    claim about rows that do not exist.
+    """
+    lines: list[str] = []
+    for entry in store.migrations_applied:
+        if entry.endswith(" (table)"):
+            lines.append(
+                f"[STORE-MIGRATED] created {entry[: -len(' (table)')]}, "
+                "empty until the first cycle writes it"
+            )
+        else:
+            lines.append(f"[STORE-MIGRATED] added {entry}, NULL for every earlier row")
+    return lines
+
+
 class EventStore:
     """SQLite-backed append-only log with idempotent writes."""
 

@@ -2754,8 +2754,9 @@ seconds, which rests on one body measured by the consumer on 2026-09-14.
 **Acceptance.** The `systemctl cat` readings of both units quoted in
 `docs/DEPLOYMENT.md` in place of the plan, and `liveness.py`'s comment changed
 from declared to measured with the date; the first `mavo rso` and
-`mavo airspace` journal lines with `snapshot=changed`, and the one
-`[STORE-MIGRATED] created feed_snapshots` line; both feeds reading
+`mavo airspace` journal lines with `snapshot=changed`, and the three
+`[STORE-MIGRATED] created ...` lines in exactly one of the three units'
+journals, `mavo-report` included since F168, naming which; both feeds reading
 `delivering` in the `sources` block within one cadence of install; over seven
 days, `feed_snapshots` rows per day for each feed and the table's growth in
 bytes, which is the input D-054 names for a retention decision; the size of

@@ -21,10 +21,13 @@ a consumer's cache that forgets on every refresh.
 rule below is `mavosite/rso.py` or `mavosite/airspace.py` at 4.76.0.0, with the
 consumer's tests ported beside them as the proof. What differs:
 
-1. **The communique scope is the unpaged `ogolne` reading, not its first page.**
+1. **The communique scope is the `ogolne` reading at page 0, not page 1.**
    The consumer read page one and said so as a cost: a communique still valid
-   on page two was never painted. `mavo rso` reads each category unpaged, so
-   that cost is gone rather than carried.
+   on page two was never painted. `mavo rso` asks for page 0, which the
+   publisher's integration page describes as the reading with pagination
+   suppressed `[reported, T67; the 461-communique count of 2026-08-22 was
+   taken through it]`. If that description holds, the cost is gone; whether it
+   holds on the host is a T85 reading and not a property of this module.
 2. **An hour the autumn change maps twice is not converted.** The consumer
    gave such a stamp the summer offset without saying so, which ends a
    communique an hour early if the publisher meant winter time. Here the stamp

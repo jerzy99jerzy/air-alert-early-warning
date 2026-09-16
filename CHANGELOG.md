@@ -56,6 +56,23 @@ removing its two readers is the consumer's next one.
   end, where the consumer gave it the summer offset and could end a warning an
   hour early. A communique list older than an hour is `null`, where the
   consumer kept its last list for ever in a payload with no field for age.
+- **F168, found by reading the install plan against the code it described.**
+  Five of the seven commands that open a store created tables without a line,
+  `mavo report` among them, so the `[STORE-MIGRATED]` discriminator the plan
+  rested on appeared only if a collector's timer fired before the report
+  service was restarted. Reproduced, then repaired: the sentences live in
+  `mavo.store.migration_lines`, every opener prints them, and
+  `check_every_store_opener_announces_migrations` fails the build on one that
+  does not - red against the uploaded 0.54.8.0 tree with five names.
+- **A second pass over this release's own prose, before it was tagged.** Three
+  figures had been written as measured and were not: a daily volume in the
+  wrong unit, copied from the consumer; a span no intermediate revision had
+  been read for; a population claim resting on three rows. Each is corrected
+  where it stands, with the arithmetic, the unread span or the count beside
+  it, and the review carries them as R11 to R13. The cost of carrying outlines
+  in `state.json`, asserted from consistency in the first draft, was measured
+  in the second: no browser fetches the file, so it costs the internal push
+  (D-053).
 - **F167.** `docs/DEPLOYMENT.md` section 2 ended *Nothing else* beside a table
   that did not list the primary source, nor the RSO host. Closed by
   `check_every_source_host_is_in_the_egress_inventory`, which named both

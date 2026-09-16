@@ -194,7 +194,7 @@ jest zbudowany wokół tego rozróżnienia.
 Przy prywatnym projekcie to waży więcej niż technologia, więc konkrety zamiast
 zapewnień. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Log defektów ma 145 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
+**Log defektów ma 146 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
 tego nie zauważył i jaka to klasa błędu. Wpisy przeciw interesowi projektu też
 tam są, łącznie z tym o wyniku 0 na 20 i z tym, w którym dokumentacja
 twierdziła, że coś jest sprawdzane, a nie było. Osobno zapisano **53 decyzje
@@ -211,9 +211,9 @@ wywnioskowane, założone. Te 57% z akapitu wyżej jest liczbą cudzą i tak jes
 oznaczone, łącznie z uwagą, że źródło mogło mieć na myśli inny obszar niż ten
 projekt.
 
-**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 881 testów,
+**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 894 testów,
 w tym 13 skryptowanych ataków na własne zabezpieczenia; pokrycie kodu wynosi
-95,50% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
+95,72% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
 sprawdzane: 12 z 13 zweryfikowano tak, że celowo psuto chronioną kontrolę i
 wymagano, żeby atak to wykrył. Ten jeden bez takiej weryfikacji jest wypisywany
 jako niezweryfikowany przy każdym uruchomieniu, zamiast być przemilczany.

@@ -33,7 +33,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from statistics import median
 
-from mavo.store import EventStore
+from mavo.store import EventStore, migration_lines
 
 #: A gap is a stretch this collector cannot account for. Two cadences of
 #: silence is the threshold: one cadence is the ordinary spacing between
@@ -289,10 +289,14 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError as bad:
         print(f"attempts: {bad}", file=sys.stderr)
         return 2
+    store = EventStore(path)
+    # F168. An operator reading attempts right after an install is a command
+    # opening the store, and a table created here without a line is created
+    # in silence.
+    for line in migration_lines(store):
+        print(line)
     print(
-        measure(
-            EventStore(path), args.feed, args.cadence_s, since=window[0], until=window[1]
-        ).render()
+        measure(store, args.feed, args.cadence_s, since=window[0], until=window[1]).render()
     )
     return 0
 

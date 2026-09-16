@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.61
+Document:  docs/METHODOLOGY.md, version 2.62
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4801,6 +4801,43 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
 
+### F168, 0.55.0.0. Five of seven commands that open the store created tables in silence, and the install plan's discriminator rested on the two that did not
+
+`EventStore.__init__` creates a missing recorded table on every open and
+records the fact in `migrations_applied` for the caller to print - "once, at
+the moment it happens, in the journal a person greps" (0.53.4.0). The printing
+was beside `collect` and `collect-api` and nowhere else. Run against the
+0.54.8.0 tree, the lint that now holds this names five silent openers:
+`fixture`, `reconcile`, `rso` and `report` in `mavo/cli.py`, and
+`attempts.main` `[measured, tests/lint_domain.py
+check_every_store_opener_announces_migrations against the uploaded tree]`.
+
+**Reproduced before the repair** `[measured, this session]`: a store lacking
+the three tables 0.55.0.0 adds, opened first by `mavo report --watch`, gained
+all three and printed no line on either stream; `mavo rso` opened it next and
+printed nothing, because nothing was left to migrate. On the host `mavo-report`
+is the one long-lived unit, so whether the 0.53.4.0 line `[STORE-MIGRATED]
+created alert_levels` appeared in the collector's journal depended on the
+collector's timer firing before the report service was restarted. It did, and
+the deployment record reads as though the mechanism guaranteed it.
+
+**Found by writing the 0.55.0.0 install plan**, whose discriminator was that
+line, and then asking which command would print it. F156's class (argument
+against use): the announcement was added where the migration was argued about,
+in the collectors, and missed where the store is opened in passing.
+
+**Repair.** The sentences move to `mavo.store.migration_lines`, every opener
+in `mavo/cli.py` and `mavo/attempts.py` prints them, and
+`check_every_store_opener_announces_migrations` in `tests/lint_domain.py`
+reads each function that constructs an `EventStore` and fails the build when
+it prints nothing. The check is red against the 0.54.8.0 tree with the five
+names above and green here.
+
+**Reopen condition:** a store opener outside the two modules the lint reads.
+`mavo/latency.py` reads the file through `sqlite3` directly and creates
+nothing, which is why it is not one; a module that constructs an `EventStore`
+elsewhere would be.
+
 ### F167, 0.55.0.0. The egress inventory said "Nothing else" beside a table that did not list the primary source
 
 `docs/DEPLOYMENT.md` section 2 is titled *Egress inventory*, opens by saying it
@@ -4810,7 +4847,11 @@ OpenSky hosts.
 It did not list `api.ukrainealarm.com`, which has been the primary source since
 D-040 (0.44.0.0), nor `komunikaty.tvp.pl`, which the same document's network
 table measured from `vm-mavo` on 2026-09-04 `[measured, both absences read
-from the 0.54.8.0 tree]`.
+from the 0.54.8.0 tree]`. **How long the rows were missing is not measured.**
+The section carries a correction dated 0.31.0.0 and nothing later, so the
+absence is at least as old as the D-040 switch if nobody edited the table in
+between; the revisions between were not read, and the first draft of this
+entry wrote "from 0.44.0.0" as though they had been.
 
 **Found by using the table rather than by auditing it.** 0.55.0.0 adds two
 destinations to this host, and adding a row is the moment a reader counts the
