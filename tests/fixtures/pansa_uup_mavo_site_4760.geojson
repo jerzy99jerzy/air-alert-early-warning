@@ -1,0 +1,131 @@
+{
+ "type": "FeatureCollection",
+ "available": true,
+ "read_at": "2026-09-14T12:00:00+00:00",
+ "error": null,
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       22.0,
+       52.0
+      ],
+      [
+       22.4,
+       52.0
+      ],
+      [
+       22.4,
+       52.3
+      ],
+      [
+       22.0,
+       52.3
+      ],
+      [
+       22.0,
+       52.0
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "designator": "EPTS9",
+    "kind": "TSA",
+    "lower": "GND",
+    "upper": "F095",
+    "lower_m": 0,
+    "upper_m": 2900,
+    "managed_by": "EPDE",
+    "until": "2026-09-14T16:00:00+00:00",
+    "remarks": "F16/W"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       20.0,
+       51.0
+      ],
+      [
+       20.4,
+       51.0
+      ],
+      [
+       20.4,
+       51.3
+      ],
+      [
+       20.0,
+       51.3
+      ],
+      [
+       20.0,
+       51.0
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "designator": "EPTR700",
+    "kind": "TRA",
+    "lower": "GND",
+    "upper": "F135",
+    "lower_m": 0,
+    "upper_m": 4100,
+    "managed_by": "COP",
+    "until": "2026-09-14T18:00:00+00:00",
+    "remarks": "NOT.D6513/26/ORZEL"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       23.2,
+       50.6
+      ],
+      [
+       23.9,
+       50.6
+      ],
+      [
+       23.9,
+       51.1
+      ],
+      [
+       23.2,
+       51.1
+      ],
+      [
+       23.2,
+       50.6
+      ]
+     ]
+    ]
+   },
+   "properties": {
+    "designator": "EPD29",
+    "kind": "D",
+    "lower": "GND",
+    "upper": "F245",
+    "lower_m": 0,
+    "upper_m": 7450,
+    "managed_by": "MIL",
+    "until": "2026-09-15T06:00:00+00:00",
+    "remarks": null
+   }
+  }
+ ]
+}

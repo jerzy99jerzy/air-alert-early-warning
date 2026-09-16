@@ -6,7 +6,7 @@ break. `DATA-FLOW.md` is the companion and answers the other question, what
 happens to a message as it travels.
 
 ```
-Document:  docs/ARCHITECTURE.md, version 2.6
+Document:  docs/ARCHITECTURE.md, version 2.7
 Audience:  a contributor about to add a module, a dependency, or a process
 Companion: DATA-FLOW (what happens to the data), MECHANISMS (why each mechanism
            is built the way it is), METHODOLOGY (what may be claimed)
@@ -35,17 +35,22 @@ flowchart TD
     subgraph IN["Sources: everything implements ThreatSource"]
         UASRC["ukrainealarm_source.py<br/>full-state API, PRIMARY since D-040<br/>ended alerts synthesised from the snapshot diff<br/>an episode starts at its earliest level record (F148)<br/>and folds overlapping alerts to the earliest start (F147)"]
         TG["telegram.py<br/>channel silent twice: from 2026-08-29, and again from 2026-09-07 06:09 UTC<br/>kept wired as the watchman, health read per pipe (D-049)"]
-        RSO["rso.py<br/>Polish RSO reader, built 0.34.0.0 against the public list pages<br/>RSO has published CAP behind a token since June 2026 (FEED-SPEC 2.4), token requested<br/>no caller until T68 names the surface"]
+        RSO["rso.py<br/>Polish RSO reader, built 0.34.0.0 against the public list pages<br/>on a timer from 0.55.0.0, recorded, never a ThreatEvent (D-053)<br/>RSO has published CAP behind a token since June 2026 (FEED-SPEC 2.4)"]
+        PANSA["pansa.py<br/>PAŻP updated airspace use plan, from 0.55.0.0<br/>recorded structures and outlines, never a ThreatEvent (D-053)"]
         OFF["ukrainealarm.py<br/>the measuring probe, never a source<br/>its module docstring is the prohibition"]
         FIX["fixture.py<br/>synthetic scenarios"]
     end
     NET --> UASRC
     NET --> TG
-    NET -.-> RSO
+    NET --> RSO
+    NET --> PANSA
     NET -.-> OFF
     UASRC --> EV
     TG --> EV
-    RSO -.-> EV
+    RSO --> PLSTORE
+    PANSA --> PLSTORE
+    PLSTORE[("recorded tables<br/>communiques, airspace_zones, feed_snapshots<br/>what each address served, when it changed (D-054)")]
+    PLSTORE --> POLAND["poland.py<br/>pl_warnings and pl_airspace for state.json<br/>which communique is about the air, which structure is drawn"]
     FIX --> EV
 
     EV["ThreatEvent<br/>area / state / kind / provenance / ts_source / ts_ingest"]
@@ -61,11 +66,18 @@ flowchart TD
     ALARM --> HUMAN["recipient<br/>never a substitute for sirens"]
 ```
 
-The dashed edges are adapters that do not exist. They are drawn because the
-boundary is the point: everything downstream of `ThreatEvent` is blind to which
-feed produced it, so adding one is an implementation rather than a rewrite. The
-three network-facing sources all draw on the same upstream and are one dependency,
-not three (MT9, D-010).
+The dashed edge is the probe, which is never a source. The two Polish readers
+feed recorded tables and a composer of their own rather than `ThreatEvent`: a
+communique and an airspace structure are not alert transitions, and folding them
+into that type would be the modelling error F25 recorded (D-053).
+
+Until 0.55.0.0 the RSO edge was dashed too. The boundary is the point of the
+drawing: everything downstream of `ThreatEvent` is blind to which feed produced
+it, so adding a Ukrainian source is an implementation rather than a rewrite. The
+API, the channel and the probe all draw on one Ukrainian upstream and are one
+dependency (MT9, D-010). The Polish readers are dependencies of their own, and
+neither can make the Ukrainian picture blind: a failure there reaches
+`state.json` as a `null` Polish key and nothing else.
 
 
 

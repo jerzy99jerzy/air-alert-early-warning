@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.40 / 2026-09-10
+Version: 1.41 / 2026-09-16
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -60,8 +60,8 @@ never a decision until D-031 wrote it down.
 | Contract after | `[reported, the consumer half of the same session]` `mavosite-doctor` on the production `state.json` at about 22:50 UTC: `schema v3 accepted`, `contract complete: state=ok, 35 areas, window 7 d`, `no vocabulary drift`, exit 0 |
 | `Самарівський район` | in `unresolved` at 20:25:11 and again at 22:09:59, one of the five names the map does not place at the second read. A row for `data/reference/tag_map.csv`, and open (P7) |
 | `feed_attempts` coverage | **begins 2026-08-29 14:39:05 UTC, for every feed** `[measured 2026-09-10]`. Collection began 2026-08-11, so the table is eighteen days younger than the store it sits in and a query before that date returns an empty set rather than a silence. The refusal-rate figures above are journald's, not this table's, which is what makes them valid for a window this table does not reach (F159) |
-| `main` | 0.54.8.0 |
-| Behind by | **6** releases: 0.54.3.0 writes T40's row into `docs/CHANNEL.md` from the reading this host produced and changes nothing under `mavo/`; 0.54.4.0 replaces the backfill directory lock with `flock` (T26, F160), which touches `mavo/backfill.py` and matters only if a second collector is ever run against one directory - not the current shape, and the reason this install is not urgent; 0.54.5.0 splits the latency instrument's upstream figure into a measured bound and an estimate (F161) and touches no collector path; 0.54.6.0 stops `DirectoryLock` unlinking the file it locks, without which two holders can exist (F162), and touches `mavo/backfill.py` only; 0.54.7.0 adds one gate step and corrects three documents, touching nothing under `mavo/`; 0.54.8.0 corrects three documents and touches nothing under `mavo/` either. Superseded rows, kept for the record: **five** releases were outstanding before the 2026-09-10 install: 0.53.5.0 adds a gate, two documents and one decision's condition; 0.53.5.1 rewrites the Polish edition of FEED-SPEC; 0.54.0.0 closes S9, moves the latency instrument into the package as `mavo latency` and repairs two defects in it (F154, F155). The first two change nothing under `mavo/` but the version string. **The third does**, and the instrument it ships is the one that has to be run on this host to write the row `docs/CHANNEL.md` 8a is missing, so this install is not optional bookkeeping. 0.54.1.0 adds one gate step and changes nothing under `mavo/` but the version string; 0.54.2.0 wires `--source` onto `mavo latency`, without which the command this document and `docs/CHANNEL.md` both print exits 2 (F157) |
+| `main` | 0.55.0.0 |
+| Behind by | **7** releases: 0.55.0.0 moves the Polish channels here (D-053), **adds three recorded tables** and two collectors, so its install takes a point of return first and writes two units - see *Installing 0.55.0.0* below, and until it is installed the consumer keeps reading RSO and the airspace plan itself; 0.54.3.0 writes T40's row into `docs/CHANNEL.md` from the reading this host produced and changes nothing under `mavo/`; 0.54.4.0 replaces the backfill directory lock with `flock` (T26, F160), which touches `mavo/backfill.py` and matters only if a second collector is ever run against one directory - not the current shape, and the reason this install is not urgent; 0.54.5.0 splits the latency instrument's upstream figure into a measured bound and an estimate (F161) and touches no collector path; 0.54.6.0 stops `DirectoryLock` unlinking the file it locks, without which two holders can exist (F162), and touches `mavo/backfill.py` only; 0.54.7.0 adds one gate step and corrects three documents, touching nothing under `mavo/`; 0.54.8.0 corrects three documents and touches nothing under `mavo/` either. Superseded rows, kept for the record: **five** releases were outstanding before the 2026-09-10 install: 0.53.5.0 adds a gate, two documents and one decision's condition; 0.53.5.1 rewrites the Polish edition of FEED-SPEC; 0.54.0.0 closes S9, moves the latency instrument into the package as `mavo latency` and repairs two defects in it (F154, F155). The first two change nothing under `mavo/` but the version string. **The third does**, and the instrument it ships is the one that has to be run on this host to write the row `docs/CHANNEL.md` 8a is missing, so this install is not optional bookkeeping. 0.54.1.0 adds one gate step and changes nothing under `mavo/` but the version string; 0.54.2.0 wires `--source` onto `mavo latency`, without which the command this document and `docs/CHANNEL.md` both print exits 2 (F157) |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
@@ -596,11 +596,18 @@ undocumented cannot be reasoned about by whoever runs it.
 | ntfy host (operator-controlled) | notification delivery, phase M1 onward | token, write-side only | on decision and on degradation, bounded by the alarm budget |
 | `opensky-network.org` | ADS-B state vectors over the Jasionka box, T42's sampler | OAuth2 client credentials, held on the host in `/etc/mavo-adsb/env` | one request per 60 s from 2026-08-14, 1,440 per day against a 4,000/day allowance |
 | `auth.opensky-network.org` | the token endpoint for the row above | the same credentials | once per token lifetime, roughly every 30 minutes |
+| `api.ukrainealarm.com` | the primary source since D-040, `mavo collect-api` | API key, held on the host and not named here, for the reason the service units are not reproduced | one request per timer run, 120 s configured `[measured 2026-09-08, systemctl cat, recorded in mavo/liveness.py]`. **Missing from this table from 0.44.0.0 to 0.54.8.0 (F167)** |
+| `komunikaty.tvp.pl` | RSO communiques, `mavo rso`, five category addresses per run | none. The XML is public by the publisher's own statement | five requests per run, 900 s **declared** for `mavo-rso.timer` (D-053), not yet read from the host. Missing from this table until 0.55.0.0 although this document's network table measured it from `vm-mavo` on 2026-09-04 (F167) |
+| `airspace.pansa.pl` | PAŻP's updated airspace use plan, `mavo airspace` | none | one request per run, 300 s **declared** for `mavo-airspace.timer` (D-053); about 382 kilobytes per body `[measured on vm-site 2026-09-14, by the consumer]` |
 
-Nothing else. All reach lives in `mavo/transport.py`, and
-`network_reach_is_one_file` in `tests/lint_limitations.py` fails the build if a
-second module acquires it, which is what makes the table above checkable rather
-than aspirational.
+Nothing else, and from 0.55.0.0 that sentence is held by a check rather than by
+care: `check_every_source_host_is_in_the_egress_inventory` in
+`tools/docs_audit.py` fails the gate when a module under `mavo/sources/` names a
+host with no row here. What `network_reach_is_one_file` in
+`tests/lint_limitations.py` enforces is narrower and different: all reach lives
+in `mavo/transport.py`, so a second module cannot acquire any. Until F167 this
+paragraph said that lint is what made the table checkable, and it never read
+the table.
 
 **Correction, 0.31.0.0.** Until this release that check scanned `mavo/` only,
 so `tools/` - which the `Makefile` calls "inside the net", and where half of
@@ -996,3 +1003,80 @@ error message says so.
 **After tagging, read the tag rather than trusting it**: `git show
 <tag>:pyproject.toml` prints the version the tag actually points at, which has
 disagreed with the worktree before.
+
+## Installing 0.55.0.0: two timers and three tables, written before it runs
+
+**Nothing in this section has been read from the host.** It is the plan for
+the install, in the shape the 0.44.0.0 and 0.53.4.0 sections used, and the
+readings that replace it are T85's acceptance.
+
+**The schema moves, so the store is copied first.** `feed_snapshots`,
+`airspace_zones` and `airspace_geometries` are recorded tables (D-036, D-054):
+created empty on the first open by the new version, printed once as
+`[STORE-MIGRATED] created ...` by whichever command opens the store first, and
+never refused. The point of return is `events.pre-0.55.0.0`, taken with the
+collect timers stopped, as at 0.53.4.0.
+
+**The two units, as this release asks for them.** The collectors on this host
+run as `User=mavo` from `/opt/mavo/venv`; the files below copy that shape and
+must be compared against `systemctl cat mavo-collect.service` before they are
+written, because this document has never quoted a collector's service unit.
+
+```
+# /etc/systemd/system/mavo-rso.service
+[Unit]
+Description=read the RSO communique feed once (D-053)
+
+[Service]
+Type=oneshot
+User=mavo
+ExecStart=/opt/mavo/venv/bin/mavo rso --store /var/lib/mavo/events
+
+# /etc/systemd/system/mavo-rso.timer
+[Unit]
+Description=read the RSO communique feed every fifteen minutes
+
+[Timer]
+OnBootSec=120
+OnUnitActiveSec=900
+RandomizedDelaySec=60
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
+
+# /etc/systemd/system/mavo-airspace.service
+[Unit]
+Description=read the PANSA updated airspace use plan once (D-053)
+
+[Service]
+Type=oneshot
+User=mavo
+ExecStart=/opt/mavo/venv/bin/mavo airspace --store /var/lib/mavo/events
+
+# /etc/systemd/system/mavo-airspace.timer
+[Unit]
+Description=read the PANSA updated airspace use plan every five minutes
+
+[Timer]
+OnBootSec=150
+OnUnitActiveSec=300
+RandomizedDelaySec=30
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
+```
+
+**Why these cadences and not the consumer's alone.** The airspace figure is the
+consumer's own (300 s, chosen against a public agency's bandwidth for a layer
+whose activations last hours). The communique figure is the consumer's 900 s
+kept, now carrying five addresses per run where the consumer asked one: the
+record wants every category (D-034) and the map reads one.
+`mavo/liveness.py` declares both, so `sources` reads `unknown` for each until
+its first run and a measured state after.
+
+**`mavo-report.service` needs no change** and neither does the delivery unit.
+The Polish keys ride inside `state.json`, which is already pushed every thirty
+seconds; the outlines travel as `pl_airspace.features` rather than as a fourth
+file for exactly that reason.

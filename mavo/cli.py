@@ -29,6 +29,9 @@ from mavo.latency import main as latency_main
 from mavo.liveness import PRODUCTION_FEEDS, EventStamps, FeedLiveness
 from mavo.liveness import liveness as measure_liveness
 from mavo.obs import from_environment as sink_from_environment
+from mavo.poland import FAILED as POLAND_FAILED
+from mavo.poland import PolandBlocks
+from mavo.poland import measure as measure_poland
 from mavo.policy import Regime, policy_of
 from mavo.report import (
     DEFAULT_TRAILING_DAYS,
@@ -55,6 +58,10 @@ from mavo.schema import (
     redate_reassertions,
 )
 from mavo.sources.fixture import FixtureSource, generate_history
+from mavo.sources.pansa import FEED as PANSA_FEED
+from mavo.sources.pansa import SOURCE_URL as PANSA_URL
+from mavo.sources.pansa import TIMEOUT_S as PANSA_TIMEOUT_S
+from mavo.sources.pansa import poll_once as pansa_poll_once
 from mavo.sources.rso import CATEGORIES as RSO_CATEGORIES
 from mavo.sources.rso import FEED as RSO_FEED
 from mavo.sources.rso import page_url as rso_page_url
@@ -792,6 +799,11 @@ def _cmd_rso(args: argparse.Namespace) -> int:
         except Exception as failure:  # noqa: BLE001
             print(f"[STORE-FAILED] {failure}")
             return 7
+        # 0.55.0.0. On the host this is the first command to open the store
+        # after the upgrade whenever its timer fires before the others, and
+        # three tables created without a line would be the silent repair
+        # `_announce_migrations` exists to refuse.
+        _announce_migrations(store)
 
     if args.url:
         targets = [args.url]
@@ -815,10 +827,17 @@ def _cmd_rso(args: argparse.Namespace) -> int:
             # No break. One category refusing is not the feed refusing, and
             # abandoning the rest would turn one failure into four silences.
             continue
+        changed = "unrecorded"
         if store is not None:
             store.record_read(RSO_FEED, url, started, len(page.communiques), page.unreadable)
             try:
                 appended += store.append_communiques(RSO_FEED, page.communiques)
+                # D-054. After the rows, never before: a list naming digests
+                # the store has not written yet is a list a composer reading
+                # between the two writes would refuse as inconsistent.
+                changed = "changed" if store.record_snapshot(
+                    RSO_FEED, url, started, [item.digest() for item in page.communiques]
+                ) else "unchanged"
             except Exception as failure:  # noqa: BLE001
                 print(f"[STORE-FAILED] {failure}")
                 return 7
@@ -826,7 +845,7 @@ def _cmd_rso(args: argparse.Namespace) -> int:
         unreadable += page.unreadable
         print(f"read={len(page.communiques)} unreadable={page.unreadable} "
               f"items_on_page={page.items_on_page} items_per_page={page.items_per_page} "
-              f"latency={elapsed:.3f}s {url}")
+              f"snapshot={changed} latency={elapsed:.3f}s {url}")
 
     print(f"seen={seen} unreadable={unreadable} refused={refused}/{len(targets)} "
           f"stored={appended} (seen minus stored is idempotence, not loss)")
@@ -837,6 +856,68 @@ def _cmd_rso(args: argparse.Namespace) -> int:
         # Any refusal makes the reading partial, and a partial reading that
         # exits 0 is the shape this project refuses everywhere else.
         return 3
+    return 0
+
+
+def _cmd_airspace(args: argparse.Namespace) -> int:
+    """Read PAŻP's updated airspace use plan once and record what it said.
+
+    The twin of `_cmd_rso` for a feed with one address (D-053). The attempt is
+    logged before the exit code is chosen, for the reason given there: a
+    refusal that leaves no row is an interval this collector cannot tell apart
+    from an interval nothing changed in the sky, and the scrubber this record
+    exists for would draw it as one.
+
+    **Rows, then the list, then the exit code.** The structures and their
+    shapes are written before the snapshot naming them, so a composer reading
+    between the two writes sees the previous list whole rather than a new one
+    pointing at rows that are not there yet.
+
+    Exit codes match `collect` and `rso`: 3 for a refusal, 7 for a store that
+    failed, 0 for a plan that was read, including an empty one.
+    """
+    transport: Transport = StubTransport(Path(args.stub).read_text(encoding="utf-8")) \
+        if args.stub else UrllibTransport(timeout_s=PANSA_TIMEOUT_S)
+    store = None
+    if args.store:
+        try:
+            store = EventStore(Path(args.store))
+        except Exception as failure:  # noqa: BLE001
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+        _announce_migrations(store)
+    url = args.url or PANSA_URL
+    started = datetime.now(UTC)
+    try:
+        page, elapsed = pansa_poll_once(transport, url)
+    except SourceUnavailable as unreachable_now:
+        waited = (datetime.now(UTC) - started).total_seconds()
+        if store is not None:
+            store.record_refusal(PANSA_FEED, url, started, str(unreachable_now), waited)
+        print(f"[UNREACHABLE] {unreachable_now} (attempt {waited:.2f}s)")
+        return 3
+    note = (f"reservations_refused={page.reservations_refused}"
+            if page.reservations_refused else None)
+    stored = 0
+    changed = "unrecorded"
+    if store is not None:
+        store.record_read(PANSA_FEED, url, started, len(page.zones), page.unreadable,
+                          elapsed_s=elapsed, detail=note)
+        try:
+            stored = store.append_airspace_zones(PANSA_FEED, page.zones)
+            changed = "changed" if store.record_snapshot(
+                PANSA_FEED, url, started, [zone.digest() for zone in page.zones]
+            ) else "unchanged"
+        except Exception as failure:  # noqa: BLE001
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+    statuses = " ".join(f"{name}={count}" for name, count in page.statuses.items()) or "none"
+    print(f"zones={len(page.zones)} unreadable={page.unreadable} "
+          f"reservations_refused={page.reservations_refused} statuses: {statuses} "
+          f"stored={stored} snapshot={changed} latency={elapsed:.3f}s {url}")
+    if page.unreadable or page.reservations_refused:
+        print("NOTE: features and reservations this reader refused are counted on the "
+              "attempt row, never dropped silently.")
     return 0
 
 
@@ -891,10 +972,24 @@ def _cmd_report(args: argparse.Namespace) -> int:
                 store, PRODUCTION_FEEDS, as_of=moment, events=stamps
             )
 
+        # D-053. The Polish keys, composed from the same store on the same
+        # cycle. Guarded here rather than inside `publish`, because a failure
+        # to compose them must not take the Ukrainian picture down with it:
+        # both keys go out `null`, which a reader sees as could-not-read, and
+        # the heartbeat keeps beating. Absent would hand the page back to
+        # whatever the consumer still reads itself, and say nothing about why.
+        def poland(moment: datetime) -> PolandBlocks:
+            try:
+                return measure_poland(store, moment)
+            except Exception as failure:  # noqa: BLE001
+                print(f"[POLAND-FAILED] {failure}", file=sys.stderr, flush=True)
+                return POLAND_FAILED
+
         outcome = publish(
             store.replay,
             Path(args.json),
             sources=sources,
+            poland=poland,
             interval_s=args.interval,
             max_cycles=args.max_cycles,
             valid_for_s=args.valid_for,
@@ -1071,6 +1166,23 @@ def build_parser() -> argparse.ArgumentParser:
              "collector is indistinguishable from a quiet country",
     )
     rso.set_defaults(func=_cmd_rso)
+
+    airspace = subparsers.add_parser(
+        "airspace",
+        help="read PANSA's updated airspace use plan once and record what it said",
+    )
+    airspace.add_argument(
+        "--url",
+        help="read this exact address instead of the updated plan. Never the day "
+             "plan as a fallback: it carries no ACTIVATED status (D-053)",
+    )
+    airspace.add_argument("--stub", help="read a saved body instead of the network")
+    airspace.add_argument(
+        "--store",
+        help="append the structures and the plan's list, and log the attempt "
+             "whether or not it succeeded",
+    )
+    airspace.set_defaults(func=_cmd_airspace)
 
     attempts = subparsers.add_parser(
         "attempts",

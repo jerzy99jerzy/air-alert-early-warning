@@ -7,9 +7,10 @@ over the same rows.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
@@ -55,6 +56,14 @@ DERIVED_TABLES = ("events", "kind_events")
 #: comes off an API snapshot this project does not archive, so no corpus
 #: rebuilds it. It is extended additively like the other two, never refused.
 RECORDED_TABLES = ("communiques", "feed_attempts", "alert_levels")
+#: D-054 (0.55.0.0). Three more recorded tables, kept in their own tuple so the
+#: order of the first three - which `_tables_this_version_adds` walks - does
+#: not move. `feed_snapshots` is what an endpoint served, as an ordered list,
+#: written when the list changed; `airspace_zones` and `airspace_geometries`
+#: are the UUP's structures as read. None of them is derived from anything this
+#: project archives: the plan PAŻP serves at 03:10 is gone at 03:15, so no
+#: corpus and no re-read rebuilds them, and D-036's additive rule applies.
+RECORDED_TABLES_0_55 = ("feed_snapshots", "airspace_zones", "airspace_geometries")
 
 EXPECTED_KIND_COLUMNS = (
     "content_hash", "area_id", "oblast", "kind", "state",
@@ -74,6 +83,11 @@ EXPECTED_ATTEMPT_COLUMNS = (
 EXPECTED_LEVEL_COLUMNS = (
     "content_hash", "area_id", "oblast", "kind", "level", "level_at", "ts_ingest", "source_id",
 )
+EXPECTED_SNAPSHOT_COLUMNS = ("observed_at", "feed", "url", "digest", "members")
+EXPECTED_ZONE_COLUMNS = (
+    "digest", "feed", "designator", "kind", "geometry", "reservations", "ts_ingest",
+)
+EXPECTED_GEOMETRY_COLUMNS = ("digest", "geometry", "ts_ingest")
 
 #: Column definitions for the recorded tables, so a column missing from an
 #: older store can be added rather than refused. Every one of them is nullable
@@ -89,6 +103,9 @@ RECORDED_COLUMN_TYPES: dict[str, dict[str, str]] = {
         "last_id": "INTEGER",
     },
     "alert_levels": {},
+    "feed_snapshots": {},
+    "airspace_zones": {},
+    "airspace_geometries": {},
 }
 
 _SCHEMA = """
@@ -190,6 +207,40 @@ CREATE TABLE IF NOT EXISTS alert_levels (
     ts_ingest    TEXT NOT NULL,
     source_id    TEXT NOT NULL
 );
+-- D-054 (0.55.0.0). What an endpoint served at a read, as the ordered list of
+-- the digests of the records on it, written only when that list differs from
+-- the newest one held for the same `(feed, url)`. Not keyed on `digest`: a
+-- plan that goes A, B and back to A is three rows, and a primary key on the
+-- list would keep the first A and lose the return. The rows between two
+-- snapshots are the reads that saw no change, and `feed_attempts` is what says
+-- those reads happened; a stretch with no read is not a stretch with no change.
+CREATE TABLE IF NOT EXISTS feed_snapshots (
+    observed_at TEXT NOT NULL,
+    feed        TEXT NOT NULL,
+    url         TEXT NOT NULL,
+    digest      TEXT NOT NULL,
+    members     TEXT NOT NULL
+);
+
+-- D-054. One airspace structure as the UUP stated it, keyed on its content, so
+-- a reservation that changes status or window lands as a second row and both
+-- readings survive. `geometry` is the digest of a row in `airspace_geometries`:
+-- a polygon does not change when a reservation on it does, and repeating it on
+-- every change would store the same shape once per activation.
+CREATE TABLE IF NOT EXISTS airspace_zones (
+    digest       TEXT PRIMARY KEY,
+    feed         TEXT NOT NULL,
+    designator   TEXT NOT NULL,
+    kind         TEXT NOT NULL,
+    geometry     TEXT NOT NULL,
+    reservations TEXT NOT NULL,
+    ts_ingest    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS airspace_geometries (
+    digest    TEXT PRIMARY KEY,
+    geometry  TEXT NOT NULL,
+    ts_ingest TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS feed_attempts (
     started_at TEXT NOT NULL,
     feed       TEXT NOT NULL,
@@ -230,6 +281,9 @@ CREATE INDEX IF NOT EXISTS idx_attempts_feed_last ON feed_attempts (feed, last_i
 -- 0.53.4.0. The newest declaration per `(area, kind)` is the read every
 -- compose cycle will make once a level is shown; covering, like the one above.
 CREATE INDEX IF NOT EXISTS idx_levels_area_kind ON alert_levels (area_id, kind, level_at);
+-- 0.55.0.0. The newest snapshot of one address is read on every compose cycle
+-- and again on every poll that decides whether to write one.
+CREATE INDEX IF NOT EXISTS idx_snapshots_feed_url ON feed_snapshots (feed, url, observed_at);
 """
 
 
@@ -294,7 +348,11 @@ class EventStore:
         }
         if "events" not in present:
             return ()
-        return tuple(f"{table} (table)" for table in RECORDED_TABLES if table not in present)
+        return tuple(
+            f"{table} (table)"
+            for table in RECORDED_TABLES + RECORDED_TABLES_0_55
+            if table not in present
+        )
 
     @staticmethod
     def _refuse_an_older_schema(conn: sqlite3.Connection) -> None:
@@ -353,6 +411,9 @@ class EventStore:
             ("communiques", EXPECTED_COMMUNIQUE_COLUMNS),
             ("feed_attempts", EXPECTED_ATTEMPT_COLUMNS),
             ("alert_levels", EXPECTED_LEVEL_COLUMNS),
+            ("feed_snapshots", EXPECTED_SNAPSHOT_COLUMNS),
+            ("airspace_zones", EXPECTED_ZONE_COLUMNS),
+            ("airspace_geometries", EXPECTED_GEOMETRY_COLUMNS),
         ):
             present = tuple(row[1] for row in conn.execute(f"PRAGMA table_info({table})"))
             for column in expected:
@@ -819,6 +880,194 @@ class EventStore:
                 "fields": json.loads(row[3]),
             }
 
+    def communiques_by_digest(self, digests: Sequence[str]) -> dict[str, dict[str, Any]]:
+        """The communique rows a snapshot names, keyed on the digest it names them by.
+
+        A digest the store does not hold is absent from the result rather than
+        mapped to an empty row, so a caller can tell a snapshot it can fully
+        read from one pointing at a row nobody wrote (0.55.0.0).
+        """
+        found: dict[str, dict[str, Any]] = {}
+        wanted = list(dict.fromkeys(digests))
+        with closing(self._connect()) as conn:
+            for chunk in self._plain_chunks(wanted):
+                marks = ", ".join("?" for _ in chunk)
+                for row in conn.execute(
+                    "SELECT digest, source_id, ts_ingest, provinces, fields "
+                    f"FROM communiques WHERE digest IN ({marks})",
+                    tuple(chunk),
+                ):
+                    found[str(row[0])] = {
+                        "digest": row[0],
+                        "source_id": row[1],
+                        "ts_ingest": row[2],
+                        "provinces": json.loads(row[3]),
+                        "fields": json.loads(row[4]),
+                    }
+        return found
+
+    @staticmethod
+    def _plain_chunks(items: list[str]) -> Iterator[list[str]]:
+        for start in range(0, len(items), _QUERY_CHUNK):
+            yield items[start:start + _QUERY_CHUNK]
+
+    @staticmethod
+    def snapshot_digest(members: Sequence[str]) -> str:
+        """The digest of an ordered member list, as `feed_snapshots.digest` holds it."""
+        payload = json.dumps(list(members), ensure_ascii=True, separators=(",", ":"))
+        return hashlib.sha256(payload.encode("ascii")).hexdigest()
+
+    def record_snapshot(
+        self,
+        feed: str,
+        url: str,
+        observed_at: datetime,
+        members: Sequence[str],
+    ) -> bool:
+        """Write what one read served, when it differs from the newest list held.
+
+        Returns True when a row was written. **Compared against the newest row
+        for the same address and nothing else (D-054)**: a list equal to one
+        seen an hour earlier but different from the one seen five minutes
+        earlier is a change and is written, which is the return a primary key
+        on the digest would have swallowed.
+
+        An empty list is a list. A page that was read and held nothing is the
+        ordinary quiet day on this feed and is recorded as one; a refusal
+        never reaches this method, because there was no page to list.
+        """
+        ordered = [str(member) for member in members]
+        digest = self.snapshot_digest(ordered)
+        stamp = _stored_form(observed_at, "observed_at")
+        with closing(self._connect()) as conn:
+            newest = conn.execute(
+                "SELECT digest FROM feed_snapshots WHERE feed = ? AND url = ? "
+                "ORDER BY observed_at DESC, rowid DESC LIMIT 1",
+                (feed, url),
+            ).fetchone()
+            if newest is not None and str(newest[0]) == digest:
+                return False
+            conn.execute(
+                "INSERT INTO feed_snapshots (observed_at, feed, url, digest, members) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (stamp, feed, url, digest, json.dumps(ordered, ensure_ascii=True)),
+            )
+            conn.commit()
+        return True
+
+    def newest_snapshot(
+        self, feed: str, url: str, at: datetime | None = None
+    ) -> dict[str, Any] | None:
+        """The newest list one address served at or before ``at``.
+
+        None when nothing was ever recorded for it, which is unknown and not
+        an empty list. ``at`` defaults to the newest row of all; a caller
+        reconstructing a past moment passes it, and whether the reads between
+        that row and the moment actually happened is `feed_attempts`' answer,
+        not this table's.
+        """
+        clauses = ["feed = ?", "url = ?"]
+        values: list[Any] = [feed, url]
+        if at is not None:
+            clauses.append("observed_at <= ?")
+            values.append(_stored_form(at, "at"))
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT observed_at, digest, members FROM feed_snapshots "
+                f"WHERE {' AND '.join(clauses)} "
+                "ORDER BY observed_at DESC, rowid DESC LIMIT 1",
+                tuple(values),
+            ).fetchone()
+        if row is None:
+            return None
+        return {"observed_at": row[0], "digest": row[1], "members": json.loads(row[2])}
+
+    def count_snapshots(self, feed: str | None = None) -> int:
+        """Rows held, for the whole table or one feed."""
+        with closing(self._connect()) as conn:
+            if feed is None:
+                return int(conn.execute("SELECT COUNT(*) FROM feed_snapshots").fetchone()[0])
+            return int(
+                conn.execute(
+                    "SELECT COUNT(*) FROM feed_snapshots WHERE feed = ?", (feed,)
+                ).fetchone()[0]
+            )
+
+    def append_airspace_zones(self, feed: str, zones: Iterable[Any]) -> int:
+        """Insert structures and their shapes, ignoring what is already held.
+
+        Returns structure rows added. Idempotent on content, like
+        `append_communiques` and for its reason: the plan edits a reservation
+        in place, and a store keyed on the designator could not tell a
+        re-publication from an activation. Shapes are written first and keyed
+        on their own digest, so a zone row never points at a shape nobody
+        wrote.
+        """
+        now = _stored_form(datetime.now(UTC), "ts_ingest")
+        items = list(zones)
+        if not items:
+            return 0
+        shapes = [
+            (item.geometry_digest(), item.geometry_text(), now) for item in items
+        ]
+        rows = [
+            (
+                item.digest(),
+                feed,
+                item.designator,
+                item.kind,
+                item.geometry_digest(),
+                item.reservations_text(),
+                now,
+            )
+            for item in items
+        ]
+        with closing(self._connect()) as conn:
+            conn.executemany(
+                "INSERT OR IGNORE INTO airspace_geometries (digest, geometry, ts_ingest) "
+                "VALUES (?, ?, ?)",
+                shapes,
+            )
+            before = conn.total_changes
+            conn.executemany(
+                "INSERT OR IGNORE INTO airspace_zones (digest, feed, designator, kind, "
+                "geometry, reservations, ts_ingest) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                rows,
+            )
+            conn.commit()
+            return conn.total_changes - before
+
+    def airspace_zones_by_digest(self, digests: Sequence[str]) -> dict[str, dict[str, Any]]:
+        """The structure rows a snapshot names, each with its shape joined in.
+
+        A zone whose shape row is missing is left out, like a digest the store
+        does not hold, so the caller sees one kind of absence and refuses the
+        snapshot rather than drawing a structure with no outline.
+        """
+        found: dict[str, dict[str, Any]] = {}
+        wanted = list(dict.fromkeys(digests))
+        with closing(self._connect()) as conn:
+            for chunk in self._plain_chunks(wanted):
+                marks = ", ".join("?" for _ in chunk)
+                for row in conn.execute(
+                    "SELECT z.digest, z.designator, z.kind, z.reservations, g.geometry "
+                    "FROM airspace_zones AS z JOIN airspace_geometries AS g "
+                    f"ON g.digest = z.geometry WHERE z.digest IN ({marks})",
+                    tuple(chunk),
+                ):
+                    found[str(row[0])] = {
+                        "digest": row[0],
+                        "designator": row[1],
+                        "kind": row[2],
+                        "reservations": json.loads(row[3]),
+                        "geometry": json.loads(row[4]),
+                    }
+        return found
+
+    def count_airspace_zones(self) -> int:
+        with closing(self._connect()) as conn:
+            return int(conn.execute("SELECT COUNT(*) FROM airspace_zones").fetchone()[0])
+
     def record_read(
         self,
         feed: str,
@@ -999,7 +1248,7 @@ class EventStore:
                     "last_id": row[8],
                 }
 
-    def newest_attempt_at(self, feed: str) -> str | None:
+    def newest_attempt_at(self, feed: str, url: str | None = None) -> str | None:
         """Stored form of the most recent poll of this feed, whatever happened.
 
         `ORDER BY started_at DESC LIMIT 1` over `idx_attempts_feed`, so it stops
@@ -1010,18 +1259,21 @@ class EventStore:
         existed. This is the tail, unbounded, and it costs one seek.
 
         None when this feed has never left a row, which is genuinely unknown.
+        ``url`` narrows the tail to one address of the feed (0.55.0.0): RSO is
+        five addresses under one feed name, and the one the map reads can be
+        refused while the other four answer.
         """
-        return self._tail(feed, None)
+        return self._tail(feed, None, url)
 
-    def newest_read_at(self, feed: str) -> str | None:
+    def newest_read_at(self, feed: str, url: str | None = None) -> str | None:
         """Stored form of the most recent poll of this feed that succeeded.
 
         The quantity a liveness check turns on: an attempt that happened proves
         a timer is running, and only a *read* proves data arrived.
         """
-        return self._tail(feed, "read")
+        return self._tail(feed, "read", url)
 
-    def newest_refusal_detail(self, feed: str) -> str | None:
+    def newest_refusal_detail(self, feed: str, url: str | None = None) -> str | None:
         """`detail` of the most recent refusal, for classifying why.
 
         Reported, never load-bearing. A refusal that carried no detail returns
@@ -1030,21 +1282,28 @@ class EventStore:
         fact about the far end.
         """
         clauses = ["feed = ?", "outcome = ?"]
+        values: list[Any] = [feed, "refused"]
+        if url is not None:
+            clauses.append("url = ?")
+            values.append(url)
         with closing(self._connect()) as conn:
             row = conn.execute(
                 "SELECT detail FROM feed_attempts "
                 f"WHERE {' AND '.join(clauses)} "
                 "ORDER BY started_at DESC, rowid DESC LIMIT 1",
-                (feed, "refused"),
+                tuple(values),
             ).fetchone()
         return str(row[0]) if row and row[0] is not None else None
 
-    def _tail(self, feed: str, outcome: str | None) -> str | None:
+    def _tail(self, feed: str, outcome: str | None, url: str | None = None) -> str | None:
         clauses = ["feed = ?"]
         values: list[Any] = [feed]
         if outcome is not None:
             clauses.append("outcome = ?")
             values.append(outcome)
+        if url is not None:
+            clauses.append("url = ?")
+            values.append(url)
         with closing(self._connect()) as conn:
             row = conn.execute(
                 "SELECT started_at FROM feed_attempts "
@@ -1053,6 +1312,35 @@ class EventStore:
                 tuple(values),
             ).fetchone()
         return str(row[0]) if row and row[0] is not None else None
+
+    def newest_read(self, feed: str, url: str | None = None) -> dict[str, Any] | None:
+        """The most recent successful read of a feed, or of one of its addresses.
+
+        The row rather than its stamp, because the Polish blocks need what the
+        read counted beside when it happened: `unreadable` is how many features
+        that very page refused (0.55.0.0). None when no read is on record.
+        """
+        clauses = ["feed = ?", "outcome = ?"]
+        values: list[Any] = [feed, "read"]
+        if url is not None:
+            clauses.append("url = ?")
+            values.append(url)
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT started_at, url, items, unreadable, detail FROM feed_attempts "
+                f"WHERE {' AND '.join(clauses)} "
+                "ORDER BY started_at DESC, rowid DESC LIMIT 1",
+                tuple(values),
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "started_at": row[0],
+            "url": row[1],
+            "items": row[2],
+            "unreadable": row[3],
+            "detail": row[4],
+        }
 
     def newest_page_id(self, feed: str) -> int | None:
         """The highest post id this feed has ever been observed to serve.

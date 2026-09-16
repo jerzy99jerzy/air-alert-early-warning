@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.60
+Document:  docs/METHODOLOGY.md, version 2.61
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,42 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F167, 0.55.0.0. The egress inventory said "Nothing else" beside a table that did not list the primary source
+
+`docs/DEPLOYMENT.md` section 2 is titled *Egress inventory*, opens by saying it
+is *stated completely*, and closes its table with **Nothing else.** The table
+listed `t.me`, an ntfy host for a notifier that is not built, and the two
+OpenSky hosts.
+It did not list `api.ukrainealarm.com`, which has been the primary source since
+D-040 (0.44.0.0), nor `komunikaty.tvp.pl`, which the same document's network
+table measured from `vm-mavo` on 2026-09-04 `[measured, both absences read
+from the 0.54.8.0 tree]`.
+
+**Found by using the table rather than by auditing it.** 0.55.0.0 adds two
+destinations to this host, and adding a row is the moment a reader counts the
+rows already there. This is F166's class from the other side: a sentence
+claiming completeness is a claim of absence about everything it omits, and it
+resolves against nothing a check reads. `network_reach_is_one_file` holds the
+code to one module; nothing holds the table to the code, and the paragraph
+under the table says the lint is *what makes the table checkable*, which it
+never was.
+
+**Repair.** The three missing rows, written from the code that reaches them
+(`mavo/sources/ukrainealarm_source.py`, `mavo/sources/rso.py`,
+`mavo/sources/pansa.py`) with their cadences marked as declared or measured,
+and the sentence about the lint corrected to what it enforces.
+
+**Measured before the repair, by the check that now holds it.**
+`check_every_source_host_is_in_the_egress_inventory` in `tools/docs_audit.py`
+reads the host out of every quoted address under `mavo/sources/` and requires a
+row for it. Run against the unrepaired table it named three hosts:
+`api.ukrainealarm.com` and `komunikaty.tvp.pl`, which are this defect, and
+`airspace.pansa.pl`, which is this release.
+
+**Reopen condition:** closed by that check rather than left as a condition. One
+direction only: a row for a destination no module names is the table's
+business, and the ntfy row is one.
 
 ### F166, 0.54.8.0. The absence query run across every document, and three more sentences denying things the tree has
 

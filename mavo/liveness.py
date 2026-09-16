@@ -83,15 +83,29 @@ class FeedSpec:
 #: was an observed interval, which is the configured 120 plus the run, and the
 #: number that belongs here is the configured one.
 #:
-#: RSO is absent deliberately: there is no `mavo-rso` unit on the host, so the
-#: feed exists in `cli.py` and has never been collected. A spec for it would
-#: publish `unknown` for ever and read as an outage of something that was never
-#: switched on.
+#: **RSO and PAŻP from 0.55.0.0 (D-053), with role `context`.** Until then RSO
+#: was absent deliberately, because no unit collected it and a spec would have
+#: published `unknown` for ever. The release that adds these two rows is the
+#: release whose deployment installs `mavo-rso.timer` and `mavo-airspace.timer`,
+#: so the rows go from `unknown` to a measured state on the first cycle after
+#: install. The cadences below are **declared, not read**: they are the values
+#: those units are written with, and `docs/DEPLOYMENT.md` owes the `systemctl
+#: cat` reading that turns them into measured ones, exactly as the two above
+#: were turned on 2026-09-08.
+#:
+#: `context` is neither primary nor watchman. Neither feed is a delivery path of
+#: the Ukrainian system, so neither can make the page blind about Ukraine and
+#: neither enters `primary_delivering`; both enter `delivering` and `known`,
+#: which are the operator's numbers and now count four pipes rather than two.
 PRODUCTION_FEEDS: tuple[FeedSpec, ...] = (
     FeedSpec(feed="ukrainealarm", source_id="ukrainealarm",
              role="primary", cadence_s=120.0),
     FeedSpec(feed="channel", source_id="telegram",
              role="watchman", cadence_s=30.0),
+    FeedSpec(feed="rso", source_id="rso",
+             role="context", cadence_s=900.0),
+    FeedSpec(feed="pansa", source_id="pansa",
+             role="context", cadence_s=300.0),
 )
 
 

@@ -44,6 +44,7 @@ from mavo.areas import AreaRef, AreaTable, oblast_slug
 from mavo.liveness import EventStamps, FeedLiveness
 from mavo.liveness import as_block as sources_block
 from mavo.obs import RunLog
+from mavo.poland import PolandBlocks
 from mavo.schema import (
     AlertState,
     AreaRole,
@@ -601,6 +602,11 @@ class Report:
     #: against a block, and the consumer needs it to know whether it may stop
     #: leaning on the observation-age heuristic.
     sources: tuple[FeedLiveness, ...] | None = None
+    #: The Polish keys (D-053), or None when the caller composed without a
+    #: store to read them from. None publishes neither key, which leaves the
+    #: consumer's own reading in place; a block the caller measured decides
+    #: per key between absent, `null` and a value.
+    poland: PolandBlocks | None = None
 
     @property
     def staleness_s(self) -> float | None:
@@ -977,6 +983,7 @@ def compose(
     history_days: Sequence[int] = HISTORY_WINDOWS_DAYS,
     sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...]]
     | None = None,
+    poland: Callable[[datetime], PolandBlocks] | None = None,
 ) -> Report:
     """Fold an event log into the current picture.
 
@@ -1186,6 +1193,9 @@ def compose(
             if sources is not None
             else None
         ),
+        # D-053. The same arrangement as `sources`: the callable holds the
+        # store and this fold never learns about one.
+        poland=poland(moment) if poland is not None else None,
     )
 
 
@@ -1249,7 +1259,7 @@ def to_contract(report: Report) -> dict[str, object]:
         if report.newest_source_stamp is not None
         else report.newest_observation
     )
-    return {
+    payload: dict[str, object] = {
         "v": SCHEMA_VERSION,
         "generated_at": report.as_of.isoformat(timespec="seconds"),
         "valid_for_s": report.valid_for_s,
@@ -1350,6 +1360,17 @@ def to_contract(report: Report) -> dict[str, object]:
             "total": sum(report.counts_24h),
         },
     }
+    # D-053. Additive against v3, like `sources`, and per key rather than as
+    # one block: the consumer reads `pl_warnings` and `pl_airspace` separately
+    # and stands its own reading down on the presence of each. A key this
+    # producer has never polled for stays absent, so switching one timer on
+    # hands over one layer and not both.
+    if report.poland is not None:
+        for key, block in (("pl_warnings", report.poland.warnings),
+                           ("pl_airspace", report.poland.airspace)):
+            if block.published:
+                payload[key] = block.value
+    return payload
 
 
 def _empty_block(report: Report, window_s: int) -> dict[str, object]:
@@ -1538,6 +1559,7 @@ def publish(
     history_days: Sequence[int] = HISTORY_WINDOWS_DAYS,
     sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...]]
     | None = None,
+    poland: Callable[[datetime], PolandBlocks] | None = None,
 ) -> PublishReport:
     """Write the contract on a fixed interval until a named condition stops it.
 
@@ -1588,7 +1610,7 @@ def publish(
                       file=sys.stderr, flush=True)
             report = compose(
                 events, as_of=clock(), table=table, valid_for_s=valid_for_s,
-                history_days=history_days, sources=sources,
+                history_days=history_days, sources=sources, poland=poland,
             )
             if report.feed_state is FeedState.BLIND:
                 blind += 1

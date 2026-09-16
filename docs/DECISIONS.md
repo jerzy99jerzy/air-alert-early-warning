@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.27
+Document:  docs/DECISIONS.md, version 2.28
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2167,3 +2167,129 @@ matrix, at which point it is a figure everywhere except beside an interpreter.
 point a list becomes a maintenance surface rather than a footnote; or a
 document needs to quote an interpreter version as a measurement, which this
 exclusion would then hide.
+
+## D-053. The Polish channels are collected, recorded and composed here, and the consumer reads them from the contract
+Date: 2026-09-16. Status: adopted
+
+**Decision.** RSO communiques and PAŻP's updated airspace use plan (UUP) are
+read by this package on timers (`mavo rso`, `mavo airspace`), recorded in the
+event store, and composed by `mavo/poland.py` into two keys of `state.json`:
+`pl_warnings` and `pl_airspace`. Which communique is about the air, and which
+airspace structure is drawn, is decided here too. `mavo-site` stops reading
+either endpoint and renders what the contract carries.
+
+**Reasoning, three causes, each of which would have been enough.**
+
+*Two readers of one feed.* From 4.72.0.0 the consumer read RSO itself, with a
+parser ported from `mavo/sources/rso.py`, while this package kept the original.
+The two had already diverged in ways neither gate could see: the consumer read
+the first page of one category, gave the autumn change's doubled hour the
+summer offset without saying so, and kept a failed refresh's voivodeships while
+dropping the communiques behind them. D-020 moved the Ukrainian contract here
+on exactly this argument, and it applies to a second feed unchanged.
+
+*A scrubber cannot repaint what nobody recorded.* The operator decided on
+2026-09-16 that the seven-day scrubber repaints the airspace as well as the
+alerts. The consumer kept one reading of the plan in memory and nothing else,
+and the plan the agency serves at one moment is replaced minutes later with no
+archive of it anywhere this project can reach. History has to be recorded where
+the store is, from the first day, or the scrubber's first week is a week of
+nothing. The same holds for the seven-day communique outlines the operator asked
+for on 2026-09-13 and placed in this store the same day.
+
+*The CAP channel's credentials are bound to this host's address*
+`[reported: MSWiA correspondence of 2026-09-15, not in this tree]`. The address
+is `mavo-cap-egress` in `docs/DEPLOYMENT.md`. Whatever reads communiques after
+RSO's XML is replaced will run here, so a consumer-side reader would have to be
+moved again.
+
+**The classification moved with the reading, by the operator's decision of
+2026-09-16.** A voivodeship painted for a rail notice (the consumer's first live
+reading, 2026-09-13) is reproducible from rows this store holds, and each
+published communique carries the `air_term` that classified it, so a false
+paint names the word that caused it.
+
+**Ported, not redesigned, and the port is tested against the consumer's own
+evidence.** The term lists, the airspace rules and the payload shapes are
+`mavo-site` 4.76.0.0 verbatim. The consumer's tests are ported with its
+expected values; the outlines are compared against the GeoJSON file the
+consumer committed as its own output for the same fixture and moment.
+**Three differences are chosen, and `mavo/poland.py` names them:** the
+communique scope is `ogolne` read unpaged rather than its first page, which
+removes a cost the consumer stated; a stamp inside the doubled autumn hour is
+passed through as the feed's text and is not an end; and a communique list
+older than an hour is `null` rather than current, because that payload has no
+field for age and the consumer's kept list, empty or not, rendered as fresh
+through any outage. One difference is inherited rather than chosen: this
+parser keeps a province only by its `slug`, where the consumer kept a slugless
+one by its text. Every province in the page recorded from the live endpoint
+carries a slug `[measured, tests/fixtures/rso_page.xml]`.
+
+**What does not move.** Weather, the incidents archive, the crossings and all
+rendering stay in the consumer. So does the replacement of its own
+observation-age outage heuristic with `sources.primary_delivering`, which this
+package has published since 0.53.0.0 and which the consumer validates and does
+not yet read (its D-S69).
+
+**The handover is per key and needs no coordinated release.** The consumer's
+server stands its own reading down on the presence of each key
+`[measured, mavo-site 4.76.0.0 server.py, _picture]`. A key is absent until the
+feed behind it has been polled once, so installing one timer hands over one
+layer and not both. The outlines are carried inside `pl_airspace` as `features`,
+so the text and the shapes come from one reading; the consumer's
+`/airspace.json` route has to be pointed at them, and until it is, that route
+serves the consumer's own reading beside this package's text.
+
+**What it costs, stated.** `vm-mavo` gains two destinations on the address
+Cloudflare blocked once (`docs/DEPLOYMENT.md`), and one more failure domain: a
+producer outage now blanks the Polish layers too, as `null` rather than as a
+quiet sky. The plan is about 382 kilobytes per read `[measured on vm-site
+2026-09-14, by the consumer]`, which at one read per 300 s is about 110 MiB a
+day inbound `[inference from that one body]`.
+
+**Reopen if:** RSO's XML is withdrawn in favour of CAP (the reader changes, this
+decision does not); a Polish layer needs data per reader rather than per host;
+or this host's egress address becomes the bottleneck for the destinations it
+now carries.
+
+## D-054. What an endpoint served is recorded as an ordered list, when the list changes
+Date: 2026-09-16. Status: adopted
+
+**Decision.** A recorded table, `feed_snapshots`, holds one row per change in
+what one address served: the read's time, the feed, the address, and the
+ordered list of the digests of the records on that page. A read whose list
+equals the newest one held for the same address writes nothing here; the read
+itself is still logged in `feed_attempts`. Airspace structures are recorded in
+`airspace_zones`, keyed on content, with their outlines in
+`airspace_geometries`, keyed on the outline's own digest.
+
+**Reasoning.** `communiques` records when a row was first ingested and nothing
+about when the feed stopped serving it. A communique with no end, recorded once,
+would therefore be in force for ever when composed from the store, where the
+consumer showed it only while the feed still listed it. What a page served at a
+moment is the fact both the map and the scrubber need, and it was not recorded
+anywhere. Writing the whole body per read was the alternative and it is priced
+out by the plan alone, at about 110 MiB a day `[inference, D-053]`.
+
+**Why the change rule is against the newest row and not a key on the list.** A
+plan that goes A, then B, then back to A is three states; a primary key on the
+list digest would keep the first A and drop the return, and a scrubber would
+paint B until the end of the window. The table is therefore append-only with no
+key on `digest`, and `record_snapshot` compares against the newest row for the
+same address.
+
+**Why this reconstructs a past moment exactly, and what else it needs.** The
+state at a moment is the newest list at or before it, *provided* reads happened
+between that row and the moment, and that proviso is `feed_attempts`, which
+records every read and refusal. A stretch with no read is not a stretch with no
+change, and a scrubber built on this table must draw it as unmeasured.
+
+**What this does not decide.** How history reaches a reader - a day file, one
+bounded payload, a range query - is the scrubber's open question and is not
+answered here; nothing in the contract carries history yet. Retention is not
+set: growth is owed as a measurement from the host (T85) before a policy is
+written.
+
+**Reopen if:** the table grows faster than the event store it sits in, or the
+scrubber needs a question answered that one indexed read of this table cannot
+answer.

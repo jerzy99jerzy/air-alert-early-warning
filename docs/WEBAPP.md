@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.8 / 2026-09-10
+Version: 3.9 / 2026-09-16
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -170,6 +170,10 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `items[].west` | Whether the area is in the eight western oblasts | A flag to colour by, not a filter applied here: the stream carries all of Ukraine |
 | `items[].at` | The source's time for the transition | Not ingest time. The difference is the feed latency |
 | `counts_24h` | `west`, `rest`, `total` over the day | The context that keeps a twenty-minute window from being a keyhole: a quiet stream while the east is burning is a different fact from a quiet night |
+| `sources` | Which pipes are delivering, one row per declared feed, from `feed_attempts` and never from events (D-049), or `null` when the producer did not measure | `primary_delivering` is the reader-facing number; `delivering` and `known` are the operator's and count every pipe. **From 0.55.0.0 `known` is 4**: `rso` and `pansa` join with role `context`, which enters neither primary count, because neither is a delivery path of the Ukrainian system (D-053). Each reads `unknown` until its timer's first run. The role vocabulary is open |
+| `pl_warnings` | From 0.55.0.0, when this producer has polled RSO: one row per voivodeship named by an unexpired communique about the air, in order of first appearance, each with `communiques[]` carrying `id`, `title`, `valid_from`, `valid_to`, `text` and `air_term` (D-053) | **Four states, told apart by the key, and each is a different claim.** Absent: this producer has never polled the feed, and the consumer's own reading still stands. `null`: polled, and cannot say - including a reading of the map's scope older than an hour, which this payload has no field to show as old. `[]`: read, nothing to show. Rows: something to show. `air_term` names the word that classified the communique, so a false paint names its cause. A stamp inside the autumn change's doubled hour arrives as the feed's own text, not as ISO |
+| `pl_airspace` | From 0.55.0.0, when this producer has polled the plan: `read_at`, `switched_on[]`, `not_drawn`, `unreadable`, `statuses`, `stale_error` and `features[]` (D-053) | The same four states as `pl_warnings`, except that an old reading stays published with its `read_at`, and `stale_error` carrying the newest refusal when the last attempt failed. **`not_drawn` counts zones and its reasons partition the remainder**: `switched_on` equals `drawn` plus the three reasons. A structure switched on is not a threat and not a statement about who is flying |
+| `pl_airspace.features[]` | GeoJSON features for exactly the structures in `switched_on[]`, same order, same properties | The outlines ride in the same object as the text so the two cannot describe two different readings. A consumer serving outlines from its own read of the plan beside this text is serving two skies |
 
 ## Three states, three different sentences
 

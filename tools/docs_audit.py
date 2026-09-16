@@ -1360,6 +1360,43 @@ def check_cited_identifiers_exist(root: Path | None = None) -> list[str]:
     return problems
 
 
+#: F167. A host literal as a source module writes it: the quoted scheme and
+#: the name up to the first character a host name cannot hold.
+_SOURCE_HOST = re.compile(r'"https?://([A-Za-z0-9.-]+)')
+
+
+def check_every_source_host_is_in_the_egress_inventory(root: Path = ROOT) -> list[str]:
+    """F167. Every destination a source module names has a row in the inventory.
+
+    `docs/DEPLOYMENT.md` section 2 says it is stated completely and closes its
+    table with *Nothing else*; from 0.44.0.0 to 0.54.8.0 it did not list the
+    primary source. `network_reach_is_one_file` holds the *code* to one module
+    and nothing held the *table* to the code. This reads the host out of every
+    quoted `https://` literal under `mavo/sources/` and requires a row whose
+    first cell is that host in backticks. One direction only: a row for a
+    destination no module names yet (a planned notifier) is the table's
+    business.
+    """
+    deployment = root / "docs" / "DEPLOYMENT.md"
+    if not deployment.exists():
+        return ["docs/DEPLOYMENT.md is missing, so the egress inventory cannot be read"]
+    parts = deployment.read_text(encoding="utf-8").split("## 2. Egress inventory", 1)
+    if len(parts) < 2:
+        return ["docs/DEPLOYMENT.md has no '## 2. Egress inventory' section"]
+    table = parts[1].split("\n## ", 1)[0]
+    rows = set(re.findall(r"^\| `([^`]+)`", table, re.M))
+    problems: list[str] = []
+    for module in sorted((root / "mavo" / "sources").glob("*.py")):
+        hosts = sorted(set(_SOURCE_HOST.findall(module.read_text(encoding="utf-8"))))
+        for host in hosts:
+            if host not in rows:
+                problems.append(
+                    f"mavo/sources/{module.name} reaches {host}, which has no row in "
+                    "docs/DEPLOYMENT.md section 2 (F167)"
+                )
+    return problems
+
+
 def main() -> int:
     """Run every audit. Returns a process exit code."""
     status = _status()
@@ -1393,6 +1430,7 @@ def main() -> int:
         + check_the_host_release_distance_is_counted(status)
         + check_the_coverage_floor_stays_a_ratchet(status)
         + check_cited_identifiers_exist()
+        + check_every_source_host_is_in_the_egress_inventory()
     )
     for problem in problems:
         print(f"docs-audit: {problem}", file=sys.stderr)

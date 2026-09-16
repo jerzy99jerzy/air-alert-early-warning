@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.9
+Document:  docs/MANUAL.md, version 3.10
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -47,6 +47,7 @@ Note:      every constant, exit code and output line here was read out of the
    10. [`mavo attempts`](#410-mavo-attempts---built)
    11. [`mavo reconcile`](#411-mavo-reconcile---built)
    12. [`mavo latency`](#412-mavo-latency---built)
+   13. [`mavo airspace`](#413-mavo-airspace---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -383,6 +384,16 @@ because the information was never written. A refusal is stored with a null item
 count; a page that was read and held nothing is stored with zero. Those are two
 different facts and the schema keeps them apart.
 
+**From 0.55.0.0 every read also records what the address served, when it
+changed** (D-054). The output line gains `snapshot=changed` or
+`snapshot=unchanged`: the ordered list of the page's communiques is written to
+`feed_snapshots` only when it differs from the newest list held for the same
+address, after the rows it names. That list is what `pl_warnings` is composed
+from, and it is what makes a communique that left the feed leave the map:
+`communiques` records when a row was first seen and nothing about when the feed
+stopped serving it. On the host this command runs from `mavo-rso.timer`
+(D-053); `docs/DEPLOYMENT.md` carries the unit.
+
 | Code | Meaning |
 | --- | --- |
 | 0 | fetched and parsed, whatever the communique count |
@@ -541,6 +552,16 @@ write failed, because that is the only ending that leaves a consumer reading a
 file nobody is refreshing. `--watch` without `--json` is refused: the loop
 exists to publish.
 
+**Under `--watch` the loop also composes the Polish keys** (D-053):
+`pl_warnings` from what `mavo rso` recorded and `pl_airspace` from what
+`mavo airspace` recorded, both read from the same store on the same cycle. A key
+is absent until its feed has been polled at least once, so a consumer that
+still reads the feed itself keeps doing so; `null` means polled and cannot say;
+a list or object means read. A failure composing them prints
+`[POLAND-FAILED] <reason>` on stderr and publishes both keys `null`, and the
+Ukrainian picture is published regardless. The one-shot path composes neither,
+as it composes no `sources` block.
+
 **`--valid-for` is an assumption, not a measurement.** The default of 600
 seconds is five times the two-minute polling requirement derived from the page
 window arithmetic (T39). Neither the poll interval nor the rate the source
@@ -674,6 +695,52 @@ configurations, and the direction is safe - a slower poll only inflates our
 own share of the wait, so an upper bound stays an upper bound - but a row
 quoting the median without saying this is quoting a figure its label does not
 fit.
+
+### 4.13 `mavo airspace` - BUILT
+
+Reads PAŻP's updated airspace use plan (UUP) once, stores the structures it
+lists, records the plan's list when it changed, and logs that it tried. The
+reader moved here from `mavo-site` at 0.55.0.0 so the plan is recorded rather
+than kept in a web process's memory (D-053).
+
+```
+mavo airspace --stub tests/fixtures/pansa_uup.json --store /tmp/mavo.sqlite3
+```
+
+Without `--stub` it fetches `https://airspace.pansa.pl/map-configuration/uup`,
+asking for JSON, with a twenty-second bound on the whole request.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--url` | the updated plan | Read this exact address instead. **Never the day plan as a fallback**: AUP carries no ACTIVATED status at all, so reading it when UUP fails would answer a different question in the same words |
+| `--stub` | none | Read a saved body from disk instead of the network |
+| `--store` | none | Append the structures and their outlines, record the plan's list when it changed, and log the attempt whether or not it succeeded |
+
+**Everything the plan says is stored and nothing is filtered.** Which structure
+a map draws - switched on, in force, of a drawn kind, not sport or unmanned
+work, a TRA only when a NOTAM or supplement calls it up - is decided when
+`pl_airspace` is composed, in `mavo/poland.py`, over rows this command wrote.
+A structure is stored once per distinct content and its outline once per
+distinct shape, so an activation lands as one new row and not as a copy of the
+polygon.
+
+**Refused, and counted rather than dropped.** A body that is HTML, not JSON,
+neither a list nor a FeatureCollection, over the transport's four-million-byte
+ceiling, or a list in which
+nothing is readable is a refusal (exit 3, attempt logged with a null count). A
+feature that cannot be read is counted in the attempt's `unreadable`; a
+reservation whose stamps carry no offset is refused and counted in the
+attempt's `detail` as `reservations_refused=N`, because guessing a zone would
+move its window by hours.
+
+The output line names the zones read, the refusals, every status seen and
+whether the list changed (`snapshot=changed` or `snapshot=unchanged`).
+
+| Code | Meaning |
+| --- | --- |
+| 0 | fetched and parsed, whatever the zone count, including none |
+| 3 | the source was unreachable or answered with something that is not the plan. The attempt is logged first |
+| 7 | the store could not be opened or written |
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)
 

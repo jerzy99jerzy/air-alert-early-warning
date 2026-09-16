@@ -7,7 +7,7 @@ powiadomienia.**
 Dokument dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.19
+Document:  docs/BRIEF-PL.md, version 2.20
 Measured:  2026-08-31, against STATUS.json at 0.50.0.0, i tym razem liczby
            faktycznie przeliczono zamiast przepisać. Wersja 2.4 nosiła tę samą
            linijkę, a cztery liczby w środku pochodziły z 0.32.9.0; co to
@@ -194,11 +194,11 @@ jest zbudowany wokół tego rozróżnienia.
 Przy prywatnym projekcie to waży więcej niż technologia, więc konkrety zamiast
 zapewnień. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Log defektów ma 144 wpisy.** Każdy zawiera, co się zepsuło, dlaczego nikt
+**Log defektów ma 145 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
 tego nie zauważył i jaka to klasa błędu. Wpisy przeciw interesowi projektu też
 tam są, łącznie z tym o wyniku 0 na 20 i z tym, w którym dokumentacja
-twierdziła, że coś jest sprawdzane, a nie było. Osobno zapisano **51 decyzji
-projektowych**, każdą z warunkiem, który by ją otworzył z powrotem.
+twierdziła, że coś jest sprawdzane, a nie było. Osobno zapisano **53 decyzje
+projektowe**, każdą z warunkiem, który by ją otworzył z powrotem.
 
 **Część danych została zapieczętowana, zanim ktokolwiek je przeczytał.**
 Odłożone jest 20,01% zebranych wiadomości i nie zostały otwarte. Nie da się
@@ -211,9 +211,9 @@ wywnioskowane, założone. Te 57% z akapitu wyżej jest liczbą cudzą i tak jes
 oznaczone, łącznie z uwagą, że źródło mogło mieć na myśli inny obszar niż ten
 projekt.
 
-**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 777 testów,
+**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 881 testów,
 w tym 13 skryptowanych ataków na własne zabezpieczenia; pokrycie kodu wynosi
-95,61% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
+95,50% przy podłodze 95%, która nigdy nie jest obniżana. Same ataki też są
 sprawdzane: 12 z 13 zweryfikowano tak, że celowo psuto chronioną kontrolę i
 wymagano, żeby atak to wykrył. Ten jeden bez takiej weryfikacji jest wypisywany
 jako niezweryfikowany przy każdym uruchomieniu, zamiast być przemilczany.

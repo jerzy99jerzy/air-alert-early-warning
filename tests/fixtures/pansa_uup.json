@@ -1,0 +1,606 @@
+[
+{
+"type": "Feature",
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+23.2,
+50.6
+],
+[
+23.9,
+50.6
+],
+[
+23.9,
+51.1
+],
+[
+23.2,
+51.1
+],
+[
+23.2,
+50.6
+]
+]
+]
+},
+"properties": {
+"designator": "EPD29",
+"airspaceElementType": "D",
+"activeH24": false,
+"fbz": true,
+"fuaStatus": "ALL",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 23.55,
+"y": 50.85
+}
+],
+"popupHtml": "<div class=\"modal-item\"><h2>EPD29</h2></div>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14T06:00:00Z",
+"endDate": "2026-09-15T06:00:00Z",
+"lowerAltitude": "GND",
+"upperAltitude": "F245",
+"altitudeUnit": "FL",
+"unit": "MIL",
+"remarks": "",
+"reservationStatus": "ACTIVATED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+22.0,
+52.0
+],
+[
+22.4,
+52.0
+],
+[
+22.4,
+52.3
+],
+[
+22.0,
+52.3
+],
+[
+22.0,
+52.0
+]
+]
+]
+},
+"properties": {
+"designator": "EPTS9",
+"airspaceElementType": "TSA",
+"activeH24": false,
+"fbz": true,
+"fuaStatus": "ALL",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 22.2,
+"y": 52.15
+}
+],
+"popupHtml": "<div/>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14T10:00:00Z",
+"endDate": "2026-09-14T20:00:00Z",
+"lowerAltitude": "F095",
+"upperAltitude": "F315",
+"altitudeUnit": "FL",
+"unit": "EPDE",
+"remarks": "M346/CLN/W",
+"reservationStatus": "ACTIVATED"
+},
+{
+"startDate": "2026-09-14T08:00:00Z",
+"endDate": "2026-09-14T16:00:00Z",
+"lowerAltitude": "GND",
+"upperAltitude": "F095",
+"altitudeUnit": "FL",
+"unit": "EPDE",
+"remarks": "F16/W",
+"reservationStatus": "ACTIVATED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+21.0,
+53.0
+],
+[
+21.5,
+53.0
+],
+[
+21.5,
+53.4
+],
+[
+21.0,
+53.4
+],
+[
+21.0,
+53.0
+]
+]
+]
+},
+"properties": {
+"designator": "EPTR41",
+"airspaceElementType": "TRA",
+"activeH24": false,
+"fbz": true,
+"fuaStatus": "EMPTY",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 21.25,
+"y": 53.2
+}
+],
+"popupHtml": "<div/>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14T06:00:00Z",
+"endDate": "2026-09-14T22:00:00Z",
+"lowerAltitude": "GND",
+"upperAltitude": "F095",
+"altitudeUnit": "FL",
+"unit": "ZZSG",
+"remarks": "BSP/UAV",
+"reservationStatus": "ACTIVATED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+17.0,
+52.0
+],
+[
+17.4,
+52.0
+],
+[
+17.4,
+52.3
+],
+[
+17.0,
+52.3
+],
+[
+17.0,
+52.0
+]
+]
+]
+},
+"properties": {
+"designator": "EPTS12",
+"airspaceElementType": "TSA",
+"activeH24": false,
+"fbz": true,
+"fuaStatus": "ALL",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 17.2,
+"y": 52.15
+}
+],
+"popupHtml": "<div/>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14T08:00:00Z",
+"endDate": "2026-09-14T18:00:00Z",
+"lowerAltitude": "GND",
+"upperAltitude": "F095",
+"altitudeUnit": "FL",
+"unit": "EPPT",
+"remarks": "C150 GLD PJE",
+"reservationStatus": "ACTIVATED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+20.0,
+51.0
+],
+[
+20.4,
+51.0
+],
+[
+20.4,
+51.3
+],
+[
+20.0,
+51.3
+],
+[
+20.0,
+51.0
+]
+]
+]
+},
+"properties": {
+"designator": "EPTR700",
+"airspaceElementType": "TRA",
+"activeH24": false,
+"fbz": true,
+"fuaStatus": "ALL",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 20.2,
+"y": 51.15
+}
+],
+"popupHtml": "<div/>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14T09:00:00Z",
+"endDate": "2026-09-14T18:00:00Z",
+"lowerAltitude": "GND",
+"upperAltitude": "F135",
+"altitudeUnit": "FL",
+"unit": "COP",
+"remarks": "NOT.D6513/26/ORZEL",
+"reservationStatus": "ACTIVATED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+19.0,
+51.0
+],
+[
+19.4,
+51.0
+],
+[
+19.4,
+51.3
+],
+[
+19.0,
+51.3
+],
+[
+19.0,
+51.0
+]
+]
+]
+},
+"properties": {
+"designator": "EPTR55",
+"airspaceElementType": "TRA",
+"activeH24": false,
+"fbz": true,
+"fuaStatus": "EMPTY",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 19.2,
+"y": 51.15
+}
+],
+"popupHtml": "<div/>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14T06:00:00Z",
+"endDate": "2026-09-14T20:00:00Z",
+"lowerAltitude": "GND",
+"upperAltitude": "F095",
+"altitudeUnit": "FL",
+"unit": "EPLK",
+"remarks": "PZL130",
+"reservationStatus": "ACTIVATED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "MultiPolygon",
+"coordinates": [
+[
+[
+[
+18.5,
+54.8
+],
+[
+19.2,
+54.8
+],
+[
+19.2,
+55.2
+],
+[
+18.5,
+55.2
+],
+[
+18.5,
+54.8
+]
+]
+]
+]
+},
+"properties": {
+"designator": "EPEA07",
+"airspaceElementType": "ADHOC",
+"activeH24": false,
+"fbz": false,
+"fuaStatus": "ALL",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 18.85,
+"y": 55.0
+}
+],
+"popupHtml": "<div/>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14T06:00:00Z",
+"endDate": "2026-09-14T09:00:00Z",
+"lowerAltitude": "GND",
+"upperAltitude": "F095",
+"altitudeUnit": "FL",
+"unit": "MIL",
+"remarks": "SUP32/26",
+"reservationStatus": "ACTIVATED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+23.0,
+52.4
+],
+[
+23.3,
+52.4
+],
+[
+23.3,
+52.7
+],
+[
+23.0,
+52.7
+],
+[
+23.0,
+52.4
+]
+]
+]
+},
+"properties": {
+"designator": "EPR134",
+"airspaceElementType": "R",
+"activeH24": false,
+"fbz": true,
+"fuaStatus": "ALL",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 23.15,
+"y": 52.55
+}
+],
+"popupHtml": "<div/>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14T06:00:00Z",
+"endDate": "2026-09-15T06:00:00Z",
+"lowerAltitude": "GND",
+"upperAltitude": "F660",
+"altitudeUnit": "FL",
+"unit": "MIL",
+"remarks": "",
+"reservationStatus": "PLANNED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+20.0,
+50.0
+],
+[
+20.2,
+50.0
+],
+[
+20.2,
+50.2
+],
+[
+20.0,
+50.2
+],
+[
+20.0,
+50.0
+]
+]
+]
+},
+"properties": {
+"designator": "EPKK ATZ",
+"airspaceElementType": "ATZ",
+"activeH24": false,
+"fbz": false,
+"fuaStatus": "ALL",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 20.1,
+"y": 50.1
+}
+],
+"popupHtml": "<div/>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14T00:00:00Z",
+"endDate": "2026-09-14T23:59:00Z",
+"lowerAltitude": "GND",
+"upperAltitude": "A030",
+"altitudeUnit": "FL",
+"unit": "EPKK",
+"remarks": "",
+"reservationStatus": "ACTIVATED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Polygon",
+"coordinates": [
+[
+[
+22.6,
+50.0
+],
+[
+22.8,
+50.0
+],
+[
+22.8,
+50.2
+],
+[
+22.6,
+50.2
+],
+[
+22.6,
+50.0
+]
+]
+]
+},
+"properties": {
+"designator": "EPD53A",
+"airspaceElementType": "D",
+"activeH24": false,
+"fbz": true,
+"fuaStatus": "ALL",
+"section": "BRAVO",
+"centroid": [
+{
+"x": 22.7,
+"y": 50.1
+}
+],
+"popupHtml": "<div/>",
+"airspaceReservations": [
+{
+"startDate": "2026-09-14 06:00:00",
+"endDate": "2026-09-15 06:00:00",
+"lowerAltitude": "GND",
+"upperAltitude": "F095",
+"altitudeUnit": "FL",
+"unit": "MIL",
+"remarks": "",
+"reservationStatus": "ACTIVATED"
+}
+]
+}
+},
+{
+"type": "Feature",
+"geometry": {
+"type": "Point",
+"coordinates": [
+21.0,
+52.0
+]
+},
+"properties": {
+"designator": "EPX01",
+"airspaceElementType": "TSA",
+"airspaceReservations": []
+}
+},
+{
+"type": "Feature",
+"geometry": null,
+"properties": {
+"airspaceElementType": "TSA"
+}
+}
+]

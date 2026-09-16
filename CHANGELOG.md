@@ -16,6 +16,70 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.0.0 - 2026-09-16
+
+**The Polish channels move here from the consumer, and so does the decision
+about which communique is about the air.** D-053, on the operator's decisions
+of 2026-09-16: the seven-day scrubber repaints the airspace as well as the
+alerts, and the air-threat classification belongs to the producer. RSO and the
+PAŻP updated airspace use plan are read on timers, recorded, and composed into
+`pl_warnings` and `pl_airspace` in `state.json`. The consumer's server stands
+its own reading down on the presence of each key, so the handover needs no
+consumer release; pointing its `/airspace.json` at the new outlines and
+removing its two readers is the consumer's next one.
+
+- **`mavo airspace`**, new, and `mavo/sources/pansa.py`, its adapter. The
+  parser is `mavosite/airspace.py` at 4.76.0.0 with the drawing rules taken
+  out: this module records everything the plan says, and `mavo/poland.py`
+  decides what is drawn (D-034 applied to a second Polish feed). A structure is
+  stored once per distinct content and its outline once per distinct shape. A
+  reservation whose stamps carry no offset is refused and counted on the
+  attempt row as `reservations_refused=N`, where the consumer dropped it
+  silently.
+- **`mavo rso` records what each address served** (D-054). `communiques` holds
+  when a row was first seen and nothing about when the feed stopped serving it,
+  so a communique with no end, composed from the store, would have stayed on
+  the map for ever. `feed_snapshots` holds the ordered list a read served,
+  written only when it differs from the newest list for the same address, so a
+  plan that goes A, B and back to A is three rows. Three recorded tables in
+  all, created on first open and announced once by whichever command opens the
+  store first.
+- **`mavo/poland.py`** composes both keys per cycle under `--watch`. Absent
+  until a feed has been polled once, so one timer hands over one layer; `null`
+  when polled and unreadable; a list or object otherwise. A failure composing
+  them publishes both `null` and prints `[POLAND-FAILED]`, and the Ukrainian
+  picture is published regardless. `pl_airspace` carries `features`, so the
+  text and the outlines come from one reading.
+- **Three differences from the consumer, chosen and named in the module.** The
+  communique scope is `ogolne` read unpaged, not its first page. A stamp inside
+  the doubled autumn hour is passed through as the feed's text and is not an
+  end, where the consumer gave it the summer offset and could end a warning an
+  hour early. A communique list older than an hour is `null`, where the
+  consumer kept its last list for ever in a payload with no field for age.
+- **F167.** `docs/DEPLOYMENT.md` section 2 ended *Nothing else* beside a table
+  that did not list the primary source, nor the RSO host. Closed by
+  `check_every_source_host_is_in_the_egress_inventory`, which named both
+  against the unrepaired table, and a third, `airspace.pansa.pl`, which is this
+  release.
+- **`sources` counts four pipes.** `rso` and `pansa` join with role `context`,
+  which enters neither primary count. Their cadences are declared for the units
+  the install writes and are not yet read from the host; T85 owes the reading,
+  together with the snapshot table's growth per day and the size of
+  `state.json` once outlines ride in it.
+- **What proves the port.** The consumer's tests for both modules, ported with
+  its expected values; and the outlines compared against the GeoJSON file the
+  consumer committed as its own module's output for the same fixture and
+  moment, an assertion nobody in this repository wrote. Twelve mutations of the
+  new controls were run by hand in the session: one survived, a freshness test
+  that did not narrow the read to the map's address, and the test was tightened
+  until all twelve were killed. They are not registered in
+  `tools/harness_mutation.py`, whose `MT` numbering still collides with the
+  threat model's.
+- **What this does not do.** No history reaches a reader: how the scrubber gets
+  it is its own open question (D-054). No retention is set for the new tables.
+  The CAP channel is not read; its credentials are bound to this host, which is
+  one of the three reasons for the move and none of its work.
+
 ## 0.54.8.0 - 2026-09-10
 
 **The absence query, run across every tracked document rather than three.**

@@ -59,9 +59,11 @@ def run(store: EventStore, feed: str, start: datetime, count: int,
 def test_a_feed_with_no_row_is_unknown_and_not_stalled(store):
     """Never switched on is not the same fact as stopped, and must not read so.
 
-    `mavo-rso` has no unit on the host, so the `rso` feed exists in the CLI and
-    has never been collected. Reporting it as `stalled` would announce the
-    failure of something nobody started.
+    Until 0.55.0.0 `mavo-rso` had no unit on the host, so the `rso` feed
+    existed in the CLI and had never been collected. Between the install of
+    that release and the first run of its timer the same holds for `rso` and
+    `pansa`, and reporting either as `stalled` would announce the failure of
+    something nobody had started yet.
     """
     now = datetime(2026, 9, 8, 15, 0, tzinfo=UTC)
     row = measure_feed(store, API, as_of=now)
@@ -244,7 +246,15 @@ def test_the_production_registry_maps_feeds_to_the_right_source_ids():
     assert by_feed["ukrainealarm"].source_id == "ukrainealarm"
     assert by_feed["ukrainealarm"].role == "primary"
     assert by_feed["channel"].role == "watchman"
-    assert "rso" not in by_feed
+    # 0.55.0.0 (D-053). The two Polish pipes are declared with the release
+    # that installs their units, as `context`: neither is a delivery path of
+    # the Ukrainian system, so neither may enter the primary count.
+    assert by_feed["rso"].role == "context"
+    assert by_feed["pansa"].role == "context"
+    assert by_feed["rso"].cadence_s == 900.0
+    assert by_feed["pansa"].cadence_s == 300.0
+    assert [spec.feed for spec in PRODUCTION_FEEDS if spec.role == "primary"] == [
+        "ukrainealarm"]
 
 
 def test_the_threshold_comes_from_the_shared_constant():
