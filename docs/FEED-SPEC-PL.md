@@ -1,6 +1,6 @@
 # Czym musiałby być polski feed alarmowy czytelny maszynowo
 
-Version: 3.2 / 2026-09-09
+Version: 3.3 / 2026-09-18
 Specyfikacja napisana z pozycji kogoś, kto próbował budować na takim feedzie,
 najpierw nie znalazł niczego, a potem znalazł jego część za tokenem.
 Ukraiński odpowiednik był czytany i mierzony na korpusie
@@ -30,7 +30,7 @@ Uwaga: ten dokument opisuje feed, który jeszcze nie istnieje w postaci, o
 
 **Jak to czytać i dla kogo to jest.** Dokument ma dwie części i dwóch
 czytelników. Część I (sekcje 1 do 9) to argument: co istnieje, czego brakuje,
-ile kosztowało dowiedzenie się tego, i dziewiętnaście właściwości nauczonych
+ile kosztowało dowiedzenie się tego, i dwadzieścia właściwości nauczonych
 przez budowanie konsumenta na feedach, które ich nie miały. Jest napisana dla
 osoby, która decyduje, czy feed tego rodzaju ma istnieć. Część II (sekcje 10
 do 16) to instrukcja: jak feed wygląda element po elemencie, jak jeden alarm
@@ -107,7 +107,7 @@ Bez oceny, bo chodzi o interfejs, a nie o instytucję.
 | --- | --- | --- |
 | Syreny | Ludzi w zasięgu słuchu | Nie, i nie może być |
 | Alert RCB (SMS) | Telefonów w całym kraju | Nie. Wolny tekst na telefon |
-| Strumień RSO (XML i JSON) | Każdego, kto znajdzie adres | Tak. Odczytany 2026-08-22, z lukami zapisanymi w sekcji 4a |
+| Strumień RSO (XML i JSON) | Każdego, kto znajdzie adres | Tak. Odczytany 2026-08-22, a od września czytany przez ten projekt cyklicznie; luki są zapisane w sekcji 4a |
 | Zasób CAP RSO | Posiadaczy tokena | Co do formatu, tak. Strona integracyjna wydawcy dokumentuje token; ten projekt nie czytał tego zasobu |
 
 Wiersze RSO pochodzą z odczytu strumienia i z własnej strony integracyjnej
@@ -194,12 +194,16 @@ portalu, rozpakować, przefiltrować pola opisu. Polecenie jest w historii tego
 repozytorium, a liczby wyżej pochodzą z jego uruchomienia, nie z przeglądania
 strony.
 
-**Trzy pytania, na które ten dokument nie odpowiada**, i nie odpowiada na nie
-nigdzie poniżej: czy ładunek CAP niesie dotknięty obszar jako kod TERYT w
-`geocode`, czy tylko jako nazwę albo wielokąt; czy koniec zagrożenia jest
-publikowany jako wiadomość `Cancel` lub `Update`, czy wynika z upływu
+**Trzy pytania, na które ten dokument nie umiał odpowiedzieć**, a jedno z nich
+ma dziś połowę odpowiedzi: czy ładunek CAP niesie dotknięty obszar jako kod
+TERYT w `geocode`, czy tylko jako nazwę albo wielokąt; czy koniec zagrożenia
+jest publikowany jako wiadomość `Cancel` lub `Update`, czy wynika z upływu
 `expires`; oraz czy cokolwiek jest publikowane, kiedy nic się nie dzieje, co
-jest tematem sekcji 4. Wszystkie trzy rozstrzygnąłby odczyt pod tokenem. T8a w
+jest tematem sekcji 4. Dla stron XML drugie ma odpowiedź, z jednej pary
+komunikatów odczytanej 2026-09-16: ani jedno, ani drugie, tylko osobny
+komunikat prozą, który nie wskazuje żadnego alarmu, podczas gdy własne
+`valid_to` alarmu biegnie do końca dnia (właściwość dwudziesta). Dla zasobu
+CAP wszystkie trzy stoją, a rozstrzygnąłby je odczyt pod tokenem. T8a w
 backlogu jest tym odczytem i nie został wykonany.
 
 ## 3. Specyfikacja, która w większości nie jest moja
@@ -226,16 +230,17 @@ alarmowania największe znaczenie. Jest oznaczona jako luka, nie jako prośba.
 Cztery wiersze powyżej nie potrzebują ode mnie argumentu. Dalej jest
 uzasadnienie każdego z nich w konkretnym przypadku alarmowania, a potem luka.
 
-**Odczytane na tle RSO, w 2.4.** Te same pięć właściwości, ze statusem
-każdej wobec jedynego istniejącego polskiego strumienia. `[zmierzone]` to
-odczyt tego projektu z 2026-08-22; *nieustalone* to to, czego ten odczyt nie
-rozstrzyga, a sekcja 2 wymienia, co by rozstrzygnęło.
+**Odczytane na tle RSO, w 2.4, z jednym wierszem poprawionym w 3.3.** Te same
+pięć właściwości, ze statusem każdej wobec jedynego istniejącego polskiego
+strumienia. `[zmierzone]` to odczyt tego projektu z 2026-08-22, a dla
+trzeciego wiersza jego odczyt z 2026-09-16; *nieustalone* to to, czego te
+odczyty nie rozstrzygają, a sekcja 2 wymienia, co by rozstrzygnęło.
 
 | Właściwość | Status wobec RSO |
 | --- | --- |
 | Publiczny, bez procedury wnioskowej | Spełniona przez strony list XML i JSON `[zmierzone]`. Niespełniona przez zasób CAP, który strona integracyjna wydawcy stawia za tokenem. To jest pozostała luka |
 | Obszar przez kod rejestru, nie opisem słownym | Strony list podają województwo jako slug i nazwę, bez kodu rejestru `[zmierzone]`. Nieustalone dla CAP, którego `geocode` może go nieść |
-| Przejścia stanów ze znacznikiem czasu | Nieustalone dla obu zasobów; nie zmierzone 2026-08-22. CAP ma na to `Cancel` i `Update` |
+| Przejścia stanów ze znacznikiem czasu | Częściowo spełniona przez strony list: publikowane są oba kierunki, koniec jako osobny komunikat prozą, który nie wskazuje żadnego alarmu, podczas gdy własne `valid_to` alarmu biegnie do końca dnia, a żaden znacznik nie ma przesunięcia strefy `[zmierzone]`, właściwość dwudziesta. Nieustalone dla CAP, który ma na to `Cancel` i `Update` |
 | Wersjonowany schemat, serwowany przez API | W dużej mierze spełniona przez sam CAP, opublikowany wersjonowany standard; profil RSO, czyli które elementy opcjonalne są wypełniane, jest nieopublikowany |
 | **Sygnał życia** | Nieustalone dla RSO. Nie zdefiniowane przez CAP, więc nie uzyskane przez jego przyjęcie. Sekcja 4 |
 
@@ -421,7 +426,9 @@ powiedziane tutaj, a nie zakopane. Szesnasta została dodana w 1.9 i wycofana w
 tej samej dyscypliny, o którą te właściwości proszą wydawcę. Osiemnasta i
 dziewiętnasta zostały dodane w 2.5, obie z tego, że ukraińskie źródło zmieniło
 się pod kolektorem tego projektu 2026-09-06: jedna z tego, co zmiana zepsuła,
-druga z tego, co opublikowała.
+druga z tego, co opublikowała. Dwudziesta została dodana w 3.3, z jednej
+pary polskich komunikatów odczytanej 2026-09-16, i jej dowodem jest
+dokładnie to: jedna para.
 
 **Szósta. Limit, opublikowany, i flaga mówiąca, kiedy zadziałał.** Nauczka z produkcji.
 
@@ -702,6 +709,19 @@ wszystko. Obejście istnieje. To, że istnieje, nie jest argumentem przeciw
 polu; jest miarą tego, ile brakujące pole kosztuje, pomnożoną przez każdego
 konsumenta.
 
+**A kategorii, która miałaby największe znaczenie, nie ma wśród pięciu.**
+Alarm lotniczy, który ten projekt odczytał 2026-09-16, przyszedł w `ogolne`,
+kategorii ogólnej, która niesie też komunikaty obywatelskie, więc konsument
+rysujący mapę zagrożeń z powietrza musi rozstrzygać po słowach każdego
+komunikatu. Ten projekt tak robi: dziesięć terminów czyni komunikat
+komunikatem o powietrzu, dwanaście trzyma go z dala od mapy nawet wtedy, gdy
+któryś z tych dziesięciu pasuje, a wykluczenie wygrywa, bo test syren pisze w
+treści *alarm powietrzny*. Każdy termin jest zgadywaniem, jak zostanie
+sformułowany następny komunikat, a komunikat sformułowany inaczej zostaje
+pominięty albo źle odczytany bez sygnału dla którejkolwiek ze stron.
+Właściwość dwudziesta pokazuje, ile to kosztuje na parze z 2026-09-16:
+odwołanie też jest o powietrzu.
+
 **Szesnasta. Wycofana w 2.0.**
 
 W postaci wysłanej w 1.9 ten wpis prosił wydawców o zadeklarowanie, na jakich
@@ -829,6 +849,34 @@ reguła napisana z założonego kształtu to klasa defektu, którą zapisuje
 poprzednia właściwość. Do tego czasu strona mówi, że poziom nadchodzi, i
 mówi, czyj to będzie poziom.
 
+**Dwudziesta. Koniec mówi, co kończy, w polu, a pole nazwane końcem jest
+końcem.** Nauczka z odczytu strumienia RSO 2026-09-16
+`[zmierzone: jedna para komunikatów, odczytana na hoście strony tego projektu]`.
+
+O 07:05 tego ranka kategoria `ogolne` niosła komunikat zatytułowany *Alert
+RCB*, identyfikator 23337896, o rosyjskim ataku powietrznym na Ukrainę. O
+07:36 przyszedł drugi, identyfikator 23337898, zatytułowany *ALERT RCB-
+ODWOŁANIE ZAGROŻENIA*: odwołanie. Oba niosły `valid_to` na 23:59 tego samego
+dnia. Odwołanie jest osobnym komunikatem. Nie wskazuje żadnego identyfikatora
+alarmu, który kończy, i nic w żadnym z dwóch rekordów ich nie łączy; to, że
+drugi kończy pierwszy, wyczytuje z tytułu i z prozy człowiek.
+
+Dwie połowy, jak wcześniej. Wydawcy: **koniec jest wiadomością, która mówi, co
+kończy**, a CAP ma już na to formę, `Cancel`, którego `references` niesie
+identyfikator `Alert` (sekcja 10.1), po którym indeks z sekcji 10.2 usuwa
+alarm. Pole ważności, którego wydawca nie używa do kończenia, jest gorsze niż
+brak pola, bo wygląda jak odpowiedź: konsument, który bierze `valid_to` za
+koniec zagrożenia, pokazuje województwa tego alarmu jako zagrożone od 07:36 do
+23:59, a własna kompozycja tego projektu robi dokładnie to w wydanej wersji
+(F169).
+
+Konsumenta: bez odwołania, za którym można pójść, musi parować koniec z
+alarmem po tym, co da się przeczytać, po województwach, które każdy z nich
+nazywa, i po kolejności, w jakiej przyszły, a reguła parowania napisana z
+jednej pary jest regułą o jednej parze, dopóki tydzień zapisanych wierszy nie
+powie inaczej. Dlatego zapis trzyma każdy komunikat, który ten projekt czyta,
+a nie tylko te, które klasyfikuje.
+
 
 ## 5. Zarzut i odpowiedź
 
@@ -955,6 +1003,16 @@ projektu, któremu właściwość ósma przeczy dwie sekcje wcześniej. Dokument
 który prosi wydawcę, żeby mówił, czego jego pola nie rozróżniają, musi
 trzymać ten sam standard w części, która mówi wydawcy, co ma zbudować.
 
+**Uwaga do wydania 3.3.** Jedna poprawka i jedna nowa właściwość, z tym, co z
+niej wynika. Sekcja 10.3 mówiła, że pięć jej wierszy mówi *nic*; mówi osiem, i
+liczba jest poprawiona. Właściwość dwudziesta jest nowa, z pary komunikatów
+odczytanej 2026-09-16, i odpowiada na połowę jednego z otwartych pytań sekcji
+2, tylko dla stron XML; sekcje 10.3, 11 i 16 nazywają ją tam, gdzie na niej
+stoją, właściwość piętnasta zyskuje to, ile kosztuje klasyfikowanie po
+słowach, a sekcja 15 zapisuje retencję, którą producent tego projektu jest
+zbudowany prowadzić. Właściwość stoi na jednej parze i mówi to, a to jest
+standard, który sekcja 4a postawiła sobie w 1.9.
+
 ## 9. Źródła
 
 - Dokumentacja integracyjna RSO, <https://komunikaty.tvp.pl/Info/Integration>,
@@ -968,6 +1026,8 @@ trzymać ten sam standard w części, która mówi wydawcy, co ma zbudować.
   na tle tego cytatu, a zdanie stoi jako `[unverified]`, dopóki nie
   zostanie.
 - [`docs/CHANNEL.md`](CHANNEL.md), dla każdego pomiaru w sekcji 1.
+- Lista `ogolne` strumienia RSO, odczytana 2026-09-16 na hoście strony tego
+  projektu. Cytowana dla właściwości dwudziestej i sekcji 2.
 
 ---
 
@@ -1139,8 +1199,9 @@ wydawcy, które feed z samymi wiadomościami zamieniłby w spokój.
 | Siedemnasta: częściowe odpowiedzi mówią o tym | nic | sekcja 15, o protokole |
 | Osiemnasta: zmienione znaczenie to nowa nazwa | nic | sekcja 15 |
 | Dziewiętnasta: poziom z własnym znacznikiem | `severity`; bez znacznika | `severity_at` w indeksie, `sent` na `Update` |
+| Dwudziesta: koniec mówi, co kończy | `Cancel`, `references` | `references` zawsze wypełnione na `Cancel`; sekcja 11 |
 
-Pięć wierszy mówi *nic*. To nie jest defekt CAP. CAP opisuje wiadomość; ten
+Osiem wierszy mówi *nic*. To nie jest defekt CAP. CAP opisuje wiadomość; ten
 dokument opisuje strumień, a sekcja 4 mówi, dlaczego te dwie rzeczy
 potrzebują różnych gwarancji. Dodatki to jeden dokument i garść reguł
 wypełniania elementów, które CAP już ma.
@@ -1194,7 +1255,9 @@ Potem identyfikator opuszcza `active`. Dzieje się jedno i drugie; żadne
 samo nie wystarcza. `Cancel` to zdarzenie końca, które konsument zapisuje i
 pokazuje („alarm zakończył się o 12:04"); indeks to sposób, w jaki konsument,
 który przegapił `Cancel`, i tak dowiaduje się, że alarm minął. Właściwość
-trzecia, w obie strony.
+trzecia, w obie strony. Polski koniec, który ten projekt odczytał
+2026-09-16, był wiadomością, co jest połową tego, i nie wskazywał żadnego
+alarmu, czego brakuje w drugiej połowie: właściwość dwudziesta.
 
 **Wygasły.** `expires` minął i `Cancel` nie przyszedł. Wydawca usuwa
 identyfikator z `active` i mówi to w następnym indeksie, w polu, które
@@ -1395,6 +1458,11 @@ w skali całego kraju, tak że tygodnia, który miał największe znaczenie, nie
 dało się odczytać wstecz. Liczba w profilu - dziewięćdziesiąt dni, rok, na
 zawsze - jest warta więcej niż najlepsze intencje, bo konsument może się
 przygotować do liczby, a do intencji nie.
+Producent tego projektu jest zbudowany tak, żeby prowadzić własną: każdą
+listę, jaką adres podał, zapisaną, gdy lista się zmienia, obok wierszy, które
+nazywa. To konsument budujący retencję, której strumień nie deklaruje, tak jak
+właściwość dziewiąta każe mu budować sygnał życia, którego strumień nie
+niesie.
 
 **Zmieniaj przez dodawanie.** Nowy element jest dodawany; nic nie jest
 usuwane i nic nie zmienia znaczenia. Konsument, który czyta tylko elementy,
@@ -1448,7 +1516,7 @@ profilu z sekcji 10.1.
 5. Alarm zaczyna się od `msgType` `Alert` i świeżego `identifier`. Sekcja
    11.
 6. Alarm kończy się `msgType` `Cancel` odwołującym się do `Alert` i opuszcza
-   `active` w następnym indeksie. Właściwość trzecia.
+   `active` w następnym indeksie. Właściwość trzecia, właściwość dwudziesta.
 7. Alarm, który wygasa na `expires` bez `Cancel`, jest w indeksie oznaczony
    jako wygasły, a nie po cichu usunięty. Sekcja 11.
 8. Zmiana alarmu to `Update` odwołujący się do `Alert`, z własnym `sent`, a

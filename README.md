@@ -6,7 +6,7 @@
 [![tests 894](https://img.shields.io/badge/tests-894-brightgreen)](tests/)
 [![coverage 95.72%](https://img.shields.io/badge/coverage-95.72%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 146](https://img.shields.io/badge/defects%20logged-146-informational)](docs/METHODOLOGY.md)
+[![defects logged 149](https://img.shields.io/badge/defects%20logged-149-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -121,6 +121,11 @@ same announcements as prose and stopped mid-attack. Its collector still runs,
 now as the watchman for the publisher's return rather than as a feed. The
 switch and its cost are in *Why the official API, and why is the channel still
 read?* below.
+
+From 0.55.0.0 it also records two Polish public feeds, the civil-protection
+communiques and the airspace use plan, and hands them to the site as context
+beside the Ukrainian picture (D-053). Neither is a warning channel; the source
+table below says what each is.
 
 That is the whole of it. It is a **reporting instrument**: it tells you what has
 been announced, in a form a person near the border can act on. It does not
@@ -271,7 +276,11 @@ when it bound, a window whose left edge had to be guessed, a version bump that
 needed both sides deployed inside one window, a category field mistaken twice
 for a description of the threat, a classification ceiling that no parser can
 raise because the source simply does not say, a null with two meanings and one
-field, and a number whose denominator lived in prose. Each one is labelled
+field, and a number whose denominator lived in prose. Three more come from
+reading the Polish stream itself: a category that exists in the request
+address and in no record, a scope called *all* that is not all, and an
+all-clear that names no alert while the alert's own end runs to the end of
+the day. Each one is labelled
 with how it was learned, and several are labelled `[measured]` against a
 corpus of 61,041 messages over 118 days.
 
@@ -445,7 +454,8 @@ look.
 | **alerts.in.ua** | The same alerts, through another API | Token applied for 2026-08-06, unanswered | **Not independent.** Draws from the same upstream (D-010). Two feeds, one dependency, and treating them as two would be the kind of false redundancy that reads as robustness right up until the day it matters |
 | **KATOTTG**, the Ukrainian state register of administrative units | The code, oblast and hierarchy behind every area the channel names | A file, published as open data under Creative Commons Attribution | Used offline, versioned in the tree, never called at runtime (D-016). No API key in the warning path, no rate limit where latency is the product, and no third party learning which raions a Polish user asks about at three in the morning |
 | **OpenSky Network** (ADS-B) | A second, physically different kind of observation: aircraft that broadcast their own position | Registered 2026-08-10, 4,000 credits a day, one credit per call over the western box [measured] | **Not a drone-tier source, and the premise that it was is recorded as false.** Transponders are carried by aircraft that choose to be seen; Shahed-type munitions and missiles carry none. What it can measure is **the operating intensity of the Rzeszow-Jasionka hub**, which has potential diagnostic value during a war and is reported rather than scored (D-019, T42) |
-| A Polish-side feed | Would close the loop | Unresolved (T8) | **None found that is machine-readable and timely.** RSO and NOTAM are readable; RCB and the announced government application are not, as far as anyone here has established |
+| **komunikaty.tvp.pl**, the RSO stream, run for MSWiA by TVP | Civil-protection communiques by voivodeship: weather, water, road and general notices, and air threats, published into it by RCB among others | Public XML, no token. A CAP resource beside it needs one; this project's credentials for it are bound to the producer's host, and the resource has not been read | **Context, never a warning channel** (D-053). Composed into `pl_warnings` from the words of each communique, because no record carries a category (FEED-SPEC property fifteen). An all-clear is a communique too, and at 0.55.0.0 it paints (F169) |
+| **airspace.pansa.pl**, PAŻP's updated airspace use plan | Reserved airspace structures over Poland, with their windows, limits and outlines | Public, no token | **Context** (D-053). `pl_airspace` draws only structures the plan marks `ACTIVATED`; the structures and their windows are recorded whether drawn or not |
 
 **What follows from that table.** Everything this tool says about Ukraine is
 `reported` or weaker: it is what the operator's system claims, not what the
@@ -753,11 +763,23 @@ mavo/
   errors.py        the refusal taxonomy; there is no warning type in this codebase
   transport.py     the only file that reaches the network
   backfill.py      retrieves channel history backwards, verbatim, resumable
+  areas.py         area resolution by the channel's own hashtags
+  kinds.py         the means of attack, joined to alerts rather than read off them
+  report.py        the picture now, how blind it is, and the files the site reads
+  liveness.py      which pipes are delivering, from the attempt log and nothing else
+  attempts.py      attempt completeness for one feed
+  latency.py       how late the channel is: post time against the moment of receipt
+  obs.py           the run log: one writer, one schema, no message text
+  poland.py        the Polish keys of the contract, composed from the recorded tables
   sources/
     fixture.py     synthetic scenarios, shipped as a CLI command
     ukrainealarm_source.py  the primary adapter; snapshot diffing, clears synthesised
+    ukrainealarm.py  a second view of the same alerts, for measuring the first one
     telegram.py    the channel adapter, now the watchman; its pattern table is under redesign
-  cli.py           fixture / gate / policy / backfill / collect
+    rso.py         the Polish civil-warning stream, read as a record and not as an alarm
+    pansa.py       the Polish airspace use plan, read as structures and their windows
+  cli.py           fixture / gate / policy / backfill / collect / collect-api / rso /
+                   airspace / attempts / latency / report / reconcile
 tests/
   test_<domain>.py behaviour
   test_sprint<N>.py regression, one file per sprint, verified red before it is fixed
@@ -767,6 +789,11 @@ tools/
   docs_audit.py    fails when a pin in STATUS.json disagrees with the tree
   manual_audit.py  fails when the manual describes a command the CLI does not have
   harness_mutation.py  disables each control and fails if its attack stays green
+  contract_check.py    reads state.json v3 the way its consumer does, inside the gate
+  figures.py       every derived figure, computed once and written where it is quoted
+  feed_spec_check.py   holds the two editions of FEED-SPEC to one structure
+  brief_check.py   holds the two briefs to one set of figures
+  the rest         gate checks, and the instruments behind figures the documents quote
 docs/
   BRIEF.md         the project for a reader who does not write code
   BRIEF-PL.md      the same, in Polish, and the original
@@ -782,6 +809,11 @@ docs/
   COMPUTATION.md   the statistical machinery, with its stated weaknesses
   MOBILE.md        the notification channel: technology choice and its phases
   WEBAPP.md        the web tier: the contract, the three states, and the mockups
+  CHANNEL.md       the channel measured: the corpus behind FEED-SPEC section 1
+  DEPLOYMENT.md    what runs on the host, how it got there, how far behind it is
+  FEED-SPEC.md     what a machine-readable Polish alerting feed would have to be
+  FEED-SPEC-PL.md  the same specification in Polish, held to it by a check
+  OBSERVABILITY.md watching a run: the sink, and what a line may contain
   reviews/         one review per major release, findings dispositioned
 data/
   raw/             tier 1, never committed, git-ignored
@@ -797,10 +829,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 26 | 11,388 |
+| Package `mavo/` | 26 | 11,393 |
 | Tests | 74 | 15,964 |
 | Tools | 28 | 7,990 |
-| Documentation | 75 | 33,848 |
+| Documentation | 75 | 34,257 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -815,9 +847,9 @@ confidence interval attached.
 | Coverage | 95.72% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 15, each with a control or a named acceptance |
-| Defects logged with their class | 146, the count pinned against the log itself |
+| Defects logged with their class | 149, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 53, counted from the log itself |
-| Releases | 150 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 151 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation

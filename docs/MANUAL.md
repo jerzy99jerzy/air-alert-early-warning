@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.11
+Document:  docs/MANUAL.md, version 3.12
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -568,6 +568,11 @@ a list or object means read. A failure composing them prints
 `[POLAND-FAILED] <reason>` on stderr and publishes both keys `null`, and the
 Ukrainian picture is published regardless. The one-shot path composes neither,
 as it composes no `sources` block.
+
+**An all-clear paints at this release** (F169). An RCB all-clear matches the
+same air terms as a threat and nothing here tells the two apart, so it keeps
+the voivodeships it names in `pl_warnings` until their `valid_to`, which on
+the one pair measured was the end of the day.
 
 **`--valid-for` is an assumption, not a measurement.** The default of 600
 seconds is five times the two-minute polling requirement derived from the page

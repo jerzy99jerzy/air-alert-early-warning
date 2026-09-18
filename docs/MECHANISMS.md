@@ -4,7 +4,7 @@ Every mechanism in MAVO: what it is, where it lives, the alternative that was
 rejected, the failure it prevents, and the test that keeps it honest.
 
 ```
-Document:  docs/MECHANISMS.md, version 2.3
+Document:  docs/MECHANISMS.md, version 2.4
 Audience:  a contributor about to change how something works, and anyone asking
            "why is it done this way rather than the obvious way"
 Companion: ARCHITECTURE (what talks to what), DATA-FLOW (what happens to a
@@ -43,6 +43,10 @@ Note:      every constant quoted here was read out of the code. Where a
 24. [Mutation-verified attacks](#24-mutation-verified-attacks)
 25. [Provenance labels as a data type](#25-provenance-labels-as-a-data-type)
 26. [Area resolution by hashtag, not by name search](#26-area-resolution-by-hashtag-not-by-name-search)
+27. [A pipe's state from its attempts, never from its events](#27-a-pipes-state-from-its-attempts-never-from-its-events)
+28. [What an endpoint served, recorded as a list when the list changes](#28-what-an-endpoint-served-recorded-as-a-list-when-the-list-changes)
+29. [Four states for a key that may not exist yet](#29-four-states-for-a-key-that-may-not-exist-yet)
+30. [A communique is about the air by its words, and an exclusion wins](#30-a-communique-is-about-the-air-by-its-words-and-an-exclusion-wins)
 
 ---
 
@@ -716,3 +720,128 @@ records the mechanism as running since S7, and the threat model cites a control
 over it. Three artefacts described a built mechanism while the document whose
 subject is that mechanism called it unbuilt and unguarded. Nothing failed,
 because nothing fails when a document understates what exists.
+
+---
+
+## 27. A pipe's state from its attempts, never from its events
+
+**Where:** `mavo/liveness.py`, published per feed in the `sources` block of
+`state.json` (D-049).
+
+Four words per feed, `PipeState`: `delivering` when a read succeeded inside
+the threshold, `refusing` when polls are current and the far end refuses them,
+`stalled` when no poll happened inside it, and `unknown` when the feed has
+never left a row. Each is decided from `feed_attempts`, which carries a row
+per poll whatever happened, and from nothing else. The newest event stamp is
+reported beside the state and never decides it, and a feed whose cadence the
+caller did not declare gets no state: the module will not infer a cadence from
+the gaps it is looking for.
+
+**Rejected alternative: an observation-age threshold over events.** A healthy
+pipe under a quiet sky produces no events. Both feeds went quiet together for
+more than an hour twice on the evening of 2026-09-06, at full health, because
+they are two delivery paths of one system, and a threshold of an hour would
+have declared two outages that did not happen.
+
+**The failure it prevents** is the one that made it: one source lost while
+another delivers, invisible because the picture was composed over one pool
+with no source dimension. On 2026-09-07 the API stopped for 28 h 30 min, and
+the channel stopped the same morning and was still stopped 33 h later, while
+the page said nothing.
+
+**Guarded by:**
+`test_liveness.py::test_a_silent_publisher_on_a_healthy_pipe_still_reads_delivering`,
+`test_liveness.py::test_the_watchman_cannot_hold_the_primary_count_up`,
+`test_liveness.py::test_2026_09_07_the_stopped_timer_reads_stalled` and
+`test_liveness.py::test_a_feed_with_no_row_is_unknown_and_not_stalled`.
+
+---
+
+## 28. What an endpoint served, recorded as a list when the list changes
+
+**Where:** `feed_snapshots` in `mavo/store.py`, written by `mavo rso` and
+`mavo airspace`, read by `mavo/poland.py` (D-054).
+
+A successful read writes its rows first and then the ordered list of their
+content digests, and the list is written only when it differs from the newest
+list for the same feed and address: a plan that goes A, B and back to A is
+three rows, and an unchanged plan read every five minutes is one. An empty
+list is a list. The composer reads the newest list for the address it shows
+and the rows that list names, and a list naming a row nobody wrote makes the
+key `null` rather than partial.
+
+**Rejected alternative: first-seen rows alone.** `communiques` records when a
+row was first seen and nothing about when the feed stopped serving it, so a
+communique with no end, composed from the store, would stay on the map for
+ever, and one the publisher edited would be shown in both versions.
+
+**Never exercised on the host.** 0.55.0.0 is not installed there, and the
+table's growth per day is T85's reading.
+
+**Guarded by:**
+`test_poland.py::test_an_unchanged_list_is_not_written_twice_and_a_return_is`,
+`test_poland.py::test_order_is_part_of_the_list`,
+`test_poland.py::test_an_empty_list_is_recorded_as_a_list`,
+`test_poland.py::test_an_edited_communique_shows_only_the_edit_the_feed_serves_now`
+and
+`test_poland.py::test_a_list_naming_a_row_nobody_wrote_is_null_not_partial`.
+
+---
+
+## 29. Four states for a key that may not exist yet
+
+**Where:** `Block` and `measure` in `mavo/poland.py`, and the end of
+`to_contract` in `mavo/report.py` (D-053).
+
+`pl_warnings` and `pl_airspace` are each one of four things, told apart by the
+key. Absent: this producer has never polled the feed, so a consumer still
+reading it itself keeps its own reading. `null`: polled, and cannot say.
+Empty: read, and nothing to show. Rows: something to show. Per key, so
+switching one timer on hands over one layer. A communique list older than
+`WARNINGS_VALID_FOR_S`, an hour, is `null`, because that payload has no field
+to show its age; the airspace object has no ceiling, because it carries
+`read_at` and `stale_error` and the page prints both. A failure composing
+either publishes both `null` and prints `[POLAND-FAILED]`, and the Ukrainian
+picture is published regardless.
+
+**Rejected alternative: keeping the last good list.** The site did, before the
+move, and a list from yesterday rendered exactly like one from a minute ago,
+including an empty one, which is silence rendered as calm.
+
+**Guarded by:**
+`test_poland.py::test_a_feed_this_producer_never_polled_leaves_the_key_absent`,
+`test_poland.py::test_a_reading_older_than_the_ceiling_is_null_and_not_the_last_list`,
+`test_poland.py::test_an_empty_page_is_an_empty_list_and_not_null`,
+`test_poland.py::test_each_key_is_published_on_its_own` and
+`test_poland.py::test_a_failed_composition_publishes_both_keys_null`.
+
+---
+
+## 30. A communique is about the air by its words, and an exclusion wins
+
+**Where:** `air_term`, `AIR_THREAT_TERMS` and `NOT_A_THREAT_TERMS` in
+`mavo/poland.py`, ported verbatim from the site's own reader (D-053).
+
+No communique carries a category (FEED-SPEC property fifteen), so which one
+paints the map is decided from its title and body, lowercased and matched as
+substrings: ten terms make it about the air, and twelve keep it off even when
+one of the ten matches, because a siren test writes *alarm powietrzny* in its
+body. The matching term is published as `air_term`, so a false paint names the
+word that caused it. Only the `ogolne` list read unpaged may paint
+(`WARNINGS_URL`); the other four categories are read, recorded and never
+shown.
+
+**Rejected alternative: painting by category.** The categories are in the
+request address and not in the record, and the four specific ones carry
+weather, water and road notices: a voivodeship painted because a river is high
+would be read, on a map of air alerts, as something it is not.
+
+**Open defect: an all-clear is about the air too** (F169). An RCB all-clear
+matches an air term and nothing here tells it from a threat, so at this
+release it paints the voivodeships it names until their `valid_to`.
+
+**Guarded by:**
+`test_poland.py::test_the_term_list_is_the_one_the_project_reviewed`,
+`test_poland.py::test_the_exclusion_list_is_the_one_the_project_reviewed`,
+`test_poland.py::test_exclusions_beat_inclusions` and
+`test_poland.py::test_a_siren_test_a_heat_warning_and_an_alarm_flag_do_not_paint`.

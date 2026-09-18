@@ -149,9 +149,10 @@ CREATE TABLE IF NOT EXISTS kind_events (
 -- that is a different column and it is not this one.
 --
 -- Every field the publisher sent is kept in `fields` as JSON, unfiltered.
--- D-034: nothing is dropped by category here. A row this project cannot
--- classify is a row it stores and cannot classify, which is a different
--- object from a row that was never published.
+-- Nothing is dropped by category here, the rule `mavo/sources/rso.py`
+-- states; until 0.55.0.1 this line cited D-034, a different decision (F171).
+-- A row this project cannot classify is a row it stores and cannot classify,
+-- which is a different object from a row that was never published.
 CREATE TABLE IF NOT EXISTS communiques (
     digest     TEXT PRIMARY KEY,
     feed       TEXT NOT NULL,

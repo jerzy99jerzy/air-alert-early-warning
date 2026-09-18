@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 3.2 / 2026-09-09
+Version: 3.3 / 2026-09-18
 A specification, written from the position of someone who tried to build against
 one, found nothing at first, and then found part of one behind a token. The
 Ukrainian equivalent was consumed and measured over a corpus
@@ -28,7 +28,7 @@ Note: this document describes a feed that does not yet exist in the form it
 
 **How to read this, and who it is for.** The document has two parts and two
 readers. Part I (sections 1 to 9) is the argument: what exists, what is
-missing, what it cost to find out, and nineteen properties learned by
+missing, what it cost to find out, and twenty properties learned by
 building a consumer against feeds that lacked them. It is written for the
 person who decides whether a feed of this kind should exist. Part II
 (sections 10 to 16) is the instruction: what the feed looks like element by
@@ -104,7 +104,7 @@ institution.
 | --- | --- | --- |
 | Sirens | People within earshot | No, and cannot be |
 | RCB alert (SMS) | Phones across the country | No. Free text to a phone |
-| RSO stream (XML and JSON) | Anyone who finds the address | Yes. Read on 2026-08-22, with the gaps recorded in section 4a |
+| RSO stream (XML and JSON) | Anyone who finds the address | Yes. Read on 2026-08-22, and read on a timer by this project since September; the gaps are recorded in section 4a |
 | RSO CAP resource | Holders of a token | In format, yes. The publisher's integration page documents the token; this project has not read the resource |
 
 The RSO rows come from reading the stream and from the publisher's own
@@ -187,13 +187,17 @@ metadata, unpack, and filter the description fields. The command is in this
 repository's history and the figures above come from running it, not from
 browsing the site.
 
-**Three questions this document cannot answer**, and none of them is
-answered anywhere below: whether the CAP payload carries the affected area as
-a TERYT code in `geocode` or only as a name or a polygon; whether the end of a
-threat is published as a `Cancel` or `Update` message or is implied by
-`expires` elapsing; and whether anything is published when nothing is
-happening, which is section 4. A reading under a token would settle all three.
-T8a in the backlog is that reading, and it has not been made.
+**Three questions this document could not answer**, and one of them now has
+half an answer: whether the CAP payload carries the affected area as a TERYT
+code in `geocode` or only as a name or a polygon; whether the end of a threat
+is published as a `Cancel` or `Update` message or is implied by `expires`
+elapsing; and whether anything is published when nothing is happening, which
+is section 4. For the XML pages the second has an answer, from one pair of
+communiques read on 2026-09-16: neither, but a separate communique in prose
+that names no alert, while the alert's own `valid_to` runs to the end of the
+day (property twenty). For the CAP resource all three stand, and a reading
+under a token would settle them. T8a in the backlog is that reading, and it
+has not been made.
 
 ## 3. The specification, which is mostly not mine
 
@@ -218,16 +222,17 @@ matters most for alerting. It is marked as a gap rather than as a request.
 The four rows above need no argument from me. What follows is the reasoning for
 each in the specific case of alerting, and then the gap.
 
-**Read against RSO, at 2.4.** The same five properties, with the status each
-holds against the one Polish stream that exists. `[measured]` is this
-project's reading of 2026-08-22; *unknown* is what that reading does not
+**Read against RSO, at 2.4, with one row amended at 3.3.** The same five
+properties, with the status each holds against the one Polish stream that
+exists. `[measured]` is this project's reading of 2026-08-22, and for the
+third row its reading of 2026-09-16; *unknown* is what those readings do not
 settle, and section 2 lists what would.
 
 | Property | Status against RSO |
 | --- | --- |
 | Public, no application process | Met by the XML and JSON list pages `[measured]`. Not met by the CAP resource, which the publisher's integration page places behind a token. This is the remaining gap |
 | Area by register code, not prose | List pages carry the voivodeship as a slug and a name, no register code `[measured]`. Unknown for CAP, whose `geocode` can carry one |
-| Timestamped transitions | Unknown for both resources; not measured on 2026-08-22. CAP has `Cancel` and `Update` for it |
+| Timestamped transitions | Partly met by the list pages: both directions are published, the end as a separate communique in prose that names no alert, while the alert's own `valid_to` runs to the end of the day, and no stamp carries an offset `[measured]`, property twenty. Unknown for CAP, which has `Cancel` and `Update` for it |
 | Versioned schema, served over an API | Largely met by CAP itself, a published versioned standard; the RSO profile of it, which optional elements are populated, is unpublished |
 | **A heartbeat** | Unknown for RSO. Not defined by CAP, so not obtained by adopting it. Section 4 |
 
@@ -409,6 +414,8 @@ withdrawal recorded openly is part of the same discipline these properties ask
 of a publisher. Eighteen and nineteen were added at 2.5, both from the
 Ukrainian source changing under this project's collector on 2026-09-06: one
 from what the change broke, one from what it published.
+Twenty was added at 3.3, from one pair of Polish communiques read on
+2026-09-16, and its evidence is exactly that: one pair.
 
 **Six. A cap, published, and a flag saying when it bound.** Learned in
 production.
@@ -687,6 +694,17 @@ everything. The workaround exists. That it exists is not an argument against the
 field; it is a measure of what the missing field costs, multiplied by every
 consumer.
 
+**And the category that would matter most is not among the five.** The air
+alert this project read on 2026-09-16 arrived in `ogolne`, the general
+category, which carries civic notices as well, so a consumer drawing a map of
+air threats has to decide from the words of each communique. This project
+does: ten terms make a communique about the air, twelve keep it off the map
+even when one of the ten matches, and an exclusion wins, because a siren test
+writes *alarm powietrzny* in its body. Every term is a guess about how the
+next communique will be worded, and one worded otherwise is missed or misread
+with no signal to either side. Property twenty is what that costs on the pair
+of 2026-09-16: an all-clear is about the air as well.
+
 **Sixteen. Withdrawn at 2.0.**
 
 As shipped at 1.9, this entry asked publishers to state which address families
@@ -812,6 +830,33 @@ written from a shape assumed is the class of defect the preceding property
 records. Until then the page says the level is coming, and says whose level
 it will be.
 
+**Twenty. An end says what it ends, in a field, and a field named for the end
+is the end.** Learned by reading the RSO stream on 2026-09-16
+`[measured: one pair of communiques, read on this project's site host]`.
+
+At 07:05 that morning the `ogolne` category carried a communique titled *Alert
+RCB*, identifier 23337896, about a Russian air attack on Ukraine. At 07:36 a
+second arrived, identifier 23337898, titled *ALERT RCB- ODWOŁANIE ZAGROŻENIA*:
+the all-clear. Both carried `valid_to` at 23:59 the same day. The all-clear is
+a communique of its own. It names no identifier of the alert it ends, and
+nothing in either record links the two; that the second ends the first is read
+from its title and its prose, by a person.
+
+Two halves, as before. The publisher's: **an end is a message that says what
+it ends**, and CAP already has the form, a `Cancel` whose `references` carries
+the identifier of the `Alert` (section 10.1), after which the index of section
+10.2 drops the alert. A validity field the publisher does not use to end
+things is worse than no field, because it looks like the answer: a consumer
+that takes `valid_to` as the end of the threat shows the voivodeships of that
+alert as under threat from 07:36 to 23:59, and this project's own composition
+does exactly that as released (F169).
+
+The consumer's: with no reference to follow, it has to pair an end with an
+alert by what it can read, the voivodeships each names and the order they
+arrived in, and a pairing rule written from one pair is a rule about one pair
+until a week of recorded rows says otherwise. That is why the record keeps
+every communique this project reads, not only the ones it classifies.
+
 
 ## 5. The objection, and the answer
 
@@ -933,6 +978,15 @@ policy that property eight contradicts two sections earlier. A document that
 asks a publisher to say what its fields do not distinguish has to hold itself
 to that standard in the part that tells the publisher what to build.
 
+**Edition note, 3.3.** One correction and one new property, with what follows
+from it. Section 10.3 said five of its rows say *nothing*; eight do, and the
+count is corrected. Property twenty is new, from a pair of communiques read on
+2026-09-16, and it answers half of one of section 2's open questions, for the
+XML pages only; sections 10.3, 11 and 16 name it where they rest on it,
+property fifteen gains what classifying by words costs, and section 15 records
+the retention this project's producer is built to keep. The property rests on
+one pair and says so, which is the standard section 4a set itself at 1.9.
+
 ## 9. Sources
 
 - RSO integration documentation, <https://komunikaty.tvp.pl/Info/Integration>,
@@ -945,6 +999,8 @@ to that standard in the part that tells the publisher what to build.
   digital transmission. Its published wording has not been read against that
   citation, and the sentence stands as `[unverified]` until it has.
 - [`docs/CHANNEL.md`](CHANNEL.md), for every measurement in section 1.
+- The RSO stream's `ogolne` list, read on 2026-09-16 on this project's site
+  host. Cited for property twenty and section 2.
 
 ---
 
@@ -1120,8 +1176,9 @@ into calm.
 | Seventeen: partial answers say so | nothing | section 15, on the protocol |
 | Eighteen: a changed meaning is a new name | nothing | section 15 |
 | Nineteen: a severity with its own stamp | `severity`; no stamp | `severity_at` in the index, `sent` on the `Update` |
+| Twenty: an end says what it ends | `Cancel`, `references` | `references` always filled on a `Cancel`; section 11 |
 
-Five rows say *nothing*. That is not a defect in CAP. CAP describes a
+Eight rows say *nothing*. That is not a defect in CAP. CAP describes a
 message; this document describes a stream, and section 4 says why the two
 need different guarantees. The additions are one document and a handful of
 rules about filling elements CAP already has.
@@ -1174,7 +1231,9 @@ changes.
 the identifier leaves `active`. Both happen; neither alone is enough. The
 `Cancel` is the end event a consumer stores and shows ("the alert ended at
 12:04"); the index is how a consumer that missed the `Cancel` still learns
-the alert is over. Property three, both directions.
+the alert is over. Property three, both directions. The Polish end this
+project read on 2026-09-16 was a message, which is half of this, and named
+no alert, which is the other half missing: property twenty.
 
 **Lapsed.** `expires` has passed and no `Cancel` came. The publisher removes
 the identifier from `active` and says so in the next index, in a field a
@@ -1373,6 +1432,10 @@ across a whole country, so that the week that mattered most could not be
 read back. A number in the profile - ninety days, a year, forever - is worth
 more than the best intentions, because a consumer can plan around a number
 and cannot plan around an intention.
+This project's producer is built to keep its own: every list an address
+served, written when the list changes, beside the rows it names. It is the
+consumer building the retention the stream does not state, as property nine
+has it build the heartbeat the stream does not carry.
 
 **Change by adding.** A new element is added; nothing is removed and nothing
 changes meaning. A consumer that reads only the elements it knows keeps
@@ -1425,7 +1488,7 @@ profile in section 10.1.
 5. An alert begins with `msgType` `Alert` and a fresh `identifier`. Section
    11.
 6. An alert ends with `msgType` `Cancel` referencing the `Alert`, and leaves
-   `active` in the next index. Property three.
+   `active` in the next index. Property three, property twenty.
 7. An alert that lapses on `expires` without a `Cancel` is marked as lapsed
    in the index, not silently dropped. Section 11.
 8. A change to an alert is an `Update` referencing the `Alert`, with its own

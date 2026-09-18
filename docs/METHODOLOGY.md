@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.62
+Document:  docs/METHODOLOGY.md, version 2.63
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,82 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F171, 0.55.0.1. Two decision numbers cited for a rule neither decision
+holds, and a module named that never existed
+
+`mavo/sources/rso.py` cited D-033 for where RSO renders and D-034 for keeping
+every category, and `docs/reviews/0.38.0.0.md` already cites D-034 for the
+second. Neither rule was entered under either number: the log issued D-033 to
+delivery pacing and D-034 to the polled flag by 0.39.1.0, and T68, the other
+half of the first citation, left the backlog at 0.38.0.0 as the operator's
+decision. The citation spread by copying, to the comment over the
+`communiques` table in `mavo/store.py` and, at 0.55.0.0, to
+`mavo/sources/pansa.py`, `docs/DEPLOYMENT.md` and that release's changelog
+entry. The same sentence in `pansa.py` sent its reader to mavo/polish.py for
+the drawing rules, a module that has never existed
+`[measured, a search over the uploaded 0.55.0.0 tree]`.
+
+**Why nothing failed.** `check_cited_identifiers_exist` resolves that a cited
+identifier exists, and D-033 and D-034 do. What the sentence claims the
+decision says is a reading, and no check reads. A control covers a shape and
+not a subject.
+
+**Repair.** Each citation points at where the rule is written:
+`mavo/sources/rso.py` itself, and `docs/MANUAL.md` (*Nothing is filtered by
+category*). The rule has no entry in `docs/DECISIONS.md` and this release does
+not issue one. The rendering paragraph of `rso.py`, which argued for a text
+block below the map, now says what `mavo/poland.py` does.
+
+**Reopen condition:** a decision number cited for a rule its heading does not
+name. Unenforced, and stated here as the limit of the resolver.
+
+### F170, 0.55.0.1. The host table named 0.54.2.0 through seven releases, and
+the host had moved to 0.54.8.0 the same morning
+
+`docs/DEPLOYMENT.md` recorded the 0.54.2.0 install of 2026-09-10 08:02 UTC,
+and every release from 0.54.3.0 to 0.55.0.0 counted its `Behind by` row from
+it. The host has run 0.54.8.0 since the same morning: `mavo --version` prints
+`mavo 0.54.8.0`, and the installed package's RECORD file was last written
+2026-09-10 09:53:44 UTC `[measured 2026-09-18, the operator's terminal]`. The
+seven was correct arithmetic over a stale input.
+`check_the_host_release_distance_is_counted` counts from the `Installed` row
+and cannot know whether the row was read, and the freshness line passed
+because both installs fell on the date it carries.
+
+**Repair.** The row re-read and rewritten, and the distance recounted from it.
+Nothing new is enforced: the gate cannot reach the host.
+
+**Reopen condition:** an install the row does not record. The row is written
+when the host is read, whatever release is being cut.
+
+### F169, 0.55.0.1. An RCB all-clear is a communique of its own, and the
+composition ends a communique only at `valid_to`
+
+On 2026-09-16 the `ogolne` list carried identifier 23337896, *Alert RCB*,
+valid from 07:05, and identifier 23337898, *ALERT RCB- ODWOŁANIE ZAGROŻENIA*,
+valid from 07:36: the all-clear. Both carried `valid_to` 23:59 the same day,
+and the all-clear names no alert
+`[measured: one pair, the operator's terminal on the site host, after v0.55.0.0 was tagged]`.
+`is_expired` in `mavo/poland.py` ends a communique only at `valid_to`, and
+`air_term` reads the all-clear as a communique about the air, because its body
+says *atak powietrzny*. So `warnings_rows` keeps every voivodeship either
+communique names under threat until 23:59
+`[measured, 0.55.0.1 session: the pair's titles and bodies run through the 0.55.0.0 functions, with stand-in voivodeships]`.
+
+**Class.** An end read from the field named for it, from a publisher that does
+not use the field to end things: the shape assumed rather than read. FEED-SPEC
+property twenty is the publisher's half of it.
+
+**Open, and not repaired in this release**, which changes no code path. The
+repair tells a threat from an all-clear and pairs each all-clear with the
+threats it ends, by voivodeship and order; it rests on one pair until a week
+of recorded rows says otherwise. **0.55.0.0 is not to be installed alone**
+(`docs/DEPLOYMENT.md`).
+
+**Closes when** `pl_warnings` stops carrying a voivodeship an all-clear has
+named since its threat, tested against the recorded bytes of this pair rather
+than against stand-ins.
 
 ### F168, 0.55.0.0. Five of seven commands that open the store created tables in silence, and the install plan's discriminator rested on the two that did not
 

@@ -16,8 +16,8 @@ So this module does read RCB, some of the time, and cannot tell when. The
 payload carries voivodeship scope and no issuer field `[n=1 fixture]`, so a
 communique written by the Government Centre for Security and one written by a
 voivodeship crisis centre arrive indistinguishable. That is a property of the
-feed, it is the next entry FEED-SPEC needs, and it is not something a parser
-can repair.
+feed, FEED-SPEC records it as property fifteen, and it is not something a
+parser can repair.
 
 **What this is for.** The project has no labelled outcome variable. Every
 question it asks about western episodes -- was that night different, does a
@@ -25,24 +25,26 @@ raid near the border mean anything on this side of it -- has no right-hand
 side to be measured against. A state-issued communique with a date, a scope
 and an issuer is exactly that missing column.
 
-**What it must never become.** A live warning layer on the map. A reader who
-sees Polish warnings drawn beside Ukrainian ones will read an absent warning
-as no warning, and this instrument is structurally later than the SMS that
-arrives on the same reader's phone automatically and by statute. Such a layer
-would add a way to be misled by absence and subtract nothing.
+**Where this renders is decided elsewhere, and was decided the other way
+first.** This module was written arguing against any layer on the map: a
+reader who sees Polish warnings drawn beside Ukrainian ones may read an absent
+warning as no warning, and this instrument is structurally later than the SMS
+that arrives on the same reader's phone automatically and by statute. The
+operator decided otherwise - T68 left the backlog at 0.38.0.0 as the
+operator's decision - and the site paints the voivodeships a communique about
+the air names. Since D-053 which communique paints is decided in
+`mavo/poland.py`, from the store, and this module decides nothing about what
+is shown. Until 0.55.0.1 this paragraph cited D-033 for the rendering rule, a
+number the decision log issued to a different decision (F171).
 
-**Where this renders, decided** (D-033, T68). In text, in a block below the
-map, never as a layer on it, and always beneath a sentence saying this is not
-a warning channel. **Under the name of the feed it was read from and never
-under `RCB`.** The two are different institutions publishing different things,
-this module reads only one of them, and a page that says otherwise asserts a
-source it does not have.
-
-**Nothing is filtered by category** (D-034). An allowlist of recognised
-categories would drop a communique of a category nobody anticipated, which is
-this project's founding failure reached by a different route: the reader is
-told about a quiet country because our own vocabulary was short. Classification
-orders what is shown; it never decides what exists.
+**Nothing is filtered by category.** An allowlist of recognised categories
+would drop a communique of a category nobody anticipated, which is this
+project's founding failure reached by a different route: the reader is told
+about a quiet country because our own vocabulary was short. Classification
+orders what is shown; it never decides what exists, and `mavo rso` walks all
+five categories for that reason. The rule has no entry in
+`docs/DECISIONS.md`; the D-034 this paragraph cited until 0.55.0.1 is a
+different decision (F171).
 
 **What the feed does that this project is built to refuse.** Elements arrive
 present and empty rather than absent: `<latitude></latitude>` is a field that

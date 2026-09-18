@@ -1242,7 +1242,7 @@ def render_text(report: Report) -> str:
 
 
 def to_contract(report: Report) -> dict[str, object]:
-    """The `state.json` payload, schema v1.
+    """The `state.json` payload, at the version `SCHEMA_VERSION` names.
 
     Written here rather than reconstructed by a consumer. The site's adapter
     was reading MAVO's domain objects and guessing at attribute names, which

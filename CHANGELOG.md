@@ -16,6 +16,36 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.0.1 - 2026-09-18
+
+**Documents brought level with the tree, and three defects recorded, one of
+them in code that ships.** No code path changes; the edits under `mavo/` are
+docstrings and one schema comment.
+
+- **F169, open.** An RCB all-clear is a communique of its own that names no
+  alert, and on the pair read 2026-09-16 both it and the alert carried
+  `valid_to` 23:59. `mavo/poland.py` ends a communique only at `valid_to` and
+  reads the all-clear as a communique about the air, so 0.55.0.0 keeps the
+  voivodeships an all-clear names under threat until then. Not repaired here;
+  `docs/DEPLOYMENT.md` holds the 0.55.0.0 install until a release does.
+- **F170.** `docs/DEPLOYMENT.md` named 0.54.2.0 as installed for seven
+  releases; the host has run 0.54.8.0 since 2026-09-10 09:53 UTC, read
+  2026-09-18.
+- **F171.** D-033 and D-034 were cited for the RSO rendering surface and for
+  keeping every category, and the log issued both numbers to other decisions;
+  `mavo/sources/pansa.py` also named a module that has never existed.
+  Repointed to where the rule is written, which is not the decision log.
+- **FEED-SPEC 3.3**, both editions. Property twenty, from the pair above; half
+  of one of section 2's open questions answered, for the XML pages; property
+  fifteen gains the cost of classifying by words; section 10.3 said five of
+  its rows say nothing, and eight do.
+- **MECHANISMS 2.4** gains four mechanisms that 0.53.0.0 to 0.55.0.0 shipped
+  without an entry: a pipe's state from its attempts, a list per address when
+  it changes, four states per Polish key, and classification by words.
+- **README.** The layout lists the modules, commands, gate tools and documents
+  the tree has, and the source table names RSO and the airspace plan where it
+  said no Polish feed had been found. `report.to_contract` said schema v1. Both briefs carry the new defect count.
+
 ## 0.55.0.0 - 2026-09-16
 
 **The Polish channels move here from the consumer, and so does the decision

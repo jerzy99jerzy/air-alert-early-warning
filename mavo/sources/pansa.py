@@ -21,9 +21,11 @@ against the live body: 382,154 bytes, `reservationStatus` PLANNED and
 ACTIVATED on UUP and PLANNED alone on AUP, every stamp carrying `Z`
 `[reported: the consumer's module, not re-measured from this host]`. The rules for what the map
 draws are not in this module. They are a presentation decision (D-S82) over
-what was read, and they live in `mavo/polish.py` so that this file records
-everything the plan said and decides nothing about it, which is D-034 applied
-to a second Polish feed.
+what was read, and they live in `mavo/poland.py` so that this file records
+what the plan said and decides nothing about it, which is the rule
+`mavo/sources/rso.py` states for the first Polish feed. Until 0.55.0.1 this
+sentence named a module, polish.py, that has never existed, and cited the
+rule as D-034, a different decision (F171).
 
 **What is deliberately not kept.** `popupHtml` is the agency's own interface
 fragment and is never parsed or stored. `altitudeUnit` is a constant `FL`
