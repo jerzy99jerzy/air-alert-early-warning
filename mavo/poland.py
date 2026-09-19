@@ -110,6 +110,19 @@ NOT_A_THREAT_TERMS: tuple[str, ...] = (
     "py\u0142u zawieszon",
 )
 
+#: A communique that ends an air alert rather than raising one (D-055). RCB
+#: does not end an alert by `valid_to`: on 2026-09-16 "Alert RCB" (07:05) and
+#: "ALERT RCB- ODWOŁANIE ZAGROŻENIA" (07:36) both carried `valid_to` 23:59
+#: `[measured on vm-site, one pair]`, and both match `powietrzn`, so a reader
+#: of the air terms alone paints the voivodeships until midnight, sixteen hours
+#: after the all-clear. The title term or a body term qualifies; the body term
+#: is the publisher's own sentence from that pair. `brak zagrożenia` is not a
+#: term on purpose: it will appear one day inside a notice that *raises* an
+#: alert ("na razie brak zagrożenia dla ..."), and reading it as an all-clear
+#: would end an alert on the strength of a reassurance.
+ALL_CLEAR_TITLE_TERMS: tuple[str, ...] = ("odwołan",)
+ALL_CLEAR_BODY_TERMS: tuple[str, ...] = ("zakończył się atak", "zakończono")
+
 #: Switched on, in the plan's own vocabulary (consumer D-S82, decision A).
 STATUS_ON = "ACTIVATED"
 
@@ -154,13 +167,18 @@ FAILED_BLOCK = Block(published=True, value=None)
 
 @dataclass(frozen=True, slots=True)
 class PolandBlocks:
-    """Both Polish keys for one composed picture."""
+    """The Polish keys for one composed picture.
+
+    `warnings` and `all_clear` come from one feed and one reading, so they are
+    published together or not at all (D-055); `airspace` is its own feed.
+    """
 
     warnings: Block = UNPUBLISHED
+    all_clear: Block = UNPUBLISHED
     airspace: Block = UNPUBLISHED
 
 
-FAILED = PolandBlocks(warnings=FAILED_BLOCK, airspace=FAILED_BLOCK)
+FAILED = PolandBlocks(warnings=FAILED_BLOCK, all_clear=FAILED_BLOCK, airspace=FAILED_BLOCK)
 
 
 def _parse_stored(stamp: str) -> datetime:
@@ -187,6 +205,30 @@ def air_term(title: str | None, text: str | None) -> str | None:
         if term in haystack:
             return term
     return None
+
+
+def classify(title: str | None, text: str | None) -> tuple[str, str] | None:
+    """`("threat", term)`, `("all_clear", term)`, or None when not about the air.
+
+    Exclusions win over everything, as in `air_term`. An all-clear is an air
+    communique first: it must match an air term *and* an all-clear term, so
+    "Odwołanie ostrzeżenia hydrologicznego" is not an all-clear that could end
+    an air alert on the same voivodeship. The all-clear's `term` is the
+    all-clear term, so the contract says why the row is a clearance and not a
+    threat.
+    """
+    term = air_term(title, text)
+    if term is None:
+        return None
+    lowered_title = (title or "").lower()
+    lowered_text = (text or "").lower()
+    for word in ALL_CLEAR_TITLE_TERMS:
+        if word in lowered_title:
+            return "all_clear", word
+    for word in ALL_CLEAR_BODY_TERMS:
+        if word in lowered_text:
+            return "all_clear", word
+    return "threat", term
 
 
 def is_expired(valid_to: str | None, as_of: datetime) -> bool:
@@ -223,20 +265,50 @@ def feed_stamp_as_iso(value: str | None) -> str | None:
 
 
 def _body(fields: dict[str, Any]) -> str | None:
-    return " ".join(
-        part for part in (fields.get("shortcut"), fields.get("content")) if part
-    ) or None
+    """`shortcut` and `content` as one text, with every sentence in it once.
+
+    The feed writes the lead into the content as well: 4 of the 40 records in
+    the `ogolne` body recorded 2026-09-16 open the content with it, the pair
+    among them, and a fifth, a hydrological notice, carries it after two lines
+    of header `[measured, tests/fixtures/rso_ogolne_2026-09-16.xml]`. Joining
+    both fields printed the lead twice on the card (F172). A lead the content
+    already carries, anywhere in it, is dropped, so what the reader gets is the
+    content whole; whitespace is compared folded, because the two fields need
+    not wrap alike.
+    """
+    lead = (fields.get("shortcut") or "").strip()
+    content = (fields.get("content") or "").strip()
+    if lead and _folded(lead) in _folded(content):
+        return content
+    return " ".join(part for part in (lead, content) if part) or None
 
 
-def _names(row: dict[str, Any]) -> tuple[str, ...]:
-    """Voivodeship names as the consumer folds them: the element text, lowercased."""
-    names: list[str] = []
+def _folded(text: str) -> str:
+    return " ".join(text.split())
+
+
+def _names(row: dict[str, Any]) -> tuple[tuple[str, str], ...]:
+    """Voivodeships as `(slug, name)`, in the row's order, deduplicated by slug.
+
+    Two fields because they answer two questions (D-055). The slug is the key:
+    it pairs an all-clear with the threats it ends, and it is what a consumer
+    joins geometry on; all 40 provinces of the page recorded on 2026-09-16
+    carry one `[measured, n=40]`, and this parser keeps no province without
+    one. The name is what a reader is shown: the element text, lowercased as
+    0.55.0.0 composed it, or the slug where the element is empty. In that page
+    they differ for four of the eleven voivodeships named (`śląskie` against
+    `slaskie`) `[measured 2026-09-19]`, so neither can stand in for the other.
+    """
+    names: list[tuple[str, str]] = []
     for entry in row["provinces"]:
-        slug, name = entry[0], entry[1]
-        folded = str(name or slug).lower()
-        if folded not in names:
-            names.append(folded)
+        slug = str(entry[0])
+        if slug not in _slugs_of(names):
+            names.append((slug, str(entry[1] or slug).lower()))
     return tuple(names)
+
+
+def _slugs_of(names: list[tuple[str, str]] | tuple[tuple[str, str], ...]) -> tuple[str, ...]:
+    return tuple(slug for slug, _name in names)
 
 
 def _communique_item(row: dict[str, Any], term: str) -> dict[str, Any]:
@@ -251,57 +323,128 @@ def _communique_item(row: dict[str, Any], term: str) -> dict[str, Any]:
     }
 
 
-def warnings_rows(rows: list[dict[str, Any]], as_of: datetime) -> list[dict[str, Any]]:
-    """The `pl_warnings` list from communique rows in feed order.
+def _issued_at(row: dict[str, Any]) -> datetime | None:
+    """When the publisher issued a communique, or None when that cannot be read.
 
-    Expired rows and rows not about the air are dropped; voivodeships are
-    deduplicated and ordered by first appearance, and each carries the rows
-    that named it, in feed order.
+    `valid_from` is the publisher's own stamp; the ingest time is ours and lags
+    by up to a poll. An unreadable stamp - absent, malformed, inside the
+    doubled autumn hour - is None, and None takes the side that keeps a
+    warning on the map: a threat with no stamp is never ended, an all-clear
+    with no stamp ends nothing.
     """
-    active: list[tuple[dict[str, Any], str]] = []
+    try:
+        return rso.to_utc(row["fields"].get("valid_from") or "", ZONE)
+    except SourceUnavailable:
+        return None
+
+
+def _rows_by_voivodeship(
+    entries: list[tuple[str, str, dict[str, Any]]]
+) -> list[dict[str, Any]]:
+    """Group `(slug, name, item)` into the contract's row shape, feed order kept.
+
+    Rows are keyed by slug; `voivodeship` is the name as the first communique
+    naming that slug wrote it.
+    """
+    order: list[tuple[str, str]] = []
+    for slug, name, _item in entries:
+        if slug not in _slugs_of(order):
+            order.append((slug, name))
+    return [
+        {"voivodeship": name, "slug": slug,
+         "communiques": [item for s, _name, item in entries if s == slug]}
+        for slug, name in order
+    ]
+
+
+def warnings_rows(
+    rows: list[dict[str, Any]], as_of: datetime
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """`pl_warnings` and `pl_all_clear` from communique rows in feed order (D-055).
+
+    A threat is painted on a voivodeship until an all-clear naming that
+    voivodeship is issued after it, or until its `valid_to`, whichever comes
+    first. The pairing is per voivodeship: an all-clear for two of a threat's
+    three voivodeships ends the threat on those two and leaves the third
+    painted, because that is what the publisher said. A threat issued after an
+    all-clear is a new threat and stays. An all-clear ends nothing before its
+    own issue time, and one that ends nothing is still published, because the
+    reader should see the clearance the publisher sent even when this store
+    never held what it cleared.
+    """
+    threats: list[tuple[dict[str, Any], str]] = []
+    clears: list[tuple[dict[str, Any], str]] = []
     for row in rows:
         fields = row["fields"]
         if is_expired(fields.get("valid_to"), as_of):
             continue
-        term = air_term(fields.get("title"), _body(fields))
-        if term is not None:
-            active.append((row, term))
-    order: list[str] = []
-    for row, _term in active:
-        for name in _names(row):
-            if name not in order:
-                order.append(name)
-    return [
-        {
-            "voivodeship": name,
-            "communiques": [
-                _communique_item(row, term) for row, term in active if name in _names(row)
-            ],
-        }
-        for name in order
-    ]
+        verdict = classify(fields.get("title"), _body(fields))
+        if verdict is None:
+            continue
+        kind, term = verdict
+        (clears if kind == "all_clear" else threats).append((row, term))
+
+    def ended_by(threat: dict[str, Any], slug: str) -> list[str]:
+        issued = _issued_at(threat)
+        if issued is None:
+            return []
+        return [
+            clear["source_id"] for clear, _t in clears
+            if slug in _slugs_of(_names(clear))
+            and (at := _issued_at(clear)) is not None and at > issued
+        ]
+
+    painted: list[tuple[str, str, dict[str, Any]]] = []
+    ended: dict[tuple[str, str], list[str]] = {}
+    for row, term in threats:
+        for slug, name in _names(row):
+            by = ended_by(row, slug)
+            if by:
+                for clear_id in by:
+                    ended.setdefault((clear_id, slug), []).append(str(row["source_id"]))
+            else:
+                painted.append((slug, name, _communique_item(row, term)))
+    cleared: list[tuple[str, str, dict[str, Any]]] = []
+    for row, term in clears:
+        for slug, name in _names(row):
+            item = _communique_item(row, term)
+            item["ended"] = ended.get((str(row["source_id"]), slug), [])
+            cleared.append((slug, name, item))
+    return _rows_by_voivodeship(painted), _rows_by_voivodeship(cleared)
 
 
-def warnings_block(store: EventStore, as_of: datetime) -> Block:
-    """`pl_warnings` for one moment, or the reason it is absent or null."""
+def warnings_blocks(store: EventStore, as_of: datetime) -> tuple[Block, Block]:
+    """`pl_warnings` and `pl_all_clear` for one moment, or why they are absent or null.
+
+    One reading, two keys, one verdict: whatever makes the first key `null`
+    makes the second `null` too, so a consumer never sees a clearance beside a
+    warning list it cannot read.
+    """
     if store.newest_attempt_at(rso.FEED) is None:
-        return UNPUBLISHED
+        return UNPUBLISHED, UNPUBLISHED
+    null = Block(published=True, value=None)
     read = store.newest_read(rso.FEED, WARNINGS_URL)
     if read is None:
-        return Block(published=True, value=None)
+        return null, null
     age = (as_of - _parse_stored(str(read["started_at"]))).total_seconds()
     if age > WARNINGS_VALID_FOR_S:
-        return Block(published=True, value=None)
+        return null, null
     snapshot = store.newest_snapshot(rso.FEED, WARNINGS_URL)
     if snapshot is None:
-        return Block(published=True, value=None)
+        return null, null
     members = [str(member) for member in snapshot["members"]]
     held = store.communiques_by_digest(members)
     if any(member not in held for member in members):
         # A list naming a row nobody wrote is a store this cycle cannot read,
         # and a partial list would render as a complete one.
-        return Block(published=True, value=None)
-    return Block(published=True, value=warnings_rows([held[m] for m in members], as_of))
+        return null, null
+    warnings, cleared = warnings_rows([held[m] for m in members], as_of)
+    return Block(published=True, value=warnings), Block(published=True, value=cleared)
+
+
+def warnings_block(store: EventStore, as_of: datetime) -> Block:
+    """`pl_warnings` alone; kept for callers that read one key."""
+    return warnings_blocks(store, as_of)[0]
 
 
 # ---- airspace
@@ -468,7 +611,9 @@ def airspace_block(store: EventStore, as_of: datetime) -> Block:
 
 def measure(store: EventStore, as_of: datetime) -> PolandBlocks:
     """Both Polish keys for one moment, from the store and nothing else."""
+    warnings, cleared = warnings_blocks(store, as_of)
     return PolandBlocks(
-        warnings=warnings_block(store, as_of),
+        warnings=warnings,
+        all_clear=cleared,
         airspace=airspace_block(store, as_of),
     )

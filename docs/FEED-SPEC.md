@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 3.3 / 2026-09-18
+Version: 3.4 / 2026-09-19
 A specification, written from the position of someone who tried to build against
 one, found nothing at first, and then found part of one behind a token. The
 Ukrainian equivalent was consumed and measured over a corpus
@@ -849,7 +849,8 @@ the identifier of the `Alert` (section 10.1), after which the index of section
 things is worse than no field, because it looks like the answer: a consumer
 that takes `valid_to` as the end of the threat shows the voivodeships of that
 alert as under threat from 07:36 to 23:59, and this project's own composition
-does exactly that as released (F169).
+did exactly that at 0.55.0.0, which was never installed, until 0.55.1.0 paired
+the two (F169, D-055).
 
 The consumer's: with no reference to follow, it has to pair an end with an
 alert by what it can read, the voivodeships each names and the order they
@@ -986,6 +987,11 @@ XML pages only; sections 10.3, 11 and 16 name it where they rest on it,
 property fifteen gains what classifying by words costs, and section 15 records
 the retention this project's producer is built to keep. The property rests on
 one pair and says so, which is the standard section 4a set itself at 1.9.
+
+**Edition note, 3.4.** One sentence of property twenty changes tense: this
+project's composition took `valid_to` as the end at 0.55.0.0 and pairs an
+all-clear with its alert from 0.55.1.0 (D-055). The pair the property rests on
+is now held as recorded bytes, and it names one voivodeship.
 
 ## 9. Sources
 

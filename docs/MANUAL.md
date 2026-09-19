@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.12
+Document:  docs/MANUAL.md, version 3.13
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -560,19 +560,15 @@ the two collectors did, and a store opened first by this command after an
 install was migrated in silence.
 
 **Under `--watch` the loop also composes the Polish keys** (D-053):
-`pl_warnings` from what `mavo rso` recorded and `pl_airspace` from what
-`mavo airspace` recorded, both read from the same store on the same cycle. A key
+`pl_warnings` and `pl_all_clear` from what `mavo rso` recorded and
+`pl_airspace` from what `mavo airspace` recorded, all read from the same store
+on the same cycle. An all-clear ends the threats it names (D-055). A key
 is absent until its feed has been polled at least once, so a consumer that
 still reads the feed itself keeps doing so; `null` means polled and cannot say;
 a list or object means read. A failure composing them prints
-`[POLAND-FAILED] <reason>` on stderr and publishes both keys `null`, and the
+`[POLAND-FAILED] <reason>` on stderr and publishes every Polish key `null`, and the
 Ukrainian picture is published regardless. The one-shot path composes neither,
 as it composes no `sources` block.
-
-**An all-clear paints at this release** (F169). An RCB all-clear matches the
-same air terms as a threat and nothing here tells the two apart, so it keeps
-the voivodeships it names in `pl_warnings` until their `valid_to`, which on
-the one pair measured was the end of the day.
 
 **`--valid-for` is an assumption, not a measurement.** The default of 600
 seconds is five times the two-minute polling requirement derived from the page

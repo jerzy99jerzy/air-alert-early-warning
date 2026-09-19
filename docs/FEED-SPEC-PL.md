@@ -1,6 +1,6 @@
 # Czym musiałby być polski feed alarmowy czytelny maszynowo
 
-Version: 3.3 / 2026-09-18
+Version: 3.4 / 2026-09-19
 Specyfikacja napisana z pozycji kogoś, kto próbował budować na takim feedzie,
 najpierw nie znalazł niczego, a potem znalazł jego część za tokenem.
 Ukraiński odpowiednik był czytany i mierzony na korpusie
@@ -867,8 +867,8 @@ identyfikator `Alert` (sekcja 10.1), po którym indeks z sekcji 10.2 usuwa
 alarm. Pole ważności, którego wydawca nie używa do kończenia, jest gorsze niż
 brak pola, bo wygląda jak odpowiedź: konsument, który bierze `valid_to` za
 koniec zagrożenia, pokazuje województwa tego alarmu jako zagrożone od 07:36 do
-23:59, a własna kompozycja tego projektu robi dokładnie to w wydanej wersji
-(F169).
+23:59, a własna kompozycja tego projektu robiła dokładnie to w 0.55.0.0,
+nigdy niezainstalowanej, dopóki 0.55.1.0 nie sparowała obu (F169, D-055).
 
 Konsumenta: bez odwołania, za którym można pójść, musi parować koniec z
 alarmem po tym, co da się przeczytać, po województwach, które każdy z nich
@@ -1012,6 +1012,11 @@ stoją, właściwość piętnasta zyskuje to, ile kosztuje klasyfikowanie po
 słowach, a sekcja 15 zapisuje retencję, którą producent tego projektu jest
 zbudowany prowadzić. Właściwość stoi na jednej parze i mówi to, a to jest
 standard, który sekcja 4a postawiła sobie w 1.9.
+
+**Uwaga do wydania 3.4.** Jedno zdanie właściwości dwudziestej zmienia czas:
+kompozycja tego projektu brała `valid_to` za koniec w 0.55.0.0, a od 0.55.1.0
+paruje odwołanie z jego alarmem (D-055). Para, na której stoi ta właściwość,
+jest teraz trzymana jako nagrane bajty i nazywa jedno województwo.
 
 ## 9. Źródła
 

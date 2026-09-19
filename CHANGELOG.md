@@ -16,6 +16,38 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.1.0 - 2026-09-19
+
+**An all-clear ends the alert it names (D-055), and F169 closes on the recorded
+bytes of the pair.** On 2026-09-16 "Alert RCB" at 07:05 and its "ALERT RCB-
+ODWOŁANIE ZAGROŻENIA" at 07:36 both ran to 23:59 and both matched `powietrzn`,
+so the consumer painted the voivodeship as under alert until midnight, about
+sixteen hours after the publisher had cleared it, and 0.55.0.0, which ported
+the rule, would have done the same. 0.55.x stays held (F173, F174).
+
+- **F169, closed.** `classify` tells a threat from an all-clear, and an
+  all-clear ends every earlier threat on each voivodeship it names, on those
+  only. `pl_warnings` carries what still stands, so a consumer that paints
+  every row paints the right colour with no release of its own; `pl_all_clear`,
+  new, carries each clearance with the ids it ended. Tested on the unpaged
+  `ogolne` body the operator recorded that day, now
+  `tests/fixtures/rso_ogolne_2026-09-16.xml` with its digest pinned: from 07:36
+  to 23:59 nothing is painted and `lubelskie` is cleared. The pair names one
+  voivodeship, so the rule for clearing part of an area rests on no recorded
+  row; T86 owes the week's reading.
+- **F172.** The feed writes the lead into the content: 4 of the 40 recorded
+  records open the content with it and a fifth carries it after a header, and
+  0.55.0.0 printed each of those leads twice. A lead the content already
+  carries is dropped.
+- **Every row names its voivodeship twice.** `slug`, new, is the publisher's
+  slug and the key the pairing uses; `voivodeship` stays the name a reader is
+  shown, because in the recorded body four of the eleven names differ from
+  their slugs (`śląskie`, `slaskie`).
+- **F173 and F174, open**, from the review of 0.55.0.1: a well-formed document
+  that is not the feed's list is published as a calm list, and an airspace
+  body the writer cannot encode stops `state.json` for the Ukrainian picture as
+  well. They hold the install in place of F169 (`docs/DEPLOYMENT.md`).
+
 ## 0.55.0.1 - 2026-09-18
 
 **Documents brought level with the tree, and three defects recorded, one of

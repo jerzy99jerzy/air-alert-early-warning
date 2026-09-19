@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.63
+Document:  docs/METHODOLOGY.md, version 2.64
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4801,6 +4801,77 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
 
+### F174, 0.55.1.0. A context feed can stop the primary publication
+
+**Open, and the reason no release from 0.55.0.0 on is installed.** Found by
+the review of `v0.54.8.0...v0.55.0.1` (R2) `[measured in the review
+container]`: a 4.7 kB
+UUP body whose one in-force TSA nests `coordinates` 2,000 deep was stored by
+`mavo airspace`, exit 0, and the next `mavo report --watch` cycle raised
+`RecursionError` in `_write_json`, where `indent=1` selects the recursive
+encoder. The call sits in `publish` inside a `try` that catches `OSError`
+only, so no `state.json` was written and the Ukrainian picture stopped with
+the Polish one. The zone stays in the newest snapshot until the plan changes,
+so a restarted unit fails the same way `[inference from the code]`. One `NaN`
+in a coordinate reaches `state.json` as the token `NaN`, which a strict JSON
+reader refuses whole `[measured, same review]`.
+
+**Class.** A promise kept by a guard around one call. D-053 says a failure on
+the Polish side publishes the Polish keys `null` and the Ukrainian picture
+regardless; the guard wraps `measure_poland`, and serialisation happens later,
+outside it.
+
+**Closes when** a Polish value the writer cannot write publishes the Polish
+keys `null` and the Ukrainian picture beside them, and a feature whose
+coordinates are not GeoJSON-deep and finite is counted unreadable where it is
+read, both under test.
+
+### F173, 0.55.1.0. A well-formed document that is not a list is read as an empty list, and an empty list says calm
+
+**Open, and held with F174.** Found by the same review (R1) `[measured in the
+review container]`: an XML error document and a doctype-less HTML maintenance
+page, each given to `mavo rso --stub`, exited 0 with `read=0` and
+`snapshot=changed`, and `poland.warnings_block` returned a published empty
+list. `rso.parse_page` accepts any root and collects `news` beneath it. Before
+0.55.0.0 its output reached no reader; since D-053 it is the map's input, and
+an empty list means *read, nothing to show*: silence rendered as calm, under a
+fresh stamp.
+
+**Class.** Fixtures written against the implementation. The page ported from
+the consumer used the root `<news_list>`, which nothing recorded from the feed
+carries; every recorded page has `<newses>`, the body of 2026-09-16 included
+`[measured, tests/fixtures/rso_ogolne_2026-09-16.xml]`, so no test could tell
+a list from any other document.
+
+**Closes when** a document whose root is not the feed's list is refused as a
+failed read, and a test holds it.
+
+### F172, 0.55.1.0. The lead was printed twice, because the feed writes `<shortcut>` into `<content>`
+
+`_body` in `mavo/poland.py` joined `shortcut` and `content` into the text a
+card shows whole (consumer D-S84). In the `ogolne` body recorded 2026-09-16,
+now `tests/fixtures/rso_ogolne_2026-09-16.xml`, 4 of the 40 records open the
+content with the lead, the air-attack pair among them, and a fifth, the
+hydrological notice 23091688, carries it after two lines of header
+`[measured, the recorded body]`. 0.55.0.0 printed each of those leads twice;
+it was never installed, so no reader saw it from this producer. The same
+review measured the four (R5), and the tree held no record of the habit:
+`shortcut` occurred only in code.
+
+**Class.** A shape assumed rather than read: two fields taken as two texts,
+where the publisher writes one inside the other.
+
+**Repair.** A lead the content carries anywhere is dropped, compared with
+whitespace folded, and the content is published whole. Containment rather
+than a prefix because of the fifth record. That record is not about the air,
+so on the recorded day no payload changes between the two rules
+`[measured: the recorded body through this release]`; the prefix rule would
+leave the shape unguarded for the first air communique written that way.
+Tested on all forty recorded records and on wrapped text.
+
+**Reopen condition:** a published text that repeats a sentence its publisher
+wrote once.
+
 ### F171, 0.55.0.1. Two decision numbers cited for a rule neither decision
 holds, and a module named that never existed
 
@@ -4876,6 +4947,16 @@ of recorded rows says otherwise. **0.55.0.0 is not to be installed alone**
 **Closes when** `pl_warnings` stops carrying a voivodeship an all-clear has
 named since its threat, tested against the recorded bytes of this pair rather
 than against stand-ins.
+
+**Closed at 0.55.1.0** (D-055). On the recorded bytes, now
+`tests/fixtures/rso_ogolne_2026-09-16.xml`, `pl_warnings` carries nothing from
+the all-clear's issue to 23:59, and `pl_all_clear` carries `lubelskie` with
+23337898 ending 23337896 `[measured,
+test_poland.py::test_the_recorded_pair_paints_nothing_the_publisher_cleared]`.
+Of the forty records only the pair is about the air. The pair names one
+voivodeship, `lubelskie`, where the stand-ins had three, so the rule for a
+clearance of part of an alert's area rests on no recorded row; T86 is where it
+meets one.
 
 ### F168, 0.55.0.0. Five of seven commands that open the store created tables in silence, and the install plan's discriminator rested on the two that did not
 

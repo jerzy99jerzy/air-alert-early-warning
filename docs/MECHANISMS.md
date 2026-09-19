@@ -4,7 +4,7 @@ Every mechanism in MAVO: what it is, where it lives, the alternative that was
 rejected, the failure it prevents, and the test that keeps it honest.
 
 ```
-Document:  docs/MECHANISMS.md, version 2.4
+Document:  docs/MECHANISMS.md, version 2.5
 Audience:  a contributor about to change how something works, and anyone asking
            "why is it done this way rather than the obvious way"
 Companion: ARCHITECTURE (what talks to what), DATA-FLOW (what happens to a
@@ -794,15 +794,16 @@ and
 `to_contract` in `mavo/report.py` (D-053).
 
 `pl_warnings` and `pl_airspace` are each one of four things, told apart by the
-key. Absent: this producer has never polled the feed, so a consumer still
+key, and `pl_all_clear` (D-055) shares the verdict of `pl_warnings`, because
+both come from one reading. Absent: this producer has never polled the feed, so a consumer still
 reading it itself keeps its own reading. `null`: polled, and cannot say.
 Empty: read, and nothing to show. Rows: something to show. Per key, so
 switching one timer on hands over one layer. A communique list older than
 `WARNINGS_VALID_FOR_S`, an hour, is `null`, because that payload has no field
 to show its age; the airspace object has no ceiling, because it carries
 `read_at` and `stale_error` and the page prints both. A failure composing
-either publishes both `null` and prints `[POLAND-FAILED]`, and the Ukrainian
-picture is published regardless.
+any of them publishes all three `null` and prints `[POLAND-FAILED]`, and the
+Ukrainian picture is published regardless.
 
 **Rejected alternative: keeping the last good list.** The site did, before the
 move, and a list from yesterday rendered exactly like one from a minute ago,
@@ -812,8 +813,9 @@ including an empty one, which is silence rendered as calm.
 `test_poland.py::test_a_feed_this_producer_never_polled_leaves_the_key_absent`,
 `test_poland.py::test_a_reading_older_than_the_ceiling_is_null_and_not_the_last_list`,
 `test_poland.py::test_an_empty_page_is_an_empty_list_and_not_null`,
-`test_poland.py::test_each_key_is_published_on_its_own` and
-`test_poland.py::test_a_failed_composition_publishes_both_keys_null`.
+`test_poland.py::test_each_key_is_published_on_its_own`,
+`test_poland.py::test_a_failed_composition_publishes_both_keys_null` and
+`test_poland.py::test_the_third_key_travels_with_the_first`.
 
 ---
 
@@ -836,12 +838,26 @@ request address and not in the record, and the four specific ones carry
 weather, water and road notices: a voivodeship painted because a river is high
 would be read, on a map of air alerts, as something it is not.
 
-**Open defect: an all-clear is about the air too** (F169). An RCB all-clear
-matches an air term and nothing here tells it from a threat, so at this
-release it paints the voivodeships it names until their `valid_to`.
+**A threat, or the all-clear that ends it** (`classify`, `warnings_rows`,
+D-055). RCB ends an air alert with a second communique and leaves `valid_to`
+at the end of the day (F169), so a communique about the air is further either
+a threat or an all-clear, and an all-clear must match an air term *and*
+`odwołan` in its title or the publisher's closing sentence in its body. An
+all-clear issued at T and naming a voivodeship ends every threat naming it
+that was issued before T, on that voivodeship only, keyed on the publisher's
+slug. `pl_warnings` carries what still stands and `pl_all_clear` the
+clearances, each with the ids it ended. `valid_to` stays a ceiling. An issue
+stamp that cannot be read keeps a warning: a threat without one is never
+ended, and an all-clear without one ends nothing. The rule rests on one
+recorded pair, which names one voivodeship, and T86 is its reading over a
+week.
 
 **Guarded by:**
 `test_poland.py::test_the_term_list_is_the_one_the_project_reviewed`,
 `test_poland.py::test_the_exclusion_list_is_the_one_the_project_reviewed`,
-`test_poland.py::test_exclusions_beat_inclusions` and
-`test_poland.py::test_a_siren_test_a_heat_warning_and_an_alarm_flag_do_not_paint`.
+`test_poland.py::test_exclusions_beat_inclusions`,
+`test_poland.py::test_a_siren_test_a_heat_warning_and_an_alarm_flag_do_not_paint`,
+`test_poland.py::test_the_recorded_pair_paints_nothing_the_publisher_cleared`,
+`test_poland.py::test_on_the_recorded_day_only_the_pair_is_about_the_air`,
+`test_poland.py::test_a_partial_clearance_ends_the_threat_only_where_it_is_named` and
+`test_poland.py::test_pairing_and_grouping_go_by_slug_not_by_the_text_shown`.

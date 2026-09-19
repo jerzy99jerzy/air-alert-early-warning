@@ -18,6 +18,7 @@ table or column name that drifts fails here and not on the host (F154).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 from contextlib import closing
@@ -174,7 +175,8 @@ def test_the_body_is_read_as_well_as_the_title_and_the_term_is_named() -> None:
 
 def test_the_payload_carries_the_communiques_behind_each_name() -> None:
     """The consumer's 4.76.0.0 expectations, unchanged, plus `air_term`."""
-    rows = poland.warnings_rows(_rows(), RSO_NOW)
+    rows, cleared = poland.warnings_rows(_rows(), RSO_NOW)
+    assert cleared == []
     assert [r["voivodeship"] for r in rows] == ["malopolskie", "podkarpackie"]
     by_name = {r["voivodeship"]: [c["id"] for c in r["communiques"]] for r in rows}
     assert by_name == {"malopolskie": ["1", "3"], "podkarpackie": ["3"]}
@@ -186,7 +188,7 @@ def test_the_payload_carries_the_communiques_behind_each_name() -> None:
 
 
 def test_a_siren_test_a_heat_warning_and_an_alarm_flag_do_not_paint() -> None:
-    names = [r["voivodeship"] for r in poland.warnings_rows(_rows(), RSO_NOW)]
+    names = [r["voivodeship"] for r in poland.warnings_rows(_rows(), RSO_NOW)[0]]
     assert "mazowieckie" not in names    # siren test with "alarm powietrzny" in its body
     assert "pomorskie" not in names      # rso_alarm=1 and not about the air
     assert "lubelskie" not in names      # air quality
@@ -337,7 +339,7 @@ def test_a_fresh_reading_of_the_map_scope_publishes_rows(tmp_path: Path) -> None
     store = EventStore(tmp_path / "events")
     _write_page(store, poland.WARNINGS_URL, RSO_NOW - timedelta(minutes=10))
     block = poland.warnings_block(store, RSO_NOW)
-    assert block.value == poland.warnings_rows(_rows(), RSO_NOW)
+    assert block.value == poland.warnings_rows(_rows(), RSO_NOW)[0]
     assert [r["voivodeship"] for r in block.value] == ["malopolskie", "podkarpackie"]
 
 
@@ -617,3 +619,247 @@ def test_the_publishing_loop_survives_a_store_the_polish_blocks_cannot_read(
     payload = json.loads(state.read_text(encoding="utf-8"))
     assert payload["pl_warnings"] is None and payload["pl_airspace"] is None
     assert "[POLAND-FAILED] disk I/O error" in capsys.readouterr().err
+
+
+# ---- D-055: an all-clear ends the alert it cancels; `valid_to` does not
+
+#: The pair's titles and texts, verbatim from the recorded body below. **The
+#: provinces in `PAIR` are stand-ins**: the recorded pair names one voivodeship,
+#: `lubelskie`, so no recorded row clears part of a threat's area, and the
+#: three used here exist to exercise that rule `[measured: the recorded body]`.
+ALERT = ("UWAGA! Rosyjski atak powietrzny na terenie Ukrainy.",
+         "UWAGA! Rosyjski atak powietrzny na terenie Ukrainy. Sytuacja jest "
+         "monitorowana. W przestrzeni RP operuje polskie lotnictwo. Oczekuj "
+         "dalszych komunikatów.")
+CLEAR = ("UWAGA! Zakończył się atak powietrzny na Ukrainę. Brak zagrożenia na "
+         "terenie Polski.",
+         "UWAGA! Zakończył się atak powietrzny na Ukrainę. Brak zagrożenia na "
+         "terenie Polski.")
+
+
+def _news(id_: str, title: str, shortcut: str, content: str, valid_from: str,
+          slugs: tuple[str, ...], valid_to: str = "2026-09-16 23:59:00") -> str:
+    provinces = "".join(f'<province id="1" slug="{s}" city="">{s.title()}</province>'
+                        for s in slugs)
+    return (f"<news><id>{id_}</id><title>{title}</title><shortcut>{shortcut}</shortcut>"
+            f"<content>{content}</content><valid_from>{valid_from}</valid_from>"
+            f"<valid_to>{valid_to}</valid_to><provinces>{provinces}</provinces></news>")
+
+
+def _page(*items: str) -> bytes:
+    return ('<?xml version="1.0" encoding="UTF-8"?><newses>' + "".join(items)
+            + "</newses>").encode()
+
+
+PAIR = _page(
+    _news("23337898", "ALERT RCB- ODWOŁANIE ZAGROŻENIA", *CLEAR, "2026-09-16 07:36:00",
+          ("lubelskie", "podkarpackie")),
+    _news("23337896", "Alert RCB", *ALERT, "2026-09-16 07:05:00",
+          ("lubelskie", "podkarpackie", "mazowieckie")),
+)
+MIDDAY = datetime(2026, 9, 16, 10, 0, tzinfo=UTC)
+
+
+def test_a_partial_clearance_ends_the_threat_only_where_it_is_named() -> None:
+    """Stand-in provinces: the rule for a clearance of part of an area has no recorded row."""
+    painted, cleared = poland.warnings_rows(_rows(PAIR), MIDDAY)
+    assert [r["voivodeship"] for r in painted] == ["mazowieckie"]
+    assert [c["id"] for c in painted[0]["communiques"]] == ["23337896"]
+    assert [r["voivodeship"] for r in cleared] == ["lubelskie", "podkarpackie"]
+    for row in cleared:
+        (item,) = row["communiques"]
+        assert item["id"] == "23337898" and item["ended"] == ["23337896"]
+        assert item["air_term"] == "odwołan"
+
+
+# ---- F169's closing condition, on the recorded bytes of the pair
+
+#: The unpaged `ogolne` body the operator recorded on 2026-09-16, byte for byte:
+#: 40 records, one province each, the pair 23337896 and 23337898 among them.
+#: The digest is the one read on the operator's disk and on upload
+#: `[measured 2026-09-19, both sides]`; a fixture that has moved is a different
+#: fixture, so this test fails before any other can pass on it.
+RECORDED = FIXTURES / "rso_ogolne_2026-09-16.xml"
+RECORDED_SHA256 = "40421bb37d35e5e0db06f0d3fbca726098563c71edb42280e50fb7b0b3da559c"
+
+
+def _recorded() -> list[dict[str, object]]:
+    return _rows(RECORDED.read_bytes())
+
+
+def test_the_recorded_body_is_the_one_the_operator_holds() -> None:
+    raw = RECORDED.read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == RECORDED_SHA256
+    assert raw.lstrip().startswith(b'<?xml version="1.0" encoding="utf-8"?>\n<newses>')
+    assert len(_recorded()) == 40
+
+
+def test_the_recorded_pair_paints_nothing_the_publisher_cleared() -> None:
+    """F169 closes here: from the all-clear to 23:59 lubelskie is cleared, not painted."""
+    for as_of in (datetime(2026, 9, 16, 5, 40, tzinfo=UTC), MIDDAY,
+                  datetime(2026, 9, 16, 21, 58, tzinfo=UTC)):
+        painted, cleared = poland.warnings_rows(_recorded(), as_of)
+        assert painted == [], as_of
+        (row,) = cleared
+        assert (row["voivodeship"], row["slug"]) == ("lubelskie", "lubelskie")
+        (item,) = row["communiques"]
+        assert (item["id"], item["ended"]) == ("23337898", ["23337896"])
+        assert item["air_term"] == "odwołan"
+        assert item["valid_from"] == "2026-09-16T07:36:00+02:00"
+    assert poland.warnings_rows(_recorded(), datetime(2026, 9, 16, 22, 0, tzinfo=UTC)) == ([], [])
+
+
+def test_zero_five_five_zero_painted_the_cleared_voivodeship() -> None:
+    """The defect, on the recorded bytes: the old rule read both rows as threats."""
+    pair = [r for r in _recorded() if r["source_id"] in {"23337896", "23337898"}]
+    fields = [r["fields"] for r in pair]
+    assert [poland.air_term(f["title"], poland._body(f)) for f in fields] == [
+        "powietrzn", "powietrzn"]
+    assert [f["valid_to"] for f in fields] == ["2026-09-16 23:59:00"] * 2
+
+
+def test_on_the_recorded_day_only_the_pair_is_about_the_air() -> None:
+    """38 civic notices - water, a siren test, rail, hydrology, ozone, smog - stay off."""
+    verdicts = {r["source_id"]: poland.classify(r["fields"]["title"], poland._body(r["fields"]))
+                for r in _recorded()}
+    about_the_air = {k: v for k, v in verdicts.items() if v is not None}
+    assert about_the_air == {"23337896": ("threat", "powietrzn"),
+                             "23337898": ("all_clear", "odwołan")}
+
+
+def test_no_recorded_communique_prints_its_lead_twice() -> None:
+    """F172: five of the forty carry the lead inside the content, one after a header."""
+    whole = 0
+    for row in _recorded():
+        fields = row["fields"]
+        lead, text = poland._folded(fields["shortcut"]), poland._folded(poland._body(fields) or "")
+        assert text.count(lead) == 1, row["source_id"]
+        whole += poland._body(fields) == fields["content"].strip()
+    assert whole == 5
+
+
+def test_the_recorded_body_names_eleven_voivodeships_four_of_them_with_letters() -> None:
+    """Why the row carries two fields (D-055): name and slug differ for four."""
+    names = dict(pair for row in _recorded() for pair in poland._names(row))
+    assert len(names) == 11
+    assert {s: n for s, n in names.items() if s != n} == {
+        "dolnoslaskie": "dolnośląskie", "slaskie": "śląskie",
+        "swietokrzyskie": "świętokrzyskie", "warminsko-mazurskie": "warmińsko-mazurskie"}
+
+
+def test_an_all_clear_is_an_air_communique_first() -> None:
+    assert poland.classify("Odwołanie ostrzeżenia hydrologicznego",
+                           "Zakończono ostrzeżenie. Stan wody opada.") is None
+    assert poland.classify("Alert RCB", "Na razie brak zagrożenia dla Polski. "
+                           "Rosyjski atak powietrzny na Ukrainę.") == ("threat", "powietrzn")
+    assert poland.classify("Test syren", "Odwołanie alarmu powietrznego - ćwiczenia") is None
+
+
+def test_a_threat_issued_after_the_all_clear_is_a_new_threat() -> None:
+    page = _page(
+        _news("3", "Alert RCB", *ALERT, "2026-09-16 09:00:00", ("lubelskie",)),
+        _news("2", "ALERT RCB- ODWOŁANIE ZAGROŻENIA", *CLEAR, "2026-09-16 07:36:00",
+              ("lubelskie",)),
+        _news("1", "Alert RCB", *ALERT, "2026-09-16 07:05:00", ("lubelskie",)),
+    )
+    painted, cleared = poland.warnings_rows(_rows(page), MIDDAY)
+    assert [c["id"] for c in painted[0]["communiques"]] == ["3"]
+    assert cleared[0]["communiques"][0]["ended"] == ["1"]
+
+
+def test_an_unreadable_issue_stamp_keeps_the_warning_and_ends_nothing() -> None:
+    page = _page(
+        _news("2", "ALERT RCB- ODWOŁANIE ZAGROŻENIA", *CLEAR, "not a date", ("lubelskie",)),
+        _news("1", "Alert RCB", *ALERT, "2026-09-16 07:05:00", ("lubelskie",)),
+    )
+    painted, cleared = poland.warnings_rows(_rows(page), MIDDAY)
+    assert [c["id"] for c in painted[0]["communiques"]] == ["1"]
+    assert cleared[0]["communiques"][0]["ended"] == []
+    page = _page(
+        _news("2", "ALERT RCB- ODWOŁANIE ZAGROŻENIA", *CLEAR, "2026-09-16 07:36:00",
+              ("lubelskie",)),
+        _news("1", "Alert RCB", *ALERT, "", ("lubelskie",)),
+    )
+    painted, _cleared = poland.warnings_rows(_rows(page), MIDDAY)
+    assert [c["id"] for c in painted[0]["communiques"]] == ["1"]
+
+
+def test_an_all_clear_with_nothing_to_end_is_still_published() -> None:
+    page = _page(_news("2", "ALERT RCB- ODWOŁANIE ZAGROŻENIA", *CLEAR,
+                       "2026-09-16 07:36:00", ("lubelskie",)))
+    painted, cleared = poland.warnings_rows(_rows(page), MIDDAY)
+    assert painted == []
+    assert cleared[0]["communiques"][0]["ended"] == []
+
+
+def test_valid_to_still_ends_a_row_the_publisher_never_cleared() -> None:
+    painted, cleared = poland.warnings_rows(_rows(PAIR), datetime(2026, 9, 16, 22, 0, tzinfo=UTC))
+    assert painted == [] and cleared == []
+
+
+def test_the_lead_sentence_is_not_repeated() -> None:
+    fields = {"shortcut": ALERT[0], "content": ALERT[1]}
+    assert poland._body(fields) == ALERT[1]
+    assert poland._body({"shortcut": "A.", "content": "B."}) == "A. B."
+    assert poland._body({"shortcut": "A.", "content": None}) == "A."
+    assert poland._body({"shortcut": "Lead\nwrapped.", "content": "Header.\n\nLead wrapped. Rest."}
+                        ) == "Header.\n\nLead wrapped. Rest."
+    assert poland._body({"shortcut": None, "content": None}) is None
+
+
+def test_the_row_shows_the_feeds_name_and_joins_on_the_publishers_slug() -> None:
+    """`voivodeship` is what a reader sees, `slug` is what anything joins on (D-055)."""
+    page = _page(_news("1", "Alert RCB", *ALERT, "2026-09-16 07:05:00", ("x",)).replace(
+        'slug="x" city="">X', 'slug="warminsko-mazurskie" city="">Warmińsko-Mazurskie'))
+    painted, _ = poland.warnings_rows(_rows(page), MIDDAY)
+    assert painted[0]["voivodeship"] == "warmińsko-mazurskie"
+    assert painted[0]["slug"] == "warminsko-mazurskie"
+    assert list(painted[0]) == ["voivodeship", "slug", "communiques"]
+
+
+def test_an_empty_province_element_shows_the_slug() -> None:
+    page = _page(_news("1", "Alert RCB", *ALERT, "2026-09-16 07:05:00", ("x",)).replace(
+        'slug="x" city="">X', 'slug="slaskie" city="">'))
+    painted, _ = poland.warnings_rows(_rows(page), MIDDAY)
+    assert (painted[0]["voivodeship"], painted[0]["slug"]) == ("slaskie", "slaskie")
+    # The parser already falls back to the slug; a stored row written with no
+    # name reaches the same answer rather than the text "none".
+    assert poland._names({"provinces": [["slaskie", None, None]]}) == (("slaskie", "slaskie"),)
+
+
+def test_pairing_and_grouping_go_by_slug_not_by_the_text_shown() -> None:
+    """An all-clear writing the name differently still ends the threat it names.
+
+    Whether RCB ever spells one voivodeship two ways is `[nieustalone]`; the
+    test pins that the key which decides a clearance is the one the publisher
+    keeps constant, and that one voivodeship is one row whatever its spelling.
+    """
+    alert = _news("1", "Alert RCB", *ALERT, "2026-09-16 07:05:00", ("x",)).replace(
+        'slug="x" city="">X', 'slug="slaskie" city="">Śląskie')
+    second = _news("3", "Alert RCB", *ALERT, "2026-09-16 07:10:00", ("x",)).replace(
+        'slug="x" city="">X', 'slug="slaskie" city="">slaskie')
+    clear = _news("2", "ALERT RCB- ODWOŁANIE ZAGROŻENIA", *CLEAR, "2026-09-16 07:36:00",
+                  ("x",)).replace('slug="x" city="">X', 'slug="slaskie" city="">ŚLĄSKIE')
+    painted, cleared = poland.warnings_rows(_rows(_page(clear, second, alert)), MIDDAY)
+    assert painted == []
+    (row,) = cleared
+    assert (row["voivodeship"], row["slug"]) == ("śląskie", "slaskie")
+    assert row["communiques"][0]["ended"] == ["3", "1"]
+    painted, _ = poland.warnings_rows(_rows(_page(second, alert)), MIDDAY)
+    assert [(r["voivodeship"], r["slug"]) for r in painted] == [("slaskie", "slaskie")]
+    assert [c["id"] for c in painted[0]["communiques"]] == ["3", "1"]
+
+
+def test_the_third_key_travels_with_the_first(tmp_path: Path) -> None:
+    store = EventStore(tmp_path / "events")
+    _write_page(store, poland.WARNINGS_URL, MIDDAY - timedelta(minutes=5), PAIR)
+    blocks = poland.measure(store, MIDDAY)
+    assert [r["voivodeship"] for r in blocks.warnings.value] == ["mazowieckie"]
+    assert [r["voivodeship"] for r in blocks.all_clear.value] == ["lubelskie", "podkarpackie"]
+    assert all(r["slug"] == r["voivodeship"] for r in blocks.warnings.value)
+    payload = to_contract(compose([_event()], as_of=MIDDAY, poland=lambda _m: blocks))
+    assert set(payload) >= {"pl_warnings", "pl_all_clear"} and "pl_airspace" not in payload
+    stale = poland.measure(store, MIDDAY + timedelta(hours=2))
+    assert stale.warnings.value is None and stale.all_clear.value is None
+    assert to_contract(compose([_event()], as_of=MIDDAY, poland=lambda _m: poland.FAILED)
+                       )["pl_all_clear"] is None

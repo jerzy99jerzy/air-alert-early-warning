@@ -1367,6 +1367,7 @@ def to_contract(report: Report) -> dict[str, object]:
     # hands over one layer and not both.
     if report.poland is not None:
         for key, block in (("pl_warnings", report.poland.warnings),
+                           ("pl_all_clear", report.poland.all_clear),
                            ("pl_airspace", report.poland.airspace)):
             if block.published:
                 payload[key] = block.value

@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.29
+Document:  docs/DECISIONS.md, version 2.30
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2313,3 +2313,76 @@ written.
 **Reopen if:** the table grows faster than the event store it sits in, or the
 scrubber needs a question answered that one indexed read of this table cannot
 answer.
+
+## D-055. An RCB all-clear ends the alert it names; `valid_to` is the publisher's day, not the threat's end
+Date: 2026-09-16; the meaning of `voivodeship` settled 2026-09-19, before release. Status: adopted
+
+**Decision.** A communique is classified as a threat or an all-clear
+(`mavo/poland.py`, `classify`). An all-clear issued at T and naming voivodeship
+V ends every threat naming V that was issued before T, on V only. `pl_warnings`
+carries live, unended threats and nothing else; a new key, `pl_all_clear`,
+carries each all-clear with the ids it ended, per voivodeship. `valid_to` stays
+as a ceiling. Every row of both keys names its voivodeship twice: `slug`, the
+publisher's slug, which the pairing and any join use, and `voivodeship`, the
+feed's name as 0.55.0.0 composed it, which is what a reader is shown.
+
+**What was measured, and it is one pair.** On 2026-09-16 the `ogolne` category
+held "Alert RCB" issued 07:05 and "ALERT RCB- ODWOŁANIE ZAGROŻENIA" issued
+07:36, both with `valid_to` 23:59 the same day, both about a Russian air attack
+on Ukraine `[measured on vm-site from the consumer's rendered payload, and in
+the page fetched from the operator's machine at 23:42 - 40 records, both ids
+present]`. That page is `tests/fixtures/rso_ogolne_2026-09-16.xml`, and the
+pair in it names one voivodeship, `lubelskie` `[measured 2026-09-19]`, so the
+clearance of part of an alert's area that the rule below provides for has no
+recorded row. Both match `powietrzn`. The consumer at 4.76.0.0 and the producer at
+0.55.0.0, which ported the consumer's rule unchanged, painted every voivodeship
+the alert named as under an air alert from 07:05 until midnight, about sixteen
+hours after the publisher had cleared it. The map claimed a threat the
+publisher had ended, which is the wrong colour, for most of a day.
+
+**Why pairing and not an exclusion.** Excluding the all-clear term would take
+the clearance off the map and leave the alert painted until midnight, which is
+strictly worse than the state that was found: the card at least showed both.
+The publisher ends an alert by a second communique, so the reader of the feed
+has to do the same.
+
+**The rule, and where each part comes from.** An all-clear must match an air
+term and one of `odwołan` (title) or `zakończył się atak` / `zakończono`
+(body); the body terms are the publisher's own sentence from the pair.
+`brak zagrożenia` is not a term, because a notice that raises an alert will one
+day say "na razie brak zagrożenia" and an all-clear read out of a reassurance
+would end an alert on the strength of it. Pairing is per voivodeship because a
+clearance for two of an alert's three voivodeships is what the publisher said
+about two of them. A threat issued after an all-clear is a new threat. A
+communique whose `valid_from` cannot be read takes the side that keeps a
+warning on the map: a threat with no readable stamp is never ended, an
+all-clear with none ends nothing. Every part of this rests on one pair, and
+T86 is the reading that confirms or reshapes it over the week T85 records.
+
+**Why a third key.** `mavo-site` 4.76.0.0 paints every row of `pl_warnings`
+`[measured, map.py foldWarnings]`, so a clearance published inside that list
+would paint. Publishing it beside the list gives the consumer the right colour
+today with no release, and a card that says "odwołano" once a consumer release
+renders the new key. Both keys come from one reading and share one verdict: what
+makes `pl_warnings` `null` makes `pl_all_clear` `null`.
+
+**Two smaller changes carried by the same reading.** Each row gains `slug`:
+all 40 provinces on the page carry one `[measured, n=40]` and this parser keeps
+no province without one, so the pairing no longer rests on a fold of the name.
+`voivodeship` keeps the name, because the consumer prints that field verbatim
+as the name in its RCB block, and in the page recorded 2026-09-16 name and slug
+differ for four of the eleven voivodeships it names, `śląskie` against
+`slaskie` `[measured 2026-09-19, the operator's terminal, on that page and on
+the consumer tree]`. The consumer joins its geometry on its own fold of
+`voivodeship`, which maps all nine Polish letters, and a slug folds to itself,
+so what it paints is the same under either field `[inference from the
+consumer's code]`. **Rejected: `voivodeship` as the slug**, which this
+decision carried as first built. It would have shown `slaskie` where the feed
+wrote `śląskie` until a consumer release mapped slug to name, and so would
+have needed that release first; the added field changes nothing a reader sees
+and asks for no order. And the lead sentence the feed repeats inside
+`<content>` is not concatenated twice `[measured, both rows of the pair]`.
+
+**Reopen if:** T86 finds a threat the publisher ended without a communique this
+rule recognises, or an all-clear that names voivodeships the alert did not; or
+the publisher's `valid_to` starts to move with the threat.
