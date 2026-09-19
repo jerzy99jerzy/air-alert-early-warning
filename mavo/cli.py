@@ -829,7 +829,6 @@ def _cmd_rso(args: argparse.Namespace) -> int:
             continue
         changed = "unrecorded"
         if store is not None:
-            store.record_read(RSO_FEED, url, started, len(page.communiques), page.unreadable)
             try:
                 appended += store.append_communiques(RSO_FEED, page.communiques)
                 # D-054. After the rows, never before: a list naming digests
@@ -838,6 +837,12 @@ def _cmd_rso(args: argparse.Namespace) -> int:
                 changed = "changed" if store.record_snapshot(
                     RSO_FEED, url, started, [item.digest() for item in page.communiques]
                 ) else "unchanged"
+                # Last. `mavo/poland.py` takes the list's age from this row, so
+                # written first it vouched for the previous list whenever a
+                # write above failed, and every failing run refreshed it
+                # (F176). A run whose writes failed leaves no
+                # read row, and the pipe's liveness says so.
+                store.record_read(RSO_FEED, url, started, len(page.communiques), page.unreadable)
             except Exception as failure:  # noqa: BLE001
                 print(f"[STORE-FAILED] {failure}")
                 return 7
@@ -868,10 +873,11 @@ def _cmd_airspace(args: argparse.Namespace) -> int:
     from an interval nothing changed in the sky, and the scrubber this record
     exists for would draw it as one.
 
-    **Rows, then the list, then the exit code.** The structures and their
-    shapes are written before the snapshot naming them, so a composer reading
-    between the two writes sees the previous list whole rather than a new one
-    pointing at rows that are not there yet.
+    **Rows, then the list, then the read.** The structures and their shapes
+    are written before the snapshot naming them, so a composer reading between
+    the two writes sees the previous list whole rather than a new one pointing
+    at rows that are not there yet; and the read row, which is `read_at`, is
+    written last, so it never vouches for a list that failed to land.
 
     Exit codes match `collect` and `rso`: 3 for a refusal, 7 for a store that
     failed, 0 for a plan that was read, including an empty one.
@@ -901,13 +907,14 @@ def _cmd_airspace(args: argparse.Namespace) -> int:
     stored = 0
     changed = "unrecorded"
     if store is not None:
-        store.record_read(PANSA_FEED, url, started, len(page.zones), page.unreadable,
-                          elapsed_s=elapsed, detail=note)
         try:
             stored = store.append_airspace_zones(PANSA_FEED, page.zones)
             changed = "changed" if store.record_snapshot(
                 PANSA_FEED, url, started, [zone.digest() for zone in page.zones]
             ) else "unchanged"
+            # Last, for the reason `_cmd_rso` gives.
+            store.record_read(PANSA_FEED, url, started, len(page.zones), page.unreadable,
+                              elapsed_s=elapsed, detail=note)
         except Exception as failure:  # noqa: BLE001
             print(f"[STORE-FAILED] {failure}")
             return 7
@@ -976,12 +983,24 @@ def _cmd_report(args: argparse.Namespace) -> int:
         # D-053. The Polish keys, composed from the same store on the same
         # cycle. Guarded here rather than inside `publish`, because a failure
         # to compose them must not take the Ukrainian picture down with it:
-        # both keys go out `null`, which a reader sees as could-not-read, and
+        # every Polish key goes out `null`, which a reader sees as could-not-read, and
         # the heartbeat keeps beating. Absent would hand the page back to
         # whatever the consumer still reads itself, and say nothing about why.
         def poland(moment: datetime) -> PolandBlocks:
             try:
-                return measure_poland(store, moment)
+                blocks = measure_poland(store, moment)
+                # The writer indents, which walks the payload in Python, and
+                # writes UTF-8, so a value it cannot write raised in
+                # `write_contract` - outside this guard and outside the
+                # `OSError` that `publish` catches - and no `state.json` was
+                # written at all (F174). Written here first,
+                # and strictly, so the promise above holds whatever a parser
+                # lets through.
+                for block in (blocks.warnings, blocks.all_clear, blocks.airspace):
+                    json.dumps(
+                        block.value, ensure_ascii=False, indent=1, allow_nan=False
+                    ).encode("utf-8")
+                return blocks
             except Exception as failure:  # noqa: BLE001
                 print(f"[POLAND-FAILED] {failure}", file=sys.stderr, flush=True)
                 return POLAND_FAILED

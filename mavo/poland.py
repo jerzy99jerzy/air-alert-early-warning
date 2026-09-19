@@ -31,8 +31,8 @@ consumer's tests ported beside them as the proof. What differs:
 2. **An hour the autumn change maps twice is not converted.** The consumer
    gave such a stamp the summer offset without saying so, which ends a
    communique an hour early if the publisher meant winter time. Here the stamp
-   reaches the reader as the feed wrote it, and an end that cannot be settled
-   is not an end.
+   reaches the reader as the feed wrote it, and as an end it is the later of
+   its two readings, so nothing ends early and nothing stays for ever.
 3. **A communique list older than an hour is not published as current.** The
    consumer kept the last good reading for ever, and its payload shape has no
    field for age, so a reading from yesterday rendered exactly like one from a
@@ -123,6 +123,20 @@ NOT_A_THREAT_TERMS: tuple[str, ...] = (
 ALL_CLEAR_TITLE_TERMS: tuple[str, ...] = ("odwołan",)
 ALL_CLEAR_BODY_TERMS: tuple[str, ...] = ("zakończył się atak", "zakończono")
 
+#: A drill word negated where it stands does not exclude (F178).
+#: `ćwiczeni` is matched as a substring, so "To nie są ćwiczenia", the sentence
+#: an alert writes to say it is not an exercise, kept a threat off the map; a
+#: missed threat costs more here than a false paint. Narrow on purpose: only
+#: `nie` directly before the drill word, with at most the verb and `to` between,
+#: is removed before the exclusions are read, so a drill word anywhere else in
+#: the same communique still excludes it, and no other exclusion changes.
+#: Whether RCB writes the sentence is `[nieustalone]`: none of the 40 records
+#: of 2026-09-16 does `[measured, tests/fixtures/rso_ogolne_2026-09-16.xml]`.
+NEGATED_DRILL = re.compile(
+    r"\bnie\s+(?:(?:s\u0105|jest|by\u0142y|by\u0142|by\u0142a|b\u0119d\u0105|b\u0119dzie)\s+)?"
+    r"(?:to\s+)?\u0107wiczeni\w*"
+)
+
 #: Switched on, in the plan's own vocabulary (consumer D-S82, decision A).
 STATUS_ON = "ACTIVATED"
 
@@ -199,7 +213,8 @@ def air_term(title: str | None, text: str | None) -> str | None:
     is painted, and a reviewer reading a false paint sees which word did it.
     """
     haystack = " ".join(part for part in (title, text) if part).lower()
-    if any(term in haystack for term in NOT_A_THREAT_TERMS):
+    screened = NEGATED_DRILL.sub(" ", haystack)
+    if any(term in screened for term in NOT_A_THREAT_TERMS):
         return None
     for term in AIR_THREAT_TERMS:
         if term in haystack:
@@ -234,18 +249,30 @@ def classify(title: str | None, text: str | None) -> tuple[str, str] | None:
 def is_expired(valid_to: str | None, as_of: datetime) -> bool:
     """Whether a communique has an end and that end is behind us.
 
-    **An end that cannot be established is not an end.** Absent, unparseable,
-    or inside the hour the autumn change maps twice: the communique stays,
-    because dropping it would be this producer deciding a warning is over on
-    the strength of a field it could not read.
+    **An end that cannot be established is not an end.** Absent or
+    unparseable: the communique stays, because dropping it would be this
+    producer deciding a warning is over on the strength of a field it could
+    not read. A change-night stamp is not that case. It names one of two
+    instants, both known, and past the later one the communique is over under
+    either reading; kept as no end, it stayed painted for as long as the feed
+    listed it (F177).
     """
     if valid_to is None:
         return False
     try:
         end = rso.to_utc(valid_to, ZONE)
+    except rso.AmbiguousLocalTime:
+        end = _later_reading(valid_to)
     except SourceUnavailable:
         return False
     return end < as_of
+
+
+def _later_reading(stamp: str) -> datetime:
+    """The later of the two instants a change-night wall time can name."""
+    naive = datetime.strptime(stamp.strip(), "%Y-%m-%d %H:%M:%S")
+    zone = ZoneInfo(ZONE)
+    return max(naive.replace(tzinfo=zone, fold=fold).astimezone(UTC) for fold in (0, 1))
 
 
 def feed_stamp_as_iso(value: str | None) -> str | None:

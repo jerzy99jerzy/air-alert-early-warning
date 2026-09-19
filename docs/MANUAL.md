@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.13
+Document:  docs/MANUAL.md, version 3.14
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -376,6 +376,11 @@ of categories this project recognises would drop a communique of a category
 nobody anticipated, and the reader would be told about a quiet country because
 our vocabulary was short.
 
+**A document that is not the feed's list is refused, however empty it
+looks** (F173). The list's root is `newses`; an error document or a
+maintenance page parses as XML and is refused (exit 3, attempt logged), so the
+key it feeds reads `null` an hour later instead of an empty list.
+
 **`--store` also writes the attempt log, and that is the reason to pass it.**
 This feed publishes no heartbeat, so without a record of every poll an hour in
 which Poland was quiet and an hour in which this collector was dead are the
@@ -734,12 +739,16 @@ polygon.
 
 **Refused, and counted rather than dropped.** A body that is HTML, not JSON,
 neither a list nor a FeatureCollection, over the transport's four-million-byte
-ceiling, or a list in which
+ceiling, nested deeper than this reader follows (F175), or a list in which
 nothing is readable is a refusal (exit 3, attempt logged with a null count). A
 feature that cannot be read is counted in the attempt's `unreadable`; a
 reservation whose stamps carry no offset is refused and counted in the
 attempt's `detail` as `reservations_refused=N`, because guessing a zone would
-move its window by hours.
+move its window by hours. A feature whose coordinates are not as deep as
+GeoJSON says, or hold a value that is not a finite number, is counted in
+`unreadable` (F174). A store write that fails prints `[STORE-FAILED]`, exits 7
+and leaves no read row, so the layer's `read_at` stays the last read written
+whole (F176).
 
 The output line names the zones read, the refusals, every status seen and
 whether the list changed (`snapshot=changed` or `snapshot=unchanged`).

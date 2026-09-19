@@ -67,6 +67,13 @@ def test_a_feature_collection_is_read_like_a_list() -> None:
     (b'[{"type":"Feature","geometry":null,"properties":{}}]', "none of the 1"),
     (b'[{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[1,2],', "not JSON"),
     (b"x" * (pansa.MAX_BYTES + 1), "ceiling"),
+    # Refused on every interpreter, for one of two reasons: where the stack
+    # gives out first the reader stops (F175), and where it does not - the
+    # operator's macOS 3.14.7, and 3.14.7 on Linux given a 16 MiB stack - the
+    # list parses and holds nothing readable `[measured 2026-09-19]`. The
+    # first reason is pinned on its own below.
+    pytest.param(b"[" * 100_000 + b"]" * 100_000, "nests deeper|none of the 1",
+                 id="deep-nesting"),
 ])
 def test_hostile_bodies_are_refused_rather_than_read_as_an_empty_plan(
     body: bytes, reason: str
@@ -74,6 +81,18 @@ def test_hostile_bodies_are_refused_rather_than_read_as_an_empty_plan(
     """Malformed, truncated, oversized, garbage and an HTML block page."""
     with pytest.raises(SourceUnavailable, match=reason):
         pansa.parse(body)
+
+
+def test_a_reader_that_runs_out_of_depth_refuses_and_is_counted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """F175, on every platform: whether real bytes reach the limit depends on the stack."""
+    def out_of_depth(_payload: object) -> object:
+        raise RecursionError("maximum recursion depth exceeded")
+
+    monkeypatch.setattr(pansa.json, "loads", out_of_depth)
+    with pytest.raises(SourceUnavailable, match="nests deeper"):
+        pansa.parse(b"[]")
 
 
 def test_garbage_reservations_inside_a_readable_feature_are_counted() -> None:
@@ -206,3 +225,65 @@ def test_json_of_the_wrong_shape_is_counted_and_never_escapes_as_another_excepti
     except SourceUnavailable:
         return
     assert page.unreadable + len(page.zones) == 1
+
+
+# ---- F174 and F175: values the writers downstream cannot hold
+
+
+def _feature(designator: str, coordinates: object, remarks: str = "M346") -> dict[str, object]:
+    return {
+        "type": "Feature",
+        "geometry": {"type": "Polygon", "coordinates": coordinates},
+        "properties": {
+            "designator": designator, "airspaceElementType": "D",
+            "airspaceReservations": [{
+                "startDate": "2026-09-14T10:00:00Z", "endDate": "2026-09-14T12:00:00Z",
+                "reservationStatus": "ACTIVATED", "remarks": remarks,
+            }],
+        },
+    }
+
+
+RING = [[[21.0, 50.0], [21.5, 50.0], [21.5, 50.5], [21.0, 50.0]]]
+
+
+def _nested(depth: int) -> list[object]:
+    value: list[object] = []
+    for _ in range(depth):
+        value = [value]
+    return value
+
+
+@pytest.mark.parametrize("coordinates", [
+    _nested(50),
+    [[[21.0, 50.0], [float("nan"), 50.5], [21.0, 50.0]]],
+    [[[21.0, 50.0], [float("inf"), 50.5], [21.0, 50.0]]],
+    [[[21.0, 50.0], [True, 50.5], [21.0, 50.0]]],
+    [[[21.0], [21.5, 50.5], [21.0, 50.0]]],
+    [[21.0, 50.0]],
+    [[["21.0", 50.0]]],
+], ids=["deep", "nan", "inf", "bool", "short", "shallow", "text"])
+def test_coordinates_the_writers_cannot_hold_are_counted_unreadable(coordinates: object) -> None:
+    """F174. Each of these parsed, and at 2000 levels `deep` stopped the
+    publisher on 3.12.3 before `state.json` was written; `nan` and `inf` went
+    out as non-JSON tokens. Any depth that is not GeoJSON's is refused by the
+    same branch, so 50 levels stand for all of them: 2000 do not survive this
+    test's own `json.dumps` on 3.11, where the reader refuses the body instead
+    (F175) `[measured 2026-09-19 on 3.11.16, 3.12.3, 3.13.15, 3.14.7]`."""
+    body = json.dumps([_feature("EPOK", RING), _feature("EPBAD", coordinates)]).encode()
+    page = pansa.parse(body)
+    assert [zone.designator for zone in page.zones] == ["EPOK"]
+    assert page.unreadable == 1
+
+
+def test_a_lone_surrogate_is_refused_where_it_stands_and_counted() -> None:
+    """R4's trigger. The escape is legal JSON; the store's digest could not encode it."""
+    body = json.dumps([
+        _feature("EPOK", RING, remarks="\ud800"),
+        _feature("\udfff", RING),
+    ]).encode()
+    page = pansa.parse(body)
+    (zone,) = page.zones
+    assert zone.designator == "EPOK" and zone.reservations == ()
+    assert page.reservations_refused == 1 and page.unreadable == 1
+    assert zone.digest() and zone.reservations_text().encode("utf-8") is not None

@@ -16,6 +16,34 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.2.0 - 2026-09-19
+
+**The review of 0.55.0.1, repaired, and the Polish channels installable.** Two
+defects held every release from 0.55.0.0: a document from the feed that is
+not its list read as a calm list (F173), and a context feed's body could stop
+`state.json`, the Ukrainian picture with it (F174). Both close here, with five
+more from the same review.
+
+- **F173, closed.** Any root but the feed's `newses` is a refusal, exit 3, and
+  `pl_warnings` reads `null` an hour later instead of `[]`.
+- **F174, closed.** Coordinates are checked for GeoJSON depth and finite
+  positions where they are read, and every Polish block is serialised strictly
+  inside the guard, so an unwritable value publishes the Polish keys `null`
+  and the Ukrainian picture beside them. The guard as reviewed covered two
+  blocks; `pl_all_clear`, added by D-055, is the third and is inside it.
+- **F175.** A UUP body nested beyond the reader's depth ended `mavo airspace`
+  in a traceback with no attempt row; it is a counted refusal.
+- **F176.** The read row was written before the rows and the list it vouches
+  for, so a failed write left a fresh `read_at` over the previous plan; it is
+  written last, and a failed run leaves none.
+- **F177.** An end stamped in an hour the clock change doubles or skips never
+  ended; it ends at the later of its two readings (D-053 amended).
+- **F178.** "To nie są ćwiczenia" kept a threat off the map, because the drill
+  word excluded wherever it stood; a negated drill word is set aside, and no
+  other exclusion changes.
+- **F179.** `mavo/sources/pansa.py` still cited a module that has never
+  existed, in the two places F171's repair missed.
+
 ## 0.55.1.0 - 2026-09-19
 
 **An all-clear ends the alert it names (D-055), and F169 closes on the recorded

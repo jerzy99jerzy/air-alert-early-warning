@@ -51,6 +51,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import time
 from dataclasses import dataclass, field
@@ -82,6 +83,15 @@ TIMEOUT_S = 20.0
 
 _HTML = re.compile(r"<!DOCTYPE|<html", re.IGNORECASE)
 
+#: A lone UTF-16 surrogate. JSON can escape one and Python's reader keeps it,
+#: and no UTF-8 writer can write it: the store's digest raised on it after the
+#: read had been logged (F176).
+_SURROGATE = re.compile("[\ud800-\udfff]")
+
+#: List levels above a position: a Polygon is rings of positions, and a
+#: MultiPolygon is polygons of those.
+_POSITION_DEPTH = {"Polygon": 2, "MultiPolygon": 3}
+
 
 @dataclass(frozen=True)
 class Reservation:
@@ -89,7 +99,7 @@ class Reservation:
 
     Limits stay the feed's codes. `GND`, `A061` and `F245` are three notations
     in one field, and converting them here would be this module inventing a
-    common unit; `mavo/polish.py` puts an approximation in metres *beside*
+    common unit; `mavo/poland.py` puts an approximation in metres *beside*
     them for a reader.
     """
 
@@ -195,8 +205,40 @@ def _text(value: Any) -> str | None:
     return text or None
 
 
+def _writable(*values: Any) -> bool:
+    """Whether every string among `values` can be written as UTF-8."""
+    return not any(isinstance(value, str) and _SURROGATE.search(value) for value in values)
+
+
+def _finite(number: Any) -> bool:
+    if isinstance(number, bool) or not isinstance(number, (int, float)):
+        return False
+    return not isinstance(number, float) or math.isfinite(number)
+
+
+def _coordinates_ok(value: Any, depth: int) -> bool:
+    """GeoJSON coordinates of exactly `depth` list levels, ending in finite positions.
+
+    Checked here because everything downstream writes the outline again: the
+    store as canonical JSON, and `state.json` through an indenting encoder that
+    walks in Python. Nesting past the interpreter's recursion limit parsed
+    here and raised there, in the publisher, before `state.json` was written
+    (F174: 2,000 levels in a 4.7 kB body); `NaN`, which Python's
+    reader accepts, went out as a token no strict JSON reader takes. The
+    recursion below is bounded by `depth`, never by the data.
+    """
+    if not isinstance(value, list):
+        return False
+    if depth == 0:
+        return len(value) >= 2 and all(_finite(number) for number in value)
+    return all(_coordinates_ok(item, depth - 1) for item in value)
+
+
 def _reservation(raw: Any) -> Reservation | None:
     if not isinstance(raw, dict):
+        return None
+    if not _writable(*(raw.get(name) for name in (
+            "lowerAltitude", "upperAltitude", "unit", "remarks", "reservationStatus"))):
         return None
     starts, ends = _stamp(raw.get("startDate")), _stamp(raw.get("endDate"))
     if starts is None or ends is None or ends < starts:
@@ -221,11 +263,11 @@ def _zone(raw: Any) -> tuple[Zone | None, int]:
         return None, 0
     designator = _text(props.get("designator"))
     kind = _text(props.get("airspaceElementType"))
-    if designator is None or kind is None:
+    if designator is None or kind is None or not _writable(designator, kind):
         return None, 0
-    if geometry.get("type") not in ("Polygon", "MultiPolygon"):
+    if geometry.get("type") not in _POSITION_DEPTH:
         return None, 0
-    if not isinstance(geometry.get("coordinates"), list):
+    if not _coordinates_ok(geometry.get("coordinates"), _POSITION_DEPTH[geometry["type"]]):
         return None, 0
     raws = props.get("airspaceReservations") or []
     if not isinstance(raws, list):
@@ -252,6 +294,10 @@ def parse(payload: bytes) -> Page:
         data = json.loads(payload)
     except ValueError as bad:
         raise SourceUnavailable(f"UUP body is not JSON: {bad}") from bad
+    except RecursionError as deep:
+        # Not a `ValueError`, so it left `mavo airspace` as a traceback with no
+        # attempt row, which is F110's shape (F175).
+        raise SourceUnavailable("UUP body nests deeper than this reader follows") from deep
     if isinstance(data, list):
         features: list[Any] = data
     elif isinstance(data, dict) and isinstance(data.get("features"), list):
@@ -284,7 +330,7 @@ def zone_from_record(record: dict[str, Any]) -> Zone:
     """Rebuild a zone from the row `EventStore.airspace_zones_by_digest` returns.
 
     The inverse of what `append_airspace_zones` writes, so the rules in
-    `mavo/polish.py` run over the same objects whether the zone came off the
+    `mavo/poland.py` run over the same objects whether the zone came off the
     wire a second ago or out of the store a week later. A stored window that
     no longer parses raises rather than disappearing: the store writes these
     stamps itself, and one it cannot read back was written by something else.

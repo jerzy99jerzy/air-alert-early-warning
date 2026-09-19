@@ -510,3 +510,26 @@ def test_the_cursor_is_the_highest_id_seen_not_the_most_recent(
                       first_id=101, last_id=105)
     assert store.newest_page_id(FEED) == 120
     assert store.newest_page_id("nothing-polled-this") is None
+
+
+# ---- F173, found by the review of 0.55.0.1
+
+
+@pytest.mark.parametrize("body", [
+    b'<?xml version="1.0" encoding="UTF-8"?><error><code>503</code><message>x</message></error>',
+    b"<html><head><title>Przerwa</title></head><body><p>Serwis niedostepny</p></body></html>",
+    b"<news_list/>",
+], ids=["xml-error", "maintenance-page", "invented-root"])
+def test_a_well_formed_document_that_is_not_a_list_is_refused_not_read_as_empty(
+    body: bytes,
+) -> None:
+    """F173. Each of these was an empty page, exit 0, and `pl_warnings: []`."""
+    with pytest.raises(SourceUnavailable, match="not a communique list"):
+        parse_page(body)
+
+
+def test_the_spring_hour_is_named_as_missing_and_the_autumn_hour_as_doubled() -> None:
+    with pytest.raises(AmbiguousLocalTime, match="does not have"):
+        to_utc("2026-03-29 02:30:00", "Europe/Warsaw")
+    with pytest.raises(AmbiguousLocalTime, match="maps twice"):
+        to_utc("2026-10-25 02:30:00", "Europe/Warsaw")

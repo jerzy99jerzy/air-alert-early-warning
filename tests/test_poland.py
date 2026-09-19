@@ -44,14 +44,16 @@ AIR_NOW = datetime(2026, 9, 14, 12, 0, tzinfo=UTC)
 #: The consumer's `NOW` in `tests/test_rso.py`.
 RSO_NOW = datetime(2026, 9, 13, 12, 0, tzinfo=UTC)
 
-#: The consumer's test page, with the one change the producer's parser needs:
-#: every `<province>` carries a `slug`, as all three provinces in the reduced
-#: page recorded from the live endpoint do (`tests/fixtures/rso_page.xml`;
-#: three is the whole of the evidence). The consumer read slugless provinces by
-#: their text; this parser keeps a province by its slug, and D-053 names that
-#: difference and its cost.
+#: The consumer's test page, with the two changes the producer's parser needs.
+#: Its root is the feed's `<newses>` (`tests/fixtures/rso_page.xml`), where the
+#: consumer's page invented `<news_list>` and so could not tell a list from any
+#: other document (F173). And every `<province>` carries a
+#: `slug`, as all three provinces in the reduced page recorded from the live
+#: endpoint do (`tests/fixtures/rso_page.xml`; three is the whole of the
+#: evidence). The consumer read slugless provinces by their text; this parser
+#: keeps a province by its slug, and D-053 names that difference and its cost.
 PAGE = """<?xml version="1.0" encoding="UTF-8"?>
-<news_list>
+<newses>
   <news>
     <id>1</id>
     <title>Zagrożenie z powietrza</title>
@@ -103,7 +105,7 @@ PAGE = """<?xml version="1.0" encoding="UTF-8"?>
     <valid_to>2099-01-01 00:00:00</valid_to>
     <provinces><province slug="pomorskie">pomorskie</province></provinces>
   </news>
-</news_list>
+</newses>
 """.encode()
 
 
@@ -302,10 +304,11 @@ def test_the_text_block_is_the_consumers_shape_with_features_added() -> None:
 
 
 def _write_page(store: EventStore, url: str, at: datetime, page_bytes: bytes = PAGE) -> None:
+    """Rows, the list, then the read: the order `mavo rso` writes them in."""
     page = rso.parse_page(page_bytes)
-    store.record_read(rso.FEED, url, at, len(page.communiques), page.unreadable)
     store.append_communiques(rso.FEED, page.communiques)
     store.record_snapshot(rso.FEED, url, at, [item.digest() for item in page.communiques])
+    store.record_read(rso.FEED, url, at, len(page.communiques), page.unreadable)
 
 
 def test_a_feed_this_producer_never_polled_leaves_the_key_absent(tmp_path: Path) -> None:
@@ -363,7 +366,7 @@ def test_the_ceiling_is_inclusive_of_its_own_edge(tmp_path: Path) -> None:
 
 def test_an_empty_page_is_an_empty_list_and_not_null(tmp_path: Path) -> None:
     store = EventStore(tmp_path / "events")
-    _write_page(store, poland.WARNINGS_URL, RSO_NOW, b"<news_list/>")
+    _write_page(store, poland.WARNINGS_URL, RSO_NOW, b"<newses/>")
     assert poland.warnings_block(store, RSO_NOW).value == []
 
 
@@ -392,10 +395,10 @@ def test_an_edited_communique_shows_only_the_edit_the_feed_serves_now(tmp_path: 
 
 def _write_plan(store: EventStore, at: datetime) -> pansa.Page:
     page = pansa.parse(UUP.read_bytes())
-    store.record_read(pansa.FEED, pansa.SOURCE_URL, at, len(page.zones), page.unreadable)
     store.append_airspace_zones(pansa.FEED, page.zones)
     store.record_snapshot(pansa.FEED, pansa.SOURCE_URL, at,
                           [zone.digest() for zone in page.zones])
+    store.record_read(pansa.FEED, pansa.SOURCE_URL, at, len(page.zones), page.unreadable)
     return page
 
 
@@ -863,3 +866,165 @@ def test_the_third_key_travels_with_the_first(tmp_path: Path) -> None:
     assert stale.warnings.value is None and stale.all_clear.value is None
     assert to_contract(compose([_event()], as_of=MIDDAY, poland=lambda _m: poland.FAILED)
                        )["pl_all_clear"] is None
+
+
+# ---- F174 to F177, found by the review of 0.55.0.1
+
+
+def test_a_change_night_end_ends_at_the_later_of_its_two_readings() -> None:
+    """F177. Both ends below were never an end, which kept them painted for ever."""
+    autumn = "2026-10-25 02:30:00"      # 00:30 or 01:30 UTC
+    assert poland.is_expired(autumn, datetime(2026, 10, 25, 1, 30, tzinfo=UTC)) is False
+    assert poland.is_expired(autumn, datetime(2026, 10, 25, 1, 31, tzinfo=UTC)) is True
+    assert poland.is_expired(autumn, datetime(2027, 1, 1, tzinfo=UTC)) is True
+    spring = "2026-03-29 02:30:00"      # a wall time the zone never shows
+    assert poland.is_expired(spring, datetime(2026, 3, 29, 1, 30, tzinfo=UTC)) is False
+    assert poland.is_expired(spring, datetime(2026, 3, 29, 1, 31, tzinfo=UTC)) is True
+
+
+def test_a_lead_the_body_opens_with_is_printed_once() -> None:
+    """F172 on wrapped text, which the recorded body does not exercise: its
+    five leads match the content without folding. The recorded case is
+    `test_no_recorded_communique_prints_its_lead_twice`."""
+    lead = "Zdanie wiodace komunikatu."
+    doubled = {"shortcut": lead, "content": "Zdanie  wiodace\nkomunikatu. Dalsza tresc."}
+    assert poland._body(doubled) == doubled["content"]
+    apart = {"shortcut": "podkarpackie, zlewnie", "content": "W obszarach wystepowania"}
+    assert poland._body(apart) == "podkarpackie, zlewnie W obszarach wystepowania"
+    assert poland._body({"shortcut": None, "content": None}) is None
+
+
+@pytest.mark.parametrize("command", ["rso", "airspace"])
+def test_a_store_failure_leaves_no_read_vouching_for_the_previous_list(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    """F176. The read row is the list's age, so it may exist only once the list does.
+
+    Reproduced before the repair with one `\\ud800` escape in a UUP remark: every
+    run exited 7, every run logged a fresh read, and `pl_airspace` published
+    the previous plan under the new `read_at` with no `stale_error`.
+    """
+    store_path = tmp_path / "events"
+    if command == "rso":
+        argv = ["rso", "--stub", str(FIXTURES / "rso_page.xml"), "--category", "ogolne",
+                "--store", str(store_path)]
+        feed, url = rso.FEED, poland.WARNINGS_URL
+    else:
+        argv = ["airspace", "--stub", str(UUP), "--store", str(store_path)]
+        feed, url = pansa.FEED, pansa.SOURCE_URL
+    assert main(argv) == 0
+    first = EventStore(store_path).newest_read(feed, url)
+    assert first is not None
+
+    def broken(*_args: object, **_kwargs: object) -> bool:
+        raise sqlite3.OperationalError("disk I/O error")
+
+    monkeypatch.setattr(EventStore, "record_snapshot", broken)
+    assert main(argv) == 7
+    assert EventStore(store_path).newest_read(feed, url) == first
+
+
+def _nested(depth: int) -> list[object]:
+    value: list[object] = []
+    for _ in range(depth):
+        value = [value]
+    return value
+
+
+@pytest.mark.parametrize("value", [
+    {"read_at": "x", "features": [{"coordinates": [float("nan"), 50.0]}]},
+    {"read_at": "x", "features": [{"coordinates": _nested(2000)}]},
+    {"read_at": "x", "remarks": "\ud800"},
+], ids=["nan", "deep", "surrogate"])
+def test_a_polish_value_the_writer_cannot_write_publishes_both_keys_null(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+    value: dict[str, object],
+) -> None:
+    """F174. D-053 promises the Ukrainian picture survives the Polish side.
+
+    Before the repair `deep` raised `RecursionError` in the writer's own
+    `json.dumps`, outside every guard, and no `state.json` was written; `nan`
+    was written as a token strict JSON readers refuse. **Whether 2000 levels
+    are unwritable depends on the interpreter**: the indented writer refuses
+    them on 3.11 and 3.12 and writes them on 3.13 and 3.14 `[measured
+    2026-09-19 on 3.11.16, 3.12.3, 3.13.15, 3.14.7]`. What holds on every one
+    is the promise: `state.json` is written, as strict JSON, and a value is
+    either published or refused with every Polish key `null`.
+    """
+    monkeypatch.delenv("MAVO_LOG_FILE", raising=False)
+    store_path = tmp_path / "events"
+    EventStore(store_path)
+    blocks = poland.PolandBlocks(airspace=poland.Block(published=True, value=value))
+    monkeypatch.setattr("mavo.cli.measure_poland", lambda _store, _moment: blocks)
+    state = tmp_path / "state.json"
+    assert main(["report", "--store", str(store_path), "--json", str(state),
+                 "--watch", "--interval", "0", "--max-cycles", "1"]) == 0
+
+    def refuse(constant: str) -> object:
+        raise ValueError(constant)
+
+    payload = json.loads(state.read_text(encoding="utf-8"), parse_constant=refuse)
+    if _this_interpreter_writes(value):
+        assert payload["pl_airspace"] is not None
+        assert "[POLAND-FAILED]" not in capsys.readouterr().err
+    else:
+        assert payload["pl_warnings"] is None and payload["pl_airspace"] is None
+        assert "[POLAND-FAILED]" in capsys.readouterr().err
+
+
+def _this_interpreter_writes(value: object) -> bool:
+    """Whether this interpreter's `json` writes `value` under the writer's settings."""
+    try:
+        json.dumps(value, ensure_ascii=False, indent=1, allow_nan=False).encode("utf-8")
+    except (RecursionError, ValueError, UnicodeEncodeError):
+        return False
+    return True
+
+
+def test_an_unwritable_clearance_publishes_every_polish_key_null(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+) -> None:
+    """F174 one key over: D-055 added `pl_all_clear` after the review read the guard.
+
+    A lone surrogate in a clearance's text is refused by the UTF-8 encode; left
+    outside the guard it stopped `state.json` exactly as the airspace did.
+    """
+    monkeypatch.delenv("MAVO_LOG_FILE", raising=False)
+    store_path = tmp_path / "events"
+    EventStore(store_path)
+    row = {"voivodeship": "lubelskie", "slug": "lubelskie",
+           "communiques": [{"id": "1", "text": "\ud800", "ended": []}]}
+    blocks = poland.PolandBlocks(warnings=poland.Block(published=True, value=[]),
+                                 all_clear=poland.Block(published=True, value=[row]))
+    monkeypatch.setattr("mavo.cli.measure_poland", lambda _store, _moment: blocks)
+    state = tmp_path / "state.json"
+    assert main(["report", "--store", str(store_path), "--json", str(state),
+                 "--watch", "--interval", "0", "--max-cycles", "1"]) == 0
+    payload = json.loads(state.read_text(encoding="utf-8"))
+    assert payload["pl_warnings"] is None and payload["pl_all_clear"] is None
+    assert "[POLAND-FAILED]" in capsys.readouterr().err
+
+
+
+# ---- R7: a negated drill word does not exclude
+
+@pytest.mark.parametrize("text", [
+    "UWAGA! Rosyjski atak powietrzny na terenie Ukrainy. To nie są ćwiczenia.",
+    "UWAGA! Atak powietrzny. Nie są to ćwiczenia!",
+    "Alarm lotniczy - to nie ćwiczenie.",
+], ids=["nie-sa", "nie-sa-to", "nie"])
+def test_a_threat_that_says_it_is_not_a_drill_is_painted(text: str) -> None:
+    verdict = poland.classify("Alert RCB", text)
+    assert verdict is not None and verdict[0] == "threat"
+
+
+def test_the_exception_is_narrow() -> None:
+    """Only the negated drill word is set aside; every other exclusion still wins."""
+    assert poland.classify("Ćwiczenia", "Ćwiczenia obrony powietrznej w powiecie.") is None
+    assert poland.classify("Test syren", "Alarm powietrzny. To nie są ćwiczenia.") is None
+    assert poland.classify("Alert RCB", "To nie są ćwiczenia. Ćwiczenia z alarmem "
+                           "powietrznym odbędą się jutro.") is None
+    # `trening` is not the word R7 named, so its negation keeps excluding.
+    assert poland.classify("Alert RCB", "Atak powietrzny. To nie jest trening.") is None
+    assert poland.classify("ALERT RCB- ODWOŁANIE ZAGROŻENIA", "Zakończył się atak "
+                           "powietrzny. To nie były ćwiczenia.") == ("all_clear", "odwołan")

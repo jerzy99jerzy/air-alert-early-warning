@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.30
+Document:  docs/DECISIONS.md, version 2.31
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2217,8 +2217,11 @@ consumer committed as its own output for the same fixture and moment.
 **Three differences are chosen, and `mavo/poland.py` names them:** the
 communique scope is `ogolne` at page 0 rather than page 1, which removes a
 cost the consumer stated if page 0 is the unpaged reading the publisher's page
-says it is `[reported, T67]`; a stamp inside the doubled autumn hour is
-passed through as the feed's text and is not an end; and a communique list
+says it is `[reported, T67]`; a stamp inside an hour the clock change
+doubles or skips is passed through as the feed's text, and as an end it is the
+later of its two readings (amended 2026-09-19, F177: first written as *not an
+end*, which kept such a communique painted for as long as the feed listed it,
+though past the later reading it is over under either); and a communique list
 older than an hour is `null` rather than current, because that payload has no
 field for age and the consumer's kept list, empty or not, rendered as fresh
 through any outage. One difference is inherited rather than chosen: this

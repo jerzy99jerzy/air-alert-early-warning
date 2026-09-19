@@ -4,7 +4,7 @@ Every mechanism in MAVO: what it is, where it lives, the alternative that was
 rejected, the failure it prevents, and the test that keeps it honest.
 
 ```
-Document:  docs/MECHANISMS.md, version 2.5
+Document:  docs/MECHANISMS.md, version 2.6
 Audience:  a contributor about to change how something works, and anyone asking
            "why is it done this way rather than the obvious way"
 Companion: ARCHITECTURE (what talks to what), DATA-FLOW (what happens to a
@@ -768,7 +768,10 @@ list for the same feed and address: a plan that goes A, B and back to A is
 three rows, and an unchanged plan read every five minutes is one. An empty
 list is a list. The composer reads the newest list for the address it shows
 and the rows that list names, and a list naming a row nobody wrote makes the
-key `null` rather than partial.
+key `null` rather than partial. The read row is written last, after the rows
+and the list and inside the same failure handling, because it is the list's
+age: a run whose writes fail leaves no read row, and the pipe reads as not
+read, which is true (F176).
 
 **Rejected alternative: first-seen rows alone.** `communiques` records when a
 row was first seen and nothing about when the feed stopped serving it, so a
@@ -803,7 +806,11 @@ switching one timer on hands over one layer. A communique list older than
 to show its age; the airspace object has no ceiling, because it carries
 `read_at` and `stale_error` and the page prints both. A failure composing
 any of them publishes all three `null` and prints `[POLAND-FAILED]`, and the
-Ukrainian picture is published regardless.
+Ukrainian picture is published regardless. Composing includes writing: the
+guard serialises every Polish block under the writer's own settings,
+`allow_nan=False` and a UTF-8 encode, before `publish` does, so a value a
+parser let through and the writer cannot write is a failure here and not a
+`state.json` that never appears (F174).
 
 **Rejected alternative: keeping the last good list.** The site did, before the
 move, and a list from yesterday rendered exactly like one from a minute ago,
@@ -814,8 +821,10 @@ including an empty one, which is silence rendered as calm.
 `test_poland.py::test_a_reading_older_than_the_ceiling_is_null_and_not_the_last_list`,
 `test_poland.py::test_an_empty_page_is_an_empty_list_and_not_null`,
 `test_poland.py::test_each_key_is_published_on_its_own`,
-`test_poland.py::test_a_failed_composition_publishes_both_keys_null` and
-`test_poland.py::test_the_third_key_travels_with_the_first`.
+`test_poland.py::test_a_failed_composition_publishes_both_keys_null`,
+`test_poland.py::test_the_third_key_travels_with_the_first`,
+`test_poland.py::test_a_polish_value_the_writer_cannot_write_publishes_both_keys_null` and
+`test_poland.py::test_an_unwritable_clearance_publishes_every_polish_key_null`.
 
 ---
 
@@ -838,6 +847,11 @@ request address and not in the record, and the four specific ones carry
 weather, water and road notices: a voivodeship painted because a river is high
 would be read, on a map of air alerts, as something it is not.
 
+**A negated drill word does not exclude** (F178). Only `nie` directly before
+`ćwiczeni`, with at most the verb and `to` between, is set aside before the
+exclusions are read (`NEGATED_DRILL`); the drill word anywhere else in the same
+communique still excludes it.
+
 **A threat, or the all-clear that ends it** (`classify`, `warnings_rows`,
 D-055). RCB ends an air alert with a second communique and leaves `valid_to`
 at the end of the day (F169), so a communique about the air is further either
@@ -858,6 +872,8 @@ week.
 `test_poland.py::test_exclusions_beat_inclusions`,
 `test_poland.py::test_a_siren_test_a_heat_warning_and_an_alarm_flag_do_not_paint`,
 `test_poland.py::test_the_recorded_pair_paints_nothing_the_publisher_cleared`,
+`test_poland.py::test_a_threat_that_says_it_is_not_a_drill_is_painted`,
+`test_poland.py::test_the_exception_is_narrow`,
 `test_poland.py::test_on_the_recorded_day_only_the_pair_is_about_the_air`,
 `test_poland.py::test_a_partial_clearance_ends_the_threat_only_where_it_is_named` and
 `test_poland.py::test_pairing_and_grouping_go_by_slug_not_by_the_text_shown`.

@@ -248,6 +248,14 @@ def _int(raw: str | None) -> int | None:
         return None
 
 
+#: The root element of a communique list as the feed serves it
+#: `[measured: tests/fixtures/rso_page.xml, a page read from the live endpoint
+#: on 2026-08-20; and the unpaged ogolne body recorded 2026-09-16, 40 records,
+#: read on the operator's terminal]`. A well-formed document with any other
+#: root is not a list, however empty it looks (F173).
+LIST_ROOTS: frozenset[str] = frozenset({"newses"})
+
+
 def parse_page(payload: bytes) -> Page:
     """Read one `?_format=xml` page.
 
@@ -265,6 +273,11 @@ def parse_page(payload: bytes) -> Page:
         root = ElementTree.fromstring(payload)
     except ElementTree.ParseError as exc:
         raise SourceUnavailable(f"RSO page is not well-formed XML: {exc}") from exc
+    if root.tag not in LIST_ROOTS:
+        # An XML error body, or a maintenance page written without a doctype,
+        # parses without error and holds no `<news>`. Read as a page it is an
+        # empty list, and an empty list is what the map shows as calm.
+        raise SourceUnavailable(f"RSO page root is <{root.tag}>, which is not a communique list")
 
     pagination = root.find("pagination_info")
     on_page = _int(_attr(pagination, "totalItems")) if pagination is not None else None
@@ -314,8 +327,13 @@ def to_utc(local: str, zone: str) -> datetime:
     earlier = naive.replace(tzinfo=tz, fold=0)
     later = naive.replace(tzinfo=tz, fold=1)
     if earlier.utcoffset() != later.utcoffset():
+        # Two offsets for one wall time is the autumn hour, which the zone
+        # shows twice, or the spring hour, which it never shows; only the
+        # first survives the round trip.
+        shown = earlier.astimezone(UTC).astimezone(tz).replace(tzinfo=None) == naive
         raise AmbiguousLocalTime(
-            f"RSO timestamp {local!r} falls in an hour {zone} maps twice; "
+            f"RSO timestamp {local!r} falls in an hour {zone} "
+            f"{'maps twice' if shown else 'does not have'}; "
             "the feed carries no offset to settle it"
         )
     return earlier.astimezone(UTC)

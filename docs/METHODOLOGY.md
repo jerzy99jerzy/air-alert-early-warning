@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.64
+Document:  docs/METHODOLOGY.md, version 2.65
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4801,6 +4801,107 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
 
+### F179, 0.55.2.0. F171 was repaired in one place of three
+
+`mavo/sources/pansa.py` still cited `mavo/polish.py`, a module that has never
+existed, twice after 0.55.0.1 repaired its module docstring `[measured, grep;
+review of 0.55.0.1, R8]`. `check_cited_identifiers_exist` reads `docs/*.md`
+and the README, so a path inside a `.py` docstring is outside it.
+
+**Class.** F156's: the repair landed where the defect was argued and missed
+where the name was used in passing.
+
+**Repair.** Both citations point where the rule is written. The control the
+review proposed, resolving every backticked path under the tree's top
+directories across every tracked text file, is not built here.
+
+**Reopen condition:** a backticked path to a file that does not exist.
+
+### F178, 0.55.2.0. A negated drill word excluded a threat
+
+`ćwiczeni` in `NOT_A_THREAT_TERMS` is matched as a substring and exclusions win
+over everything, so *To nie są ćwiczenia*, the sentence an alert writes to say
+it is not an exercise, kept a threat off the map `[inference, deterministic
+from the code; review of 0.55.0.1, R7]`. Not observed: of the forty records of
+2026-09-16 one carries the drill word, un-negated, and none a negated one
+`[measured, the recorded body]`. Whether RCB writes the sentence is
+`[nieustalone]`.
+
+**Class.** A substring rule reading a word without its sentence, where a missed
+threat costs more than a false paint.
+
+**Repair.** Before the exclusions are read, only `nie` directly before the
+drill word, with at most the verb and `to` between, is set aside
+(`NEGATED_DRILL`). A drill word anywhere else in the communique still
+excludes it, and no other exclusion changes, `trening` included: the
+operator's decision of 2026-09-19 was a narrow exception with a test.
+
+**Reopen condition:** a real communique that negates another exclusion term,
+or a drill notice that negates its own drill word.
+
+### F177, 0.55.2.0. An end stamped in the hour of a clock change never ended
+
+`is_expired("2026-10-25 02:30:00", 2027-01-01)` returned `False`, and
+`rso.to_utc("2026-03-29 02:30:00", ...)`, an hour the zone does not have,
+raised *maps twice* and never expired either `[measured, review of 0.55.0.1,
+R6]`. D-053's second difference said such a stamp is not an end, so the
+communique stayed painted for as long as the feed listed it.
+
+**Class.** A safe default with no exit. Both candidate instants are known, and
+past the later one the communique is over under either reading.
+
+**Repair.** As an end, the stamp is the later of its two readings (D-053
+amended); the error names a doubled hour and a skipped one apart; the stamp a
+reader sees is still the feed's text.
+
+**Reopen condition:** an end that can never pass.
+
+### F176, 0.55.2.0. The read row was committed before what it vouches for
+
+`record_read` wrote the `read` row in its own transaction before the rows and
+the list. For `pl_warnings` that row is the list's age and for `pl_airspace`
+it is `read_at`. A UUP body with one `\ud800` escape in a remark made `mavo
+airspace` exit 7 with `[STORE-FAILED]`, logged a second read and left the list
+where it was, and the next report cycle published the previous plan under the
+failed run's `read_at` with `stale_error` null, which `docs/WEBAPP.md` said
+could not happen `[measured, review of 0.55.0.1, R4]`. `record_read` also
+stood outside the `try`.
+
+**Class.** Fixtures written against the implementation: the test helpers
+wrote in the same order and held the defect in place.
+
+**Repair.** Rows, then the list, then the read row, all inside the `try`; a
+run whose writes fail leaves no read row and exits 7, and the pipe's liveness
+shows no read, which is true. A lone surrogate refuses the reservation or the
+feature it stands in, counted. One transaction for all three writes would need
+a new store API and was not taken.
+
+**Reopen condition:** a read row whose list is not the newest one written.
+
+### F175, 0.55.2.0. Nesting depth escaped `mavo airspace` with no attempt row
+
+A body of 200,000 bytes of nested arrays is under both size ceilings, and on
+it `json.loads` raises `RecursionError`, which is not a `ValueError`.
+`_cmd_airspace` caught `SourceUnavailable` only, so the command ended in a
+traceback and left no `feed_attempts` row `[measured, review of 0.55.0.1,
+R3]`. `rso.parse_page` is not affected: 100,000-deep XML parses `[measured,
+same review]`.
+
+**Class.** F110's shape, one adapter over: the hostile suite covered malformed
+shapes, not depth.
+
+**Repair.** `RecursionError` becomes a `SourceUnavailable` the command counts
+as a refusal. Where the limit falls depends on the platform: the operator's
+macOS 3.14.7 parses the same 100,000 levels, as 3.14.7 on Linux does given a
+16 MiB stack, and the body is then refused as holding nothing readable, which
+the patch's test did not accept `[measured 2026-09-19: the operator's
+terminal, and this container with that stack]`. Why the Mac's limit falls
+later is `[nieustalone]`. The handler is pinned by forcing the error, and the
+real bytes by the refusal, whichever reason gives it.
+
+**Reopen condition:** a parser exception that ends a collector without an
+attempt row.
+
 ### F174, 0.55.1.0. A context feed can stop the primary publication
 
 **Open, and the reason no release from 0.55.0.0 on is installed.** Found by
@@ -4826,6 +4927,24 @@ keys `null` and the Ukrainian picture beside them, and a feature whose
 coordinates are not GeoJSON-deep and finite is counted unreadable where it is
 read, both under test.
 
+**Closed at 0.55.2.0.** `pansa._coordinates_ok` requires the exact GeoJSON
+depth and positions of finite numbers, bounded by the expected depth and never
+by the data, and a feature that fails is counted unreadable. The `poland()`
+guard in `_cmd_report` serialises every Polish block under the writer's own
+settings, `allow_nan=False` and a UTF-8 encode, before `publish` does, so an
+unwritable value is `[POLAND-FAILED]` and the Polish keys `null`. The guard as
+the review wrote it covered two blocks; D-055 had added a third, and a lone
+surrogate in a clearance's text stopped `state.json` in the same way
+`[measured: test_an_unwritable_clearance_publishes_every_polish_key_null, red on
+the two-block guard and green on three]`. The review measured the depth
+trigger on 3.12.3, and it is not a property of every interpreter: 2000 levels
+are refused by the indented writer on 3.11 and 3.12 and written on 3.13 and
+3.14, and on 3.11 the reader refuses them first (F175) `[measured 2026-09-19
+on 3.11.16, 3.12.3, 3.13.15, 3.14.7]`. The two depth tests the patch carried
+were red on 3.11 and on 3.13 and 3.14 respectively, and the operator's local
+gate caught one of them before this release was tagged; they now test depth
+by the branch that refuses it and the promise per interpreter.
+
 ### F173, 0.55.1.0. A well-formed document that is not a list is read as an empty list, and an empty list says calm
 
 **Open, and held with F174.** Found by the same review (R1) `[measured in the
@@ -4845,6 +4964,15 @@ a list from any other document.
 
 **Closes when** a document whose root is not the feed's list is refused as a
 failed read, and a test holds it.
+
+**Closed at 0.55.2.0.** `rso.parse_page` reads a list only under a root in
+`LIST_ROOTS`, which is `newses`, and anything else raises `SourceUnavailable`:
+a counted refusal, exit 3, and after an hour `pl_warnings` reads `null`, which
+says *could not read*. Tested on both documents above
+(`test_rso.py::test_a_well_formed_document_that_is_not_a_list_is_refused_not_read_as_empty`).
+Requiring `pagination_info` was not done: the recorded body carries it, as
+`totalItems="40" itemsPerPage="20"` over forty records `[measured]`, and
+whether an empty list carries it is `[nieustalone]`.
 
 ### F172, 0.55.1.0. The lead was printed twice, because the feed writes `<shortcut>` into `<content>`
 
