@@ -7,7 +7,7 @@ godzinach. Projekt prywatny, w fazie pre-alfa; nikt nie dostaje z niego dziś
 Dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.25
+Document:  docs/BRIEF-PL.md, version 2.26
 Measured:  każdą zmierzoną liczbę z tego pliku bramka zestawia ze
            STATUS.json przy każdym przebiegu, więc ręczy za nią to
            porównanie, a nie data w nagłówku. Wartości, z którymi są
@@ -200,7 +200,7 @@ konstrukcja jest ułożona wokół tego rozróżnienia.
 Przy prywatnym projekcie wiarygodność waży więcej niż technologia, więc zamiast
 zapewnień konkrety. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Rejestr błędów ma 159 wpisów.** Każdy mówi, co się zepsuło, dlaczego nikt tego
+**Rejestr błędów ma 160 wpisów.** Każdy mówi, co się zepsuło, dlaczego nikt tego
 nie zauważył i jakiej klasy był to błąd. Są tam także wpisy przeciw interesowi
 projektu, w tym ten o wyniku 0 na 20 oraz ten, w którym dokumentacja twierdziła,
 że coś jest sprawdzane, a nie było. Osobno zapisano **54 decyzje projektowe**,

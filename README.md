@@ -6,7 +6,7 @@
 [![tests 937](https://img.shields.io/badge/tests-937-brightgreen)](tests/)
 [![coverage 95.91%](https://img.shields.io/badge/coverage-95.91%25-brightgreen)](Makefile)
 [![harness 13 attacks, 12 mutation-verified](https://img.shields.io/badge/harness-13%20attacks%2C%2012%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 159](https://img.shields.io/badge/defects%20logged-159-informational)](docs/METHODOLOGY.md)
+[![defects logged 160](https://img.shields.io/badge/defects%20logged-160-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -832,7 +832,7 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | Package `mavo/` | 26 | 11,649 |
 | Tests | 74 | 16,479 |
 | Tools | 28 | 7,990 |
-| Documentation | 75 | 35,001 |
+| Documentation | 75 | 35,098 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -847,9 +847,9 @@ confidence interval attached.
 | Coverage | 95.91% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 12 of 13 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 15, each with a control or a named acceptance |
-| Defects logged with their class | 159, the count pinned against the log itself |
+| Defects logged with their class | 160, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 54, counted from the log itself |
-| Releases | 157 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 158 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation

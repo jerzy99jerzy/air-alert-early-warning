@@ -16,6 +16,38 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.2.5 - 2026-09-20
+
+**The web-tier document described a map the reader stopped getting.**
+`docs/WEBAPP.md` argued against a tile server as a design rule while the
+default basemap has been tiled since 4.20.0.0, and said in the same file that
+the deployed page makes no third-party request. Documents only; nothing under
+`mavo/` moves but the version string.
+
+- **F182. A privacy property this document kept after the page lost it.**
+  Measured on the served page: one third-party address in the document,
+  `maps.googleapis.com/maps/api/js`, with the Maps script fetching
+  `fonts.googleapis.com` and `fonts.gstatic.com` itself. The consumer's
+  `/privacy` had already corrected the same claim on the surface a reader sees.
+- **`docs/WEBAPP.md` 3.13.** The map sections now say which of the two maps a
+  reader gets and which one the geometry checks are evidence about; the
+  deployment diagram carries the two Polish context sources the contract table
+  three sections above it already counted; the airspace row records that the
+  deployed pair is in the state that row warns against; and three claims in the
+  present tense about another repository carry the date they were read.
+- **Two open questions answered by measurement rather than by argument.**
+  English shipped, so only the Ukrainian half of the language question is open.
+  A reload of `/pl` finished in 908 ms over 89 requests and 90.4 kB with a warm
+  cache, which retires the desktop half of the weight question and leaves the
+  phone on one bar where it was.
+- **One gap named without a check proposed for it.** The contract's own reader
+  in the gate stops before the four newest keys, which are asserted in
+  `tests/test_poland.py` instead. Closing the link would duplicate those tests
+  and buy a citation rather than a behaviour, so the document says so and
+  nothing is built.
+- **`docs/DEPLOYMENT.md` 1.50.** The `main` row and the release distance follow
+  the version. The host still runs 0.55.2.0 and nothing here was read from it.
+
 ## 0.55.2.4 - 2026-09-20
 
 **The Polish brief was a translation and read like one.** `docs/BRIEF-PL.md`

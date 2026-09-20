@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.12 / 2026-09-19
+Version: 3.13 / 2026-09-20
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -174,7 +174,18 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `pl_warnings` | From 0.55.0.0, when this producer has polled RSO: one row per voivodeship named by an unexpired, **uncleared** threat about the air, in order of first appearance, each with `communiques[]` carrying `id`, `title`, `valid_from`, `valid_to`, `text` and `air_term` (D-053). From 0.55.1.0 each row also carries `slug`, the publisher's slug (`warminsko-mazurskie`): join and pair on `slug`, show `voivodeship`, the feed's name lowercased (`warmińsko-mazurskie`); and a threat leaves this list the moment a later all-clear names its voivodeship (D-055) | **Four states, told apart by the key, and each is a different claim.** Absent: this producer has never polled the feed, and the consumer's own reading still stands. `null`: polled, and cannot say - including a reading of the map's scope older than an hour, which this payload has no field to show as old. `[]`: read, nothing to show. Rows: something to show. `air_term` names the word that classified the communique, so a false paint names its cause. A stamp inside an hour the clock change doubles or skips arrives as the feed's own text, not as ISO. From 0.55.2.0 a document from the feed that is not its list is a failed read, so the key goes `null` an hour later rather than `[]` (F173) |
 | `pl_all_clear` | From 0.55.1.0, published whenever `pl_warnings` is and `null` whenever it is: one row per voivodeship named by an unexpired all-clear, the same row shape with `slug`, each item plus `ended`, the ids of the threats it ended on that voivodeship (D-055) | **The clearance the publisher sent, kept apart from the list a consumer paints.** RCB ends an alert with a second communique and leaves `valid_to` at the end of the day, so a reader of the air terms alone painted the sixteenth until midnight. A row with `ended: []` is a clearance for something this store never held, still shown. `air_term` here is the all-clear term |
 | `pl_airspace` | From 0.55.0.0, when this producer has polled the plan: `read_at`, `switched_on[]`, `not_drawn`, `unreadable`, `statuses`, `stale_error` and `features[]` (D-053) | The same four states as `pl_warnings`, except that an old reading stays published with its `read_at`, which from 0.55.2.0 is the read that wrote it (F176), and `stale_error` carrying the newest refusal when the last attempt failed. **`not_drawn` counts zones and its reasons partition the remainder**: `switched_on` equals `drawn` plus the three reasons. A structure switched on is not a threat and not a statement about who is flying |
-| `pl_airspace.features[]` | GeoJSON features for exactly the structures in `switched_on[]`, same order, same properties | The outlines ride in the same object as the text so the two cannot describe two different readings. A consumer serving outlines from its own read of the plan beside this text is serving two skies |
+| `pl_airspace.features[]` | GeoJSON features for exactly the structures in `switched_on[]`, same order, same properties | The outlines ride in the same object as the text so the two cannot describe two different readings. A consumer serving outlines from its own read of the plan beside this text is serving two skies, and that is the deployed state: since 0.55.2.0 `mavo-site` has still served `/airspace.json` from its own reading on its own phase `[reported, 2026-09-19]`, so the fix is owed on that side |
+
+**Where the table and the gate stop agreeing, stated rather than left to be
+found.** `tools/contract_check.py` says its assertions are each traceable to a
+line here, and its `REQUIRED_*` tuples stop before the four newest: `sources`,
+`pl_warnings`, `pl_all_clear` and `pl_airspace` appear nowhere in that module
+[measured 2026-09-20, this tree]. They are asserted, in `tests/test_poland.py`,
+so the gate does see them; what has no reader is the tie between those rows and
+a check. The four rows above are the longest in this table, which is the usual
+shape: the more a document argues for a field, the later anything checks it. No
+check is proposed here, because the one that would close it duplicates
+`tests/test_poland.py` and buys a link rather than a behaviour.
 
 ## Three states, three different sentences
 
@@ -222,12 +233,16 @@ quiet sky.
 
 ## The map
 
-**The map is a requirement, not a feature.** A page for a reader in Hrubieszow
-at half past three that answers "which raion" with a name and a number, and
-nothing else, is asking that reader to hold Ukrainian administrative geography
-in their head. Almost nobody can. The distance interval says how far; only the
-map says *where*, and where is half the question. Anything that ships without
-it ships without the half the reader cannot supply themselves.
+**The map is a requirement, not a feature, and since 4.20.0.0 it is two maps.**
+A page for a reader in Hrubieszow at half past three that answers "which raion"
+with a name and a number, and nothing else, is asking that reader to hold
+Ukrainian administrative geography in their head. Almost nobody can. The
+distance interval says how far; only the map says *where*, and where is half the
+question. What the reader gets by default is a tiled basemap; the drawing
+described in the next section is what it falls back to. **Anything in this file
+that validates the drawing is evidence about the fallback, not about what the
+reader sees**, and a check that reads it as evidence about the reader's map is
+wrong.
 
 That is also why the distance list, and not the map, is the part that works
 without JavaScript: the map is necessary, and it is not sufficient on its own,
@@ -237,8 +252,10 @@ so the text version is the floor and the map is what makes the floor legible.
 
 The outlines are Natural Earth 10m admin-1 and admin-0, public domain,
 simplified offline by the site's `tools/build_geometry.py` and committed as a
-versioned asset. Nothing about them is drawn by hand or approximated for
-effect.
+versioned asset. Nothing about them is drawn by hand or approximated for effect.
+**They are the fallback's geometry.** The default map is tiled and its shapes
+are Google's, so everything verified below is a property of the drawing the
+reader gets when the tiles do not answer.
 
 The asset is verified rather than trusted [measured, in the site's own gate]:
 22 checks against values that did not come from the file, including published
@@ -260,12 +277,13 @@ the border are not.
 
 ### The control panel
 
-Four controls, in this order: **zoom out, zoom in, "Przy granicy", "Cała
-Ukraina"**. The two presets exist because the map has two jobs that pull in
-opposite directions. "Przy granicy" is the working view: the western belt and
-the Polish border, which is where a Polish reader's question lives. "Cała
-Ukraina" is the context view, and it is the reason the map carries all 25
-oblasts rather than the six that matter to the distance list.
+Four controls **[measured on the served page 2026-09-20: "Przy granicy", "Cała
+Ukraina", "Pełny ekran", "Warstwy"; the two zoom controls named here belong to
+the drawing, not to the tiled map]**. The two presets exist because the map has
+two jobs that pull in opposite directions. "Przy granicy" is the working view:
+the western belt and the Polish border, which is where a Polish reader's
+question lives. "Cała Ukraina" is the context view, and it is the reason the map
+carries all 25 oblasts rather than the six that matter to the distance list.
 
 Also wired [BUILT]: drag, wheel, pinch, arrow keys, `+` and `-`, and `Home`.
 Markers counter-scale, so an icon stays an icon at every zoom instead of
@@ -290,13 +308,17 @@ a point impossible to miss:
 - **No pin, no crosshair, no dot with a tail.** All three are the visual
   vocabulary of a fix, and there is no fix here.
 
-**Five kinds, and the consumer names three.** Measured 2026-08-10 over the
-corpus: `drone` 2,756 declarations, `glide_bomb` 2,104, `artillery` 934,
-`missile` 242. The site knows `missile`, `drone` and `unknown`, so more than
-three thousand declarations arrive named and render as *typ nieznany*. That
-collapses two different facts, "the source said nothing" and "the source said
-something this page has no word for", which is `AlertState.UNKNOWN` against
-`PARTIAL_CLEAR` one layer out. T47 carries the fix, and from 0.54.0.0 it is the **consumer's** entry rather than the producer's: the producer's two items shipped and are held by the gate, which fails when a `ThreatKind` member is not named in this document, and what is outstanding is a label and a glyph on a page this repository does not own.
+**Five kinds, and the consumer named three when this was last read.**
+Measured 2026-08-10 over the corpus: `drone` 2,756 declarations,
+`glide_bomb` 2,104, `artillery` 934, `missile` 242. The site knows `missile`,
+`drone` and `unknown`, so more than three thousand declarations arrive named and
+render as *typ nieznany*. That collapses two different facts, "the source said
+nothing" and "the source said something this page has no word for", which is
+`AlertState.UNKNOWN` against `PARTIAL_CLEAR` one layer out. T47 carries the fix,
+and from 0.54.0.0 it is the **consumer's** entry rather than the producer's: the
+producer's two items shipped and are held by the gate, which fails when a
+`ThreatKind` member is not named in this document, and what is outstanding is a
+label and a glyph on a page this repository does not own.
 
 Glide bombs are worth a category of their own even though they do not reach
 Poland: they are the largest class in the corpus and they say which oblast is
@@ -312,17 +334,18 @@ Since the kind tables cover roughly one alert in ten (F71), the iconless marker
 is the common case, which is why the legend says *alarm, typ nieznany* rather
 than leaving a reader to infer that a bare disc is something milder.
 
-**Shading is the trailing window, and it currently reads the wrong field.**
-Fill saturation is `alerts_count` over the last seven days in five buckets, from
-`recent_7d` and `window_days`. **That inverts** (F114): an oblast under
-continuous attack reports one stretch and renders paler than an oblast with six
-discrete, fully cleared episodes - measured, bucket 1 against bucket 2. It is
-F76's failure in a new direction, the shading now measuring how often an oblast
-fell completely silent. The bucket edges (1, 3, 8, 20) are a display choice made
-by eye and were chosen against a distribution this defect deflates. **The
-consumer should shade by `alert_seconds / (window_days * 86400)`**, which is
-bounded by one and needs no edges. An ongoing alert always beats the trailing
-layer: one oblast never carries two markers.
+**Shading is the trailing window, and at the last reading it read the wrong
+field** `[measured 2026-08, and not re-read since]`. Fill saturation is
+`alerts_count` over the last seven days in five buckets, from `recent_7d` and
+`window_days`. **That inverts** (F114): an oblast under continuous attack
+reports one stretch and renders paler than an oblast with six discrete, fully
+cleared episodes - measured, bucket 1 against bucket 2. It is F76's failure in a
+new direction, the shading now measuring how often an oblast fell completely
+silent. The bucket edges (1, 3, 8, 20) are a display choice made by eye and were
+chosen against a distribution this defect deflates. **The consumer should shade
+by `alert_seconds / (window_days * 86400)`**, which is bounded by one and needs
+no edges. An ongoing alert always beats the trailing layer: one oblast never
+carries two markers.
 
 **Animation carries liveness, never motion.** Ripples run on a five-second
 radar cadence, the marker breathes, rotor blades spin in place. **Nothing
@@ -338,14 +361,22 @@ with a gate around it.
 
 ## What the map refuses to draw
 
-- **No tile server.** Every pan would send the visitor's viewport and IP to a
-  third party, which is exactly what D-016 refused for MAVO. Geometry is
-  Natural Earth, public domain, built offline, served once and cached, so after
-  the first load pan and zoom cost nothing and are seen by nobody. The price is
-  real and worth stating: no cities, roads or rivers as landmarks. The honest
-  alternative, if legibility wins that argument, is self-hosted tiles, which is
-  a new operational component and deserves its own decision rather than being
-  absorbed into this one.
+- **A tile server, refused and then adopted, and this document carried only the
+  refusal.** The refusal was real and its reasoning still holds for the drawing
+  below: geometry is Natural Earth, public domain, built offline and served
+  once, so a pan costs nothing and is seen by nobody. The price was no cities,
+  roads or rivers as landmarks; readers near the border asked for exactly those
+  `[reported, the consumer's privacy page]`, and the tiled map shipped and
+  became the default. **The reader's   browser therefore talks to Google, and
+  this file said otherwise long after   the consumer's own privacy page had
+  corrected the same claim.** Measured on   the served page 2026-09-20: the
+  document carries one third-party address,   `maps.googleapis.com/maps/api/js`,
+  and the Maps script fetches the other two   itself, a stylesheet from
+  `fonts.googleapis.com` and the font files from   `fonts.gstatic.com`. The
+  consumer's `/privacy` describes this in a section of   its own and is where a
+  reader should be sent; nothing here should be a second   account of it. In the
+  fallback drawing the browser still reaches nobody but   the site's own server,
+  and that is the property worth keeping.
 - **No area the geometry does not know.** An area whose oblast slug does not
   match is collected into `unplaceable` and the page says, under the map, that
   the list is complete and the map is not. That behaviour was itself a defect
@@ -420,6 +451,8 @@ flowchart LR
   api[ukrainealarm API, primary since D-040] --> collector[MAVO collectors]
   channel[Telegram channel, the watchman] -.-> collector
   collector --> store[(event store)]
+  rso[RSO communiques, context since D-053] --> store
+  pansa[PANSA airspace plan, context since D-053] --> store
   store --> report[mavo report --watch]
   report -->|writes every cycle| state[/state.json + feed.json/]
   state -->|pushed every 30 s, F116| site[mavo-site, separate host]
@@ -459,8 +492,8 @@ was published on 2026-08-12 with one of them still open. The honest record:
 map with the self-hosted SVG announced as the fallback rather than hidden as
 one; the map running the width of the page; a panel of state transitions over
 the last day; weather fetched server-side; a visit counter that stores two
-numbers a day from a daily-rotated hash. No cookie, no third-party request, no
-analytics script.
+numbers a day from a daily-rotated hash. No cookie and no analytics script; the
+third-party requests are the map's, and they are named above.
 
 **The check this file still lacks.** Nothing fails when this document falls
 behind the consumer, which it has now done twice. The consumer pins its own
@@ -473,15 +506,21 @@ notice the drift finds a proposal rather than a complaint.
 
 ## Open questions
 
-- **Does the page need Ukrainian and English, or is Polish enough?** The
-  audience argued for in `docs/BRIEF.md` is Polish readers near the border.
-  Unresolved, and cheap to get wrong in either direction.
+- **Does the page need Ukrainian?** English shipped: the routes `/en` and
+  `/en/areas` are named in the crawling policy of 4.66.0.0 `[reported]`, so half
+  of this question answered itself and this file went on asking it. The audience
+  argued for in `docs/BRIEF.md` is Polish readers near the border, which is an
+  argument about Polish rather than against Ukrainian.
 - **Raion-level markers need centroids MAVO does not currently publish.** The
   contract carries `katottg` and the distance interval; a marker needs a point.
   Adding one is a schema bump, not a field slipped in.
-- **What the page does at 03:30 on a phone with one bar.** No measurement
-  exists of its weight or its behaviour on a slow connection, and "it is
-  stdlib and small" is an assumption until somebody times it.
+- **What the page does at 03:30 on a phone with one bar.** The desktop half is
+  no longer an assumption: a reload of `/pl` with a warm cache finished in 908
+  ms over 89 requests and 90.4 kB transferred
+  `[measured 2026-09-20, the operator's browser]`. That is the easy case. The
+  phone on one bar is still unmeasured, and the tiled map makes it a different
+  question from the one this line was written for, because most of the weight is
+  now Google's rather than this project's.
 - **Whether the ADS-B hub count (T42) belongs on this page at all.** It is a
   different kind of claim about a different country, and putting it beside the
   alert picture risks a reader reading one as evidence for the other.

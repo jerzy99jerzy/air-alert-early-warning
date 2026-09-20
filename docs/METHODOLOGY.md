@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.66
+Document:  docs/METHODOLOGY.md, version 2.67
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,32 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F182, 0.55.2.5. A privacy property this document kept after the page lost it
+
+`docs/WEBAPP.md` opened its refusals with "**No tile server.** Every pan would
+send the visitor's viewport and IP to a third party", and recorded, one
+hundred and seventeen lines later in the same file, that a tiled basemap had
+shipped with "no third-party request". Measured on the served page 2026-09-20:
+the document loads `maps.googleapis.com/maps/api/js`, and the Maps script
+fetches `fonts.googleapis.com` and `fonts.gstatic.com` itself. The consumer's
+`/privacy` had already corrected the same claim, with a dated note saying the
+page used to assert there were no tiles, so the repair reached the surface a
+reader sees and not the document that argues for it.
+
+**Class.** F118, reversed. Every earlier instance had a document ahead of the
+tree; here the tree and the public page were ahead of the document, and
+nothing prompts anybody to look for that direction. It is also the shape of
+this file's own header, which retired a stale version number and left the
+sentences around it in the present tense.
+
+**Repair.** The refusal is now a record: what was refused, what shipped, why,
+and the three addresses measured on the page. The claim about third-party
+requests in the deployment paragraph is corrected in the same edit, and the
+reader-facing account is left to `/privacy` rather than restated here.
+
+**Reopen condition:** a statement in this file about what the reader's browser
+does, written without a date or without a reading behind it.
 
 ### F181, 0.55.2.3. The brief answered a question the project had re-answered
 

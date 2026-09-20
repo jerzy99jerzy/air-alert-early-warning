@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.49 / 2026-09-20
+Version: 1.50 / 2026-09-20
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -60,8 +60,8 @@ never a decision until D-031 wrote it down.
 | Contract after | `[reported, the consumer half of the same session]` `mavosite-doctor` on the production `state.json` at about 22:50 UTC: `schema v3 accepted`, `contract complete: state=ok, 35 areas, window 7 d`, `no vocabulary drift`, exit 0 |
 | `Самарівський район` | in `unresolved` at 20:25:11 and again at 22:09:59, one of the five names the map does not place at the second read. A row for `data/reference/tag_map.csv`, and open (P7) |
 | `feed_attempts` coverage | **begins 2026-08-29 14:39:05 UTC, for every feed** `[measured 2026-09-10]`. Collection began 2026-08-11, so the table is eighteen days younger than the store it sits in and a query before that date returns an empty set rather than a silence. The refusal-rate figures above are journald's, not this table's, which is what makes them valid for a window this table does not reach (F159) |
-| `main` | 0.55.2.4 |
-| Behind by | **four** releases: 0.55.2.4 rewrites the Polish brief as Polish, 0.55.2.3 repairs two claims both briefs had stopped being able to make, 0.55.2.2 records the reading in the row above and 0.55.2.1 rewrites both editions of FEED-SPEC; none of the three changes anything under `mavo/` but the version string, so this install stays bookkeeping rather than a repair. What each outstanding release contained is in `CHANGELOG.md` and is no longer restated here, because the releases this row used to list as outstanding are installed. Superseded rows, kept for the record: at 0.55.2.2 this row read **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**, both counted from an `Installed` row naming 0.54.8.0 while the host had run 0.55.2.0 since 2026-09-19; at 0.55.1.0 it read **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
+| `main` | 0.55.2.5 |
+| Behind by | **five** releases: 0.55.2.5 brings the web-tier document level with the page a reader gets, 0.55.2.4 rewrites the Polish brief as Polish, 0.55.2.3 repairs two claims both briefs had stopped being able to make, 0.55.2.2 records the reading in the row above and 0.55.2.1 rewrites both editions of FEED-SPEC; none of the three changes anything under `mavo/` but the version string, so this install stays bookkeeping rather than a repair. What each outstanding release contained is in `CHANGELOG.md` and is no longer restated here, because the releases this row used to list as outstanding are installed. Superseded rows, kept for the record: at 0.55.2.2 this row read **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**, both counted from an `Installed` row naming 0.54.8.0 while the host had run 0.55.2.0 since 2026-09-19; at 0.55.1.0 it read **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
 
 **The first poll after installing 0.41.0.0 changes the store, in place, and
 says so.** `feed_attempts` gains `elapsed_s`; the column is added by
