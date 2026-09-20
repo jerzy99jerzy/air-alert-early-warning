@@ -1,56 +1,57 @@
-# Czym musiałby być polski feed alarmowy czytelny maszynowo
+# Jaki powinien być polski kanał komunikatów alarmowych czytelny maszynowo
 
 Version: 3.4 / 2026-09-19
-Specyfikacja napisana z pozycji kogoś, kto próbował budować na takim feedzie,
-najpierw nie znalazł niczego, a potem znalazł jego część za tokenem.
-Ukraiński odpowiednik był czytany i mierzony na korpusie
-118 dni; zbudowanie na nim czegoś to praca na weekend, a parser w jego
-środku zajął dwa popołudnia. Podaję oba, bo argument poniżej opiera się na
-drugim: to, co ta konwencja umożliwia, jest tanie w wykorzystaniu, i w tym
-rzecz. Dokument towarzyszący:
-[`docs/CHANNEL.md`](CHANNEL.md), czyli pomiar, na którym to wszystko stoi,
-oraz T8a w [`../TODO.md`](../TODO.md), gdzie luka została po raz pierwszy
-zapisana. T8a to przegląd, na którym ten dokument się opiera. Jego pierwszy
-werdykt na poziomie źródła, dla strumienia RSO, pochodzi z odczytu strumienia
-z 2026-08-22 i jest wpleciony w sekcje 2 i 4a poniżej. Pozostałych polskich
-źródeł z sekcji 2 ten projekt nie czytał;
-są opisane z tego, co ich operatorzy o nich publikują, i przy każdym zdaniu
-widać, czy jest odczytem, czy cudzą deklaracją.
+Tę specyfikację piszę jako ktoś, kto próbował zbudować system korzystający z
+polskich komunikatów alarmowych. Najpierw nie znalazłem żadnego kanału danych,
+a później tylko jego część, dostępną po uzyskaniu tokena. Ukraiński odpowiednik
+odbierałem i mierzyłem przez 118 dni. Zbudowanie na nim działającej aplikacji
+zajmuje weekend, a parser, który jest jej sercem, powstał w dwa popołudnia.
+Przytaczam oba fakty, bo na drugim z nich opiera się dalszy wywód: z
+ukraińskiego rozwiązania można korzystać niewielkim kosztem i na tym polega
+jego wartość. Dokument uzupełniają [`docs/CHANNEL.md`](CHANNEL.md), gdzie
+opisano pomiar będący jego podstawą, oraz zadanie T8a w
+[`../TODO.md`](../TODO.md), w którym lukę odnotowano po raz pierwszy. T8a to
+przegląd, z którego wyrasta cała argumentacja. Pierwsza ocena konkretnego
+źródła, czyli danych RSO, pochodzi z ich odczytu z 22 sierpnia 2026 r. i
+została włączona do sekcji 2 oraz 4a. Pozostałych polskich kanałów z sekcji 2
+projekt nie badał bezpośrednio. Opisano je na podstawie informacji
+publikowanych przez operatorów, a każde zdanie wskazuje, skąd pochodzi zawarta
+w nim informacja.
 
 ```
-Uwaga: ten dokument opisuje feed, który jeszcze nie istnieje w postaci, o
-       którą prosi. Najbliższy polski odpowiednik, strumień RSO, został
-       odczytany i zmierzony 2026-08-22. Sekcja 2 zapisuje ten odczyt,
-       sekcja 8 zapisuje korekty, które ten dokument musiał wprowadzić,
-       a ostatnie wpisy sekcji 4a zapisują, czego nauczyło
-       konsumowanie strumienia. Korekty są oznaczone, nie ciche. Nic z tego
-       nie jest twierdzeniem o czyichkolwiek kompetencjach i ten dokument
-       takich twierdzeń nie stawia
+Uwaga: ten dokument opisuje kanał danych, który w proponowanej postaci
+       jeszcze nie istnieje. Najbliższy polski odpowiednik, dane RSO,
+       odczytano i zmierzono 22 sierpnia 2026 r. Sekcja 2 opisuje ten odczyt,
+       sekcja 8 zbiera poprawki, które trzeba było wprowadzić do dokumentu,
+       a ostatnie punkty sekcji 4a pokazują, czego nauczyło korzystanie
+       z tych danych. Każda poprawka jest jawnie oznaczona. Nic z tego nie
+       jest oceną niczyich kompetencji i dokument takich ocen nie formułuje.
 ```
 
-**Jak to czytać i dla kogo to jest.** Dokument ma dwie części i dwóch
-czytelników. Część I (sekcje 1 do 9) to argument: co istnieje, czego brakuje,
-ile kosztowało dowiedzenie się tego, i dwadzieścia właściwości nauczonych
-przez budowanie konsumenta na feedach, które ich nie miały. Jest napisana dla
-osoby, która decyduje, czy feed tego rodzaju ma istnieć. Część II (sekcje 10
-do 16) to instrukcja: jak feed wygląda element po elemencie, jak jeden alarm
-przechodzi przez niego od pierwszej wiadomości do ostatniej, i lista
-kontrolna, którą wydawca może przepuścić przez kandydata, zanim przeczyta go
-ktokolwiek spoza budynku. Jest napisana dla inżyniera, któremu kazano to
-zbudować, i zakłada, że ten inżynier już publikuje CAP, bo operator RSO
-publikuje. Inżynier w pośpiechu może zacząć od sekcji 10 i wrócić do części I,
-kiedy jakaś reguła z części II będzie potrzebowała swojego powodu; każda
-reguła tam nazywa właściwość, na której stoi. Wydanie angielskie,
-`FEED-SPEC.md`, stoi obok tego pliku, `FEED-SPEC-PL.md`, i jest z nim trzymane
-sekcja w sekcję, liczba w liczbę, przez sprawdzenie w buildzie tego
-repozytorium, więc oba nie mogą się rozjechać bez tego, żeby build o tym
-powiedział.
+**Jak czytać ten dokument i do kogo jest skierowany.** Składa się z dwóch
+części i ma dwóch adresatów. Część I (sekcje 1–9) zawiera argumentację: co
+istnieje, czego brakuje, ile kosztowało ustalenie tego oraz dwadzieścia
+właściwości, które wyłoniły się podczas budowy systemu odbierającego dane z
+kanałów, którym ich brakowało. Jest przeznaczona dla osoby decydującej o tym,
+czy taki kanał powinien powstać. Część II (sekcje 10–16) to instrukcja: jak
+wygląda on element po elemencie, jak jeden alarm przechodzi przez niego od
+pierwszego do ostatniego komunikatu, oraz lista kontrolna, według której
+nadawca może sprawdzić projekt, zanim zobaczy go ktokolwiek spoza instytucji.
+Tę część napisałem dla inżyniera, któremu powierzono budowę kanału, i zakładam,
+że zna on już format CAP, bo operator RSO go stosuje. Komuś, komu się spieszy,
+wystarczy zacząć od sekcji 10 i wracać do części I wtedy, gdy potrzebne jest
+uzasadnienie którejś reguły z części II; każda z tych reguł wskazuje
+właściwość, z której wynika. Obok polskiego wydania, `FEED-SPEC-PL.md`,
+istnieje angielskie, `FEED-SPEC.md`. Automatyczna kontrola w tym repozytorium
+pilnuje, żeby oba były zgodne sekcja po sekcji i liczba po liczbie, więc nie
+mogą rozejść się niezauważenie.
+
 
 ## Spis treści
 
-**Część I. Argument**
+**Część I. Argumentacja**
 
-1. [Różnica to hasztag](#1-różnica-to-hasztag)
+1. [Różnica sprowadza się do hasztagu](#1-różnica-sprowadza-się-do-hasztagu)
 2. [Co jest dziś dostępne po polskiej stronie](#2-co-jest-dziś-dostępne-po-polskiej-stronie)
 3. [Specyfikacja, która w większości nie jest moja](#3-specyfikacja-która-w-większości-nie-jest-moja)
 4. [Cisza nie może znaczyć bezpieczeństwa](#4-cisza-nie-może-znaczyć-bezpieczeństwa)
@@ -72,218 +73,222 @@ powiedział.
 
 ---
 
-## 1. Różnica to hasztag
+## 1. Różnica sprowadza się do hasztagu
 
-Zmierzone na 48 540 prawdziwych wiadomościach z publicznego ukraińskiego
-kanału alarmów lotniczych, przez 99 nocy ([`docs/CHANNEL.md`](CHANNEL.md)):
+Poniższe wartości zmierzono na 48 540 wiadomościach z publicznego ukraińskiego
+kanału alarmów lotniczych, zebranych przez 99 nocy
+([`docs/CHANNEL.md`](CHANNEL.md)):
 
 | Wielkość | Wartość |
 | --- | --- |
-| Wiadomości oznaczone dotkniętym obszarem i typem jego jednostki | **99,34%** |
-| Różnych etykiet obszarów w całym okresie | 127 |
-| Etykiet rozwiązujących się do unikalnego kodu w państwowym rejestrze | 126 automatycznie, 127 z jedną decyzją kontekstową |
-| Zgodność etykiety z treścią samej wiadomości | **99,997%** na 38 521 porównywalnych wiadomościach |
+| Wiadomości, w których podano obszar i rodzaj jednostki | **99,34%** |
+| Różne etykiety obszarów w całym okresie | 127 |
+| Etykiety, które da się jednoznacznie przypisać do kodu w rejestrze państwowym | 126 automatycznie, 127 po jednej decyzji na podstawie kontekstu |
+| Zgodność etykiety z treścią wiadomości | **99,997%** na 38 521 wiadomościach, które dało się porównać |
 
-Etykieta to hasztag: `#Харківський_район`, `#Львівський_район`,
-`#м_Харків_та_Харківська_територіальна_громада`. Mianownik, podkreślenia
-zamiast spacji, typ jednostki wypisany.
+Etykieta z tabeli to hasztag, na przykład `#Харківський_район`,
+`#Львівський_район` albo `#м_Харків_та_Харківська_територіальна_громада`.
+Wskazuje on obszar, którego dotyczy wiadomość, i zapisuje się go według stałej
+reguły: nazwa w mianowniku, podkreślenia zamiast spacji i pełne określenie
+rodzaju jednostki.
 
-**Ile ta konwencja kosztowała wydawcę: nic.** To reguła formatowania w
-wiadomości, którą człowiek i tak pisze. **Co umożliwiła po stronie
-odbierającej:** jedna osoba, przez dwa popołudnia, zbudowała parser, który
-rozwiązuje każdy obszar do kodu rejestru krajowego ze zmierzonym błędem zero
-na oknie projektowym. Bez API, bez tokena, bez umowy, bez zamówienia, bez
-finansowania.
+**Po stronie ukraińskiej konwencja nie wymagała żadnych nakładów.** Hasztag
+jest po prostu częścią treści komunikatu. Dla odbiorców korzyść jest wyraźna:
+jedna osoba w dwa popołudnia zbudowała parser, który przypisuje każdemu
+obszarowi kod z krajowego rejestru, a w danych, na których go projektowano, nie
+popełnił ani jednego błędu. Wystarczyły do tego publiczne wiadomości, bez
+osobnego interfejsu, formalności i finansowania.
 
-Konwencja jest w użyciu w publicznych wiadomościach alarmowych kraju
-codziennie atakowanego na własnym terytorium i nie dokłada nic do wiadomości,
-którą ktoś i tak pisze. To jest cała opisywana tu luka techniczna.
+Tak zapisuje swoje publiczne komunikaty alarmowe państwo, które jest codziennie
+atakowane na własnym terytorium. Cała luka techniczna, której dotyczy ten
+dokument, sprowadza się właśnie do tego.
 
 ## 2. Co jest dziś dostępne po polskiej stronie
 
-Bez oceny, bo chodzi o interfejs, a nie o instytucję.
+Zestawienie nie zawiera ocen, bo dotyczy sposobu udostępniania komunikatów, a
+nie instytucji.
 
-| Kanał | Dociera do | Czytelny maszynowo |
+| Kanał | Kto go odbiera | Czytelny maszynowo |
 | --- | --- | --- |
-| Syreny | Ludzi w zasięgu słuchu | Nie, i nie może być |
-| Alert RCB (SMS) | Telefonów w całym kraju | Nie. Wolny tekst na telefon |
-| Strumień RSO (XML i JSON) | Każdego, kto znajdzie adres | Tak. Odczytany 2026-08-22, a od września czytany przez ten projekt cyklicznie; luki są zapisane w sekcji 4a |
-| Zasób CAP RSO | Posiadaczy tokena | Co do formatu, tak. Strona integracyjna wydawcy dokumentuje token; ten projekt nie czytał tego zasobu |
+| Syreny | Osoby w zasięgu słuchu | Nie i z natury rzeczy nie może być |
+| Alert RCB (SMS) | Telefony w całym kraju | Nie. To zwykły tekst wysyłany na telefon |
+| Dane RSO (XML i JSON) | Każdy, kto znajdzie adres | Tak. Pierwszy odczyt 22 sierpnia 2026 r., od września ten projekt pobiera je cyklicznie; luki opisuje sekcja 4a |
+| Zasób CAP w RSO | Posiadacze tokena | Pod względem formatu tak. Token opisuje strona integracyjna operatora; ten projekt nie odczytywał tego zasobu |
 
-Wiersze RSO pochodzą z odczytu strumienia i z własnej strony integracyjnej
-wydawcy. Syreny i SMS są opisane z tego, co ich operatorzy o nich publikują.
-Żadne twierdzenie poniżej nie opiera się na odczycie, którego ten projekt nie
-wykonał, ani na dokumencie, którego jego wydawca nie opublikował.
+Wiersze o RSO wynikają z odczytu danych i z informacji na stronie
+integracyjnej, a opis syren i SMS opiera się na materiałach publikowanych przez
+ich operatorów. Każde dalsze twierdzenie ma za sobą albo odczyt wykonany przez
+ten projekt, albo dokument opublikowany przez odpowiedzialną instytucję.
 
-**Korekta wcześniejszych wydań, zmierzona 2026-08-22.** Ten dokument opisywał
-kiedyś strumień RSO jako zamknięty. Nie jest. Usługa stojąca za aplikacją RSO
-publikuje swoje strony list jako XML i JSON, publicznie, bez tokena i bez
-rejestracji, a jej strona integracyjna mówi to wprost. Ten projekt odczytał
-strumień w jeden wieczór, co jest najmocniejszą postacią, jaką taka korekta
-może przyjąć.
+**Sprostowanie do wcześniejszych wydań, na podstawie pomiaru z 22 sierpnia 2026
+r.** Dokument opisywał dotąd dane RSO jako zamknięte. To nieprawda. Usługa, na
+której działa aplikacja RSO, publikuje listy komunikatów w XML i JSON
+publicznie, bez tokena i bez rejestracji, a jej strona integracyjna mówi o tym
+wprost. Ten projekt odczytał te dane w jeden wieczór, a trudno o mocniejszą
+podstawę takiej poprawki.
 
-Ten sam wieczór pokazał, dlaczego strumień w postaci publikowanej dziś nie
-jest jeszcze feedem, który ten dokument opisuje. Żadna wiadomość nie mówi,
-czym jest: pięć kategorii istnieje, ale tylko w adresie żądania, nigdy w
-rekordzie. Żadna wiadomość nie mówi, kto ją wydał, choć do tego samego
-strumienia publikują dwa różne rodzaje organów. Zakres nazwany „wszystkie" po
-cichu zwraca ułamek danych. A historia kurczy się do garstki rekordów na tydzień
-w skali całego kraju, więc tydzień, w który ten projekt najbardziej
-potrzebował spojrzeć wstecz, już w większości przepadł. Każde z tych czterech
-jest zmierzone i każde ma własny wpis na końcu sekcji 4a.
+Ten sam wieczór pokazał, dlaczego dane RSO w obecnej postaci nie są jeszcze
+kanałem, który opisuje ten dokument. Żaden komunikat nie podaje, czego dotyczy:
+istnieje pięć kategorii, ale pojawiają się one wyłącznie w adresie zapytania,
+nigdy w samym rekordzie. Nie wiadomo też, kto go wydał, choć do tego samego
+źródła trafiają komunikaty dwóch różnych rodzajów organów. Zakres nazwany
+„wszystkie” zwraca tylko część rekordów i niczym tego nie sygnalizuje. Historia
+szybko się przerzedza, do kilku wpisów tygodniowo w skali całego kraju, więc
+tydzień, do którego ten projekt najbardziej potrzebował wrócić, w większości
+już zniknął. Każdą z tych obserwacji zmierzono i każda ma osobny punkt na końcu
+sekcji 4a.
 
-**Zmierzone, a nie założone, 2026-08-09.** Pełny katalog metadanych portalu
-danych otwartych został pobrany i przeszukany: 1 510 768 zasobów,
-przefiltrowanych po alarmie, ostrzeżeniu, syrenie, RCB, ochronie ludności,
-zarządzaniu kryzysowym i ewakuacji. Dwadzieścia dziewięć zbiorów pasowało i
-żaden nie jest strumieniem. Rządowe Centrum Bezpieczeństwa jest w katalogu
-obecne i publikuje dwa zbiory, oba dokumenty, żaden nieoznaczony jako dane
-dynamiczne. IMGW publikuje ostrzeżenia meteorologiczne, więc ta kategoria
-ostrzeżeń do danych otwartych dotarła. Feedy dynamiczne na portalu istnieją i
-portal je obsługuje: jakość powietrza jest publikowana z API i oznaczona jako
-dynamiczna. Brakuje nie możliwości i nie wydawcy; brakuje tej jednej
-kategorii danych.
+**Pomiar zamiast założeń, 9 sierpnia 2026 r.** Pobrano i przeszukano pełny
+katalog metadanych portalu otwartych danych: 1 510 768 zasobów,
+przefiltrowanych według słów alarm, ostrzeżenie, syrena, RCB, ochrona ludności,
+zarządzanie kryzysowe i ewakuacja. Kryteria spełniło dwadzieścia dziewięć
+zbiorów danych, ale żaden z nich nie jest kanałem aktualizowanym na bieżąco.
+Rządowe Centrum Bezpieczeństwa jest obecne w katalogu i publikuje dwa zbiory;
+oba zawierają dokumenty i żaden nie jest oznaczony jako dane dynamiczne. IMGW
+publikuje ostrzeżenia meteorologiczne, więc ta kategoria trafiła do otwartych
+danych. Portal obsługuje dane dynamiczne i rzeczywiście je publikuje:
+informacje o jakości powietrza są dostępne przez API i mają takie oznaczenie.
+Nie brakuje więc możliwości technicznych ani instytucji, która mogłaby
+publikować, tylko tej jednej kategorii danych.
 
-**Jak wyglądają wpisy samego wydawcy, zmierzone.** Rządowe Centrum
-Bezpieczeństwa publikuje cztery zasoby w tych dwóch zbiorach: XML i HTML,
-wszystkie na **poziomie otwartości 3**, wszystkie z częstotliwością
-aktualizacji *nie dotyczy*. Czytane na tle standardu, to nie jest błąd
-formatu. XML jest dozwolony na poziomie 3, a HTML jest odradzany dopiero
-powyżej, więc wpisy są poprawne. Czym są, to **dokumenty statyczne**,
-poprawnie jako takie zadeklarowane.
+**Jak wyglądają wpisy RCB – według pomiaru.** W tych dwóch zbiorach Rządowe
+Centrum Bezpieczeństwa udostępnia cztery zasoby w formatach XML i HTML,
+wszystkie na **poziomie otwartości 3**, każdy z częstotliwością aktualizacji
+*nie dotyczy*. W świetle standardu nie jest to błąd formatu: XML jest
+dopuszczalny na poziomie 3, a HTML odradza się dopiero powyżej niego, więc
+wpisy są poprawne. Są to po prostu **dokumenty statyczne**, prawidłowo tak
+oznaczone.
 
-Czytane na poziomie treści 2026-08-22, cztery zasoby to: Krajowy Plan
-Zarządzania Kryzysowego, Narodowy Program Ochrony Infrastruktury Krytycznej z
-załącznikiem standardów oraz katalog centrów zarządzania kryzysowego z ich
-danymi kontaktowymi. Plany i kontakty. Ani jednego datowanego zdarzenia, ani
-jednego alarmu.
+Przegląd ich treści z 22 sierpnia 2026 r. pokazuje, że chodzi o Krajowy Plan
+Zarządzania Kryzysowego, Narodowy Program Ochrony Infrastruktury Krytycznej
+wraz z załącznikiem ze standardami oraz wykaz centrów zarządzania kryzysowego z
+danymi kontaktowymi. Są to plany i kontakty, a nie zdarzenia z datą czy alarmy.
 
-Poziom 3 to zarazem dokładnie ten poziom, na którym standard mówi, że
-udostępnianie przez API jest zalecane, właśnie po to, żeby dane dało się
-przetwarzać maszynowo. Wydawca stoi więc już na progu, który standard opisuje,
-i publikuje pliki.
+Standard zaleca udostępnianie przez API właśnie od poziomu 3, żeby dane dało
+się przetwarzać maszynowo. RCB jest więc już na tym progu i na razie publikuje
+pliki.
 
-Wniosek, na który to wskazuje, jest węższy i trudniejszy do odpowiedzi niż
-ten, po który ten dokument pierwotnie sięgał. **Luką nie są kompetencje,
-format ani platforma. Luką jest to, że wiadomości alarmowe w ogóle nie są
-traktowane jako dane.** Kategoria istnieje na portalu dla jakości powietrza,
-z dynamicznym API włącznie. Dla alarmowania nie istnieje, a wydawca, który by
-ją posiadał, już jest obecny, już jest zgodny ze standardem i już publikuje
-coś innego.
+Wniosek jest węższy i trudniejszy do podważenia niż ten, do którego zmierzały
+pierwsze wydania. **Luka nie dotyczy kompetencji, formatu ani platformy. Polega
+na tym, że komunikatów alarmowych w ogóle nie traktuje się jak danych.** Na
+portalu istnieje taka kategoria dla jakości powietrza, razem z dynamicznym API.
+Dla alarmów jej nie ma, choć instytucja, która mogłaby za nią odpowiadać, jest
+już tam obecna, spełnia standard i publikuje inne zasoby.
 
-Konsekwencję trzeba wypowiedzieć ostrożniej, niż robiły to wcześniejsze
-wydania tego dokumentu, bo ten projekt od tamtej pory zbudował coś na jedynym
-strumieniu, który istnieje. Nie jest tak, że nie da się nic zbudować. Jest
-tak, że **alarmowanie jest nieobecne w miejscu, w którym państwo publikuje
-dane jako dane.** Strumień żyje poza katalogiem, jako zaplecze aplikacji: bez
-wpisu, bez wersji, bez zadeklarowanego schematu, bez zadeklarowanej retencji,
-wolny do zmiany kształtu bez ostrzeżenia. Zbiór badawczy, narzędzie
-dostępności dla osób niesłyszących, wyświetlacz w szkole, sprawdzenie, jak
-szybki naprawdę jest system - każde z nich da się na nim spróbować i każde
-dziedziczy wszystkie luki z sekcji 4a bez żadnego kontraktu pod spodem.
+Skutki trzeba opisać ostrożniej niż dawniej, bo ten projekt zbudował już system
+korzystający z jedynego istniejącego źródła. Nie chodzi o to, że nic nie da się
+zbudować, lecz o to, że **komunikatów alarmowych nie ma tam, gdzie państwo
+publikuje dane jako dane.** RSO działa poza katalogiem, jako zaplecze
+aplikacji: nie ma wpisu, wersji, opisanego schematu ani określonego okresu
+przechowywania, a jego struktura może się zmienić bez zapowiedzi. Można na nim
+oprzeć badania naukowe, narzędzie dla osób głuchych, ekran informacyjny w
+szkole albo pomiar rzeczywistej szybkości systemu, ale każde z tych rozwiązań
+odziedziczy wszystkie luki z sekcji 4a i nie będzie miało żadnych gwarancji.
 
-Ten projekt natrafił na tę ścianę wprost. Ukraińska strona granicy jest
-zmierzona do poziomu rejonu, 118 dni, 61 041 wiadomości. Polska strona ma
-jeden wieczór i nie da się jej zbudować wstecz: własna retencja strumienia
-trzyma chudy plik, a tydzień lipcowego uderzenia pocisku manewrującego
-przetrwał w nim jako garść wierszy dla całego kraju. Asymetria nie dotyczy
-ilości danych; dotyczy tego, czy dane są traktowane jako warte zachowania.
+Ten projekt odczuł to bezpośrednio. Ukraińską stronę granicy zmierzono z
+dokładnością do rejonu: 118 dni i 61 041 wiadomości. Polska strona ma za sobą
+jeden wieczór pomiarów i nie da się jej odtworzyć wstecz. RSO przechowuje
+niewiele, a z tygodnia lipcowego uderzenia pocisku manewrującego zostało w nim
+kilka rekordów dla całego kraju. Różnica nie wynika z ilości danych, lecz z
+tego, czy się je archiwizuje.
 
-Przeszukanie katalogu jest odtwarzalne: pobrać metadane katalogu samego
-portalu, rozpakować, przefiltrować pola opisu. Polecenie jest w historii tego
-repozytorium, a liczby wyżej pochodzą z jego uruchomienia, nie z przeglądania
-strony.
+Wyszukiwanie w katalogu można powtórzyć: wystarczy pobrać metadane udostępniane
+przez portal, rozpakować je i przefiltrować pola opisu. Odpowiednie polecenie
+jest w historii repozytorium, a liczby podane wyżej pochodzą z jego wyniku, nie
+z przeglądania strony.
 
-**Trzy pytania, na które ten dokument nie umiał odpowiedzieć**, a jedno z nich
-ma dziś połowę odpowiedzi: czy ładunek CAP niesie dotknięty obszar jako kod
-TERYT w `geocode`, czy tylko jako nazwę albo wielokąt; czy koniec zagrożenia
-jest publikowany jako wiadomość `Cancel` lub `Update`, czy wynika z upływu
-`expires`; oraz czy cokolwiek jest publikowane, kiedy nic się nie dzieje, co
-jest tematem sekcji 4. Dla stron XML drugie ma odpowiedź, z jednej pary
-komunikatów odczytanej 2026-09-16: ani jedno, ani drugie, tylko osobny
-komunikat prozą, który nie wskazuje żadnego alarmu, podczas gdy własne
-`valid_to` alarmu biegnie do końca dnia (właściwość dwudziesta). Dla zasobu
-CAP wszystkie trzy stoją, a rozstrzygnąłby je odczyt pod tokenem. T8a w
-backlogu jest tym odczytem i nie został wykonany.
+**Trzy pytania, na które ten dokument nie umiał odpowiedzieć**; na jedno z nich
+jest już połowa odpowiedzi. Czy treść komunikatu CAP zawiera obszar jako kod
+TERYT w polu `geocode`, czy tylko jako nazwę albo wielokąt? Czy koniec
+zagrożenia jest publikowany jako komunikat `Cancel` lub `Update`, czy wynika
+wyłącznie z upływu terminu w polu `expires`? Czy cokolwiek jest publikowane
+wtedy, gdy nic się nie dzieje (tego dotyczy sekcja 4)? Dla stron XML drugie
+pytanie rozstrzygnęła para komunikatów odczytana 16 września 2026 r.: ani
+jedno, ani drugie. Koniec ogłasza osobny komunikat opisowy, który nie wskazuje
+żadnego alarmu, a pole `valid_to` samego alarmu obowiązuje do końca dnia
+(właściwość dwudziesta). Dla zasobu CAP wszystkie trzy kwestie pozostają
+otwarte i wyjaśniłby je dopiero odczyt z użyciem tokena. Taki odczyt przewiduje
+zadanie T8a, ale dotąd go nie wykonano.
 
 ## 3. Specyfikacja, która w większości nie jest moja
 
-**Cztery z pięciu właściwości poniżej są już wymagane lub zalecane przez
-własny standard techniczny polskiego państwa dla danych publicznych**
-(*Standard techniczny*, Ministerstwo Cyfryzacji, określający minimalne
-wymagania techniczne dla danych publicznych publikowanych w Centralnym
-Repozytorium Informacji Publicznej). Ta sekcja nie jest więc propozycją. Jest
-notatką, że istniejący standard nie został zastosowany do jednej kategorii
-danych.
+**Cztery z pięciu opisanych niżej właściwości polski standard techniczny dla
+danych publicznych już wymaga albo zaleca** (*Standard techniczny* Ministerstwa
+Cyfryzacji, określający minimalne wymagania techniczne dla danych publicznych
+udostępnianych w Centralnym Repozytorium Informacji Publicznej). Ta sekcja nie
+jest więc propozycją, tylko uwagą, że istniejącego standardu nie zastosowano do
+jednej kategorii danych.
 
-Piąta właściwość naprawdę w standardzie nie występuje i to ona ma dla
-alarmowania największe znaczenie. Jest oznaczona jako luka, nie jako prośba.
+Piątej właściwości w standardzie rzeczywiście nie ma, a w przypadku komunikatów
+alarmowych jest ona najważniejsza. Oznaczam ją jako lukę, a nie jako prośbę.
 
 | Właściwość | Status w standardzie |
 | --- | --- |
-| Publiczny, bez procedury wnioskowej | Portal stwierdza, że dane mogą być ponownie wykorzystywane bez składania wniosku |
-| Obszar przez kod rejestru, nie opisem słownym | Standard wskazuje TERYT jako rejestr autorytatywny i definiuje *adres uniwersalny*, mówiąc wprost, że nie jest on do czytania przez człowieka, lecz dla systemu |
-| Przejścia stanów ze znacznikiem czasu | Wymagane ISO 8601, `yyyy-mm-ddThh:mm` |
-| Wersjonowany schemat, serwowany przez API | Poziom otwartości 3 i wyżej: API zalecane, JSON wg RFC 8259 ze standardem JSON API; poziom 4 wymaga JSON-LD z pełnym kontekstem semantycznym. Istnieje osobny Standard API |
-| **Sygnał życia** | **Brak.** Patrz sekcja 4 |
+| Publiczny dostęp bez wniosków | Portal stwierdza, że dane można wykorzystywać ponownie bez składania wniosku |
+| Obszar jako kod rejestru, a nie opis | Standard wskazuje TERYT jako rejestr referencyjny i definiuje *adres uniwersalny*, zaznaczając wprost, że ma go odczytywać system, a nie człowiek |
+| Zmiany stanu z datą i godziną | Wymagany zapis ISO 8601, `yyyy-mm-ddThh:mm` |
+| Wersjonowany schemat udostępniany przez API | Od poziomu otwartości 3 zalecane API i JSON zgodny z RFC 8259 oraz standardem JSON API; poziom 4 wymaga JSON-LD z pełnym kontekstem semantycznym. Istnieje też odrębny Standard API |
+| **Sygnał życia** | **Brak.** Zob. sekcja 4 |
 
-Cztery wiersze powyżej nie potrzebują ode mnie argumentu. Dalej jest
-uzasadnienie każdego z nich w konkretnym przypadku alarmowania, a potem luka.
+Czterech pierwszych wierszy nie muszę uzasadniać. Poniżej wyjaśniam, dlaczego
+każda z tych właściwości ma znaczenie dla komunikatów alarmowych, a potem
+opisuję lukę.
 
-**Odczytane na tle RSO, w 2.4, z jednym wierszem poprawionym w 3.3.** Te same
-pięć właściwości, ze statusem każdej wobec jedynego istniejącego polskiego
-strumienia. `[zmierzone]` to odczyt tego projektu z 2026-08-22, a dla
-trzeciego wiersza jego odczyt z 2026-09-16; *nieustalone* to to, czego te
-odczyty nie rozstrzygają, a sekcja 2 wymienia, co by rozstrzygnęło.
+**Porównanie z RSO z wydania 2.4, z jednym wierszem poprawionym w wydaniu
+3.3.** Tabela zestawia tych samych pięć właściwości z jedynym istniejącym
+polskim źródłem. `[zmierzone]` oznacza odczyt tego projektu z 22 sierpnia 2026
+r., a w trzecim wierszu odczyt z 16 września 2026 r. Słowo *nieustalone*
+oznacza kwestie, których te odczyty nie rozstrzygają; sekcja 2 wymienia, co by
+je rozstrzygnęło.
 
-| Właściwość | Status wobec RSO |
+| Właściwość | Status w RSO |
 | --- | --- |
-| Publiczny, bez procedury wnioskowej | Spełniona przez strony list XML i JSON `[zmierzone]`. Niespełniona przez zasób CAP, który strona integracyjna wydawcy stawia za tokenem. To jest pozostała luka |
-| Obszar przez kod rejestru, nie opisem słownym | Strony list podają województwo jako slug i nazwę, bez kodu rejestru `[zmierzone]`. Nieustalone dla CAP, którego `geocode` może go nieść |
-| Przejścia stanów ze znacznikiem czasu | Częściowo spełniona przez strony list: publikowane są oba kierunki, koniec jako osobny komunikat prozą, który nie wskazuje żadnego alarmu, podczas gdy własne `valid_to` alarmu biegnie do końca dnia, a żaden znacznik nie ma przesunięcia strefy `[zmierzone]`, właściwość dwudziesta. Nieustalone dla CAP, który ma na to `Cancel` i `Update` |
-| Wersjonowany schemat, serwowany przez API | W dużej mierze spełniona przez sam CAP, opublikowany wersjonowany standard; profil RSO, czyli które elementy opcjonalne są wypełniane, jest nieopublikowany |
-| **Sygnał życia** | Nieustalone dla RSO. Nie zdefiniowane przez CAP, więc nie uzyskane przez jego przyjęcie. Sekcja 4 |
+| Publiczny dostęp bez wniosków | Spełniona przez listy komunikatów w XML i JSON `[zmierzone]`. Niespełniona przez zasób CAP, który według strony integracyjnej operatora wymaga tokena. Tu pozostaje luka |
+| Obszar jako kod rejestru, a nie opis | Listy podają województwo jako identyfikator tekstowy i nazwę, bez kodu rejestru `[zmierzone]`. Nieustalone dla CAP, którego pole `geocode` może taki kod zawierać |
+| Zmiany stanu z datą i godziną | Częściowo spełniona przez listy: publikowane są oba kierunki, ale koniec ogłasza osobny komunikat opisowy, który nie wskazuje alarmu, pole `valid_to` samego alarmu obowiązuje do końca dnia, a żaden znacznik czasu nie zawiera przesunięcia względem UTC `[zmierzone]`, właściwość dwudziesta. Nieustalone dla CAP, który ma do tego komunikaty `Cancel` i `Update` |
+| Wersjonowany schemat udostępniany przez API | W dużej mierze spełniona przez sam CAP, opublikowany i wersjonowany standard; profil RSO, czyli informacja, które elementy opcjonalne są wypełniane, nie został opublikowany |
+| **Sygnał życia** | Nieustalone dla RSO. CAP go nie definiuje, więc samo przyjęcie CAP go nie zapewni. Sekcja 4 |
 
-**Pierwsza. Publiczny, bez uwierzytelniania, bez procedury wnioskowej.** Feed
-za formularzem wniosku nie jest infrastrukturą publiczną; jest systemem
-zezwoleń z ikoną RSS. Ukraiński kanał nie potrzebuje tokena i dlatego każdy
-może zweryfikować pomiary w tym repozytorium zamiast brać je na wiarę.
+**Pierwsza. Dostęp publiczny, bez uwierzytelniania i bez wniosków.** Kanał
+dostępny dopiero po złożeniu wniosku nie jest infrastrukturą publiczną, tylko
+usługą udostępnianą za zgodą. Ukraińskie źródło nie wymaga tokena i dlatego
+każdy może sam sprawdzić pomiary z tego repozytorium, zamiast przyjmować je na
+wiarę.
 
-*Wobec RSO, w 2.4.* Zasób CAP jest za tokenem, co dokumentuje własna strona
-integracyjna wydawcy. Strony list XML i JSON nie mają
-żadnej bramki, więc cały ciężar spada na ten jeden zasób, który niesie postać
-ustrukturyzowaną. To nie jest pytanie o schemat, więc żadne pole go nie
-zamyka, i to jest właściwość, która oddziela system, na którym gmina może
-budować, od takiego, o który musi prosić.
+*W odniesieniu do RSO, wydanie 2.4.* Zasób CAP wymaga tokena, co opisuje strona
+integracyjna operatora. Listy w XML i JSON nie mają żadnych ograniczeń dostępu,
+więc wymóg zgody obejmuje właśnie ten zasób, który ma ustrukturyzowaną postać.
+Nie jest to kwestia schematu i żadne pole tego nie zmieni. Od tej właściwości
+zależy, czy gmina może po prostu zbudować własne rozwiązanie, czy musi najpierw
+prosić o dostęp.
 
-**Druga. Obszary identyfikowane kodem rejestru, nie opisem słownym.** Standard
-formułuje to lepiej niż ja: wprowadza adres uniwersalny właśnie po to, żeby
-lokalizację rozwiązywał system, a nie człowiek, i wskazuje TERYT jako
-rejestr, który trzyma kody. Wiadomość mówiąca `powiat biłgorajski` w zdaniu
-zmusza każdego konsumenta do zbudowania własnego mechanizmu dopasowywania
-nazw i do subtelnych pomyłek w nim. Odkrycie dokładnie tego kosztowało ten projekt jeden
-pomiar: dopasowywanie nazw do rejestru osiągnęło 6,06% tam, gdzie własne
-ustrukturyzowane etykiety źródła osiągnęły 99,34%.
+**Druga. Obszar wskazany kodem rejestru, a nie opisem.** Standard ujmuje to
+lepiej, niż ja bym potrafił: wprowadza adres uniwersalny właśnie po to, żeby
+miejsce mógł ustalić system, a nie człowiek, i wskazuje TERYT jako rejestr, w
+którym znajdują się kody. Jeśli komunikat podaje `powiat biłgorajski` w zwykłym
+zdaniu, każdy odbiorca musi napisać własne dopasowywanie nazw, a przy tym łatwo
+o subtelne błędy. Ten projekt przekonał się o tym, mierząc: dopasowanie nazw do
+rejestru osiągnęło 6,06%, a ustrukturyzowane etykiety samego źródła – 99,34%.
 
-**Trzecia. Przejścia stanów, ze znacznikiem czasu, w obie strony.** Początek
-alarmu i koniec alarmu to dwa zdarzenia i oba mają znaczenie. Feed publikujący
-tylko początek zostawia każdemu konsumentowi zgadywanie, kiedy jest po
-wszystkim, a zgadywanie produkuje awarię, której ten projekt odmawia
-wszędzie: stan nieznany zamieniony w taki, który wygląda bezpiecznie.
+**Trzecia. Zmiany stanu w obu kierunkach, z datą i godziną.** Początek i koniec
+alarmu to dwa odrębne zdarzenia i oba mają znaczenie. Jeśli kanał publikuje
+tylko początek, każdy odbiorca musi zgadywać, kiedy zagrożenie minęło, a
+zgadywanie prowadzi do błędu, którego ten projekt unika wszędzie: stan nieznany
+zaczyna wyglądać na bezpieczny.
 
-**Czwarta. Wersjonowany schemat, serwowany przez API.** Standard już zaleca
-udostępnianie przez API od poziomu otwartości 3 i ostrzega, własnymi słowami,
-że dane poziomu 3 nadal wymagają człowieka, żeby ustalić, co znaczy każde
-pole. Dane alarmowe to dokładnie to miejsce, gdzie ta niejednoznaczność jest
-droga, i to jest argument za pójściem na poziom 4 zamiast zatrzymania się na
-opublikowanym pliku.
+**Czwarta. Wersjonowany schemat udostępniany przez API.** Standard już teraz
+zaleca udostępnianie przez API od poziomu otwartości 3 i sam przestrzega, że
+przy danych z poziomu 3 człowiek wciąż musi ustalać, co znaczy każde pole. W
+komunikatach alarmowych taka niejednoznaczność kosztuje najwięcej, dlatego
+warto dojść do poziomu 4, zamiast poprzestać na opublikowanym pliku.
 
-**Piąta. Sygnał życia (heartbeat).** Nie ma go w standardzie i standard nie myli się,
-pomijając je w ogólności: opisuje, jak *zbiór danych* jest sformatowany i
-opisany, co jest innym problemem niż to, jak *strumień* sygnalizuje, że żyje.
-DCAT-AP niesie `accrualPeriodicity`, ale to zadeklarowana częstotliwość
-aktualizacji w metadanych, nie sygnał w danych. Dla alarmowania ta różnica to
-wszystko i to jest sekcja 4.
+**Piąta. Sygnał życia.** Standard go nie przewiduje i co do zasady słusznie:
+określa, jak sformatować i opisać *zbiór danych*, a to inny problem niż sposób,
+w jaki *kanał* sygnalizuje, że działa. DCAT-AP ma pole `accrualPeriodicity`,
+ale to deklarowana w metadanych częstotliwość aktualizacji, a nie sygnał w
+samych danych. Przy komunikatach alarmowych ta różnica decyduje o wszystkim i
+jej właśnie dotyczy sekcja 4.
+
 
 ## 4. Cisza nie może znaczyć bezpieczeństwa
 

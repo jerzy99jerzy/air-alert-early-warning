@@ -1,20 +1,20 @@
 # What a machine-readable Polish alerting feed would have to be
 
 Version: 3.4 / 2026-09-19
-A specification, written from the position of someone who tried to build against
-one, found nothing at first, and then found part of one behind a token. The
-Ukrainian equivalent was consumed and measured over a corpus
+A specification, written from the position of someone who tried to build
+against one, found nothing at first, and later found part of one, available
+with a token. The Ukrainian equivalent was consumed and measured over a corpus
 of 118 days; the work of building against it is a weekend project, and the
 parser at the centre of it took two afternoons. Both facts are stated because
-the argument below rests on the second: what the convention enables is cheap
-to exploit, and that is the point. Companion: [`docs/CHANNEL.md`](CHANNEL.md),
+the argument below rests on the second: what the convention enables is cheap to
+exploit, and that is the point. Companion: [`docs/CHANNEL.md`](CHANNEL.md),
 which is the measurement this rests on, and T8a in [`../TODO.md`](../TODO.md),
 which is where the gap was first recorded. T8a is the survey this document
 argues from. Its first source-level verdict, for the RSO stream, comes from
 reading the stream on 2026-08-22 and is folded into sections 2 and 4a below.
-The other Polish sources in
-section 2 have not been read by this project; they are described from what
-their operators publish about them, and each sentence says which it is.
+The other Polish sources in section 2 have not been read by this project; they
+are described from what their operators publish about them, and each sentence
+says which it is.
 
 ```
 Note: this document describes a feed that does not yet exist in the form it
@@ -81,19 +81,21 @@ over 99 nights ([`docs/CHANNEL.md`](CHANNEL.md)):
 | Labels resolving to a unique code in the state register | 126 automatically, 127 with one contextual decision |
 | Agreement between the label and the message's own prose | **99.997%** on 38,521 comparable messages |
 
-The label is a hashtag: `#Харківський_район`, `#Львівський_район`,
-`#м_Харків_та_Харківська_територіальна_громада`. Nominative case, underscores
-for spaces, unit type spelled out.
+The label in the table is a hashtag, for example `#Харківський_район`,
+`#Львівський_район` or `#м_Харків_та_Харківська_територіальна_громада`. It
+identifies the area the message concerns and is written to a fixed rule: the
+name in the nominative, underscores for spaces, and the unit type spelled out.
 
-**What that convention cost the publisher: nothing.** It is a formatting rule in
-a message a person writes anyway. **What it enabled on the receiving side:** one
-person, over two afternoons, built a parser that resolves every area to a national
-register code with a measured error rate of zero on the design window. No API,
-no token, no agreement, no procurement, no funding.
+**On the Ukrainian side the convention required no investment.** The hashtag is
+simply part of the message text. For recipients the benefit is clear: one
+person, over two afternoons, built a parser that resolves every area to a
+national register code with a measured error rate of zero on the design window.
+The public messages were all it needed, with no separate interface, no
+formalities and no funding.
 
-The convention is in use in the public alert messages of a country under daily
-attack on its own territory, and it adds nothing to a message somebody writes
-anyway. That is the entire technical gap being described here.
+This is how a country under daily attack on its own territory writes its public
+alert messages. The entire technical gap this document describes comes down to
+exactly that.
 
 ## 2. What is available on the Polish side today
 
@@ -107,10 +109,10 @@ institution.
 | RSO stream (XML and JSON) | Anyone who finds the address | Yes. Read on 2026-08-22, and read on a timer by this project since September; the gaps are recorded in section 4a |
 | RSO CAP resource | Holders of a token | In format, yes. The publisher's integration page documents the token; this project has not read the resource |
 
-The RSO rows come from reading the stream and from the publisher's own
-integration page. The sirens and the SMS are described from what their
-operators publish about them. No claim below rests on a reading this project
-has not made or on a document its publisher has not published.
+The RSO rows come from reading the stream and from the operator's integration
+page; the sirens and the SMS are described from what their operators publish
+about them. Every claim below rests either on a reading this project has made
+or on a document published by the responsible institution.
 
 **A correction to earlier editions, measured 2026-08-22.** This document used
 to describe the RSO stream as closed. It is not. The service behind the RSO
@@ -119,14 +121,15 @@ and no registration, and its integration page says so in plain words. This
 project read the stream in one evening, which is the strongest form a
 correction like this can take.
 
-The same evening showed why the stream, as published today, is not yet the
-feed this document describes. No message says what it is: five categories
-exist, but only in the address of the request, never in the record. No message
-says who issued it, although two different kinds of authority publish into the
-same stream. The scope named "all" quietly returns a fraction of the data. And
-history thins to a handful of records per week across the whole country, so
-the week this project most needed to look back at is already mostly gone. Each
-of these is measured, and each has its own entry at the end of section 4a.
+The same evening showed why the stream, as published today, is not yet the feed
+this document describes. No message says what it is: five categories exist, but
+only in the address of the request, never in the record. No message says who
+issued it, although two different kinds of authority publish into the same
+stream. The scope named "all" returns only a fraction of the records, with no
+indication of it. And history thins to a handful of records per week across the
+whole country, so the week this project most needed to look back at is already
+mostly gone. Each of these is measured, and each has its own entry at the end
+of section 4a.
 
 **Measured rather than assumed, 2026-08-09.** The full metadata catalogue of the
 open data portal was downloaded and searched: 1,510,768 resources, filtered on
@@ -149,19 +152,21 @@ they are is **static documents**, correctly declared as such.
 Read at the level of content on 2026-08-22, the four resources are: the
 National Crisis Management Plan, the National Critical Infrastructure
 Protection Programme with its standards annex, and a directory of
-crisis-management centres with their contact details. Plans and contacts. Not
-one dated event, and not one alert.
+crisis-management centres with their contact details. They are plans and
+contacts rather than dated events or alerts.
 
 Level 3 is also the exact level at which the standard says API delivery is
 recommended, precisely so that data can be machine-processed. The publisher is
-therefore already at the threshold the standard describes, and publishing files.
+therefore already at the threshold the standard describes, and for now it
+publishes files.
 
-The conclusion this points to is narrower and harder to answer than the one this
-document originally reached for. **The gap is not competence, format or
+The conclusion this points to is narrower and harder to answer than the one
+this document originally reached for. **The gap is not competence, format or
 platform. It is that alerting messages are not treated as data at all.** The
 category exists on the portal for air quality, complete with a dynamic API. For
-alerting it does not exist, and the publisher who would own it is already
-present, already compliant, and already publishing something else.
+alerting it does not exist, although the institution that would own it is
+already present on the portal, already compliant, and already publishing other
+resources there.
 
 The consequence needs stating more carefully than earlier editions of this
 document put it, because this project has since built against the one stream
@@ -174,13 +179,12 @@ for a school, a check on how fast the system actually is - each can be
 attempted against it, and each inherits every gap in section 4a with no
 contract underneath.
 
-This project hit that wall directly. The Ukrainian side of the border is
-measured down to the raion, 118 days of it, 61,041 messages. The Polish side
-is one evening old, and it cannot be built backwards: the stream's own
-retention keeps a thin file, and the week of the July cruise-missile impact
-survives in it as a handful of rows for the whole country. The asymmetry is
-not about data volume; it is about whether the data is treated as worth
-keeping.
+This project ran into this directly. The Ukrainian side of the border is
+measured down to the raion, 118 days of it, 61,041 messages. The Polish side is
+one evening old, and it cannot be built backwards: the stream's own retention
+keeps a thin file, and the week of the July cruise-missile impact survives in
+it as a handful of rows for the whole country. The difference lies not in the
+volume of data but in whether it is archived.
 
 The catalogue search is reproducible: download the portal's own catalogue
 metadata, unpack, and filter the description fields. The command is in this
@@ -236,27 +240,26 @@ settle, and section 2 lists what would.
 | Versioned schema, served over an API | Largely met by CAP itself, a published versioned standard; the RSO profile of it, which optional elements are populated, is unpublished |
 | **A heartbeat** | Unknown for RSO. Not defined by CAP, so not obtained by adopting it. Section 4 |
 
-**One. Public, unauthenticated, no application process.** A feed behind an
-application form is not public infrastructure; it is a permission regime with an
-RSS icon. The Ukrainian channel needs no token, which is why anyone can verify
-the measurements in this repository rather than take them on trust.
+**One. Public, unauthenticated, no application process.** A feed available only
+after an application is not public infrastructure but a service provided by
+permission. The Ukrainian channel needs no token, which is why anyone can
+verify the measurements in this repository rather than take them on trust.
 
-*Against RSO, at 2.4.* The CAP resource is behind a token, documented as
-such on the publisher's own integration page. The XML and JSON list pages
-carry no gate at all,
-so the regime falls on the one resource that carries the structured form. It
-is not a schema question, so no field closes it, and it is the property that
-separates a system a municipality can build on from one it must ask to.
+*Against RSO, at 2.4.* The CAP resource requires a token, as the operator's
+integration page documents. The XML and JSON list pages carry no access
+restriction, so the permission requirement applies to exactly the resource that
+carries the structured form. It is not a schema question, so no field changes
+it, and this property decides whether a municipality can simply build on the
+feed or must first ask for access.
 
 **Two. Areas identified by register code, not by prose.** The standard makes
 this point better than I can: it introduces the universal address specifically
 so that a system, rather than a person, can resolve a location, and it names
 TERYT as the register that holds the codes. A message saying
-`powiat biłgorajski` in a sentence forces every consumer to write a name
-matcher and get it subtly wrong. This project spent a measurement
-discovering exactly that: name
-matching against a register reached 6.06% where the source's own structured
-labels reached 99.34%.
+`powiat biłgorajski` in a sentence leaves every consumer to write its own name
+matcher, where subtle errors are easy to make. This project spent a measurement
+discovering exactly that: name matching against a register reached 6.06% where
+the source's own structured labels reached 99.34%.
 
 **Three. State transitions, timestamped, both directions.** An alert beginning
 and an alert ending are two events and both matter. A feed publishing only the
