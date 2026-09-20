@@ -1193,9 +1193,9 @@ rules about filling elements CAP already has.
 
 ## 11. The life of one alert on the wire
 
-One alert, from the moment an authority decides to the moment a reader can
-stop worrying, in the form a consumer sees it. Every arrow is a message or
-the absence of one, and the absences are where feeds go wrong.
+One alert, from the moment an authority decides to the moment a reader can stop
+worrying, in the form a consumer sees it. Every arrow is a message or the
+absence of one, and the absences are where a feed fails.
 
 ```mermaid
 stateDiagram-v2
@@ -1354,11 +1354,12 @@ that test in its build, against every stream it stores, and one of the
 thirteen attacks in its harness is exactly this: replay a feed, assert the
 log did not grow.
 
-**A hash over the identity, published, is a gift.** CAP does not require it,
-and a publisher that adds one - a stable digest of the elements that make the
-message the message it is - lets every consumer deduplicate without agreeing
-on which elements those are. It is one field. Its absence costs each consumer
-the same afternoon of deciding, and they decide differently.
+**A published hash over the identity spares every consumer the same work.** CAP
+does not require it, and a publisher that adds one - a stable digest of the
+elements that make the message the message it is - lets every consumer
+deduplicate without agreeing on which elements those are. It is one field. Its
+absence costs each consumer the same afternoon of deciding, and they decide
+differently.
 
 ## 14. Where: the area as a code
 
@@ -1425,25 +1426,24 @@ remaining allowance in a header. If there is none, the documentation says
 because a consumer finds it by being cut off, and the gap it leaves is
 unattributable.
 
-**Refuse what you do not honour.** A request carrying a parameter the server
-does not implement gets a `400`, not a `200` with the parameter ignored. A
-scope named *all* returns all, or is not named *all*. A count named for the
+**Refuse what the server does not honour.** A request carrying a parameter the
+server does not implement gets a `400`, not a `200` with the parameter ignored.
+A scope named *all* returns all, or is not named *all*. A count named for the
 total counts the total. Property seventeen measured all three failures on one
-Polish endpoint in one evening, and the third is the cheapest to prevent and
-the worst to suffer, because a consumer's mistake becomes a consumer's false
-belief and survives every check the consumer knows how to run.
+Polish endpoint in one evening, and the third is the cheapest to prevent and the
+worst to suffer, because a consumer's mistake becomes a consumer's false belief
+and survives every check the consumer knows how to run.
 
-**State the retention.** The messages are kept for a period the profile
-names, and the listing says how far back it reaches. Section 2 measured the
-alternative: a stream whose history thins to a handful of rows per week,
-across a whole country, so that the week that mattered most could not be
-read back. A number in the profile - ninety days, a year, forever - is worth
-more than the best intentions, because a consumer can plan around a number
-and cannot plan around an intention.
-This project's producer is built to keep its own: every list an address
-served, written when the list changes, beside the rows it names. It is the
-consumer building the retention the stream does not state, as property nine
-has it build the heartbeat the stream does not carry.
+**State the retention.** The messages are kept for a period the profile names,
+and the listing says how far back it reaches. Section 2 measured the
+alternative: a stream whose history thins to a handful of rows per week, across
+a whole country, so that the week that mattered most could not be read back. A
+number in the profile - ninety days, a year, forever - is worth more than the
+best intentions, because a consumer can plan around a number and cannot plan
+around an intention. This project's producer is built to keep its own: every
+list an address served, written when the list changes, beside the rows it names.
+This is the consumer building the retention the stream does not state, just as
+property nine has it build the heartbeat the stream does not carry.
 
 **Change by adding.** A new element is added; nothing is removed and nothing
 changes meaning. A consumer that reads only the elements it knows keeps
@@ -1473,10 +1473,10 @@ a payload two days later.
 ## 16. The conformance checklist
 
 Written so that each line can be a test. A publisher's own build should run
-these against a candidate feed before anyone outside the building reads it,
+these against a candidate feed before anyone outside the institution reads it,
 and this project could run the same lines from the outside, which is what the
-reading T8a in its backlog describes. Each line names what it rests on. *Index* means
-the document in section 10.2; *message* means a CAP document under the
+reading T8a in its backlog describes. Each line names what it rests on. *Index*
+means the document in section 10.2; *message* means a CAP document under the
 profile in section 10.1.
 
 **Liveness**

@@ -64,7 +64,7 @@ mogą rozejść się niezauważenie.
 **Część II. Instrukcja**
 
 10. [Cały kanał na jednej stronie](#10-cały-kanał-na-jednej-stronie)
-11. [Jak jeden alarm przechodzi przez feed](#11-jak-jeden-alarm-przechodzi-przez-feed)
+11. [Jak jeden alarm przechodzi przez kanał](#11-jak-jeden-alarm-przechodzi-przez-kanał)
 12. [Trzy zegary, jeden format](#12-trzy-zegary-jeden-format)
 13. [Kiedy dwa odczyty to ten sam alarm](#13-kiedy-dwa-odczyty-to-ten-sam-alarm)
 14. [Gdzie: obszar jako kod rejestru](#14-gdzie-obszar-jako-kod-rejestru)
@@ -1262,387 +1262,386 @@ sprowadzają się do jednego dokumentu i garści reguł wypełniania elementów,
 CAP już ma.
 
 
-## 11. Jak jeden alarm przechodzi przez feed
+## 11. Jak jeden alarm przechodzi przez kanał
 
-Jeden alarm, od chwili, gdy organ decyduje, do chwili, gdy czytelnik może
-przestać się martwić, w postaci, w jakiej widzi go konsument. Każda strzałka
-to wiadomość albo jej brak, a braki są tam, gdzie feedy się mylą.
+Jeden alarm, od chwili, gdy organ podejmuje decyzję, do chwili, w której
+czytelnik może przestać się niepokoić, w postaci widzianej przez odbiorcę. Każda
+strzałka jest wiadomością albo jej brakiem, a to właśnie braki są miejscem, w
+którym kanał zawodzi.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Declared: CAP Alert, identifier nadany
-    Declared --> Standing: obecny w kazdym indeksie
-    Standing --> Standing: indeks wygenerowany, bez zmian
-    Standing --> Changed: CAP Update, odwolanie do Alert
-    Changed --> Standing: obecny w nastepnym indeksie
-    Standing --> Ended: CAP Cancel, odwolanie do Alert
-    Standing --> Lapsed: expires minal, brak Cancel
+    [*] --> Declared: CAP Alert, nadanie identyfikatora
+    Declared --> Standing: obecny w każdym indeksie
+    Standing --> Standing: indeks odtworzony, bez zmian
+    Standing --> Changed: CAP Update, odnośnik do Alert
+    Changed --> Standing: obecny w następnym indeksie
+    Standing --> Ended: CAP Cancel, odnośnik do Alert
+    Standing --> Lapsed: expires minął, brak Cancel
     Ended --> [*]
     Lapsed --> [*]
-    Standing --> Blind: indeks przestaje sie poruszac
-    Blind --> Standing: indeks znow sie porusza
+    Standing --> Blind: indeks przestaje się zmieniać
+    Blind --> Standing: indeks znów się zmienia
 ```
 
-**Ogłoszony.** Organ wydaje CAP `Alert`. `identifier` powstaje tutaj i żyje
-tak długo jak feed. `sent` to teraz. `effective` to moment, w którym alarm
-nabiera mocy, zwykle ten sam. `expires` to pułap: moment, po którym, jeśli
-nic więcej nie zostanie powiedziane, alarm nie powinien być traktowany jako
-bieżący. Nie jest przewidywaniem, kiedy zagrożenie się skończy, i nie jest
-zdarzeniem końca.
+**Ogłoszony.** Organ wydaje komunikat CAP `Alert`. `identifier` powstaje w tym
+momencie i żyje tak długo jak sam kanał. `sent` to teraz. `effective` to chwila
+wejścia alarmu w życie, zwykle ta sama. `expires` jest pułapem: chwilą, po
+której alarmu nie należy uważać za obowiązujący, jeżeli nic więcej nie zostanie
+powiedziane. Nie jest przewidywaniem końca zagrożenia i nie jest zdarzeniem
+kończącym.
 
-**Trwający.** O samym alarmie nic nie jest publikowane. Indeks niesie go w
-`active`, generowany na nowo w rytmie, i tak konsument wie, że alarm nadal
-obowiązuje. To najczęstszy stan i ten z najmniejszym ruchem, i dokładnie
-dlatego indeks istnieje: konsument, który dołączył w trakcie długiego alarmu,
-musi móc się o nim dowiedzieć bez wiadomości, która go zaczęła. Właściwość
+**Obowiązuje.** O samym alarmie nie publikuje się nic. Indeks niesie go w
+`active`, powstając na nowo w ustalonym rytmie, i to stąd odbiorca wie, że alarm
+nadal trwa. Jest to stan najczęstszy i zarazem ten o najmniejszym ruchu; właśnie
+dlatego indeks jest potrzebny: ktoś, kto dołączył w trakcie długiego alarmu,
+musi móc się o nim dowiedzieć bez wiadomości, która go rozpoczęła. Właściwość
 siódma.
 
-**Zmieniony.** Organ podnosi albo obniża poziom, rozszerza obszar albo
-przesuwa `expires`. Wychodzi CAP `Update`, z `references` wskazującym na
-`Alert`, z własnym `sent` i z wypełnionymi zmienionymi elementami.
-Identyfikator się nie zmienia. To jest przejście, na którym nauczono się
-właściwości dziewiętnastej: po ukraińskiej stronie poziom zmienił się wewnątrz
-alarmu bez żadnej wiadomości, a konsument dowiedział się dwa dni później,
-czytając ładunek. Tutaj zmiana jest wiadomością, jest datowana i nazywa, co
-zmienia.
+**Zmieniony.** Organ podnosi albo obniża poziom, poszerza obszar lub przesuwa
+`expires`. Wychodzi komunikat CAP `Update` z `references` wskazującym `Alert`, z
+własnym `sent` i z wypełnionymi elementami, które uległy zmianie. Identyfikator
+zostaje ten sam. Na tym przejściu wyniesiono właściwość dziewiętnastą: po
+stronie ukraińskiej poziom zmienił się wewnątrz alarmu bez żadnej wiadomości, a
+odbiorca dowiedział się o tym dwa dni później, czytając odpowiedź. Tutaj zmiana
+jest wiadomością, ma datę i nazywa to, co zmienia.
 
-**Zakończony.** CAP `Cancel`, odwołujący się do `Alert`, z własnym `sent`.
-Potem identyfikator opuszcza `active`. Dzieje się jedno i drugie; żadne
-samo nie wystarcza. `Cancel` to zdarzenie końca, które konsument zapisuje i
-pokazuje („alarm zakończył się o 12:04"); indeks to sposób, w jaki konsument,
-który przegapił `Cancel`, i tak dowiaduje się, że alarm minął. Właściwość
-trzecia, w obie strony. Polski koniec, który ten projekt odczytał
-2026-09-16, był wiadomością, co jest połową tego, i nie wskazywał żadnego
-alarmu, czego brakuje w drugiej połowie: właściwość dwudziesta.
+**Zakończony.** Komunikat CAP `Cancel` wskazujący `Alert`, z własnym `sent`.
+Potem identyfikator znika z `active`. Dzieje się jedno i drugie; żadne z osobna
+nie wystarcza. `Cancel` jest zdarzeniem końca, które odbiorca zapisuje i
+pokazuje („alarm zakończył się o 12:04”), a indeks pozwala dowiedzieć się o
+końcu także temu, kto `Cancel` przegapił. Właściwość trzecia, oba kierunki.
+Polski koniec, który projekt odczytał 16 września 2026 r., był wiadomością,
+czyli połową tego, i nie nazywał żadnego alarmu, czyli brakowało drugiej połowy:
+właściwość dwudziesta.
 
-**Wygasły.** `expires` minął i `Cancel` nie przyszedł. Wydawca usuwa
-identyfikator z `active` i mówi to w następnym indeksie, w polu, które
-konsument może przeczytać (`ended_in_window` go liczy; `lapsed: true` per
-alarm jest lepsze). Czego wydawca nie może zrobić, to nic: alarm, który po
-cichu spada z listy, to koniec, którego nikt nie może datować, a konsument,
-który go trzyma, bo nigdy nie widział `Cancel`, ma rację. Wygasanie powinno
-być rzadkie w feedzie, którego organ wysyła `Cancel`; jeśli jest częste,
-`expires` jest używany jako zdarzenie końca, a właściwość trzecia nie jest
-spełniona.
+**Wygasły.** `expires` minął i nie przyszedł `Cancel`. Nadawca usuwa
+identyfikator z `active` i mówi o tym w następnym indeksie, w polu, które
+odbiorca umie odczytać (`ended_in_window` to zlicza, a lepsze jest
+`lapsed: true` przy pojedynczym alarmie). Czego nadawcy robić nie wolno, to
+pominąć to milczeniem: alarm, który po cichu wypada z listy, jest końcem,
+którego nikt nie potrafi datować, a kto go zachowuje, bo nie zobaczył `Cancel`,
+ma rację. Tam, gdzie organ wysyła `Cancel`, wygaśnięcie powinno zdarzać się
+rzadko; jeżeli zdarza się często, `expires` pełni funkcję zdarzenia końca, a
+właściwość trzecia nie jest spełniona.
 
-**Ślepy.** `generated_at` przestaje się poruszać. Nic w alarmie się nie
-zmieniło; zmienił się feed. Konsument, który ma indeks starszy niż
-`valid_for_s`, musi powiedzieć, że jego obraz jest stary i jak bardzo, i nie
-może odwołać niczego na podstawie ciszy. To jest stan, o którym jest sekcja 4,
-i jest narysowany na diagramie, bo cykl życia, który go pomija, opisuje feed,
-który nigdy nie zawodzi, a takiego feedu nie ma: źródło strażnicze tego
-projektu zamilkło dwa razy w dziesięć dni: pierwszy raz na trzydzieści cztery
-godziny, drugi na dłużej niż dobę.
+**Ślepota.** `generated_at` przestaje się zmieniać. W alarmie nie zmieniło się
+nic, zmienił się kanał. Odbiorca, który ma indeks starszy niż `valid_for_s`,
+musi powiedzieć, że jego obraz jest stary i jak bardzo, i nie może niczego
+zdejmować na podstawie samej ciszy. O tym stanie jest sekcja 4, a na diagramie
+znalazł się dlatego, że cykl życia bez niego opisuje kanał, który nigdy nie
+zawodzi, a takiego nie ma: zapasowe źródło tego projektu zamilkło dwa razy w
+ciągu dziesięciu dni, pierwszy raz na trzydzieści cztery godziny, drugi na
+dłużej niż dobę.
 
-**Co konsument robi przy każdej strzałce.** Ogłoszony: zapisz wiadomość, dodaj
-wiersz, pokaż alarm z `sent` jako początkiem. Trwający: odśwież wiek z
-`generated_at`, nic więcej. Zmieniony: zapisz `Update`, przeczytaj wiersz na
-nowo, pokaż nowy poziom ze znacznikiem `sent` tego `Update`; nie otwieraj
-drugiego wiersza. Zakończony: zapisz `Cancel`, zamknij wiersz, pokaż koniec z
-`sent` tego `Cancel`. Wygasły: zamknij wiersz, pokaż koniec jako *wygasł o*,
-a nie *zakończył się o*, bo to różne fakty. Ślepy: zatrzymaj zegar na
-wszystkim, powiedz, że obraz jest stary, trzymaj każdy wiersz otwarty. Wiersze
-to pamięć konsumenta; indeks to pamięć wydawcy; kiedy się nie zgadzają,
-indeks jest nowszy i wygrywa, chyba że indeks sam jest starszy niż jego pułap,
-i wtedy nie wygrywa nic, a strona to mówi.
+**Co odbiorca robi przy każdej strzałce.** Ogłoszony: zapisz wiadomość, dodaj
+wiersz, pokaż alarm z `sent` jako początkiem. Obowiązuje: odśwież wiek na
+podstawie `generated_at` i nic poza tym. Zmieniony: zapisz `Update`, odczytaj
+wiersz na nowo, pokaż nowy poziom, a jako jego znacznik czasu podaj `sent` z
+tego `Update`, i nie otwieraj drugiego wiersza. Zakończony: zapisz `Cancel`,
+zamknij wiersz, pokaż koniec z `sent` tego `Cancel`. Wygasły: zamknij wiersz i
+pokaż koniec jako *wygaśnięcie*, a nie *zakończenie*, bo są to dwa różne fakty.
+Ślepota: zatrzymaj wszystkie zegary, powiedz, że obraz jest stary, i zostaw
+każdy wiersz otwarty. Wiersze są pamięcią odbiorcy, indeks pamięcią nadawcy;
+kiedy jedno rozchodzi się z drugim, nowszy jest indeks i to on rozstrzyga, chyba
+że sam jest starszy niż własny pułap, a wtedy nie rozstrzyga nic i strona to
+mówi.
 
 ## 12. Trzy zegary, jeden format
 
-Każdy alarm ma trzy momenty, a feed, który je zlewa, produkuje defekt, który
-ten projekt zapisał jako właściwość osiemnastą: datę, która po cichu przestała
-znaczyć to, co znaczyła.
+Każdy alarm ma trzy momenty, a kanał, który je miesza, wytwarza usterkę, którą
+projekt zapisał jako właściwość osiemnastą: datę, która po cichu przestała
+znaczyć to, co znaczyła wcześniej.
 
-**Ogłoszenie.** Kiedy organ podjął decyzję. Na wiadomości to `sent`. Na
-poziomie to `sent` tego `Update`, który go przyniósł, a w indeksie to
-`severity_at`. To jest zegar, na którym czytelnikowi zależy: alarm ogłoszony o
-03:12 jest alarmem ogłoszonym o 03:12 niezależnie od tego, jak późno konsument
-go przeczytał.
+**Ogłoszenie.** Kiedy organ podjął decyzję. W wiadomości jest to `sent`. Przy
+poziomie zagrożenia jest to `sent` tego `Update`, który poziom przyniósł, a w
+indeksie `severity_at`. To zegar, na którym zależy czytelnikowi: alarm ogłoszony
+o 03:12 pozostaje alarmem ogłoszonym o 03:12, bez względu na to, jak późno
+odbiorca go odczytał.
 
-**Publikacja.** Kiedy powstał dokument, który konsument czyta. `sent` na
-wiadomości; `generated_at` na indeksie. Dla wiadomości te dwa zegary zwykle
-zgadzają się co do sekundy; dla indeksu nigdy, bo indeks jest przerabiany co
-dwie minuty, a alarmy w nim ogłoszono wtedy, kiedy je ogłoszono. Zmierzone
-2026-09-09 we własnym magazynie tego projektu: wiersz indeksu zapisany o 11:21
-niósł ogłoszenie sprzed dwóch dni. Oba znaczniki są prawdziwe. Czytelnik, któremu
-pokazano niewłaściwy, widzi dwudniowe zagrożenie jako świeże.
+**Publikacja.** Kiedy powstał dokument, który odbiorca właśnie czyta. W
+wiadomości `sent`, w indeksie `generated_at`. Dla wiadomości oba zegary zwykle
+zgadzają się co do sekundy, dla indeksu nie zgadzają się nigdy, bo indeks
+powstaje na nowo co dwie minuty, a alarmy w nim ogłoszono wtedy, kiedy je
+ogłoszono. Pomiar z 9 września 2026 r. we własnym magazynie projektu: wiersz
+indeksu zapisany o 11:21 niósł ogłoszenie sprzed dwóch dni. Oba znaczniki są
+prawdziwe. Czytelnik, któremu pokazano niewłaściwy, widzi dwudniowe zagrożenie
+jako świeże.
 
-**Obserwacja.** Kiedy konsument to przeczytał. Tego w feedzie nie ma; konsument
-zapisuje ją we własnym magazynie obok tego, co przeczytał. Tak konsument
-odróżnia „wydawca milczał" od „nie słuchałem", o czym jest właściwość
-dziewiąta, i to ten znacznik czyni własne przerwy konsumenta widocznymi
-w jego własnym zapisie.
+**Odczyt.** Kiedy odbiorca to przeczytał. Nigdy nie ma tego w kanale; odbiorca
+zapisuje tę chwilę we własnym magazynie, obok tego, co odczytał. Dzięki temu
+odróżnia „nadawca milczał” od „ja nie słuchałem”, o czym mówi właściwość
+dziewiąta, a jego własne przerwy stają się widoczne w jego własnym rejestrze.
 
-**Jeden format.** ISO 8601, z wypisanym przesunięciem UTC, zawsze:
-`2026-09-09T11:21:48+02:00`. Nie `2026-09-09 11:21`, które nie ma strefy i
-staje się dwoma różnymi momentami w dniu zmiany czasu. Nie liczba uniksowa,
-której człowiek nie przeczyta w logu. Nie data bez godziny. Własny standard
-techniczny państwa już wymaga ISO 8601 dla danych publicznych; przesunięcie
-to część, której nie wypisuje, i część, która się psuje.
+**Jeden format.** ISO 8601, zawsze z wypisanym przesunięciem względem UTC:
+`2026-09-09T11:21:48+02:00`. Nie `2026-09-09 11:21`, bo bez strefy powstają z
+tego dwa różne momenty w dniu zmiany czasu. Nie liczba uniksowa, bo człowiek jej
+w dzienniku nie odczyta. Nie sama data bez godziny. Techniczny standard samego
+państwa wymaga już ISO 8601 dla danych publicznych; przesunięcie jest tą
+częścią, której nie dopowiada, i zarazem tą, która się psuje.
 
-**Wiek jest liczony, nigdy publikowany.** „Ogłoszony 14 minut temu" to zegar
-czytelnika minus `sent`, policzone na urządzeniu czytelnika, tykające. Feed,
-który publikuje wiek, publikuje liczbę błędną w chwili zapisania i bardziej
-błędną z każdą sekundą. Publikuj moment; niech czytelnik odejmuje.
+**Wiek się wylicza, a nie publikuje.** „Ogłoszono 14 minut temu” to zegar
+czytelnika minus `sent`, wyliczony na jego urządzeniu i tykający dalej. Kanał,
+który publikuje wiek, podaje liczbę błędną już w chwili zapisu i tym bardziej
+błędną z każdą kolejną sekundą. Publikuj moment, a odejmowanie zostaw
+czytelnikowi.
 
-**Pułap to liczba w feedzie.** `valid_for_s` na indeksie i `expires` na
-wiadomości to dwa miejsca, w których wydawca mówi, jak długo można ufać jego
-własnej ciszy. Żadne z nich nie jest obietnicą o świecie; oba są obietnicami
-o feedzie. Konsument trzyma się ich dosłownie, a wydawca, który zmienia rytm,
-zmienia liczbę w tym samym wydaniu, bo konsument nie widzi rytmu, tylko
-znacznik.
+**Pułap jest liczbą w kanale.** `valid_for_s` w indeksie i `expires` w
+wiadomości to dwa miejsca, w których nadawca mówi, jak długo można ufać jego
+własnemu milczeniu. Żadne z nich nie jest obietnicą dotyczącą świata, oba są
+obietnicami dotyczącymi kanału. Odbiorca trzyma się ich dosłownie, a nadawca,
+który zmienia rytm, zmienia tę liczbę w tej samej wersji, bo rytmu odbiorca nie
+widzi, widzi tylko znacznik czasu.
 
 ## 13. Kiedy dwa odczyty to ten sam alarm
 
-Tożsamość alarmu to rzecz, na której kluczuje każdy konsument, i musi ją
-ustalić wydawca, raz, na piśmie, bo każdy konsument, który ustala ją sam,
-ustala ją inaczej.
+Tożsamość alarmu to rzecz, na której kluczuje każdy odbiorca, i musi ją ustalić
+nadawca, raz, na piśmie, bo każdy, kto ustala ją sam, robi to inaczej.
 
 **Tożsamością jest identyfikator.** Jeden ciąg znaków, nadany przy `Alert`,
-niesiony przez każdy `Update` i `Cancel` w `references`, nigdy nieużywany
-ponownie. To własny projekt CAP i jest słuszny. Wszystko inne w alarmie jest
-jego właściwością i może się zmieniać: poziom, obszar, wygaśnięcie, tekst.
-Konsument kluczuje wiersze na identyfikatorze i czyta właściwości na nowo.
+niesiony przez każdy `Update` oraz przez `Cancel` w `references`, nigdy nieużyty
+powtórnie. Tak zaprojektowano sam CAP i jest to rozwiązanie słuszne. Wszystko
+inne w alarmie jest jego atrybutem i może się zmienić: poziom, obszar, termin
+wygaśnięcia, tekst. Odbiorca kluczuje wiersze na identyfikatorze, a atrybuty
+odczytuje na nowo.
 
-**Co nie jest tożsamością i dlaczego to ma znaczenie.** Po ukraińskiej stronie
-tożsamość, jaką konsument może zbudować, to `(area_id, kind)`, bo źródło nie
-publikuje identyfikatora; a w dniu, w którym źródło dołączyło poziom do
-każdego alarmu, konsument, który wstawiłby poziom do klucza, otworzyłby nowy
-wiersz przy każdej eskalacji i nie zamknąłby żadnego. Właściwość
-dziewiętnasta naliczyła siedem widm w jednym ładunku. Czas obserwacji też nie
-jest tożsamością: ten sam alarm czytany czterysta razy dziennie to jeden
-alarm, a magazyn, który nie odróżni czterechsetnego odczytu od pierwszego,
-zapełnia się tym samym faktem. Zmierzone 2026-09-09, w pierwszym cyklu po tym,
-jak ten projekt zaczął zapisywać poziomy: dwadzieścia osiem otwartych alarmów
-oddało swoją bieżącą deklarację i magazyn zachował po jednym wierszu dla
-każdego; dwie minuty później oddano trzydzieści, a magazyn zachował dwa, te
-dwa, które się zmieniły. Tak działa poprawna tożsamość. Wszystko, co nie jest
-tożsamością, daje hasz wiersza, który już istnieje.
+**Co tożsamością nie jest i dlaczego to ważne.** Po stronie ukraińskiej
+tożsamość, jaką odbiorca może zbudować, to `(area_id, kind)`, bo źródło nie
+publikuje identyfikatora; a w dniu, w którym źródło dołączyło poziom zagrożenia
+do każdego alarmu, każdy, kto wpisałby go do klucza, otwierałby nowy wiersz przy
+każdej eskalacji i nie zamykałby żadnego. Właściwość dziewiętnasta naliczyła
+siedem fikcyjnych rekordów w jednej odpowiedzi. Czas odczytu również tożsamością
+nie jest: ten sam alarm odczytany czterysta razy dziennie pozostaje jednym
+alarmem, a magazyn, który nie odróżnia czterechsetnego odczytu od pierwszego,
+zapełnia się tym samym faktem. Pomiar z 9 września 2026 r., pierwszy cykl po
+tym, jak projekt zaczął zapisywać poziomy: dwadzieścia osiem otwartych alarmów
+przekazało swoje bieżące ogłoszenie, a magazyn zachował po jednym wierszu na
+każdy z nich; dwie minuty później przekazano trzydzieści, a magazyn zachował
+dwa, te, które się zmieniły. Tak wygląda poprawna tożsamość. Wszystko, co nią
+nie jest, trafia do wiersza, który już istnieje.
 
-**Idempotencja to dowód konsumenta, że tożsamość jest właściwa.** Odtworzenie
-dnia wiadomości do magazynu musi zostawić magazyn bez zmian. Jeśli rośnie, coś,
-co nie jest tożsamością, przeciekło do klucza. Ten projekt uruchamia ten test
-w swoim buildzie, na każdym strumieniu, który zapisuje, a jeden z trzynastu
-ataków w jego uprzęży jest dokładnie tym: odtwórz feed, sprawdź, że dziennik
-nie urósł.
+**Idempotencja jest dowodem odbiorcy na to, że tożsamość ustalono właściwie.**
+Odtworzenie jednego dnia wiadomości do magazynu musi zostawić go bez zmian.
+Jeżeli urośnie, do klucza przeciekło coś, co tożsamością nie jest. Projekt
+uruchamia ten test w swojej bramce, wobec każdego zapisywanego przez siebie
+źródła, a jeden z trzynastu ataków w jego zestawie polega dokładnie na tym:
+odtwórz kanał i sprawdź, czy rejestr nie urósł.
 
-**Opublikowany hasz po tożsamości oszczędza pracę wszystkim.** CAP go nie wymaga, a wydawca,
-który go dodaje - stabilny skrót elementów, które czynią wiadomość tą
-wiadomością - pozwala każdemu konsumentowi deduplikować bez uzgadniania, które
-to elementy. To jedno pole. Jego brak kosztuje każdego konsumenta to samo
-popołudnie decydowania, a decydują różnie.
+**Opublikowany skrót tożsamości oszczędza pracę wszystkim.** CAP tego nie
+wymaga, a nadawca, który go doda – stabilny skrót z tych elementów, które czynią
+wiadomość tą właśnie wiadomością – pozwala każdemu odbiorcy usuwać duplikaty bez
+uzgadniania, o które elementy chodzi. To jedno pole. Jego brak kosztuje każdego
+odbiorcę to samo popołudnie rozstrzygania, a rozstrzygają różnie.
 
 ## 14. Gdzie: obszar jako kod rejestru
 
 **Obszar to kod TERYT, jeden element `geocode` na jednostkę, z `valueName`
-ustawionym na `TERYT`.** Nazwa idzie do `areaDesc` dla ludzi. Wielokąt może
-iść obok kodu, jeśli decyzję podjęto na wielokącie. Czego nie może być, to
-sama nazwa albo sam wielokąt, bo oba zmuszają każdego konsumenta do zbudowania
-mechanizmu dopasowywania, a każdy taki mechanizm myli się w subtelny
-sposób: ten projekt zmierzył
-dopasowywanie nazw do rejestru na mniej więcej sześciu na sto tam, gdzie
-własne ustrukturyzowane etykiety źródła osiągnęły ponad dziewięćdziesiąt
-dziewięć, i to przy etykietach w spójnej konwencji. Właściwość druga ma
-dokładne liczby.
+ustawionym na `TERYT`.** Nazwa trafia do `areaDesc`, dla ludzi. Obok kodu może
+stanąć wielokąt, jeżeli na nim zapadła decyzja. Czego być nie może, to sama
+nazwa albo sam wielokąt, bo jedno i drugie zmusza każdego odbiorcę do zbudowania
+własnego mechanizmu dopasowania, a każdy taki mechanizm myli się w sposób trudny
+do wychwycenia: projekt zmierzył dopasowanie po nazwie do rejestru na mniej
+więcej sześć na sto, podczas gdy ustrukturyzowane etykiety samego źródła
+sięgnęły ponad dziewięćdziesięciu dziewięciu, i to przy etykietach w jednolitej
+konwencji. Dokładne liczby ma właściwość druga.
 
-**Pole złączenia to kod, nigdy nazwa wyświetlana.** Własny konsument tego
-projektu wypuścił wydanie, w którym mapa nie rysowała nic, a lista obok
-rysowała wszystko, bo pole, po którym mapa łączyła, niosło nazwę przeznaczoną
-do czytania, a geometria była kluczowana slugiem. Oba były poprawne; były
-poprawne co do różnych rzeczy. Kod to ten sam ciąg znaków w geometrii, w
-rejestrze i w wiadomości, a nazwa nie.
+**Polem złączenia jest kod, nigdy nazwa wyświetlana.** Odbiorca tego projektu
+wydał wersję, w której mapa nie rysowała nic, podczas gdy stojąca obok niej
+lista rysowała wszystko, bo pole, po którym mapa się złączała, niosło nazwę
+przeznaczoną do czytania, a geometria była kluczowana skróconą nazwą techniczną.
+Oba były poprawne, tyle że co do różnych rzeczy. Kod jest tym samym ciągiem
+znaków w geometrii, w rejestrze i w wiadomości, a nazwa nie jest.
 
-**Publikuj na poziomie, na którym podjęto decyzję, i pozwól konsumentowi
-agregować w górę.** Jeśli organ ostrzega powiat, wiadomość nazywa kod
-powiatu. Jeśli ostrzega trzy gminy, trzy elementy `area`, trzy kody. Czego
-wydawca nie może robić, to rozwijać: ostrzeżenie dla województwa zapisane jako
-jego dwadzieścia cztery powiaty to feed, który mierzy, jak drobno region jest
-podzielony, i nazywa to liczbą ostrzeżeń. Ten projekt zapisał dokładnie ten
-defekt na własnym liczniku (F76, w swoim rejestrze defektów): jeden epizod nad
-jednym obwodem dał liczbę siedem, po jednym na rejon na mapie, a konsument
-cieniujący według tej liczby namalowałby podział jako intensywność. Kod na
-poziomie samej decyzji niesie decyzję; konsument, który chce gmin, może je
-sobie wyszukać.
+**Publikuj na tym poziomie, na którym zapadła decyzja, a sumowanie zostaw
+odbiorcy.** Jeżeli organ ostrzega powiat, wiadomość nazywa kod powiatu. Jeżeli
+ostrzega trzy gminy, to trzy elementy `area` i trzy kody. Czego nadawcy robić
+nie wolno, to rozwijać: ostrzeżenie dla województwa zapisane jako jego
+dwadzieścia cztery powiaty daje kanał, który mierzy, jak drobno podzielony jest
+region, i nazywa to liczbą ostrzeżeń. Projekt zapisał dokładnie taką usterkę
+wobec własnego licznika (F76 w rejestrze błędów): jeden epizod nad jednym
+obwodem dał wynik siedem, po jednym na rejon widoczny na mapie, a odbiorca
+cieniujący mapę tym wynikiem pomalowałby podział administracyjny jako natężenie
+zagrożenia. Kod na poziomie samej decyzji niesie decyzję; komu potrzebne są
+gminy, ten je sobie sprawdzi.
 
-**Rejestr to ten, który utrzymuje państwo, w wersji, którą państwo publikuje,
-a feed mówi w której.** TERYT się zmienia: jednostki się łączą, dzielą,
-zmieniają nazwy. Kod w wiadomości czyta się na tle rejestru w stanie, w jakim
-był, gdy wiadomość wysłano, a feed, który nie mówi, które wydanie rejestru ma
-na myśli, zostawia konsumentowi zgadywanie w dniu, w którym kod zostanie
-wycofany. Jedna linia w profilu, aktualizowana wtedy, gdy rejestr.
+**Rejestrem jest ten, który prowadzi państwo, w wydaniu przez nie ogłoszonym, a
+kanał mówi, w którym.** TERYT się zmienia: jednostki się łączą, dzielą i
+zmieniają nazwy. Kod w wiadomości odczytuje się wobec rejestru w kształcie z
+chwili jej wysłania, a kanał, który nie mówi, o które wydanie chodzi, zostawia
+odbiorcę ze zgadywaniem w dniu, w którym któryś kod zostaje wycofany. Jedna
+linia w profilu, aktualizowana wtedy, kiedy rejestr.
 
 ## 15. Udostępnianie i późniejsze zmiany
 
-**Udostępniaj pliki.** Indeks i wiadomości to dokumenty; udostępnij je przez HTTPS pod
-stałymi adresami i pozwól serwerowi WWW je serwować. Bez sesji, bez ciasteczka,
-bez parametru w adresie, który zmienia to, co zwracane, w sposób, którego
-odpowiedź nie deklaruje. Indeks pod jednym adresem, zawsze bieżący; każda
-wiadomość pod adresem wyprowadzonym z jej identyfikatora; lista ostatnich
-wiadomości pod trzecim. To jest to, co standard techniczny państwa ma na myśli
-przez API na poziomie otwartości 3, i to jest zarazem najtańsza rzecz, jaką
-wydawca może prowadzić: statyczny plik za pamięcią podręczną przeżyje
+**Udostępniaj pliki.** Indeks i wiadomości są dokumentami; postaw je za HTTPS
+pod stałymi adresami i pozwól, żeby podawał je serwer WWW. Żadnej sesji, żadnego
+ciasteczka, żadnego parametru w adresie, który zmienia zwracaną treść w sposób
+nieopisany w odpowiedzi. Indeks pod jednym adresem, zawsze bieżący; każda
+wiadomość pod adresem wyprowadzonym z jej identyfikatora; wykaz ostatnich
+wiadomości pod trzecim. Tyle właśnie znaczy API na poziomie otwartości 3 w
+technicznym standardzie państwa i jest to zarazem najtańsze rozwiązanie, jakie
+nadawca może prowadzić: statyczny plik za pamięcią podręczną wytrzyma
 obciążenie, które położyłoby bazę danych.
 
-**Mów, jak świeże są dane, w nagłówkach i w treści.** `Last-Modified` i
-`ETag` na każdej odpowiedzi, żeby konsument mógł zapytać „czy to się
-zmieniło" za cenę nagłówka i usłyszeć „nie". `Cache-Control: max-age` nie
-dłuższe niż rytm, żeby pośrednik nigdy nie serwował nieaktualnego indeksu jako
-bieżącego. I `generated_at` w treści niezależnie od tego, bo nagłówki obcina
-więcej pośredników, niż ktokolwiek się spodziewa, a treść to to, co konsument
-zapisuje.
+**Mów, jak świeże to jest, w nagłówkach i w treści.** `Last-Modified` i `ETag` w
+każdej odpowiedzi, żeby odbiorca mógł zapytać „czy to się zmieniło” za cenę
+nagłówka i usłyszeć, że nie. `Cache-Control: max-age` nie dłuższy niż rytm, żeby
+pośrednik nigdy nie podał nieaktualnego indeksu jako bieżącego. I `generated_at`
+w treści niezależnie od tego, bo nagłówki obcina więcej pośredników, niż
+ktokolwiek się spodziewa, a to treść jest tym, co odbiorca zapisuje.
 
-**Zadeklaruj rytm i budżet.** Indeks jest generowany na nowo co N sekund; N
-jest opublikowane, a `valid_for_s` w indeksie nie jest od niego mniejsze.
-Jeśli jest limit żądań, jest opublikowany, a odpowiedź niesie pozostały
-przydział w nagłówku. Jeśli go nie ma, dokumentacja mówi „brak". Właściwość
-dziesiąta: łamie ją limit, który istnieje i nie jest zadeklarowany, bo
-konsument znajduje go przez odcięcie, a luka, którą zostawia, jest
-nieprzypisywalna.
+**Podaj rytm i limit.** Indeks powstaje na nowo co N sekund; N jest publikowane,
+a `valid_for_s` w indeksie nie jest od niego mniejsze. Jeżeli obowiązuje limit
+zapytań, również jest publikowany, a odpowiedź niesie w nagłówku pozostały
+przydział. Jeżeli limitu nie ma, dokumentacja mówi „nie ma”. Właściwość
+dziesiąta: zawodzi ograniczenie, które istnieje i nie zostało podane, bo
+odbiorca znajduje je przez odcięcie, a powstałej w ten sposób luki nie da się
+nikomu przypisać.
 
-**Odrzucaj to, czego nie obsługujesz.** Żądanie niosące parametr, którego
-serwer nie implementuje, dostaje `400`, a nie `200` z parametrem
-zignorowanym. Zakres nazwany *wszystkie* zwraca wszystko albo nie nazywa się
-*wszystkie*. Licznik nazwany od sumy liczy sumę. Właściwość siedemnasta
-zmierzyła wszystkie trzy awarie na jednym polskim punkcie końcowym w jeden
-wieczór, a trzecia jest najtańsza do zapobieżenia i najgorsza do zniesienia,
-bo pomyłka konsumenta staje się fałszywym przekonaniem konsumenta i przechodzi
-każde sprawdzenie, jakie konsument umie uruchomić.
+**Odrzucaj to, czego serwer nie obsługuje.** Zapytanie z parametrem, którego
+serwer nie realizuje, dostaje `400`, a nie `200` z pominiętym parametrem. Zakres
+nazwany *wszystkie* zwraca wszystkie albo nie nazywa się *wszystkie*. Licznik
+nazwany od całości liczy całość. Właściwość siedemnasta zmierzyła wszystkie trzy
+usterki na jednym polskim punkcie dostępowym jednego wieczoru, a trzecia jest
+zarazem najłatwiejsza do uniknięcia i najdotkliwsza, bo pomyłka odbiorcy staje
+się jego fałszywym przekonaniem i przechodzi każdą kontrolę, jaką odbiorca umie
+przeprowadzić.
 
-**Zadeklaruj retencję.** Wiadomości są przechowywane przez okres, który
-profil nazywa, a lista mówi, jak daleko wstecz sięga. Sekcja 2 zmierzyła
-alternatywę: strumień, którego historia kurczy się do garstki wierszy na tydzień,
-w skali całego kraju, tak że tygodnia, który miał największe znaczenie, nie
-dało się odczytać wstecz. Liczba w profilu - dziewięćdziesiąt dni, rok, na
-zawsze - jest warta więcej niż najlepsze intencje, bo konsument może się
-przygotować do liczby, a do intencji nie.
-Producent tego projektu jest zbudowany tak, żeby prowadzić własną: każdą
-listę, jaką adres podał, zapisaną, gdy lista się zmienia, obok wierszy, które
-nazywa. To konsument budujący retencję, której strumień nie deklaruje, tak jak
-właściwość dziewiąta każe mu budować sygnał życia, którego strumień nie
-niesie.
+**Podaj okres przechowywania.** Wiadomości są przechowywane przez czas, który
+nazywa profil, a wykaz mówi, jak daleko wstecz sięga. Sekcja 2 zmierzyła
+alternatywę: źródło, którego historia topnieje do garści wierszy tygodniowo w
+skali całego kraju, tak że tygodnia, który znaczył najwięcej, nie dało się
+odczytać wstecz. Liczba w profilu – dziewięćdziesiąt dni, rok, zawsze – jest
+warta więcej niż najlepsze intencje, bo wokół liczby odbiorca potrafi zaplanować
+pracę, a wokół intencji nie. Producent tego projektu jest zbudowany tak, żeby
+prowadzić własną: każdy wykaz, który dany adres podał, zapisuje się w chwili,
+gdy się zmienia, obok wierszy, które nazywa. To odbiorca buduje okres
+przechowywania, którego źródło nie podaje, tak jak we właściwości dziewiątej
+buduje sygnał życia, którego źródło nie niesie.
 
-**Zmieniaj przez dodawanie.** Nowy element jest dodawany; nic nie jest
-usuwane i nic nie zmienia znaczenia. Konsument, który czyta tylko elementy,
-które zna, dalej działa. Kiedy coś musi zostać usunięte albo zmienić
-znaczenie, to jest nowa wersja profilu: wersja jest ciągiem znaków w indeksie
-(`schema`) i w dokumencie profilu, a stara wersja jest nadal serwowana przez
-zadeklarowany okres po pojawieniu się nowej. Właściwość ósma: ten projekt
-przesunął własny kontrakt o jedną wersję z ładunkiem będącym ścisłym
-nadzbiorem i mimo to był ślepy przez minuty między dwoma wdrożeniami, bo
-konsument odrzuca wersje, których nie zna, poprawnie, a nic nie powiedziało mu
-o nakładaniu się. Ten projekt też własnej polityki nakładania się nie
-napisał, co zapisuje właściwość ósma; reguła, której trzyma się sam, jest
-węższa i dotyczy czytników, a nie serwowania. Publiczny feed ma konsumentów,
-których nigdy nie spotkał; nakładanie się jest dla nich.
+**Zmieniaj przez dodawanie.** Nowy element się dodaje; nic się nie usuwa i nic
+nie zmienia znaczenia. Odbiorca, który czyta wyłącznie znane sobie elementy,
+działa dalej. Kiedy coś trzeba usunąć albo zmienić jego znaczenie, powstaje nowa
+wersja profilu: jej numer jest napisem w indeksie (`schema`) i w dokumencie
+profilu, a poprzednia jest udostępniana jeszcze przez z góry określony czas po
+pojawieniu się nowej. Właściwość ósma: projekt przesunął własny kontrakt o jedną
+wersję przy odpowiedzi będącej ścisłym nadzbiorem poprzedniej i mimo to oślepł
+na minuty dzielące dwa wdrożenia, bo odbiorca odrzuca to, czego nie zna, i
+słusznie, a nic nie powiedziało mu o okresie przejściowym. Projekt również nie
+zapisał własnej zasady takiego okresu, co właściwość ósma odnotowuje; reguła,
+której się trzyma, jest węższa i dotyczy czytelników, a nie udostępniania. Kanał
+publiczny ma odbiorców, których nigdy nie poznał; okres przejściowy jest dla
+nich.
 
-**Pole, które zmienia znaczenie, zmienia nazwę.** Właściwość osiemnasta, i to
-jest reguła, której polityka dodawania powyżej nie obejmuje, bo znaczenie może
-się zmienić bez dodania ani usunięcia żadnego elementu. Ukraińskie API zaczęło
-podbijać istniejący znacznik przy nowym zdarzeniu i każdy konsument, który
-czytał ten znacznik jako „kiedy się zaczęło", był po cichu w błędzie. Jeśli
-`sent` kiedykolwiek ma znaczyć coś nowego, to jest nowy element z nową nazwą,
-a `sent` znaczy dalej to, co znaczyło. Po stronie konsumenta odpowiadająca
-reguła to kanarek: każdy element, dla którego parser nie ma odczytu, jest
-liczony i drukowany w dniu, w którym przychodzi, żeby następna
-niezapowiedziana zmiana była widziana w logu, a nie znajdowana w ładunku dwa
-dni później.
+**Pole, które zmienia znaczenie, zmienia nazwę.** Właściwość osiemnasta. Jest to
+reguła, której zasada dodawania nie obejmuje, bo znaczenie potrafi się zmienić
+bez dodania ani usunięcia jakiegokolwiek elementu. Ukraińskie API zaczęło
+przesuwać istniejący znacznik czasu przy nowym zdarzeniu i każdy, kto czytał ten
+znacznik jako „kiedy się zaczęło”, po cichu się mylił. Jeżeli `sent` miałoby
+kiedyś znaczyć coś nowego, powstaje nowy element o nowej nazwie, a `sent` znaczy
+dalej to, co znaczyło. Po stronie odbiorcy odpowiada temu czujnik: każdy
+element, dla którego parser nie ma odczytu, jest liczony i wypisywany w dniu, w
+którym się pojawi, dzięki czemu kolejną niezapowiedzianą zmianę widać w
+dzienniku, zamiast znajdować ją w odpowiedzi dwa dni później.
 
 ## 16. Lista kontrolna zgodności
 
-Napisana tak, żeby każdy punkt mógł być testem. Własny build wydawcy powinien
-przepuścić je przez kandydata na feed, zanim przeczyta go ktokolwiek spoza
-budynku, a ten projekt mógłby sprawdzić te same punkty z zewnątrz, i to właśnie
-opisuje odczyt T8a w jego backlogu. Każdy punkt nazywa, na czym stoi. *Indeks*
-oznacza dokument z sekcji 10.2; *wiadomość* oznacza dokument CAP według
-profilu z sekcji 10.1.
+Napisana tak, żeby każda linia mogła być testem. Własna bramka nadawcy powinna
+uruchamiać te linie na kanale przygotowanym do publikacji, zanim przeczyta go
+ktokolwiek spoza instytucji, a projekt mógłby uruchomić te same linie z
+zewnątrz, co opisuje przegląd T8a w jego rejestrze zadań. Każda linia nazywa to,
+na czym stoi. *Indeks* oznacza dokument z sekcji 10.2, a *wiadomość* dokument
+CAP zgodny z profilem z sekcji 10.1.
 
-**Żywotność**
+**Oznaki życia**
 
-1. Indeks jest generowany na nowo w zadeklarowanym rytmie, gdy nic się nie
-   dzieje, a jego `generated_at` się porusza. Sekcja 4, właściwość piąta.
-2. `valid_for_s` jest obecne, nie jest mniejsze niż rytm, a konsument
-   trzymający indeks starszy niż ono może to powiedzieć z samego indeksu.
-   Sekcja 12.
-3. Pusta lista `active` i nieobecny indeks są dla konsumenta rozróżnialne:
-   pierwsze to spokojne niebo, drugie to nic. Sekcja 4.
+1. Indeks powstaje na nowo w podanym rytmie także wtedy, gdy nic się nie dzieje,
+   a jego `generated_at` się przesuwa. Sekcja 4, właściwość piąta.
+2. `valid_for_s` jest obecne, nie jest mniejsze od rytmu, a odbiorca trzymający
+   indeks starszy niż ono potrafi to stwierdzić z samego indeksu. Sekcja 12.
+3. Pusta lista `active` i brak indeksu są dla odbiorcy rozróżnialne: pierwsze to
+   spokojne niebo, drugie to nic. Sekcja 4.
 
 **Stan i przejścia**
 
-4. Każdy obowiązujący alarm pojawia się w `active`; konsument, który czyta
-   tylko bieżący indeks, jest na bieżąco. Właściwość siódma.
-5. Alarm zaczyna się od `msgType` `Alert` i świeżego `identifier`. Sekcja
-   11.
-6. Alarm kończy się `msgType` `Cancel` odwołującym się do `Alert` i opuszcza
-   `active` w następnym indeksie. Właściwość trzecia, właściwość dwudziesta.
-7. Alarm, który wygasa na `expires` bez `Cancel`, jest w indeksie oznaczony
+4. Każdy obowiązujący alarm jest w `active`, a kto czyta wyłącznie najnowszy
+   indeks, jest na bieżąco. Właściwość siódma.
+5. Alarm zaczyna się wiadomością o `msgType` równym `Alert` i świeżym
+   `identifier`. Sekcja 11.
+6. Alarm kończy się wiadomością o `msgType` równym `Cancel`, wskazującą `Alert`,
+   i znika z `active` w następnym indeksie. Właściwość trzecia, właściwość
+   dwudziesta.
+7. Alarm, który wygasa na `expires` bez `Cancel`, zostaje w indeksie oznaczony
    jako wygasły, a nie po cichu usunięty. Sekcja 11.
-8. Zmiana alarmu to `Update` odwołujący się do `Alert`, z własnym `sent`, a
-   identyfikator się nie zmienia. Sekcja 11, właściwość dziewiętnasta.
+8. Zmiana w alarmie to `Update` wskazujący `Alert`, z własnym `sent`, przy
+   niezmienionym identyfikatorze. Sekcja 11, właściwość dziewiętnasta.
 
 **Tożsamość**
 
-9. `identifier` nigdy nie jest używany ponownie przez całe życie feedu.
+9. `identifier` nie zostaje nigdy użyty powtórnie przez całe życie kanału.
    Sekcja 13.
-10. Odtworzenie jednego dnia wiadomości do magazynu konsumenta zostawia
-    magazyn bez zmian. Sekcja 13.
-11. Zmiana poziomu nie tworzy nowego alarmu po stronie konsumenta, a `sent`
-    tego `Update` jest znacznikiem poziomu. Właściwość dziewiętnasta.
+10. Odtworzenie jednego dnia wiadomości do magazynu odbiorcy zostawia magazyn
+    bez zmian. Sekcja 13.
+11. Zmiana poziomu nie tworzy po stronie odbiorcy nowego alarmu, a `sent` z
+    `Update` jest znacznikiem czasu tego poziomu. Właściwość dziewiętnasta.
 
 **Czas**
 
-12. Każdy znacznik czasu to ISO 8601 z przesunięciem UTC, w wiadomościach i w
-    indeksie. Sekcja 12.
-13. Żaden wiek nie jest publikowany; każdy wiek, który widzi czytelnik, jest
-    liczony po stronie czytelnika. Sekcja 12.
+12. Każdy znacznik czasu jest zapisany w ISO 8601 z przesunięciem względem UTC,
+    w wiadomościach i w indeksie. Sekcja 12.
+13. Żaden wiek nie jest publikowany; każdy wiek, który widzi czytelnik, powstaje
+    z wyliczenia po jego stronie. Sekcja 12.
 14. `severity_at` w indeksie równa się `sent` tego `Update`, który ustawił
-    poziom, albo `sent` tego `Alert`, jeśli nigdy się nie zmienił. Sekcja 12.
+    poziom, albo `sent` z `Alert`, jeżeli poziom nigdy się nie zmienił.
+    Sekcja 12.
 
 **Obszar**
 
-15. Każda wiadomość niesie co najmniej jeden `geocode` z `valueName` `TERYT`
-    i kodem, który istnieje w wydaniu rejestru nazwanym przez profil.
+15. Każda wiadomość niesie co najmniej jeden `geocode` z `valueName` równym
+    `TERYT` i kodem, który istnieje w wydaniu rejestru nazwanym w profilu.
     Sekcja 14.
-16. Kod jest na poziomie, na którym podjęto decyzję; ostrzeżenie dla jednej
-    jednostki to jeden element `area`. Sekcja 14.
+16. Kod jest na tym poziomie, na którym zapadła decyzja, a ostrzeżenie dla
+    jednej jednostki to jeden element `area`. Sekcja 14.
 17. `areaDesc` jest obecne i nigdy nie jest jedynym sposobem podania obszaru.
     Sekcja 14.
 
 **Słownik**
 
-18. Każda wartość `event` jest na opublikowanej liście, a każda pozycja listy
-    ma jedno zdanie mówiące, czego nie rozróżnia. Właściwość jedenasta.
-19. `category` i `sender` są wypełnione na każdej wiadomości. Właściwość
+18. Każda wartość `event` znajduje się na opublikowanej liście, a każda pozycja
+    tej listy ma jedno zdanie mówiące, czego nie rozróżnia. Właściwość
+    jedenasta.
+19. `category` i `sender` są wypełnione w każdej wiadomości. Właściwość
     piętnasta.
-20. `Unknown` jest używane dla `severity`, `urgency` albo `certainty`, gdy
-    organ nie zdecydował, i nigdy nie jest zastępowane wartością domyślną.
+20. `Unknown` pojawia się w `severity`, `urgency` albo `certainty` wtedy, gdy
+    organ nie rozstrzygnął, i nigdy nie zostaje zastąpione wartością domyślną.
     Sekcja 10.1.
-21. Każdy element opcjonalny, na który profil pozwala, ma jedno zdanie
-    mówiące, co znaczy jego nieobecność, a tam, gdzie nieobecność i null
-    znaczyłyby różne rzeczy, są to dwa elementy. Właściwość trzynasta.
+21. Każdy element opcjonalny dopuszczony przez profil ma jedno zdanie mówiące,
+    co oznacza jego brak, a tam, gdzie brak i wartość pusta znaczyłyby co
+    innego, są to dwa elementy. Właściwość trzynasta.
 
 **Protokół**
 
-22. Żądanie z parametrem, którego serwer nie implementuje, zwraca `400`.
+22. Zapytanie z parametrem, którego serwer nie realizuje, zwraca `400`.
     Właściwość siedemnasta.
-23. Każdy zakres, licznik albo filtr, który zwraca częściową odpowiedź, mówi
-    o tym w odpowiedzi. Właściwość siedemnasta.
-24. Rytm, limit żądań albo jego brak oraz retencja są zadeklarowane w
-    dokumencie profilu, a odpowiedź niesie pozostały przydział, jeśli
+23. Każdy zakres, licznik albo filtr zwracający odpowiedź częściową mówi o tym w
+    odpowiedzi. Właściwość siedemnasta.
+24. Rytm, limit zapytań albo jego brak oraz okres przechowywania są podane w
+    dokumencie profilu, a odpowiedź niesie pozostały przydział, jeżeli limit
     istnieje. Właściwość dziesiąta, sekcja 15.
 25. `Last-Modified`, `ETag` i `Cache-Control` są ustawione, a `max-age` nie
     przekracza rytmu. Sekcja 15.
 
 **Zmiana**
 
-26. Profil ma wersję, indeks niesie ją w `schema`, a dokument mówi, jak długo
-    poprzednia wersja jest serwowana po pojawieniu się nowej. Właściwość
-    ósma.
-27. Żaden element nie zmienił znaczenia od poprzedniej wersji bez zmiany
-    nazwy. Właściwość osiemnasta.
-28. Wiadomości ze `status` `Test` i `Exercise` są publikowane tak, żeby
-    konsument mógł je odrzucić bez czytania tekstu. Sekcja 10.1.
+26. Profil ma wersję, indeks niesie ją w `schema`, a dokument mówi, jak długo po
+    pojawieniu się nowej podawana jest poprzednia. Właściwość ósma.
+27. Żaden element nie zmienił znaczenia od poprzedniej wersji bez zmiany nazwy.
+    Właściwość osiemnasta.
+28. Wiadomości o `status` równym `Test` i `Exercise` są publikowane tak, żeby
+    odbiorca mógł je odrzucić bez czytania treści. Sekcja 10.1.
 
-Dwadzieścia osiem punktów. Feed, który je spełnia, ten projekt mógłby czytać
-w dniu jego uruchomienia, kodem, który już działa, i każdy inny też. Feed,
-który któregoś punktu nie spełnia, nie jest złym feedem; jest feedem ze znaną
-luką, czyli jedynym, na jakim konsument może budować uczciwie, a punkt mówi,
-czym ta luka jest.
+Dwadzieścia osiem linii. Kanał, który je wszystkie przechodzi, projekt mógłby
+odczytać w dniu jego pojawienia się, kodem, który już ma uruchomiony, i tak samo
+mógłby każdy inny odbiorca. Niezaliczenie którejś z linii nie czyni kanału złym;
+oznacza znaną lukę, a tylko wobec takiej można budować uczciwie, bo linia mówi,
+na czym ta luka polega.
