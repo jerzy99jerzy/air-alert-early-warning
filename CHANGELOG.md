@@ -16,6 +16,43 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.2.3 - 2026-09-20
+
+**Both briefs said two things the rest of the repository had stopped saying.**
+A review of `docs/WEBAPP.md`, `docs/BRIEF.md` and `docs/BRIEF-PL.md` against
+the tree found a provenance line five releases behind its own figures, and a
+stop condition contradicted by the package shipped beside it. Documents only;
+nothing under `mavo/` moves but the version string.
+
+- **F180. A provenance line outlived the figures it vouched for.** The briefs
+  read `Measured: 2026-08-31, against STATUS.json at 0.50.0.0` while every
+  pinned figure in them matched the pins at 0.55.2.0. The check written after
+  F140 recomputes those figures on every run and reads nothing that says where
+  they came from, so the header now names that comparison instead of a date.
+- **F181. The brief answered a question the project had re-answered.** "What
+  would make the author stop" reported that no Polish machine-readable stream
+  had been found, while `docs/FEED-SPEC.md` section 2 carries the RSO data as
+  publicly readable, `TODO.md` T8a carries the same row as measured, and this
+  package has composed `pl_warnings` from it since 0.55.0.0. The paragraph now
+  separates the catalogue result, which is unchanged, from the RSO data, and
+  states the stop condition as a feed carrying the properties in section 3
+  rather than a feed of any kind.
+- **`docs/BRIEF.md` and `docs/BRIEF-PL.md` 2.24.** "Where it actually is" also
+  names the three reader-visible layers added since August. One reader-facing
+  string carried two names in both editions and is now `typ nieznany` in both
+  places. The sentence claiming the list of unmeasured work is longer than the
+  list of measured work now says it used to be: `tools/todo_index.py` counts
+  43 of 84 closed.
+- **`docs/DEPLOYMENT.md` 1.48.** The `main` row and the `Behind by` row follow
+  the version, which is what `check_the_host_version_row_matches_the_pin` and
+  `check_the_host_release_distance_is_counted` are for. The host still runs
+  0.55.2.0 and nothing here was read from it; the distance moves from two to
+  three because a release was added, not because a machine changed.
+- **`docs/METHODOLOGY.md` 2.66.** The two entries above, each with its class
+  and reopen condition. Neither proposes a check, because the honest one is a
+  person re-reading the file, which is what `tools/brief_check.py` has said
+  about this class since it was written.
+
 ## 0.55.2.2 - 2026-09-20
 
 **The host row re-read from the machine, one release after the install it

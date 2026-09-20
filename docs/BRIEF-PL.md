@@ -7,22 +7,27 @@ powiadomienia.**
 Dokument dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.23
-Measured:  2026-08-31, against STATUS.json at 0.50.0.0, i tym razem liczby
-           faktycznie przeliczono zamiast przepisać. Wersja 2.4 nosiła tę samą
-           linijkę, a cztery liczby w środku pochodziły z 0.32.9.0; co to
-           znaczy, jest opisane w sekcji „Czego nie trzeba brać na słowo".
-           Liczby korpusowe zmierzono 2026-08-17 i nie zmieniły się; zmieniło
-           się źródło, i jest to powiedziane w miejscu, w którym się stało
-Audience:  a Polish reader without a technical background: a journalist, an
-           analyst, a prospective recipient, anyone deciding whether the
-           author is careful
-Companion: BRIEF (the same document in English), FOUNDATIONS (the same claims
-           with provenance labels), METHODOLOGY (the defect log)
-Note:      this is the original and the English version follows it. The
-           readers this is written for are Polish. Every figure below is
-           either pinned in STATUS.json or labelled as somebody else's, as a
-           prior measurement, or as an illustration
+Document:  docs/BRIEF-PL.md, version 2.24
+Measured:  każda przypięta liczba w tym pliku jest porównywana ze STATUS.json
+           przy każdym przebiegu bramki i to porównanie za nią ręczy, a nie
+           data w nagłówku. Wartości, wobec których jest sprawdzana, to te,
+           które niesie 0.55.2.0. Dwa wcześniejsze nagłówki podawały zamiast
+           tego datę i oba były nieprawdziwe, zanim ktokolwiek je przeczytał:
+           wersja 2.4 datowała się na 2026-08-31, a cztery liczby w środku
+           pochodziły z 0.32.9.0; wersja 2.23 zostawiła tę linijkę, kiedy piny
+           przesunęły się o pięć wersji. Obie sprawy są opisane w sekcji
+           „Czego nie trzeba brać na słowo". Liczby korpusowe zmierzono
+           2026-08-17 i nie zmieniły się; zmieniło się źródło, i jest to
+           powiedziane w miejscu, w którym się stało
+Audience:  polski czytelnik bez technicznego przygotowania: dziennikarz,
+           analityk, ktoś, kto mógłby być odbiorcą, ktoś, kto ocenia, czy
+           autor jest staranny
+Companion: BRIEF (ten sam dokument po angielsku), FOUNDATIONS (te same
+           twierdzenia z etykietami pochodzenia), METHODOLOGY (rejestr błędów)
+Note:      to jest wersja pierwotna, a angielska powstała po niej. Czytelnicy,
+           dla których ten tekst jest pisany, są Polakami. Każda liczba niżej
+           jest albo przypięta w STATUS.json, albo oznaczona jako cudza, jako
+           wcześniejszy pomiar, albo jako przykład
 ```
 
 ---
@@ -95,8 +100,7 @@ Przełączenie kosztowało coś konkretnego i to też jest nazwane, a nie schowa
 API ma jeden typ na wszystko, co lata, więc tam gdzie kanał powiedziałby, co
 jest w powietrzu, API często nie mówi. Przez kilka godzin mapa tłumaczyła to
 milczenie na „rakietę", co było błędem tego projektu, a nie słowem nadawcy;
-teraz takie alarmy mają opis **typ niepodany**, czyli to, co faktycznie
-wiadomo.
+teraz takie alarmy mają opis **typ nieznany**, czyli to, co faktycznie wiadomo.
 
 Kanał miał jedną cechę, która przesądziła o konstrukcji, i to dlatego korpus
 opisany niżej jest wart tyle, ile jest wart: **99,3% wiadomości ma hasztag z
@@ -194,7 +198,7 @@ jest zbudowany wokół tego rozróżnienia.
 Przy prywatnym projekcie to waży więcej niż technologia, więc konkrety zamiast
 zapewnień. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Log defektów ma 157 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
+**Log defektów ma 159 wpisów.** Każdy zawiera, co się zepsuło, dlaczego nikt
 tego nie zauważył i jaka to klasa błędu. Wpisy przeciw interesowi projektu też
 tam są, łącznie z tym o wyniku 0 na 20 i z tym, w którym dokumentacja
 twierdziła, że coś jest sprawdzane, a nie było. Osobno zapisano **54 decyzje
@@ -232,6 +236,20 @@ czyta ten plik liczba po liczbie, porównuje obie wersje językowe co do wartoś
 i krotności, i **została pokazana na czerwono, zanim przepuszczono ją na
 zielono**: sześć celowo wprowadzonych błędów, sześć wykrytych.
 
+**Zdarzyło się to jeszcze dwa razy, w cichszej postaci, i ta wersja jest
+miejscem, w którym oba przypadki zostały zapisane.** Liczby przeliczano przy
+każdej wersji po wprowadzeniu tamtej kontroli, dokładnie tak, jak miało być, a
+nagłówek nad nimi dalej wskazywał wersję, wobec której odczytano je kiedyś;
+linijka mówiąca, skąd liczba pochodzi, sama jest twierdzeniem, a bramka takiej
+linijki nie czyta. Osobno: odpowiedź niżej na pytanie, co by autora zatrzymało,
+dalej głosiła, że nie znaleziono polskiego strumienia czytelnego maszynowo, już
+po tym, jak projekt taki strumień znalazł, zmierzył, opisał we własnej
+specyfikacji i zaczął czytać w stałym rytmie. Tamta naprawa dotarła do
+specyfikacji i do listy zadań, a zatrzymała się o jeden dokument przed tym,
+który czytelnik z zewnątrz otwiera najpierw. Oba przypadki są wyżej poprawione i
+zapisane jako F180 i F181. Dla żadnego nie proponuje się kontroli, bo uczciwą
+kontrolą jest człowiek czytający plik jeszcze raz.
+
 ## Gdzie to jest teraz, bez upiększeń
 
 Działa: zbieranie danych, rozpoznawanie obszaru z hasztagów, obliczanie
@@ -240,6 +258,17 @@ sama strona z mapą, **publicznie dostępna pod adresem mavo.org.pl od 12
 sierpnia 2026**. Adres jest tu wydrukowany, bo dokument mówiący „działa
 publicznie" bez podania gdzie prosi, żeby uwierzyć mu na słowo w jedynym
 miejscu, które czytelnik sprawdza w sekundę.
+
+**Od tamtej pory doszły do tej strony trzy warstwy i są tu wymienione, bo sekcja
+urywająca się na sierpniu to ten sam błąd co liczba urywająca się na sierpniu.**
+Polskie komunikaty o zagrożeniu z powietrza są rysowane na wymienionych w nich
+województwach, a treść komunikatu otwiera się po kliknięciu. Rezerwacje
+przestrzeni powietrznej oznaczone przez polską agencję ruchu lotniczego jako
+aktywowane są rysowane obrysem, co mówi o dokumentach, a nie o czymkolwiek, co
+lata. Miejsca poza Ukrainą, w których spadł dron, zaznaczono na podstawie
+opublikowanych zapisów. Żadna z tych warstw nie zmienia tego, czego narzędzie
+odmawia, a każda niesie inny rodzaj twierdzenia niż ukraiński obraz alarmów i
+dlatego każda ma własny przełącznik.
 
 18 sierpnia, w trakcie realnego nalotu, alarm objął osiem zachodnich rejonów w
 czterech obwodach i autor czytał wtedy tę stronę przeciwko kanałowi. To
@@ -318,12 +347,25 @@ fikcją.
 Lista spisana z góry, bo tylko wtedy taka lista cokolwiek znaczy.
 
 Jeśli powstanie polski publiczny kanał danych o alarmach, projekt straci sens i
-zostanie zamknięty, a nie przepozycjonowany. Sprawdzono, czy taki kanał już
-istnieje: w polskim katalogu otwartych danych przejrzano 1 510 768 zasobów, z
-czego 29 dotyczy ostrzegania, a **strumieni czytelnych maszynowo jest zero**.
-Wyszukiwanie było zawężone do jednego katalogu i nie jest dowodem, że nic
-takiego nie istnieje nigdzie; jest dowodem, że nie znaleziono go tam, gdzie
-powinno leżeć.
+zostanie zamknięty, a nie przestawiony na inny cel. Co liczy się jako taki
+kanał, trzeba było zapisać, bo pierwsza odpowiedź była zbyt zgrubna i nie
+przetrwała tego, co projekt sam potem odczytał. Przejrzano katalog otwartych
+danych: 1 510 768 zasobów, z czego 29 dotyczy ostrzegania, a **strumieni
+czytelnych maszynowo jest zero**. To nadal jest prawda i nadal jest wąskie.
+Obejmuje jeden katalog i dowodzi tego, że nie znaleziono takiego strumienia tam,
+gdzie powinien leżeć, a nie tego, że nie istnieje.
+
+**Polski strumień istnieje poza tym katalogiem i ten projekt go czyta.** Usługa
+stojąca za aplikacją RSO publikuje swoje strony list w XML i JSON, publicznie i
+bez tokenu. Pierwszy odczyt tych danych projekt wykonał 22 sierpnia 2026 r. i od
+września czyta je w stałym rytmie; stamtąd biorą się polskie komunikaty rysowane
+dziś na mapie. Dane RSO nie są jednak kanałem, który zamknąłby ten projekt, a
+powody wypisano właściwość po właściwości w `docs/FEED-SPEC.md`: żaden rekord
+nie mówi, do jakiej kategorii należy, żaden nie mówi, który organ go wydał,
+zakres nazwany „wszystkie" zwraca część danych, a historia topnieje do garstki
+rekordów tygodniowo na cały kraj. **Warunkiem jest więc polski kanał niosący te
+właściwości, a nie jakikolwiek polski kanał.** Zapisanie tego w ten sposób
+powstrzymuje warunek przed staniem się czymś, czego nic nigdy nie spełni.
 
 Jeśli okaże się, że raportowanie po polsku pomaga komuś kierować ogniem, praca
 zostanie wstrzymana. To wygląda na mało prawdopodobne, bo dane są publiczne i
@@ -347,8 +389,9 @@ ma etykietę. Warto sprawdzić kilka losowych.
 *Co ten system robi w noc, kiedy nic się nie dzieje?* Ma mówić „żaden zachodni
 rejon nie zgłasza alarmu", a nie „bezpiecznie". Różnica nie jest kosmetyczna.
 
-*Czego autor jeszcze nie zmierzył?* Lista jest w repozytorium, ustawiona w trzy
-poziomy priorytetu, i jest dłuższa niż lista rzeczy zmierzonych.
+*Czego autor jeszcze nie zmierzył?* Lista jest w repozytorium, podzielona na
+trzy poziomy priorytetu. Bywała dłuższa niż lista rzeczy zrobionych i już nie
+jest, a takiej zmiany nic w bramce nie każe nikomu szukać.
 
 *Które liczby w tym dokumencie są pilnowane maszynowo?* Do wersji 2.5 mniej,
 niż ten dokument twierdził, i warto zacząć od tego. Bramka porównywała oba

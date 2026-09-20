@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.55.2.2",
+  "version": "0.55.2.3",
   "python_requires": ">=3.11",
   "sprint_test_files": [
     0,
@@ -18,18 +18,18 @@
   "gate": "make verify",
   "documents": {
     "docs/ARCHITECTURE.md": "2.8",
-    "docs/BRIEF-PL.md": "2.23",
-    "docs/BRIEF.md": "2.23",
+    "docs/BRIEF-PL.md": "2.24",
+    "docs/BRIEF.md": "2.24",
     "docs/CHANNEL.md": "1.12",
     "docs/COMPUTATION.md": "1.1",
     "docs/DATA-FLOW.md": "1.6",
     "docs/DECISIONS.md": "2.31",
-    "docs/DEPLOYMENT.md": "1.47",
+    "docs/DEPLOYMENT.md": "1.48",
     "docs/FEED-SPEC.md": "3.5",
     "docs/FOUNDATIONS.md": "1.2",
     "docs/MANUAL.md": "3.14",
     "docs/MECHANISMS.md": "2.6",
-    "docs/METHODOLOGY.md": "2.65",
+    "docs/METHODOLOGY.md": "2.66",
     "docs/MOBILE.md": "1.6",
     "docs/MVP.md": "3.11",
     "docs/OBSERVABILITY.md": "1.1",
@@ -172,11 +172,11 @@
     "test_files": 74,
     "tool_lines": 7990,
     "tool_files": 28,
-    "documentation_lines": 34788,
+    "documentation_lines": 34960,
     "documentation_files": 75,
     "runtime_dependencies": 0
   },
-  "defects_logged": 157,
+  "defects_logged": 159,
   "decisions_recorded": 54,
-  "releases": 155
+  "releases": 156
 }

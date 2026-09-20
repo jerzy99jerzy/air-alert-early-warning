@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.65
+Document:  docs/METHODOLOGY.md, version 2.66
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,54 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F181, 0.55.2.3. The brief answered a question the project had re-answered
+
+`docs/BRIEF.md` and `docs/BRIEF-PL.md` answer "what would make the author
+stop" with a search of the open data catalogue and the sentence that the
+number of machine-readable streams in it is zero. `docs/FEED-SPEC.md` section
+2 withdrew the wider form of that claim (F142), `TODO.md` T8a carries the RSO
+row as `[measured 2026-08-22]`, and since 0.55.0.0 this package reads the
+stream on a timer and composes `pl_warnings` from it `[measured, this tree]`.
+Neither brief contains the string `RSO`, `RCB` or `CAP` `[measured]`.
+
+**Class.** F118's shape: a repair that reaches the document where a fact is
+argued about and misses the documents where it is used. One step worse than
+the F142 instance, because the document it missed is the one written for a
+reader who checks nothing else, and the paragraph it sits in is the one
+naming the condition under which this project would be closed.
+
+**Repair.** The paragraph now separates the catalogue result, which is
+unchanged and narrow, from the RSO stream, which exists and is read, and
+states the stop condition as a feed carrying the properties in
+`docs/FEED-SPEC.md` section 3 rather than a feed of any kind.
+
+**Reopen condition:** a claim in either brief about what the Polish side
+publishes that is not also made in `docs/FEED-SPEC.md` section 2.
+
+### F180, 0.55.2.3. A provenance line outlived the figures it vouched for
+
+The briefs' header read `Measured: 2026-08-31, against STATUS.json at
+0.50.0.0` while every pinned figure in them matched the pins at 0.55.2.0: 157
+defects, 54 decisions and 937 tests, against 118, 45 and 642 at the
+`v0.50.0.0` tag `[measured, this tree and that tag]`. The figures had been
+recomputed at every release, as the check F140 produced requires; the line
+saying where they came from had not.
+
+**Class.** F140 inverted. There the figures were stale and the header claimed
+they were fresh; here the figures are fresh and the header names a release
+five behind. Both misreport provenance, and `brief_check` can see neither:
+`figures()` removes four-part version strings and the number after the word
+*version* before comparing, and it compares dates between the two editions
+only, so a date wrong in both passes.
+
+**Repair.** The header no longer dates the pinned figures. They are compared
+against `STATUS.json` on every run, so the comparison is what vouches for
+them; the header says so, names the release the pins were taken at, and
+records both earlier headers.
+
+**Reopen condition:** a line in any document stating when a figure was
+measured, while a check recomputes that figure on a different schedule.
 
 ### F179, 0.55.2.0. F171 was repaired in one place of three
 

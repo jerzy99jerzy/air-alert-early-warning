@@ -6,13 +6,18 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.23
-Measured:  2026-08-31, against STATUS.json at 0.50.0.0, and this time the
-           figures were recomputed rather than carried over. Version 2.4 bore
-           the same line while four figures inside it came from 0.32.9.0; what
-           that means is set out under "What you do not have to take on trust".
-           The corpus figures were measured on 2026-08-17 and are unchanged;
-           what moved is the source, and that is said where it happened
+Document:  docs/BRIEF.md, version 2.24
+Measured:  every pinned figure here is compared against STATUS.json on each
+           run of the gate, so what vouches for those figures is that
+           comparison and not a date in this header. The pins they are read
+           against are the ones 0.55.2.0 carries. Two earlier headers named a
+           date instead, and both were untrue by the time anybody read them:
+           version 2.4 dated itself 2026-08-31 while four figures inside it
+           came from 0.32.9.0, and version 2.23 kept that line after the pins
+           had moved on five releases. Both are set out under "What you do
+           not have to take on trust". The corpus figures were measured on
+           2026-08-17 and are unchanged; what moved is the source, and that
+           is said where it happened
 Audience:  anyone who wants to understand this project without reading the
            code: a journalist, an analyst from another field, a prospective
            recipient, a reviewer deciding whether the author is careful
@@ -94,11 +99,10 @@ which is why using them would have produced the feeling of corroboration
 without any of the substance.
 
 The switch cost something specific and it is named rather than hidden: the API
-has one type for everything that flies, so where the channel would say what
-was in the air, the API often does not. For a few hours the map translated
-that silence into "missile", which was this project's error and not the
-publisher's word; it now reads **type not stated**, which is what is actually
-known.
+has one type for everything that flies, so where the channel would say what was
+in the air, the API often does not. For a few hours the map translated that
+silence into "missile", which was this project's error and not the publisher's
+word; it now reads **type unknown**, which is what is actually known.
 
 The channel had one property that determined the whole design, and it is why
 the corpus below is worth what it is: **99.3% of messages carry a hashtag
@@ -199,7 +203,7 @@ With a private project this weighs more than the technology, so specifics
 instead of assurances. Every one of them can be checked without asking the
 author for an opinion.
 
-**The defect log holds 157 entries.** Each states what broke, why nobody
+**The defect log holds 159 entries.** Each states what broke, why nobody
 noticed, and what class of error it was. Entries against the project's own
 interest are in there too, including the 0 of 20 above, and one where the
 documentation claimed something was checked and it was not. Separately, **54
@@ -238,6 +242,19 @@ closed by a check that reads this file figure by figure, compares the two
 language versions by value and by count, and **was shown failing before it was
 allowed to pass**: six deliberately introduced errors, six caught.
 
+**It happened twice more, in quieter forms, and this version is where both are
+recorded.** The figures were recomputed at every release after that check went
+in, exactly as intended, and the header above them went on naming the release
+they had once been read against; a line stating where a figure came from is
+itself a claim, and nothing in the gate reads such a line. Separately, the
+answer below to what would make the author stop went on reporting that no Polish
+machine-readable stream had been found, after this project had found one,
+measured it, written it up in its own specification and begun reading it on a
+timer. That repair reached the specification and the backlog and stopped one
+document short of the one an outside reader opens first. Both are corrected
+above and logged as F180 and F181. No check is proposed for either, because the
+honest one is a person re-reading the file.
+
 ## Where it actually is, without flattery
 
 Working: collection, district recognition from hashtags, distance to the
@@ -246,6 +263,17 @@ itself, **publicly reachable at mavo.org.pl since 2026-08-12**. The address is
 printed here because a document that says "publicly running" without saying
 where is asking to be trusted on the one claim a reader could check in a
 second.
+
+**Three layers have been added to that page since, and they belong here: a
+section that stops in August is the same failure as a figure that stops in
+August.** Polish civil communiques about a threat in the air are drawn on the
+provinces they name, with the communique's own text behind a tap. Airspace
+reservations that Polish air traffic management has marked as activated are
+drawn as outlines, which says something about paperwork rather than about
+anything flying. Places outside Ukraine where a drone came down are marked from
+published records. None of the three changes what the tool refuses to say, and
+each carries a different kind of claim from the Ukrainian alert picture, which
+is why each sits behind its own switch.
 
 On 18 August, during a real raid, an alert covered eight western districts
 across four oblasts and the author read that page against the channel while it
@@ -328,11 +356,25 @@ comfortable fiction.
 Written in advance, because that is the only time such a list means anything.
 
 If a Polish public alert feed appears, the project loses its purpose and gets
-closed rather than repositioned. Whether one already exists was checked: 1,510,768
-resources in the Polish open-data catalogue were searched, 29 of them concern
-alerting, and the number of machine-readable streams among them is **zero**.
-That search covered one catalogue and is not proof that nothing of the kind
-exists anywhere; it is proof that none was found where one would sit.
+closed rather than repositioned. What counts as one has had to be written down,
+because the first answer given here was too coarse to survive the project's own
+reading. The open-data catalogue was searched: 1,510,768 resources, 29 of them
+concerning alerting, and the number of machine-readable streams among them is
+**zero**. That is still true and it is still narrow. It covers one catalogue,
+and it is proof that none was found where one would sit rather than proof that
+none exists.
+
+**A Polish stream does exist outside that catalogue, and this project reads
+it.** The service behind the RSO application publishes its list pages as XML and
+JSON, publicly and without a token. This project measured that on 2026-08-22 and
+has read it on a timer since September; the Polish civil communiques now drawn
+on the map come from there. It is not the feed that would close this project,
+and the reasons are set out property by property in `docs/FEED-SPEC.md`: no
+record says which category it belongs to, none says which authority issued it,
+the scope named "all" returns part of the data, and history thins to a handful
+of records a week for the whole country. **So the condition is a Polish feed
+carrying those properties, not a Polish feed of any kind.** Writing it that way
+is what keeps it from being a condition nothing can ever meet.
 
 If it turns out that reporting in Polish helps somebody direct fire, work
 stops. That looks unlikely, since the data is public and available faster in
@@ -358,7 +400,9 @@ western district is reporting an alert", not "safe". The difference is not
 cosmetic.
 
 *What has the author not measured yet?* The list is in the repository, sorted
-into three priority tiers, and it is longer than the list of what has been.
+into three priority tiers. It used to be longer than the list of what has been
+done and it is not any more, which is a change nothing in the gate would have
+prompted anybody to look for.
 
 *Which figures in this document are enforced mechanically?* Until version 2.5
 fewer than this document claimed, and that is the place to start. The gate
