@@ -16,6 +16,28 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.2.2 - 2026-09-20
+
+**The host row re-read from the machine, one release after the install it
+missed.** 0.55.2.1 shipped with `docs/DEPLOYMENT.md` naming 0.54.8.0 as
+installed while the host had run 0.55.2.0 since 2026-09-19, and said so in its
+own entry. This is the reading. No code path changes; nothing under `mavo/`
+moves but the version string.
+
+- **`docs/DEPLOYMENT.md` 1.47.** `/opt/mavo/venv/bin/mavo --version` printed
+  `mavo 0.55.2.0` and the installed package's RECORD file was last written
+  2026-09-19 18:36:05 UTC, both read from the operator's terminal on
+  2026-09-20. The release distance drops from five to two.
+- **Not a numbered defect, and the distinction is the point.** F170 records a
+  row that named the wrong version for seven releases with nothing in the tree
+  saying so. This row was wrong for one release and that release stated it,
+  which is a debt rather than a drift.
+- **`Host state measured` stays 2026-09-10**, because one row was re-read and
+  the section is the whole host. The unit inventory, the timers and the paths
+  below it have not been read since, and the install they describe happened
+  after. The freshness check allows fourteen days, so a full reading is due
+  before any release dated later than 2026-09-24.
+
 ## 0.55.2.1 - 2026-09-20
 
 **Both editions of FEED-SPEC rewritten, and the Polish one written as
