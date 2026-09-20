@@ -63,7 +63,7 @@ mogą rozejść się niezauważenie.
 
 **Część II. Instrukcja**
 
-10. [Cały feed na jednej stronie](#10-cały-feed-na-jednej-stronie)
+10. [Cały kanał na jednej stronie](#10-cały-kanał-na-jednej-stronie)
 11. [Jak jeden alarm przechodzi przez feed](#11-jak-jeden-alarm-przechodzi-przez-feed)
 12. [Trzy zegary, jeden format](#12-trzy-zegary-jeden-format)
 13. [Kiedy dwa odczyty to ten sam alarm](#13-kiedy-dwa-odczyty-to-ten-sam-alarm)
@@ -947,218 +947,224 @@ jednak argument przeciwko publikowaniu pozostałych danych.
 
 ## 6. Czego ten dokument nie postuluje
 
-- **Nie o nowy system.** RSO istnieje, jest prowadzone, a jego strona
-  integracyjna dokumentuje zasób CAP. Prośba dotyczy tego, które kategorie
-  niesie i kto może czytać postać ustrukturyzowaną.
-- **Nie o nową ustawę.** Ustawa z 5 grudnia 2024 o ochronie ludności i
-  obronie cywilnej przewiduje ostrzeganie publiczne szybką transmisją
-  cyfrową; sekcja 9 zapisuje, że jej opublikowane brzmienie nie zostało
-  odczytane na tle tego twierdzenia.
-- **Nie o zmianę tego, kto decyduje.** Państwo decyduje, czym jest alarm i
-  kiedy go ogłosić. To dotyczy formatu, w jakim już podjęta decyzja jest
-  publikowana.
-- **Nie o nowy system wykrywania, czujnik ani pozycję w budżecie.** Informacja
-  istnieje w chwili, gdy odzywa się syrena.
-- **Nie o obowiązek konsumowania go przez kogokolwiek.** Feed, którego nikt nie
-  czyta, nic nie kosztuje; feed, który nie istnieje, kosztuje każdego
-  potencjalnego czytelnika.
-- **Nie o zastąpienie czegokolwiek.** Syreny pozostaną najszybszym kanałem do
-  śpiącego człowieka i nic tutaj tego nie zmienia.
+- **Nie chodzi o nowy system.** RSO działa, ma swojego operatora, a strona
+  integracyjna opisuje zasób CAP. Prośba dotyczy tego, jakie kategorie ten zasób
+  niesie i kto może czytać jego postać ustrukturyzowaną.
+- **Nie chodzi o zmianę prawa.** Ustawa z 5 grudnia 2024 r. o ochronie ludności
+  i obronie cywilnej przewiduje ostrzeganie publiczne szybką transmisją cyfrową;
+  sekcja 9 odnotowuje, że jej opublikowane brzmienie nie zostało z tym
+  twierdzeniem zestawione.
+- **Nie chodzi o to, kto decyduje.** Państwo rozstrzyga, czym jest alarm i kiedy
+  go ogłosić. Rzecz dotyczy wyłącznie formy, w jakiej podjęta już decyzja
+  zostaje opublikowana.
+- **Nie chodzi o nowy system wykrywania, czujnik ani pozycję w budżecie.**
+  Informacja istnieje w tej samej chwili, w której odzywa się syrena.
+- **Nie chodzi o obowiązek odbierania tych danych.** Kanał, którego nikt nie
+  czyta, nie kosztuje nic; jego brak kosztuje każdego, kto mógłby po niego
+  sięgnąć.
+- **Nie chodzi o zastąpienie czegokolwiek.** Syrena pozostanie najszybszą drogą
+  do człowieka, który śpi, i nic w tym dokumencie tego nie zmienia.
 
 ## 7. Jak z tym dokumentem polemizować
 
-Napisany jako specyfikacja, a nie opinia, żeby niezgoda mogła być konkretna.
-Użyteczne formy:
+Tekst ma postać specyfikacji, a nie opinii, po to, żeby niezgoda mogła być
+konkretna. Pomocne są przede wszystkim:
 
-- Właściwość w sekcji 3, która jest błędna, albo taka, której brakuje i która
-  okazuje się mieć znaczenie w praktyce. Uwaga: cztery z pięciu to cytaty z
-  własnego standardu technicznego państwa, więc niezgoda tam jest niezgodą z
-  tamtym dokumentem, a nie ze mną.
-- Konkretny powód, dla którego kody TERYT w ładunku są trudniejsze, niż
-  wyglądają.
-- Wskazanie polskiego źródła, które już spełnia część tego i którego autor nie
-  znalazł. **To najbardziej użyteczna odpowiedź, jaką ten dokument może
-  dostać**, a sekcja 8 mówi, co się dzieje, kiedy taka nadejdzie.
-- Odpowiedź na którekolwiek z trzech pytań zostawionych otwartymi na końcu
+- Błędna właściwość w sekcji 3 albo taka, której tam nie ma, a która w praktyce
+  ma znaczenie. Cztery z pięciu to cytaty z technicznego standardu samego
+  państwa, więc zastrzeżenie w tym miejscu dotyczy tamtego dokumentu, a nie
+  mnie.
+- Konkretny powód, dla którego kody TERYT w treści komunikatu są trudniejsze,
+  niż wyglądają.
+- Wskazanie polskiego źródła, które część tego już spełnia, a którego autor nie
+  znalazł. **To najbardziej przydatna odpowiedź, jaką ten dokument może
+  otrzymać**, a sekcja 8 mówi, co się dzieje, kiedy taka nadejdzie.
+- Odpowiedź na którekolwiek z trzech pytań pozostawionych otwartymi na końcu
   sekcji 2.
-- Dowód, że zarzut bezpieczeństwa z sekcji 5 ma mocniejszą postać niż ta, na
-  którą tu odpowiedziano.
+- Dowód, że zarzut dotyczący bezpieczeństwa z sekcji 5 ma mocniejszą postać niż
+  ta, na którą odpowiedziano tutaj.
 
-Korekty tego dokumentu są zapisywane jak każde inne ustalenie w tym
-repozytorium: co było błędne, kto to znalazł i co się zmieniło.
+Poprawki do tego dokumentu trafiają do rejestru na tych samych zasadach co każde
+inne ustalenie w tym repozytorium: co było błędne, kto to zauważył i co się po
+tym zmieniło.
 
 ## 8. Rejestr korekt
 
-Sekcja 7 mówi, że wskazanie istniejącego polskiego źródła to najbardziej
-użyteczna odpowiedź, jaką ten dokument może dostać, i że korekta zostanie
-zapisana jak każde inne ustalenie: co było błędne, kto to znalazł, co się
-zmieniło.
+Sekcja 7 mówi, że wskazanie istniejącego polskiego źródła jest najbardziej
+przydatną odpowiedzią, jaką ten dokument może otrzymać, i że korekta zostanie
+zapisana tak samo jak każde inne ustalenie: co było błędne, kto to zauważył, co
+się zmieniło.
 
 | Pole | Wpis |
 | --- | --- |
-| Wydania skorygowane | 1.0 / 2026-08-09 do 2.3 / 2026-08-31 |
-| Korekta wydana | 2.4 / 2026-09-04 |
-| Znalazł | własny odczyt tego projektu i odpowiedź spoza niego |
+| Skorygowane wydania | 1.0 / 2026-08-09 do 2.3 / 2026-08-31 |
+| Korekta ogłoszona | 2.4 / 2026-09-04 |
+| Kto znalazł | odczyt wykonany w projekcie oraz odpowiedź spoza niego |
 | Odtworzone tutaj | odczyt tak, odpowiedź nie |
 
-**Co było błędne.** Każde wydanie do 2.3 zaczynało się od stwierdzenia, że nie
-ma na czym budować, a od 1.9 to zdanie stało nad sekcją, która już znalazła i
-zmierzyła strumień RSO (F142). Ta korekta należy do sekcji 2 i stoi na
-odczycie, który każdy może powtórzyć.
+**Co było błędne.** Każde wydanie do 2.3 otwierało się stwierdzeniem, że nie ma
+na czym budować, a od 1.9 stało ono nad sekcją, która dane RSO już znalazła i
+zmierzyła (F142). Ta korekta należy do sekcji 2 i opiera się na odczycie, który
+każdy może powtórzyć.
 
-**Druga korekta przyszła spoza tego projektu i nie jest tu odtworzona.**
-Przyszła jako korespondencja, nie jako publikacja. To, co instytucja mówi o
-własnych systemach w odpowiedzi do jednej osoby, należy do niej i to ona
-decyduje o publikacji; specyfikacja argumentująca za danymi publicznymi jest
-złym miejscem, żeby zrobić to za nią, a argument poniżej tego nie potrzebuje.
-Wydania od 2.4 do 3.1 odtwarzały tę treść. To był błąd, materiał znika w 3.2,
-a ten akapit jest jego zapisem, bo wcześniejsze wydania są publiczne i
-udawanie, że tak nie było, byłoby drugim błędem. Zostaje to, co ten projekt
-zmierzył sam, i to, co jego wydawca publikuje.
+**Druga korekta przyszła spoza projektu i nie jest tutaj odtworzona.** Miała
+postać korespondencji, a nie publikacji. To, co instytucja mówi o własnych
+systemach w piśmie do jednej osoby, pozostaje jej własnością i to ona
+rozstrzyga, czy to ogłosić; specyfikacja dopominająca się o dane publiczne jest
+złym miejscem, żeby robić to za nią, a wywód niczego takiego nie potrzebuje.
+Wydania od 2.4 do 3.1 tę treść odtwarzały. To była pomyłka, materiał zniknął
+w 3.2, a niniejszy akapit ją odnotowuje, bo wcześniejsze wydania pozostają
+publiczne i udawanie, że ich nie było, byłoby drugim błędem. Zostaje to, co
+projekt zmierzył sam, i to, co nadawca ogłasza publicznie.
 
-**Co się nie zmieniło.** Pięć właściwości i nic w sekcjach 1 do 7, czego
-usunięcie by dotknęło: argument stoi na odczycie z 2026-08-22 i na własnym
-standardzie państwa, a jedno i drugie każdy może sprawdzić.
+**Co się nie zmieniło.** Pięć właściwości oraz wszystko w sekcjach od 1 do 7,
+czego usunięcie mogłoby dotknąć: wywód opiera się na odczycie
+z 22 sierpnia 2026 r. i na technicznym standardzie samego państwa, a jedno i
+drugie każdy może sprawdzić.
 
-**Uwaga do wydania 3.0.** Nie korekta. Dodano część II i wydanie polskie
-obok. Nic w sekcjach 1 do 9 nie zmieniło się co do treści; zmieniły się
-nagłówek i spis treści. Powodem dodania jest odbiorca: instytucja, która już
-publikuje CAP i to ona niosłaby kategorię tego rodzaju. Dla takiego
-czytelnika argument jest mniej użyteczny niż instrukcja, a instrukcja po
-angielsku mniej użyteczna niż po polsku.
+**Uwaga do wydania 3.0.** Nie jest to korekta. Dodano część II, a obok niej
+tekst polski. W sekcjach od 1 do 9 nic nie zmieniło się co do treści; zmieniły
+się nagłówek i spis treści. Powodem dodania jest adresat: instytucja, która
+format CAP już stosuje i która niosłaby kategorię tego rodzaju. Takiemu
+czytelnikowi instrukcja przyda się bardziej niż argumentacja, a instrukcja po
+polsku bardziej niż po angielsku.
 
-**Uwaga do wydania 3.1.** Wydanie polskie napisane od nowa. W postaci z 3.0
-było tłumaczeniem, a nie dokumentem: niosło angielską frazeologię w polskich
-słowach, a jeden termin - sygnał życia z sekcji 4 - oddany był zwrotem z
-anatomii. Sprawdzenie parzystości w buildzie tego repozytorium trzyma oba
-wydania przy tej samej strukturze i tych samych liczbach, i nie ma nic do
-powiedzenia o tym, czy któreś z nich czyta się jak tekst napisany w swoim
-języku; ten limit jest tu wypowiedziany, bo wydanie 3.0 przeszło bramkę i
-mimo to wymagało czytelnika.
+**Uwaga do wydania 3.1.** Tekst polski napisano wtedy od nowa. W postaci
+ogłoszonej w 3.0 był tłumaczeniem, a nie dokumentem: niósł angielską frazeologię
+w polskich słowach, a jeden termin – sygnał życia z sekcji 4 – oddano zwrotem z
+anatomii. Automatyczna kontrola w tym repozytorium pilnuje, żeby oba teksty
+miały tę samą strukturę i te same liczby; o tym, czy któryś z nich czyta się jak
+proza napisana w swoim języku, nie mówi nic. Ograniczenie jest tu nazwane,
+bo 3.0 kontrolę przeszło i mimo to wymagało czytelnika.
 
-**Uwaga do wydania 3.2.** Dwa usunięcia i cztery poprawki, żadna z nich w
-argumencie. Część II wycofała rekomendację, na którą nie miała podstawy,
-poprawiła dwa zdania o samej strukturze CAP, poprawiła zmierzoną liczbę,
-którą podała źle, i wycofała twierdzenie o własnej polityce wersji tego
-projektu, któremu właściwość ósma przeczy dwie sekcje wcześniej. Dokument,
-który prosi wydawcę, żeby mówił, czego jego pola nie rozróżniają, musi
-trzymać ten sam standard w części, która mówi wydawcy, co ma zbudować.
+**Uwaga do wydania 3.2.** Dwa usunięcia i cztery poprawki, żadna w samym
+wywodzie. Część II wycofała zalecenie, dla którego nie miała podstawy,
+sprostowała dwa zdania o budowie samego CAP, sprostowała zmierzoną liczbę podaną
+wcześniej błędnie i wycofała twierdzenie o polityce numerowania wersji w tym
+projekcie, któremu właściwość ósma przeczy dwie sekcje wcześniej. Dokument,
+który prosi nadawcę, żeby powiedział, czego jego pola nie rozróżniają, musi
+trzymać ten sam standard tam, gdzie sam mówi, co zbudować.
 
-**Uwaga do wydania 3.3.** Jedna poprawka i jedna nowa właściwość, z tym, co z
-niej wynika. Sekcja 10.3 mówiła, że pięć jej wierszy mówi *nic*; mówi osiem, i
-liczba jest poprawiona. Właściwość dwudziesta jest nowa, z pary komunikatów
-odczytanej 2026-09-16, i odpowiada na połowę jednego z otwartych pytań sekcji
-2, tylko dla stron XML; sekcje 10.3, 11 i 16 nazywają ją tam, gdzie na niej
-stoją, właściwość piętnasta zyskuje to, ile kosztuje klasyfikowanie po
-słowach, a sekcja 15 zapisuje retencję, którą producent tego projektu jest
-zbudowany prowadzić. Właściwość stoi na jednej parze i mówi to, a to jest
-standard, który sekcja 4a postawiła sobie w 1.9.
+**Uwaga do wydania 3.3.** Jedna poprawka i jedna nowa właściwość wraz z tym, co
+z niej wynika. Sekcja 10.3 podawała, że pięć jej wierszy mówi *nic*; mówi tak
+osiem i liczba została sprostowana. Właściwość dwudziesta jest nowa i pochodzi z
+pary komunikatów odczytanej 16 września 2026 r.; odpowiada ona na połowę jednego
+z pytań pozostawionych otwartymi w sekcji 2, i to wyłącznie dla stron XML.
+Sekcje 10.3, 11 i 16 nazywają ją tam, gdzie się na niej opierają. Właściwość
+piętnasta zyskuje informację o tym, ile kosztuje rozpoznawanie po słowach, a
+sekcja 15 zapisuje okres przechowywania, jaki producent w tym projekcie ma
+utrzymywać. Właściwość opiera się na jednej parze i mówi to wprost, zgodnie z
+rygorem, który sekcja 4a przyjęła dla siebie w 1.9.
 
-**Uwaga do wydania 3.4.** Jedno zdanie właściwości dwudziestej zmienia czas:
-kompozycja tego projektu brała `valid_to` za koniec w 0.55.0.0, a od 0.55.1.0
-paruje odwołanie z jego alarmem (D-055). Para, na której stoi ta właściwość,
-jest teraz trzymana jako nagrane bajty i nazywa jedno województwo.
+**Uwaga do wydania 3.4.** Jedno zdanie właściwości dwudziestej zmienia czas
+gramatyczny: składanie obrazu w tym projekcie traktowało `valid_to` jako koniec
+w 0.55.0.0, a od 0.55.1.0 łączy odwołanie z alarmem, którego dotyczy (D-055).
+Para, na której właściwość się opiera, jest teraz przechowywana jako nagrane
+bajty i nazywa jedno województwo.
 
 ## 9. Źródła
 
 - Dokumentacja integracyjna RSO, <https://komunikaty.tvp.pl/Info/Integration>,
-  czytana 2026-08-22 i 2026-09-02. Cytowana dla: publicznej dostępności
+  czytana 22 sierpnia i 2 września 2026 r. Cytowana dla: publicznej dostępności
   zasobów XML i JSON oraz tokena na zasobie CAP.
-- Common Alerting Protocol, OASIS, wersja bieżąca. Cytowany dla elementów
+- Common Alerting Protocol, OASIS, w wersji bieżącej. Cytowany dla elementów
   nazwanych w sekcji 3.
-- Ustawa z 5 grudnia 2024 o ochronie ludności i obronie cywilnej. Cytowana w
-  sekcji 6 dla istnienia podstawy ustawowej dla ostrzegania publicznego
-  szybką transmisją cyfrową. Jej opublikowane brzmienie nie zostało odczytane
-  na tle tego cytatu, a zdanie stoi jako `[unverified]`, dopóki nie
-  zostanie.
+- Ustawa z 5 grudnia 2024 r. o ochronie ludności i obronie cywilnej. Cytowana w
+  sekcji 6 jako podstawa twierdzenia, że ostrzeganie publiczne szybką transmisją
+  cyfrową ma oparcie ustawowe. Jej opublikowane brzmienie nie zostało z tym
+  przywołaniem zestawione, a zdanie pozostaje oznaczone jako `[unverified]`,
+  dopóki to nie nastąpi.
 - [`docs/CHANNEL.md`](CHANNEL.md), dla każdego pomiaru w sekcji 1.
-- Lista `ogolne` strumienia RSO, odczytana 2026-09-16 na hoście strony tego
+- Lista `ogolne` danych RSO, odczytana 16 września 2026 r. na hoście strony tego
   projektu. Cytowana dla właściwości dwudziestej i sekcji 2.
 
 ---
 
 # Część II. Instrukcja
 
-Wszystko w tej części jest konsekwencją czegoś z części I i każda reguła
-mówi, czego. Tam, gdzie część I pilnuje, żeby oznaczyć, co zmierzono, a co
-zaraportowano, część II jest celowo nakazowa: mówi *zrób tak*, a powód jest o
-jedno kliknięcie dalej. Przykłady są napisane na CAP, bo wydawca, do którego
-to jest adresowane, już go emituje, i bo specyfikacja, która prosiłaby o nowy
-format, prosiłaby o nowy system, a sekcja 6 mówi, że nie prosi. Nic poniżej
-nie wymaga opuszczenia CAP. Dwie rzeczy poniżej wymagają dodania do niego i
-obie są powiedziane otwarcie.
+Wszystko w tej części wynika z czegoś w części I i każda reguła wskazuje, z
+czego. Tam, gdzie część I starannie oznacza, co zmierzono, a co zaraportowano,
+część II jest celowo nakazowa: mówi *zrób tak*, a uzasadnienie leży o jedno
+kliknięcie dalej. Przykłady napisano na formacie CAP, bo instytucja, do której
+tekst jest adresowany, już go emituje, a także dlatego, że specyfikacja
+domagająca się nowego formatu domagałaby się nowego systemu, o co – jak mówi
+sekcja 6 – nie chodzi. Nic poniżej nie wymaga wyjścia poza CAP. Dwie rzeczy
+poniżej wymagają dopisania do niego i obie są powiedziane wprost.
 
-## 10. Cały feed na jednej stronie
+## 10. Cały kanał na jednej stronie
 
-Feed tego rodzaju to trzy rzeczy, a drugiej z nich CAP nie daje.
+Kanał tego rodzaju składa się z trzech rzeczy, a drugiej z nich CAP nie daje.
 
-**Wiadomości.** Jeden dokument CAP na zdarzenie alarmowe: alarm ogłoszony,
-alarm zmieniony, alarm zakończony. Te już istnieją w RSO; to, co część II
-dokłada, to profil - które z opcjonalnych elementów CAP są zawsze wypełniane i
-czym, żeby konsument nie musiał zgadywać. Profil to sekcja 10.1.
+**Wiadomości.** Jeden dokument CAP na zdarzenie alarmowe: alarm ogłoszony, alarm
+zmieniony, alarm zakończony. Takie dokumenty w RSO już istnieją; część II
+dokłada do nich profil, czyli wskazanie, które z opcjonalnych elementów CAP są
+wypełniane zawsze i czym, żeby odbiorca nie musiał zgadywać. Profil to
+sekcja 10.1.
 
-**Indeks.** Jeden mały dokument, generowany na nowo w stałym rytmie
-niezależnie od tego, czy coś się wydarzyło, wymieniający każdy alarm obecnie
-obowiązujący i moment, w którym lista powstała. To sygnał życia z sekcji 4 i
-migawka pełnego stanu, o którą prosi właściwość siódma, w jednym pliku. CAP go
-nie definiuje i nie musi; siedzi obok wiadomości, nie w nich. To sekcja 10.2 i
-to jest ten jeden dodatek, przy którym ten dokument się upiera.
+**Indeks.** Jeden niewielki dokument, sporządzany na nowo w stałym rytmie
+niezależnie od tego, czy cokolwiek się wydarzyło, wymieniający każdy
+obowiązujący w danej chwili alarm oraz moment powstania listy. To sygnał życia z
+sekcji 4 i pełny obraz stanu, o który prosi właściwość siódma, zebrane w jednym
+pliku. CAP go nie definiuje i nie musi; leży obok wiadomości, a nie w nich. To
+sekcja 10.2 i jedyny dodatek, przy którym ten dokument obstaje.
 
-**Historia.** Wiadomości, zachowane, dostatecznie długo, żeby czytelnik mógł
-zapytać, co działo się w zeszłym tygodniu. Sekcja 2 zmierzyła, co dzieje się
-bez tego: najgorszy tydzień kraju przetrwał jako garść wierszy. Retencja to
-liczba, którą wydawca deklaruje, a nie zachowanie, które konsument odkrywa.
+**Historia.** Wiadomości zachowane na tyle długo, żeby czytelnik mógł zapytać,
+co działo się w zeszłym tygodniu. Sekcja 2 zmierzyła, co dzieje się bez tego:
+najgorszy tydzień w kraju przetrwał jako garść wierszy. Okres przechowywania
+jest liczbą, którą nadawca podaje, a nie zachowaniem, które odbiorca odkrywa.
 Sekcja 15.
 
 ### 10.1 Profil wiadomości
 
 CAP 1.2 ma długą listę elementów i większość z nich jest opcjonalna. Profil
-mówi, które z nich ten feed zawsze wypełnia i co w nich jest. Tabela poniżej
-to całość; akapity po niej to powody, każdy wskazujący właściwość z części I.
+wskazuje, które z nich ten kanał wypełnia zawsze i czym. Cała jego treść mieści
+się w tabeli poniżej; akapity pod nią to uzasadnienia, a każde z nich wskazuje
+właściwość z części I.
 
 | Element | Zawsze | Czym wypełniany | Podstawa |
 | --- | --- | --- | --- |
-| `identifier` | tak | jeden ciąg znaków, unikalny przez całe życie feedu, nigdy nieużywany ponownie | sekcja 13 |
-| `sender`, `senderName` | tak | organ wydający, jako adres i jako nazwa; dwa organy, dwie wartości | właściwość piętnasta |
-| `sent` | tak | moment wydania tej wiadomości, ISO 8601 z przesunięciem UTC, nigdy czas lokalny bez niego | sekcja 12 |
-| `status` | tak | `Actual` dla prawdziwego alarmu; `Test` i `Exercise` to legalne wartości, które konsument musi umieć odrzucić | sekcja 16 |
-| `msgType` | tak | `Alert`, gdy się zaczyna, `Update`, gdy się zmienia, `Cancel`, gdy się kończy | sekcja 11 |
+| `identifier` | tak | jeden ciąg znaków, niepowtarzalny przez całe życie kanału, nigdy nieużywany ponownie | sekcja 13 |
+| `sender`, `senderName` | tak | organ wydający, jako adres i jako nazwa; dwa organy to dwie wartości | właściwość piętnasta |
+| `sent` | tak | moment wydania tej wiadomości, ISO 8601 z przesunięciem względem UTC, nigdy czas lokalny bez niego | sekcja 12 |
+| `status` | tak | `Actual` dla prawdziwego alarmu; `Test` i `Exercise` to wartości dopuszczalne, które odbiorca musi umieć odrzucić | sekcja 16 |
+| `msgType` | tak | `Alert` na początku, `Update` przy zmianie, `Cancel` na końcu | sekcja 11 |
 | `references` | przy `Update` i `Cancel` | `identifier`, `sender` i `sent` wiadomości, którą ta zmienia albo kończy | sekcja 13 |
-| `category` | tak | jedna wartość z listy samego CAP, nazwana w profilu; `Safety` i `Security` obie pasują do zagrożenia uderzeniem z powietrza, więc wybór należy do wydawcy i ma być zapisany | właściwość piętnasta |
-| `event` | tak | stały ciąg znaków z opublikowanej listy, jeden na rodzaj alarmu; słownik jest dokumentem, nie zwyczajem | właściwość jedenasta |
-| `urgency`, `severity`, `certainty` | tak | własne słowa CAP, dosłownie; `Unknown` jest wartością legalną i jest używana, gdy jest prawdziwa | sekcja 13, właściwość dziewiętnasta |
-| `effective`, `expires` | tak | kiedy alarm wszedł w życie i kiedy wygaśnie, jeśli nic więcej nie zostanie powiedziane; `expires` to pułap, nie zdarzenie końca | sekcja 11 |
-| `area/geocode` | tak, co najmniej jeden | `valueName` = `TERYT`, `value` = kod rejestru dotkniętej jednostki, jeden element `area` na jednostkę | sekcja 14 |
+| `category` | tak | jedna wartość z listy samego CAP, wskazana w profilu; `Safety` i `Security` pasują do zagrożenia uderzeniem z powietrza tak samo, więc wybór należy do nadawcy i wymaga zapisania | właściwość piętnasta |
+| `event` | tak | stały ciąg znaków z ogłoszonej listy, jeden na rodzaj alarmu; słownik jest dokumentem, a nie zwyczajem | właściwość jedenasta |
+| `urgency`, `severity`, `certainty` | tak | własne słowa CAP, dosłownie; `Unknown` jest wartością dopuszczalną i bywa wpisywane, kiedy odpowiada prawdzie | sekcja 13, właściwość dziewiętnasta |
+| `effective`, `expires` | tak | kiedy alarm wszedł w życie i kiedy wygaśnie, jeżeli nic więcej nie zostanie powiedziane; `expires` to pułap, a nie zdarzenie końca | sekcja 11 |
+| `area/geocode` | tak, co najmniej jeden | `valueName` = `TERYT`, `value` = kod rejestrowy jednostki objętej alarmem, jeden element `area` na jednostkę | sekcja 14 |
 | `area/areaDesc` | tak | nazwa jednostki, dla ludzi; nigdy jako jedyny sposób podania obszaru | sekcja 14 |
-| `polygon`, `circle` | opcjonalnie | kształt, jeśli decyzję podjęto na kształcie; nigdy zamiast kodu | sekcja 14 |
-| `headline`, `description`, `instruction` | tak | tekst, który czyta człowiek; wolny, po polsku, z `language` ustawionym na obejmującym bloku `info` | sekcja 11 |
+| `polygon`, `circle` | opcjonalnie | kształt, jeżeli na kształcie podjęto decyzję; nigdy zamiast kodu | sekcja 14 |
+| `headline`, `description`, `instruction` | tak | tekst czytany przez człowieka; dowolny, po polsku, z `language` ustawionym na obejmującym bloku `info` | sekcja 11 |
 
-**Dlaczego `identifier` nigdy nie wraca.** Konsument trzyma to, co widział,
-po tym ciągu znaków. Ponownie użyty identyfikator to dwa alarmy pod jedną nazwą i
-każdy konsument, który deduplikuje - czyli każdy, który działał dłużej niż
-dobę - po prostu zgubi ten drugi. Sekcja 13 ma pomiar.
+**Dlaczego `identifier` nigdy nie wraca.** Po tym ciągu znaków odbiorca
+rozpoznaje to, co już widział. Identyfikator użyty powtórnie to dwa alarmy pod
+jedną nazwą, a każdy program usuwający duplikaty – czyli każdy, który działa
+dłużej niż dobę – drugi z nich po prostu porzuci. Pomiar jest w sekcji 13.
 
-**Dlaczego `Update` odwołuje się do oryginału, a go nie zastępuje.** Alarm,
-który zmienia poziom, to ten sam alarm. Sekcja 11 go przeprowadza. Element
-`references` to sposób, w jaki CAP to mówi, a konsument, który kluczuje wiersze
-na `(identifier, severity)` zamiast na `identifier`, otwiera widmo przy każdej
-eskalacji; właściwość dziewiętnasta naliczyła siedem w jednym ładunku.
+**Dlaczego `Update` odwołuje się do pierwotnej wiadomości, a jej nie
+zastępuje.** Alarm, który zmienia poziom, pozostaje tym samym alarmem. Sekcja 11
+przeprowadza go krok po kroku. Element `references` jest sposobem, w jaki CAP to
+wyraża, a odbiorca kluczujący wiersze na `(identifier, severity)` zamiast na
+`identifier` tworzy fikcyjny rekord przy każdej eskalacji; właściwość
+dziewiętnasta naliczyła ich siedem w jednej odpowiedzi.
 
-**Dlaczego `event` to lista, którą publikujesz, a nie słowo, które wybierasz.**
-Właściwość jedenasta: kategoria mówi konsumentowi, że coś ogłoszono, a nie co,
-i nic w polu tego nie mówi. Lekarstwem jest jedno zdanie na wartość `event` w
-dokumencie, który konsument może przeczytać, w rodzaju „zagrożenie uderzeniem
-z powietrza: każdy środek z powietrza, włącznie ze środkami, których ten feed
-nie rozróżnia". Lista jest krótka, a napisanie jej to mniejsza praca niż odpowiadanie na
-pytania, które rodzi jej brak. Nienapisanie to każdy konsument zgadujący, w
-różnych kierunkach.
+**Dlaczego `event` jest listą, którą się ogłasza, a nie słowem, które się
+wybiera.** Właściwość jedenasta: kategoria mówi odbiorcy, że coś ogłoszono, ale
+nie mówi, co, i nic w samym polu tego nie sygnalizuje. Lekarstwem jest jedno
+zdanie na każdą wartość `event` w dokumencie, do którego odbiorca ma dostęp, w
+rodzaju „zagrożenie uderzeniem z powietrza: dowolny środek napadu powietrznego,
+w tym środki, których ten kanał nie rozróżnia”. Lista jest krótka, a napisanie
+jej to mniej pracy niż odpowiadanie na pytania, które rodzi jej brak. Bez niej
+każdy zgaduje, i każdy w inną stronę.
 
-**Dlaczego `Unknown` jest używane, kiedy jest prawdziwe.** CAP pozwala, żeby
-`severity`, `urgency` i `certainty` mówiły `Unknown`. Feed, który zawsze
-pisze `Severe`, bo schemat chce wartości, publikuje kolor, którego nie ma;
-właściwość dziewiętnasta pokazuje, jak kolor o nieznanym wieku wygląda z
-drugiej strony. Nieznane to legalny odczyt i uczciwy, gdy organ nie
-zdecydował.
+**Dlaczego `Unknown` bywa wpisywane, kiedy odpowiada prawdzie.** CAP dopuszcza,
+żeby `severity`, `urgency` i `certainty` przyjmowały wartość `Unknown`. Kanał,
+który zawsze wpisuje `Severe`, bo schemat nie pozwala zostawić pola pustego,
+ogłasza kolor, którego nie zna; właściwość dziewiętnasta pokazuje, jak taki
+kolor o nieznanym wieku wygląda z drugiej strony. Wartość nieznana jest odczytem
+dopuszczalnym i uczciwym wtedy, kiedy organ jeszcze nie rozstrzygnął.
 
 ### 10.2 Indeks
 
@@ -1190,67 +1196,71 @@ zdecydował.
 }
 ```
 
-Czytaj pole po polu, bo każde jest właściwością z części I z przypiętą nazwą.
+Czytaj pole po polu, bo każde z nich jest właściwością z części I zapisaną pod
+własną nazwą.
 
-- `generated_at` to sygnał życia. Zmienia się przy każdym wygenerowaniu, w
-  rytmie, który wydawca deklaruje, niezależnie od tego, czy lista jest pusta.
-  Konsument, który widzi, że przestało się poruszać, wie, że feed jest ślepy,
-  i może to powiedzieć. Pusta lista `active` ze świeżym `generated_at` to
-  spokojne niebo. Ta sama lista z nieaktualnym to nic w ogóle. Sekcja 4, w
-  jednym polu.
-- `valid_for_s` to pułap, który wydawca nakłada na własną ciszę: liczba sekund
-  po `generated_at`, po której konsument musi przestać traktować obraz jako
-  bieżący. Jest publikowany, a nie wnioskowany, bo konsument, który zgaduje
-  rytm, zgaduje źle w dniu, w którym rytm się zmienia.
-- `active` to pełny stan. Wszystko, co obowiązuje, za każdym razem. Konsument,
-  który spał godzinę, czyta jeden dokument i jest na bieżąco; nie rekonstruuje
-  teraźniejszości z wiadomości, które przegapił. Właściwość siódma i
-  odwrotność awarii, którą sekcja 4 zmierzyła na ukraińskim API, gdzie
-  migawka istniała, a końce trzeba było z niej syntetyzować.
-- `severity_at` to moment ogłoszenia poziomu, który nie jest momentem
-  początku alarmu ani momentem powstania indeksu. Właściwość dziewiętnasta.
-  Poziom bez własnego znacznika to kolor o nieznanym wieku.
-- `window` to interwał, który ten dokument obejmuje, a `truncated` mówi, czy
-  został obcięty. Obie połowy właściwości szóstej i lewa krawędź właściwości
-  siódmej, opublikowane, a nie wyprowadzone.
-- `counts` to liczby, które konsument inaczej by wyliczył, opublikowane po to,
-  żeby arytmetykę konsumenta dało się sprawdzić z arytmetyką wydawcy. Zero tu
-  to zero zmierzone: wydawca policzył i nie znalazł. Jeśli wydawca nie
-  policzył, pola nie ma, a właściwość trzynasta mówi, dlaczego nieobecność i
-  zero nie mogą dzielić jednej pisowni.
+- `generated_at` to sygnał życia. Zmienia się przy każdym sporządzeniu indeksu,
+  w rytmie, który nadawca podaje, niezależnie od tego, czy lista jest pusta. Kto
+  widzi, że pole przestało się zmieniać, wie, że kanał oślepł, i może to
+  powiedzieć. Pusta lista `active` ze świeżym `generated_at` to spokojne niebo.
+  Ta sama lista ze starym znacznikiem czasu nie mówi nic. Sekcja 4 w jednym
+  polu.
+- `valid_for_s` to pułap, jaki nadawca nakłada na własne milczenie: liczba
+  sekund po `generated_at`, po których odbiorca musi przestać uważać obraz za
+  bieżący. Jest ogłaszana, a nie wnioskowana, bo kto zgaduje rytm, ten zgadnie
+  źle w dniu, w którym rytm się zmieni.
+- `active` to pełny stan. Wszystko, co obowiązuje, za każdym razem. Odbiorca,
+  który spał godzinę, czyta jeden dokument i jest na bieżąco; nie odtwarza
+  teraźniejszości z wiadomości, które go ominęły. Właściwość siódma i odwrotność
+  awarii zmierzonej w sekcji 4 na ukraińskim API, gdzie pełny obraz istniał, a
+  końce trzeba było z niego wyprowadzać.
+- `severity_at` to moment ogłoszenia poziomu, a nie moment początku alarmu ani
+  moment powstania indeksu. Właściwość dziewiętnasta. Poziom bez własnego
+  znacznika czasu to kolor nieznanego wieku.
+- `window` to przedział, który ten dokument obejmuje, a `truncated` mówi, czy
+  został on obcięty. Obie połowy właściwości szóstej i lewa krawędź właściwości
+  siódmej, ogłoszone, a nie wyprowadzone.
+- `counts` to liczby, które odbiorca i tak by wyliczył, ogłoszone po to, żeby
+  jego arytmetykę dało się zestawić z arytmetyką nadawcy. Zero jest tu zerem
+  zmierzonym: nadawca policzył i nie znalazł niczego. Jeżeli nie policzył, pola
+  nie ma, a właściwość trzynasta mówi, dlaczego brak i zero nie mogą mieć jednej
+  pisowni.
 
-**Czym indeks nie jest.** Nie jest zamiennikiem wiadomości, a konsument,
-który czyta tylko indeks, traci tekst, instrukcję i historię. Nie jest duży: jedna linia
-na każdy obowiązujący alarm i nic poza tym. Nie jest sprytny. Jest bliski
-plikowi, który ten projekt publikuje jako `state.json`, a który niesie
-znacznik wygenerowania, okno i jego flagę obcięcia, i nie niesie poziomu ani
-znacznika dla niego; ten plik utrzymał mapę uczciwą przez dwie przerwy u
-wydawcy, które feed z samymi wiadomościami zamieniłby w spokój.
+**Czym indeks nie jest.** Nie zastępuje wiadomości, a kto czyta wyłącznie
+indeks, traci tekst, instrukcję i historię. Nie jest duży: jedna linia na każdy
+obowiązujący alarm i nic poza tym. Nie jest pomysłowy. Jest bliski plikowi,
+który ten projekt ogłasza jako `state.json`, a który niesie moment sporządzenia,
+okno oraz znacznik obcięcia tego okna, nie niesie natomiast poziomu ani
+znacznika czasu dla niego; ten plik utrzymał mapę w zgodzie z rzeczywistością
+przez dwie przerwy po stronie nadawcy, które kanał złożony z samych wiadomości
+zamieniłby w spokój.
 
 ### 10.3 Co CAP daje, a czego nie, w jednej tabeli
 
 | Właściwość z części I | CAP już to ma | Profil musi dodać |
 | --- | --- | --- |
-| Pierwsza: publiczny | brak zdania; dostęp należy do operatora | decyzję z sekcji 15 |
-| Druga: obszar kodem | `geocode` istnieje | `TERYT` jako `valueName`, zawsze wypełnione |
-| Trzecia: przejścia w obie strony | `Alert`, `Update`, `Cancel` | `Cancel` faktycznie wysyłany, nie `expires` zostawiony do wygaśnięcia |
-| Czwarta: wersjonowany schemat | CAP jest wersjonowany | sam profil, opublikowany, z wersją |
+| Pierwsza: publiczny dostęp | brak rozstrzygnięcia; dostęp należy do operatora | decyzję z sekcji 15 |
+| Druga: obszar podany kodem | `geocode` istnieje | `TERYT` jako `valueName`, zawsze wypełniony |
+| Trzecia: przejścia w obie strony | `Alert`, `Update`, `Cancel` | `Cancel` naprawdę wysłany, a nie `expires` zostawiony do wygaśnięcia |
+| Czwarta: wersjonowany schemat | CAP jest wersjonowany | sam profil, ogłoszony, z numerem |
 | Piąta: sygnał życia | nic | indeks, sekcja 10.2 |
-| Szósta: limit i flaga | nic | `window.truncated` w indeksie |
+| Szósta: pułap i znacznik | nic | `window.truncated` w indeksie |
 | Siódma: lewa krawędź okna | nic | `window.from` w indeksie |
-| Ósma: polityka przełączenia | nic | sekcja 15 |
-| Jedenasta: czego kategoria nie mówi | nic | jedno zdanie na wartość `event` |
-| Trzynasta: jeden null, jedno znaczenie | nic | zdanie na element opcjonalny, sekcja 16 |
-| Piętnasta: kategoria i autor w rekordzie | `category`, `sender` | oba zawsze wypełnione |
-| Siedemnasta: częściowe odpowiedzi mówią o tym | nic | sekcja 15, o protokole |
+| Ósma: polityka przejścia na nowe | nic | sekcja 15 |
+| Jedenasta: czego kategoria nie mówi | nic | jedno zdanie na każdą wartość `event` |
+| Trzynasta: jeden null, jedno znaczenie | nic | zdanie o każdym elemencie opcjonalnym, sekcja 16 |
+| Piętnasta: kategoria i autor w zapisie | `category`, `sender` | oba zawsze wypełnione |
+| Siedemnasta: odpowiedź częściowa sama to sygnalizuje | nic | sekcja 15, o protokole |
 | Osiemnasta: zmienione znaczenie to nowa nazwa | nic | sekcja 15 |
-| Dziewiętnasta: poziom z własnym znacznikiem | `severity`; bez znacznika | `severity_at` w indeksie, `sent` na `Update` |
-| Dwudziesta: koniec mówi, co kończy | `Cancel`, `references` | `references` zawsze wypełnione na `Cancel`; sekcja 11 |
+| Dziewiętnasta: poziom z własnym znacznikiem czasu | `severity`; bez znacznika | `severity_at` w indeksie, `sent` przy `Update` |
+| Dwudziesta: koniec mówi, co kończy | `Cancel`, `references` | `references` zawsze wypełnione przy `Cancel`; sekcja 11 |
 
-Osiem wierszy mówi *nic*. To nie jest defekt CAP. CAP opisuje wiadomość; ten
-dokument opisuje strumień, a sekcja 4 mówi, dlaczego te dwie rzeczy
-potrzebują różnych gwarancji. Dodatki to jeden dokument i garść reguł
-wypełniania elementów, które CAP już ma.
+Osiem wierszy mówi *nic*. Nie jest to wada CAP. CAP opisuje pojedynczą
+wiadomość, a ten dokument opisuje kanał, którym takie wiadomości płyną, i
+sekcja 4 mówi, dlaczego jedno i drugie potrzebuje innych gwarancji. Dodatki
+sprowadzają się do jednego dokumentu i garści reguł wypełniania elementów, które
+CAP już ma.
+
 
 ## 11. Jak jeden alarm przechodzi przez feed
 

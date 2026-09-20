@@ -904,7 +904,7 @@ not an argument against publishing the rest.
 - **Not a new detection system, sensor or budget line.** The information exists
   the moment the siren sounds.
 - **Not an obligation on anyone to consume it.** A feed nobody reads costs
-  nothing; a feed that does not exist costs every potential reader.
+  nothing; its absence costs every potential reader.
 - **Not a replacement for anything.** Sirens will remain the fastest channel to
   a person who is asleep, and nothing here changes that.
 
@@ -914,9 +914,9 @@ Written as a specification rather than an opinion so that disagreement can be
 specific. Useful forms:
 
 - A property in section 3 that is wrong, or one that is missing and turns out to
-  matter in practice. Note that four of the five are quotations of the state's
-  own technical standard, so disagreement there is disagreement with that
-  document rather than with me.
+  matter in practice. Four of the five are quotations of the state's own
+  technical standard, so an objection there concerns that document rather than
+  me.
 - A concrete reason why TERYT codes in the payload are harder than they look.
 - A pointer to a Polish source that already meets some of this and that the
   author has not found. **This is the most useful reply this document can
@@ -1027,8 +1027,8 @@ below require adding to it, and both are said in the open.
 
 ## 10. The feed in one page
 
-A feed of this kind is three things, and the second is the one CAP does not
-give you.
+A feed of this kind is three things, and the second of them is the one CAP does
+not provide.
 
 **The messages.** One CAP document per alert event: an alert declared, an
 alert changed, an alert ended. These already exist in RSO; what Part II adds
@@ -1049,9 +1049,9 @@ the publisher states, not a behaviour the consumer discovers. Section 15.
 
 ### 10.1 The message profile
 
-CAP 1.2 has a long list of elements and most of them are optional. A profile says which
-ones this feed always fills and what goes in them. The table below is the
-whole of it; the paragraphs after it are the reasons, each pointing at a
+CAP 1.2 has a long list of elements and most of them are optional. A profile
+says which ones this feed always fills and what goes in them. The table below is
+the whole of it; the paragraphs after it are the reasons, each pointing at a
 property in Part I.
 
 | Element | Always | Filled with | Rests on |
@@ -1071,33 +1071,31 @@ property in Part I.
 | `polygon`, `circle` | optional | a shape, if the decision was taken on one; never instead of a code | section 14 |
 | `headline`, `description`, `instruction` | yes | the text a person reads; free, in Polish, with `language` set on the enclosing `info` block | section 11 |
 
-**Why `identifier` never comes back.** A consumer keeps what it has seen by
-that string. A reused identifier is two alerts wearing one name, and every
-consumer that deduplicates - which is every consumer that has run for more
-than a day - will drop the second one on the floor. Section 13 has the
-measurement.
+**Why `identifier` never comes back.** A consumer keeps what it has seen by that
+string. A reused identifier is two alerts under one name, and every consumer
+that deduplicates - which is every consumer that has run for more than a day -
+discards the second. Section 13 has the measurement.
 
-**Why `Update` references the original and does not replace it.** An alert
-that changes severity is the same alert. Section 11 walks it through. The
+**Why `Update` references the original and does not replace it.** An alert that
+changes severity is the same alert. Section 11 walks it through. The
 `references` element is how CAP says so, and a consumer that keys its rows on
-`(identifier, severity)` instead of on `identifier` opens a ghost on every
+`(identifier, severity)` instead of on `identifier` opens a ghost row on every
 escalation; property nineteen counted seven in one payload.
 
-**Why `event` is a list you publish and not a word you choose.** Property
-eleven: a category tells a consumer that something was declared and not what
-it was, and nothing in the field says so. The remedy is one sentence per
-`event` value in a document the consumer can read, of the form "air-strike
-threat: any airborne means, including means this feed does not distinguish".
-The list is short, and writing it is a smaller job than answering the
-questions its absence produces. Not writing it is every consumer guessing, in
-different directions.
+**Why `event` is a published list rather than a chosen word.** Property eleven:
+a category tells a consumer that something was declared and not what it was, and
+nothing in the field says so. The remedy is one sentence per `event` value in a
+document the consumer can read, of the form "air-strike threat: any airborne
+means, including means this feed does not distinguish". The list is short, and
+writing it is a smaller job than answering the questions its absence produces.
+Without it, every consumer guesses, and in different directions.
 
-**Why `Unknown` is used when it is true.** CAP allows `severity`, `urgency`
-and `certainty` to say `Unknown`. A feed that always writes `Severe` because
-the schema wants a value is publishing a colour it does not have; property
-nineteen shows what a colour of unknown age looks like from the other side.
-Unknown is a legal reading and the honest one when the authority has not
-decided.
+**Why `Unknown` is used when it is true.** CAP allows `severity`, `urgency` and
+`certainty` to say `Unknown`. A feed that always writes `Severe` because the
+schema does not allow the field to be left empty is publishing a colour it does
+not have; property nineteen shows what a colour of unknown age looks like from
+the other side. Unknown is a legal reading and the honest one when the authority
+has not decided.
 
 ### 10.2 The index
 
@@ -1132,11 +1130,11 @@ decided.
 Read it field by field, because each one is a property from Part I with a
 name on it.
 
-- `generated_at` is the heartbeat. It moves on every regeneration, on a
-  cadence the publisher states, whether the list is empty or not. A consumer
-  that sees it stop moving knows the feed is blind, and can say so. An empty
-  `active` list with a fresh `generated_at` is a quiet sky. The same list with
-  a stale one is nothing at all. Section 4, in one field.
+- `generated_at` is the heartbeat. It moves on every regeneration, on a cadence
+  the publisher states, whether the list is empty or not. A consumer that sees
+  it stop moving knows the feed is blind, and can say so. An empty `active` list
+  with a fresh `generated_at` is a quiet sky. The same list with a stale one
+  says nothing. Section 4, in one field.
 - `valid_for_s` is the ceiling the publisher puts on its own silence: the
   number of seconds after `generated_at` beyond which a consumer must stop
   treating the picture as current. It is published, not inferred, because a
