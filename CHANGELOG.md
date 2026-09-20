@@ -16,6 +16,46 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.2.4 - 2026-09-20
+
+**The Polish brief was a translation and read like one.** `docs/BRIEF-PL.md`
+declares itself the original edition, with the English one written after it,
+while its own prose carried English idiom in Polish words: a defect register
+called a `log defektów`, a coverage floor called a `podłoga`, two feeds drawing
+from `tej samej góry strumienia`, and a page read `przeciwko kanałowi`. Its
+header block was in English, under a note, written in English, stating that the
+readers are Polish. This is the repair FEED-SPEC took at 0.55.2.1, applied to
+the document an outside reader opens first. Documents only; nothing under
+`mavo/` moves but the version string.
+
+- **`docs/BRIEF-PL.md` 2.25, written from the English content rather than
+  edited.** The previous text was read once to see what not to repeat and then
+  set aside; none of its sentences survives. Terminology follows the canon the
+  FEED-SPEC rewrite settled: `kanał` rather than `feed`, `rejestr błędów`
+  rather than `log defektów`, `dane RSO` rather than `strumień RSO`, `czujka`
+  for the channel's standing role, and no `przypiąć` anywhere, which that canon
+  lists as a calque. The Ukrainian administrative unit is `rejon` throughout;
+  the file used to open by calling it a `powiat` and name it a `rejon` four
+  lines later.
+- **The header block is Polish.** `Document:` stays in English because
+  `tools/docs_audit.py` reads that literal key; everything after it is Polish,
+  including the note about who the readers are.
+- **Quotation marks and dashes follow Polish typography.** The file closed
+  thirteen quotations with an ASCII double quote and carried no en-dash. It now
+  closes them properly and uses an en-dash where a dash is a dash, which is what
+  the rewritten `docs/FEED-SPEC-PL.md` already does.
+- **`docs/BRIEF.md` is untouched, deliberately.** Its register suits its
+  audience, and flattening it would remove the thing that makes a reader believe
+  it. The two editions therefore carry different version numbers for the first
+  time, which is what a per-file version is for.
+- **What the gate held, and what it did not.** `tools/brief_check.py` compares
+  the two editions figure by figure and date by date, and reported no difference
+  on the first run against the new text. That is the whole of what it can say:
+  it reads no prose, and nothing in the gate knows whether either edition reads
+  like the language it is written in.
+- **`docs/DEPLOYMENT.md` 1.49.** The `main` row and the release distance follow
+  the version. The host still runs 0.55.2.0 and nothing here was read from it.
+
 ## 0.55.2.3 - 2026-09-20
 
 **Both briefs said two things the rest of the repository had stopped saying.**
