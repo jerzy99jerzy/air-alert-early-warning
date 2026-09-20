@@ -1,6 +1,6 @@
 # Jaki powinien być polski kanał komunikatów alarmowych czytelny maszynowo
 
-Version: 3.4 / 2026-09-19
+Version: 3.5 / 2026-09-20
 Tę specyfikację piszę jako ktoś, kto próbował zbudować system korzystający z
 polskich komunikatów alarmowych. Najpierw nie znalazłem żadnego kanału danych,
 a później tylko jego część, dostępną po uzyskaniu tokena. Ukraiński odpowiednik
@@ -1061,6 +1061,16 @@ gramatyczny: składanie obrazu w tym projekcie traktowało `valid_to` jako konie
 w 0.55.0.0, a od 0.55.1.0 łączy odwołanie z alarmem, którego dotyczy (D-055).
 Para, na której właściwość się opiera, jest teraz przechowywana jako nagrane
 bajty i nazywa jedno województwo.
+
+**Uwaga do wydania 3.5.** Oba teksty napisano od nowa, sekcja po sekcji. Polski
+powstał jako tekst polski, a nie jako przekład z angielskiego, czego 3.1
+próbowało i nie dokończyło; angielski dostał w tych samych zakresach wyrównanie
+tonu, tak żeby zdanie stwierdzało fakt, a nie punktowało adresata. Nie zmieniła
+się żadna liczba, żaden span kodu, żaden identyfikator ani struktura, i dlatego
+automatyczna kontrola w tym repozytorium przechodziła i przed tą pracą, i po
+niej. O tym, czy któryś z tekstów czyta się jak proza napisana w swoim języku,
+kontrola nadal nie ma nic do powiedzenia; to samo ograniczenie odnotowało 3.1, a
+stoi tu po raz drugi dlatego, że za drugim razem było tym samym ograniczeniem.
 
 ## 9. Źródła
 

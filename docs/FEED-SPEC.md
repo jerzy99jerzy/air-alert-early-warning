@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 3.4 / 2026-09-19
+Version: 3.5 / 2026-09-20
 A specification, written from the position of someone who tried to build
 against one, found nothing at first, and later found part of one, available
 with a token. The Ukrainian equivalent was consumed and measured over a corpus
@@ -996,6 +996,16 @@ one pair and says so, which is the standard section 4a set itself at 1.9.
 project's composition took `valid_to` as the end at 0.55.0.0 and pairs an
 all-clear with its alert from 0.55.1.0 (D-055). The pair the property rests on
 is now held as recorded bytes, and it names one voivodeship.
+
+**Edition note, 3.5.** Both editions were rewritten, section by section. The
+Polish edition was written as Polish rather than translated from the English,
+which is what 3.1 attempted and did not finish; the English edition had its tone
+brought into line over the same ranges, so that a sentence states a fact rather
+than scoring a point. No figure, no code span, no identifier and no structure
+changed, which is why the parity check in this repository's build passed before
+the work and after it. That check still has nothing to say about whether either
+edition reads as prose in its own language, which is the limit 3.1 recorded, and
+it is recorded twice because it was the same limit both times.
 
 ## 9. Sources
 
