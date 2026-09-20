@@ -16,6 +16,36 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.2.1 - 2026-09-20
+
+**Both editions of FEED-SPEC rewritten, and the Polish one written as
+Polish.** F152 records a parity gate that proved the two editions were one
+document and could not see that one of them was not written in its own
+language. It was repaired twice by passes over the existing text and the
+edition still read as a translation, because a translation repaired sentence
+by sentence stays one. This release replaces it. No code path changes; nothing
+under `mavo/` moves but the version string.
+
+- **`docs/FEED-SPEC-PL.md` carries no sentence from the 3.0 translation.**
+  Written section by section from the English content rather than edited, in
+  four parts on one branch. The words the earlier editions used for a
+  consumer, a publisher and a feed are gone, and three terms were taken from
+  the properties that coined them rather than from a glossary.
+- **Tone aligned in `docs/FEED-SPEC.md`** over the same ranges, twenty-six
+  recorded substitutions in parts two to four, each replacing a sentence that
+  scores a point with one that states a fact. No figure, code span, identifier
+  or paragraph boundary moved, which is what let the parity check pass
+  unchanged from the first part to the last.
+- **Three headings renamed and their contents anchors with them.** Nothing in
+  the gate compares a heading with the anchor that points at it, and an
+  unrepaired anchor is a link that goes nowhere without saying so.
+- **One 87-column line and one mid-paragraph hard break repaired in the
+  English edition**, both older than this work. No check in the gate measures
+  the width of a line.
+- FEED-SPEC 3.5 in both editions. `docs/DEPLOYMENT.md` 1.46 counts the host
+  one release further behind; the host claim itself is unmeasured since
+  2026-09-10 and its `Installed` row is the next thing to re-read.
+
 ## 0.55.2.0 - 2026-09-19
 
 **The review of 0.55.0.1, repaired, and the Polish channels installable.** Two

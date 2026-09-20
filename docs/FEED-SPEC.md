@@ -1,20 +1,20 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 3.4 / 2026-09-19
-A specification, written from the position of someone who tried to build against
-one, found nothing at first, and then found part of one behind a token. The
-Ukrainian equivalent was consumed and measured over a corpus
+Version: 3.5 / 2026-09-20
+A specification, written from the position of someone who tried to build
+against one, found nothing at first, and later found part of one, available
+with a token. The Ukrainian equivalent was consumed and measured over a corpus
 of 118 days; the work of building against it is a weekend project, and the
 parser at the centre of it took two afternoons. Both facts are stated because
-the argument below rests on the second: what the convention enables is cheap
-to exploit, and that is the point. Companion: [`docs/CHANNEL.md`](CHANNEL.md),
+the argument below rests on the second: what the convention enables is cheap to
+exploit, and that is the point. Companion: [`docs/CHANNEL.md`](CHANNEL.md),
 which is the measurement this rests on, and T8a in [`../TODO.md`](../TODO.md),
 which is where the gap was first recorded. T8a is the survey this document
 argues from. Its first source-level verdict, for the RSO stream, comes from
 reading the stream on 2026-08-22 and is folded into sections 2 and 4a below.
-The other Polish sources in
-section 2 have not been read by this project; they are described from what
-their operators publish about them, and each sentence says which it is.
+The other Polish sources in section 2 have not been read by this project; they
+are described from what their operators publish about them, and each sentence
+says which it is.
 
 ```
 Note: this document describes a feed that does not yet exist in the form it
@@ -81,19 +81,21 @@ over 99 nights ([`docs/CHANNEL.md`](CHANNEL.md)):
 | Labels resolving to a unique code in the state register | 126 automatically, 127 with one contextual decision |
 | Agreement between the label and the message's own prose | **99.997%** on 38,521 comparable messages |
 
-The label is a hashtag: `#Харківський_район`, `#Львівський_район`,
-`#м_Харків_та_Харківська_територіальна_громада`. Nominative case, underscores
-for spaces, unit type spelled out.
+The label in the table is a hashtag, for example `#Харківський_район`,
+`#Львівський_район` or `#м_Харків_та_Харківська_територіальна_громада`. It
+identifies the area the message concerns and is written to a fixed rule: the
+name in the nominative, underscores for spaces, and the unit type spelled out.
 
-**What that convention cost the publisher: nothing.** It is a formatting rule in
-a message a person writes anyway. **What it enabled on the receiving side:** one
-person, over two afternoons, built a parser that resolves every area to a national
-register code with a measured error rate of zero on the design window. No API,
-no token, no agreement, no procurement, no funding.
+**On the Ukrainian side the convention required no investment.** The hashtag is
+simply part of the message text. For recipients the benefit is clear: one
+person, over two afternoons, built a parser that resolves every area to a
+national register code with a measured error rate of zero on the design window.
+The public messages were all it needed, with no separate interface, no
+formalities and no funding.
 
-The convention is in use in the public alert messages of a country under daily
-attack on its own territory, and it adds nothing to a message somebody writes
-anyway. That is the entire technical gap being described here.
+This is how a country under daily attack on its own territory writes its public
+alert messages. The entire technical gap this document describes comes down to
+exactly that.
 
 ## 2. What is available on the Polish side today
 
@@ -107,10 +109,10 @@ institution.
 | RSO stream (XML and JSON) | Anyone who finds the address | Yes. Read on 2026-08-22, and read on a timer by this project since September; the gaps are recorded in section 4a |
 | RSO CAP resource | Holders of a token | In format, yes. The publisher's integration page documents the token; this project has not read the resource |
 
-The RSO rows come from reading the stream and from the publisher's own
-integration page. The sirens and the SMS are described from what their
-operators publish about them. No claim below rests on a reading this project
-has not made or on a document its publisher has not published.
+The RSO rows come from reading the stream and from the operator's integration
+page; the sirens and the SMS are described from what their operators publish
+about them. Every claim below rests either on a reading this project has made
+or on a document published by the responsible institution.
 
 **A correction to earlier editions, measured 2026-08-22.** This document used
 to describe the RSO stream as closed. It is not. The service behind the RSO
@@ -119,14 +121,15 @@ and no registration, and its integration page says so in plain words. This
 project read the stream in one evening, which is the strongest form a
 correction like this can take.
 
-The same evening showed why the stream, as published today, is not yet the
-feed this document describes. No message says what it is: five categories
-exist, but only in the address of the request, never in the record. No message
-says who issued it, although two different kinds of authority publish into the
-same stream. The scope named "all" quietly returns a fraction of the data. And
-history thins to a handful of records per week across the whole country, so
-the week this project most needed to look back at is already mostly gone. Each
-of these is measured, and each has its own entry at the end of section 4a.
+The same evening showed why the stream, as published today, is not yet the feed
+this document describes. No message says what it is: five categories exist, but
+only in the address of the request, never in the record. No message says who
+issued it, although two different kinds of authority publish into the same
+stream. The scope named "all" returns only a fraction of the records, with no
+indication of it. And history thins to a handful of records per week across the
+whole country, so the week this project most needed to look back at is already
+mostly gone. Each of these is measured, and each has its own entry at the end
+of section 4a.
 
 **Measured rather than assumed, 2026-08-09.** The full metadata catalogue of the
 open data portal was downloaded and searched: 1,510,768 resources, filtered on
@@ -149,19 +152,21 @@ they are is **static documents**, correctly declared as such.
 Read at the level of content on 2026-08-22, the four resources are: the
 National Crisis Management Plan, the National Critical Infrastructure
 Protection Programme with its standards annex, and a directory of
-crisis-management centres with their contact details. Plans and contacts. Not
-one dated event, and not one alert.
+crisis-management centres with their contact details. They are plans and
+contacts rather than dated events or alerts.
 
 Level 3 is also the exact level at which the standard says API delivery is
 recommended, precisely so that data can be machine-processed. The publisher is
-therefore already at the threshold the standard describes, and publishing files.
+therefore already at the threshold the standard describes, and for now it
+publishes files.
 
-The conclusion this points to is narrower and harder to answer than the one this
-document originally reached for. **The gap is not competence, format or
+The conclusion this points to is narrower and harder to answer than the one
+this document originally reached for. **The gap is not competence, format or
 platform. It is that alerting messages are not treated as data at all.** The
 category exists on the portal for air quality, complete with a dynamic API. For
-alerting it does not exist, and the publisher who would own it is already
-present, already compliant, and already publishing something else.
+alerting it does not exist, although the institution that would own it is
+already present on the portal, already compliant, and already publishing other
+resources there.
 
 The consequence needs stating more carefully than earlier editions of this
 document put it, because this project has since built against the one stream
@@ -174,13 +179,12 @@ for a school, a check on how fast the system actually is - each can be
 attempted against it, and each inherits every gap in section 4a with no
 contract underneath.
 
-This project hit that wall directly. The Ukrainian side of the border is
-measured down to the raion, 118 days of it, 61,041 messages. The Polish side
-is one evening old, and it cannot be built backwards: the stream's own
-retention keeps a thin file, and the week of the July cruise-missile impact
-survives in it as a handful of rows for the whole country. The asymmetry is
-not about data volume; it is about whether the data is treated as worth
-keeping.
+This project ran into this directly. The Ukrainian side of the border is
+measured down to the raion, 118 days of it, 61,041 messages. The Polish side is
+one evening old, and it cannot be built backwards: the stream's own retention
+keeps a thin file, and the week of the July cruise-missile impact survives in
+it as a handful of rows for the whole country. The difference lies not in the
+volume of data but in whether it is archived.
 
 The catalogue search is reproducible: download the portal's own catalogue
 metadata, unpack, and filter the description fields. The command is in this
@@ -236,27 +240,26 @@ settle, and section 2 lists what would.
 | Versioned schema, served over an API | Largely met by CAP itself, a published versioned standard; the RSO profile of it, which optional elements are populated, is unpublished |
 | **A heartbeat** | Unknown for RSO. Not defined by CAP, so not obtained by adopting it. Section 4 |
 
-**One. Public, unauthenticated, no application process.** A feed behind an
-application form is not public infrastructure; it is a permission regime with an
-RSS icon. The Ukrainian channel needs no token, which is why anyone can verify
-the measurements in this repository rather than take them on trust.
+**One. Public, unauthenticated, no application process.** A feed available only
+after an application is not public infrastructure but a service provided by
+permission. The Ukrainian channel needs no token, which is why anyone can
+verify the measurements in this repository rather than take them on trust.
 
-*Against RSO, at 2.4.* The CAP resource is behind a token, documented as
-such on the publisher's own integration page. The XML and JSON list pages
-carry no gate at all,
-so the regime falls on the one resource that carries the structured form. It
-is not a schema question, so no field closes it, and it is the property that
-separates a system a municipality can build on from one it must ask to.
+*Against RSO, at 2.4.* The CAP resource requires a token, as the operator's
+integration page documents. The XML and JSON list pages carry no access
+restriction, so the permission requirement applies to exactly the resource that
+carries the structured form. It is not a schema question, so no field changes
+it, and this property decides whether a municipality can simply build on the
+feed or must first ask for access.
 
 **Two. Areas identified by register code, not by prose.** The standard makes
 this point better than I can: it introduces the universal address specifically
 so that a system, rather than a person, can resolve a location, and it names
 TERYT as the register that holds the codes. A message saying
-`powiat biłgorajski` in a sentence forces every consumer to write a name
-matcher and get it subtly wrong. This project spent a measurement
-discovering exactly that: name
-matching against a register reached 6.06% where the source's own structured
-labels reached 99.34%.
+`powiat biłgorajski` in a sentence leaves every consumer to write its own name
+matcher, where subtle errors are easy to make. This project spent a measurement
+discovering exactly that: name matching against a register reached 6.06% where
+the source's own structured labels reached 99.34%.
 
 **Three. State transitions, timestamped, both directions.** An alert beginning
 and an alert ending are two events and both matter. A feed publishing only the
@@ -289,12 +292,13 @@ they are not. This is not hypothetical: it is the founding invariant of this
 repository, that unknown never resolves to clear, and several entries in its
 defect log are instances of getting it wrong internally.
 
-The fix is trivial and has to be designed in from the start: a periodic
+The fix is simple, but it has to be designed in from the start: a periodic
 heartbeat carrying "as of this timestamp, the state is X", published whether or
 not the state changed. A consumer that has not seen a heartbeat within the
 stated interval knows it is blind, and can say so, instead of displaying calm.
 
-An alerting feed without a heartbeat is a system that fails silently by design.
+An alerting feed without a heartbeat is therefore a system whose failures, by
+design, go unnoticed.
 
 **Measured, and it is worse than the argument above assumed.** This project
 ran its own collector against the Ukrainian channel unattended for a night and
@@ -519,14 +523,15 @@ property is a limit that exists and is not stated, because a consumer then
 discovers it by being cut off.
 
 **Note on the first property, from the same experience.** Section 3 argues that
-an application process is a permission regime with an RSS icon. This project
-has since consumed the other kind under terms revocable without cause, and the
-cost is sharper than the original wording suggests: **reproducibility becomes a
-property of the interface rather than of the consumer's diligence.** A second
-reader cannot re-run a measurement that rests on an agreement they were not
-party to and may not be granted. The Ukrainian channel's measurements in
-section 1 are checkable by anyone. The ones resting on a keyed interface are
-checkable by whoever holds the key.
+a feed available only after an application is a service provided by permission
+rather than public infrastructure. This project has since consumed the other
+kind under terms revocable without cause, and the cost is sharper than the
+original wording suggests: **reproducibility becomes a property of the interface
+rather than of the consumer's diligence.** A second reader cannot re-run a
+measurement that rests on an agreement they were not party to and may not be
+granted. The Ukrainian channel's measurements in section 1 are checkable by
+anyone. The ones resting on a keyed interface are checkable by whoever holds the
+key.
 
 **Eleven. A category must say what it does not distinguish.** Learned in
 production, by getting it wrong.
@@ -681,18 +686,17 @@ something this project measured.
 who issued it cannot, and a consumer that labels the whole block with one
 issuer's name is wrong about most of it.
 
-This is not a request for a rich taxonomy. It is the observation that a
-publisher which already classifies, already routes by that classification, and
-already publishes the vocabulary as a document, leaves it out of the one place
-it would cost nothing: the record. One field per message, drawn from a list
-that already exists.
+This is not a request for a rich taxonomy. The publisher already classifies,
+routes by that classification and publishes the vocabulary as a document; the
+category is missing only from the one place where adding it would cost nothing,
+the record. One field per message, drawn from a list that already exists.
 
 **What it costs the consumer to work around, precisely.** Five requests instead
 of one, plus bookkeeping to remember which request produced which row, plus the
-certainty that any consumer who does not know to do this has silently mislabelled
-everything. The workaround exists. That it exists is not an argument against the
-field; it is a measure of what the missing field costs, multiplied by every
-consumer.
+certainty that any consumer who does not know to do this has silently
+mislabelled everything. The workaround exists, and it is better read as a
+measure of what the missing field costs, multiplied by every consumer, than as
+an argument against the field.
 
 **And the category that would matter most is not among the five.** The air
 alert this project read on 2026-09-16 arrived in `ogolne`, the general
@@ -722,40 +726,40 @@ rather than here: the name resolving is not the host answering, and in a log
 the two look the same.
 
 **Seventeen. A parameter the server does not honour must be refused, not
-accepted.** Learned by reading the RSO stream on 2026-08-22, and it is three
-findings wearing one shape.
+accepted.** Learned by reading the RSO stream on 2026-08-22, and it brings
+together three findings of the same kind.
 
 Three ways this feed returned a partial answer indistinguishable from a
 complete one, in a single evening of reading it:
 
-- **A scope named "all" that is not all.** The five categories hold 461
-  distinct communiques and share none. The `wszystkie` scope returns 156. The
-  305 it omits are one category, and nothing in the payload, the pagination
+- **The scope named "all" returns part of the feed.** The five categories hold
+  461 distinct communiques and share none. The `wszystkie` scope returns 156.
+  The 305 it omits are one category, and nothing in the payload, the pagination
   block or the integration page mentions the omission. A collector reading the
   obvious address reads a third of the feed and has no signal that it did. The
-  exclusion may well be deliberate - the site's own navigation treats water
-  levels as a separate tab - and deliberate-and-unstated is exactly the
-  problem: the scope is still called *all*, in a path where the excluded
-  category is a legal value of the same parameter, and nothing a consumer can
-  read says otherwise.
-- **A count named for the total that counts the page.** The pagination
+  exclusion may well be deliberate, since the site's own navigation shows water
+  levels in a separate tab; if it is, stating it would close the gap, because
+  the scope is still called *all*, in a path where the excluded category is a
+  legal value of the same parameter, and nothing a consumer can read says
+  otherwise.
+- **The count named for the total reports the size of the page.** The pagination
   attribute is `totalItems`. On page 1 it reads 20; on page 2 it reads 20; on
   the unpaged request over the same data it reads 156. A consumer deriving a
   page count from it divides 20 by 20 and stops after one page of eight. The
   stop condition that does work is an empty page, which the endpoint returns
   with status 200.
-- **Date parameters that are accepted and ignored.** The publisher's
-  integration page documents `from` and `to` for its search interface. Passed
-  to the XML endpoint, which accepts them without complaint, with a seven-day
-  window, the response was 200 and contained 150 records spanning seven
-  months, of which ten fell inside the window. A consumer counting rows sees a
-  plausible number and concludes the filter works.
+- **Date parameters are accepted but not applied.** The publisher's integration
+  page documents `from` and `to` for its search interface. Passed to the XML
+  endpoint, which accepts them without complaint, with a seven-day window, the
+  response was 200 and contained 150 records spanning seven months, of which ten
+  fell inside the window. A consumer counting rows sees a plausible number and
+  concludes the filter works.
 
-The third is the worst because it is the cheapest to prevent. **An unrecognised
-parameter should produce a 400, not a 200.** Silently ignoring it converts a
-consumer's mistake into a consumer's false belief, and the false belief
-survives every check the consumer knows how to run: the request succeeded, the
-data parsed, the count was reasonable.
+The third is the easiest to prevent. **An unrecognised parameter should produce
+a 400, not a 200.** Silently ignoring it converts a consumer's mistake into a
+consumer's false belief, and the false belief survives every check the consumer
+knows how to run: the request succeeded, the data parsed, the count was
+reasonable.
 
 The general property: **where a request can be partially honoured, the response
 must say so in the response.** A flag, a status, an echo of the parameters
@@ -792,10 +796,10 @@ unannounced key is visible on the day it lands rather than on the day someone
 opens a payload by hand. Both halves are cheap; the two days between the
 change and its discovery were not.
 
-**Nineteen. A severity is the publisher's word, carries its own timestamp,
-sits beside the state and never inside the identity.** Learned from the same
-change, read for what it publishes rather than for what it broke `[measured:
-one captured payload of forty alerts, and the rows stored since]`.
+**Nineteen. A severity is the publisher's word, carries its own timestamp, sits
+beside the state and never inside the identity.** Learned from the same change,
+read for what it publishes rather than for what it broke
+`[measured: one captured payload of forty alerts, and the rows stored since]`.
 
 The level records are a list per alert; the list's order does not encode
 time; each record carries a level, a free-text reason that repeats the level
@@ -842,15 +846,15 @@ a communique of its own. It names no identifier of the alert it ends, and
 nothing in either record links the two; that the second ends the first is read
 from its title and its prose, by a person.
 
-Two halves, as before. The publisher's: **an end is a message that says what
-it ends**, and CAP already has the form, a `Cancel` whose `references` carries
-the identifier of the `Alert` (section 10.1), after which the index of section
-10.2 drops the alert. A validity field the publisher does not use to end
-things is worse than no field, because it looks like the answer: a consumer
-that takes `valid_to` as the end of the threat shows the voivodeships of that
-alert as under threat from 07:36 to 23:59, and this project's own composition
-did exactly that at 0.55.0.0, which was never installed, until 0.55.1.0 paired
-the two (F169, D-055).
+Two halves, as before. The publisher's: **an end is a message that says what it
+ends**, and CAP already has the form, a `Cancel` whose `references` carries the
+identifier of the `Alert` (section 10.1), after which the index of section 10.2
+drops the alert. A validity field that the publisher does not use to end an
+alert can mislead more than a missing one, because it looks like the answer: a
+consumer that takes `valid_to` as the end of the threat shows the voivodeships
+of that alert as under threat from 07:36 to 23:59, and this project's own
+composition did exactly that at 0.55.0.0, which was never installed, until
+0.55.1.0 paired the two (F169, D-055).
 
 The consumer's: with no reference to follow, it has to pair an end with an
 alert by what it can read, the voivodeships each names and the order they
@@ -900,7 +904,7 @@ not an argument against publishing the rest.
 - **Not a new detection system, sensor or budget line.** The information exists
   the moment the siren sounds.
 - **Not an obligation on anyone to consume it.** A feed nobody reads costs
-  nothing; a feed that does not exist costs every potential reader.
+  nothing; its absence costs every potential reader.
 - **Not a replacement for anything.** Sirens will remain the fastest channel to
   a person who is asleep, and nothing here changes that.
 
@@ -910,9 +914,9 @@ Written as a specification rather than an opinion so that disagreement can be
 specific. Useful forms:
 
 - A property in section 3 that is wrong, or one that is missing and turns out to
-  matter in practice. Note that four of the five are quotations of the state's
-  own technical standard, so disagreement there is disagreement with that
-  document rather than with me.
+  matter in practice. Four of the five are quotations of the state's own
+  technical standard, so an objection there concerns that document rather than
+  me.
 - A concrete reason why TERYT codes in the payload are harder than they look.
 - A pointer to a Polish source that already meets some of this and that the
   author has not found. **This is the most useful reply this document can
@@ -993,6 +997,16 @@ project's composition took `valid_to` as the end at 0.55.0.0 and pairs an
 all-clear with its alert from 0.55.1.0 (D-055). The pair the property rests on
 is now held as recorded bytes, and it names one voivodeship.
 
+**Edition note, 3.5.** Both editions were rewritten, section by section. The
+Polish edition was written as Polish rather than translated from the English,
+which is what 3.1 attempted and did not finish; the English edition had its tone
+brought into line over the same ranges, so that a sentence states a fact rather
+than scoring a point. No figure, no code span, no identifier and no structure
+changed, which is why the parity check in this repository's build passed before
+the work and after it. That check still has nothing to say about whether either
+edition reads as prose in its own language, which is the limit 3.1 recorded, and
+it is recorded twice because it was the same limit both times.
+
 ## 9. Sources
 
 - RSO integration documentation, <https://komunikaty.tvp.pl/Info/Integration>,
@@ -1023,8 +1037,8 @@ below require adding to it, and both are said in the open.
 
 ## 10. The feed in one page
 
-A feed of this kind is three things, and the second is the one CAP does not
-give you.
+A feed of this kind is three things, and the second of them is the one CAP does
+not provide.
 
 **The messages.** One CAP document per alert event: an alert declared, an
 alert changed, an alert ended. These already exist in RSO; what Part II adds
@@ -1045,9 +1059,9 @@ the publisher states, not a behaviour the consumer discovers. Section 15.
 
 ### 10.1 The message profile
 
-CAP 1.2 has a long list of elements and most of them are optional. A profile says which
-ones this feed always fills and what goes in them. The table below is the
-whole of it; the paragraphs after it are the reasons, each pointing at a
+CAP 1.2 has a long list of elements and most of them are optional. A profile
+says which ones this feed always fills and what goes in them. The table below is
+the whole of it; the paragraphs after it are the reasons, each pointing at a
 property in Part I.
 
 | Element | Always | Filled with | Rests on |
@@ -1067,33 +1081,31 @@ property in Part I.
 | `polygon`, `circle` | optional | a shape, if the decision was taken on one; never instead of a code | section 14 |
 | `headline`, `description`, `instruction` | yes | the text a person reads; free, in Polish, with `language` set on the enclosing `info` block | section 11 |
 
-**Why `identifier` never comes back.** A consumer keeps what it has seen by
-that string. A reused identifier is two alerts wearing one name, and every
-consumer that deduplicates - which is every consumer that has run for more
-than a day - will drop the second one on the floor. Section 13 has the
-measurement.
+**Why `identifier` never comes back.** A consumer keeps what it has seen by that
+string. A reused identifier is two alerts under one name, and every consumer
+that deduplicates - which is every consumer that has run for more than a day -
+discards the second. Section 13 has the measurement.
 
-**Why `Update` references the original and does not replace it.** An alert
-that changes severity is the same alert. Section 11 walks it through. The
+**Why `Update` references the original and does not replace it.** An alert that
+changes severity is the same alert. Section 11 walks it through. The
 `references` element is how CAP says so, and a consumer that keys its rows on
-`(identifier, severity)` instead of on `identifier` opens a ghost on every
+`(identifier, severity)` instead of on `identifier` opens a ghost row on every
 escalation; property nineteen counted seven in one payload.
 
-**Why `event` is a list you publish and not a word you choose.** Property
-eleven: a category tells a consumer that something was declared and not what
-it was, and nothing in the field says so. The remedy is one sentence per
-`event` value in a document the consumer can read, of the form "air-strike
-threat: any airborne means, including means this feed does not distinguish".
-The list is short, and writing it is a smaller job than answering the
-questions its absence produces. Not writing it is every consumer guessing, in
-different directions.
+**Why `event` is a published list rather than a chosen word.** Property eleven:
+a category tells a consumer that something was declared and not what it was, and
+nothing in the field says so. The remedy is one sentence per `event` value in a
+document the consumer can read, of the form "air-strike threat: any airborne
+means, including means this feed does not distinguish". The list is short, and
+writing it is a smaller job than answering the questions its absence produces.
+Without it, every consumer guesses, and in different directions.
 
-**Why `Unknown` is used when it is true.** CAP allows `severity`, `urgency`
-and `certainty` to say `Unknown`. A feed that always writes `Severe` because
-the schema wants a value is publishing a colour it does not have; property
-nineteen shows what a colour of unknown age looks like from the other side.
-Unknown is a legal reading and the honest one when the authority has not
-decided.
+**Why `Unknown` is used when it is true.** CAP allows `severity`, `urgency` and
+`certainty` to say `Unknown`. A feed that always writes `Severe` because the
+schema does not allow the field to be left empty is publishing a colour it does
+not have; property nineteen shows what a colour of unknown age looks like from
+the other side. Unknown is a legal reading and the honest one when the authority
+has not decided.
 
 ### 10.2 The index
 
@@ -1128,11 +1140,11 @@ decided.
 Read it field by field, because each one is a property from Part I with a
 name on it.
 
-- `generated_at` is the heartbeat. It moves on every regeneration, on a
-  cadence the publisher states, whether the list is empty or not. A consumer
-  that sees it stop moving knows the feed is blind, and can say so. An empty
-  `active` list with a fresh `generated_at` is a quiet sky. The same list with
-  a stale one is nothing at all. Section 4, in one field.
+- `generated_at` is the heartbeat. It moves on every regeneration, on a cadence
+  the publisher states, whether the list is empty or not. A consumer that sees
+  it stop moving knows the feed is blind, and can say so. An empty `active` list
+  with a fresh `generated_at` is a quiet sky. The same list with a stale one
+  says nothing. Section 4, in one field.
 - `valid_for_s` is the ceiling the publisher puts on its own silence: the
   number of seconds after `generated_at` beyond which a consumer must stop
   treating the picture as current. It is published, not inferred, because a
@@ -1191,9 +1203,9 @@ rules about filling elements CAP already has.
 
 ## 11. The life of one alert on the wire
 
-One alert, from the moment an authority decides to the moment a reader can
-stop worrying, in the form a consumer sees it. Every arrow is a message or
-the absence of one, and the absences are where feeds go wrong.
+One alert, from the moment an authority decides to the moment a reader can stop
+worrying, in the form a consumer sees it. Every arrow is a message or the
+absence of one, and the absences are where a feed fails.
 
 ```mermaid
 stateDiagram-v2
@@ -1352,11 +1364,12 @@ that test in its build, against every stream it stores, and one of the
 thirteen attacks in its harness is exactly this: replay a feed, assert the
 log did not grow.
 
-**A hash over the identity, published, is a gift.** CAP does not require it,
-and a publisher that adds one - a stable digest of the elements that make the
-message the message it is - lets every consumer deduplicate without agreeing
-on which elements those are. It is one field. Its absence costs each consumer
-the same afternoon of deciding, and they decide differently.
+**A published hash over the identity spares every consumer the same work.** CAP
+does not require it, and a publisher that adds one - a stable digest of the
+elements that make the message the message it is - lets every consumer
+deduplicate without agreeing on which elements those are. It is one field. Its
+absence costs each consumer the same afternoon of deciding, and they decide
+differently.
 
 ## 14. Where: the area as a code
 
@@ -1423,25 +1436,24 @@ remaining allowance in a header. If there is none, the documentation says
 because a consumer finds it by being cut off, and the gap it leaves is
 unattributable.
 
-**Refuse what you do not honour.** A request carrying a parameter the server
-does not implement gets a `400`, not a `200` with the parameter ignored. A
-scope named *all* returns all, or is not named *all*. A count named for the
+**Refuse what the server does not honour.** A request carrying a parameter the
+server does not implement gets a `400`, not a `200` with the parameter ignored.
+A scope named *all* returns all, or is not named *all*. A count named for the
 total counts the total. Property seventeen measured all three failures on one
-Polish endpoint in one evening, and the third is the cheapest to prevent and
-the worst to suffer, because a consumer's mistake becomes a consumer's false
-belief and survives every check the consumer knows how to run.
+Polish endpoint in one evening, and the third is the cheapest to prevent and the
+worst to suffer, because a consumer's mistake becomes a consumer's false belief
+and survives every check the consumer knows how to run.
 
-**State the retention.** The messages are kept for a period the profile
-names, and the listing says how far back it reaches. Section 2 measured the
-alternative: a stream whose history thins to a handful of rows per week,
-across a whole country, so that the week that mattered most could not be
-read back. A number in the profile - ninety days, a year, forever - is worth
-more than the best intentions, because a consumer can plan around a number
-and cannot plan around an intention.
-This project's producer is built to keep its own: every list an address
-served, written when the list changes, beside the rows it names. It is the
-consumer building the retention the stream does not state, as property nine
-has it build the heartbeat the stream does not carry.
+**State the retention.** The messages are kept for a period the profile names,
+and the listing says how far back it reaches. Section 2 measured the
+alternative: a stream whose history thins to a handful of rows per week, across
+a whole country, so that the week that mattered most could not be read back. A
+number in the profile - ninety days, a year, forever - is worth more than the
+best intentions, because a consumer can plan around a number and cannot plan
+around an intention. This project's producer is built to keep its own: every
+list an address served, written when the list changes, beside the rows it names.
+This is the consumer building the retention the stream does not state, just as
+property nine has it build the heartbeat the stream does not carry.
 
 **Change by adding.** A new element is added; nothing is removed and nothing
 changes meaning. A consumer that reads only the elements it knows keeps
@@ -1471,10 +1483,10 @@ a payload two days later.
 ## 16. The conformance checklist
 
 Written so that each line can be a test. A publisher's own build should run
-these against a candidate feed before anyone outside the building reads it,
+these against a candidate feed before anyone outside the institution reads it,
 and this project could run the same lines from the outside, which is what the
-reading T8a in its backlog describes. Each line names what it rests on. *Index* means
-the document in section 10.2; *message* means a CAP document under the
+reading T8a in its backlog describes. Each line names what it rests on. *Index*
+means the document in section 10.2; *message* means a CAP document under the
 profile in section 10.1.
 
 **Liveness**
