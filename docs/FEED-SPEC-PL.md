@@ -54,7 +54,7 @@ mogą rozejść się niezauważenie.
 1. [Różnica sprowadza się do hasztagu](#1-różnica-sprowadza-się-do-hasztagu)
 2. [Co jest dziś dostępne po polskiej stronie](#2-co-jest-dziś-dostępne-po-polskiej-stronie)
 3. [Specyfikacja, która w większości nie jest moja](#3-specyfikacja-która-w-większości-nie-jest-moja)
-4. [Cisza nie może znaczyć bezpieczeństwa](#4-cisza-nie-może-znaczyć-bezpieczeństwa)
+4. [Cisza nie może oznaczać bezpieczeństwa](#4-cisza-nie-może-oznaczać-bezpieczeństwa)
 5. [Zarzut i odpowiedź](#5-zarzut-i-odpowiedź)
 6. [Czego ten dokument nie postuluje](#6-czego-ten-dokument-nie-postuluje)
 7. [Jak z tym dokumentem polemizować](#7-jak-z-tym-dokumentem-polemizować)
@@ -290,624 +290,660 @@ samych danych. Przy komunikatach alarmowych ta różnica decyduje o wszystkim i
 jej właśnie dotyczy sekcja 4.
 
 
-## 4. Cisza nie może znaczyć bezpieczeństwa
+## 4. Cisza nie może oznaczać bezpieczeństwa
 
-Najważniejsza właściwość ze wszystkich, i ta, która jest niewidoczna aż do dnia, w
-którym ma znaczenie.
+To najważniejsza z opisanych tu właściwości. Jej brak widać dopiero wtedy, gdy
+jest najbardziej potrzebna.
 
-Jeśli feed publikuje tylko wtedy, gdy coś się dzieje, to **martwy feed i
-spokojne niebo wyglądają identycznie**. Każdy konsument, który wyświetla
-ciszę jako „nic się nie dzieje", jest o jedną awarię od powiedzenia ludziom,
-że są bezpieczni, w chwili, gdy nie są. To nie jest hipoteza: to założycielski
-niezmiennik tego repozytorium, że nieznane nigdy nie zamienia się w
-odwołanie, a kilka wpisów w jego rejestrze defektów to przypadki pomylenia
-tego wewnętrznie.
+Jeśli nadawca publikuje wyłącznie wtedy, gdy coś się dzieje, **niedziałający
+kanał i spokojne niebo wyglądają dla odbiorcy tak samo**. Kto przedstawia ciszę
+jako brak zdarzeń, przy pierwszej awarii zapewni ludzi, że nic im nie grozi,
+akurat w chwili zagrożenia. Nie jest to rozważanie teoretyczne. Na tej zasadzie
+opiera się całe to repozytorium: stan nieznany nigdy nie jest pokazywany jako
+bezpieczny. Kilka wpisów w rejestrze błędów dotyczy sytuacji, w których sam
+projekt tę zasadę naruszył.
 
-Naprawa jest prosta i musi być pomyślana od początku: okresowy sygnał życia
-o treści „na ten znacznik czasu stan wygląda tak", nadawany niezależnie od
-tego, czy stan się zmienił. Konsument, do którego taki sygnał nie dotarł w
-zadeklarowanym odstępie, wie, że jest ślepy, i może to powiedzieć, zamiast
-wyświetlać spokój.
+Rozwiązanie jest proste, ale trzeba je przewidzieć od początku. Chodzi o
+okresowy sygnał życia: wiadomość „stan na godzinę X jest taki”, nadawaną bez
+względu na to, czy coś się zmieniło. Jeśli w zadeklarowanym odstępie nic nie
+nadejdzie, odbiorca wie, że działa na ślepo, i może to powiedzieć wprost,
+zamiast pokazywać spokój.
 
-Feed alarmowy bez sygnału życia to system, który z założenia zawodzi po cichu.
+Kanał alarmowy bez sygnału życia jest więc systemem, którego awarie z założenia
+pozostają niezauważone.
 
-**Zmierzone, i jest gorzej, niż zakładał argument powyżej.** Ten projekt
-uruchomił własny kolektor na ukraińskim kanale bez nadzoru na jedną noc i
-policzył: **jedenaście z dziewięćdziesięciu pięciu odpytań nie powiodło się**
-w dwunastogodzinnym dzienniku, a dziewięć z sześćdziesięciu w dwugodzinnym
-oknie zmierzonym najdokładniej. Kolejne niepowodzenia się zdarzają; najdłuższa
-seria to dwa, a najdłuższa przerwa między udanymi odczytami to siedem minut,
-przy dziesięciominutowym progu nieaktualności.
+**Pomiar pokazał, że jest gorzej, niż zakładało powyższe rozumowanie.** Projekt
+uruchomił własny program zbierający dane z ukraińskiego kanału i zostawił go na
+noc bez nadzoru. W dwunastogodzinnym zapisie **nie powiodło się jedenaście z
+dziewięćdziesięciu pięciu zapytań**, a w dwugodzinnym oknie, zbadanym
+najdokładniej, dziewięć z sześćdziesięciu. Zdarzały się też niepowodzenia
+następujące po sobie, najwyżej dwa z rzędu. Najdłuższa przerwa między udanymi
+odczytami trwała siedem minut, przy progu nieaktualności ustawionym na dziesięć
+minut.
 
-Ten wskaźnik z pierwszej nocy jest bliski tego, na którym liczba ostatecznie
-osiadła, ale dotarcie tam wymagało korekty. Późniejsze wydanie odczytało dużo
-niższy wskaźnik z innego okna i przypięło go; uzgodnienie okien między sobą
-sprowadziło wskaźnik z powrotem do mniej więcej jednego odpytania na dziewięć
-i wycofało niższy pin jako błędny o dwa rzędy wielkości (F109 w rejestrze
-defektów, z bieżącymi liczbami w README tego repozytorium i w
-`docs/DEPLOYMENT.md`). Warto to powiedzieć wprost, bo akapit poniżej
-argumentuje z tego, że wskaźnik niepowodzeń konsumenta w ogóle da się poznać.
+Wynik z pierwszej nocy jest bliski ostatecznie ustalonej wartości, ale dojście
+do niej wymagało korekty. W jednej z późniejszych wersji oprogramowania
+odczytano z innego przedziału czasu znacznie niższy odsetek i przyjęto go jako
+obowiązujący. Dopiero porównanie obu pomiarów dało z powrotem mniej więcej jedno
+nieudane zapytanie na dziewięć, a tamtą liczbę wycofano jako zaniżoną o dwa
+rzędy wielkości (F109 w rejestrze błędów; aktualne dane podają README
+repozytorium i `docs/DEPLOYMENT.md`). Trzeba to powiedzieć otwarcie, bo następny
+akapit wychodzi z założenia, że częstość niepowodzeń po stronie odbiorcy w ogóle
+da się poznać.
 
-Liczbą, która ma znaczenie, nie jest wskaźnik niepowodzeń. Jest nią to, że
-**konsument mógł to stwierdzić**, przy każdej z tych jedenastu okazji, bo
-kanał publikuje na tyle ciągle, że nieobecność jest czytelna. Feed publikujący
-tylko przejścia uczyniłby wszystkie jedenaście nieodróżnialnymi od spokojnego
-nieba, a własne oprzyrządowanie konsumenta nie odzyskałoby tej różnicy z
-zewnątrz za żadną cenę.
+Najważniejszy jest jednak nie sam odsetek niepowodzeń, lecz to, że **za każdym z
+tych jedenastu razy odbiorca wiedział o problemie**. Kanał publikuje na tyle
+regularnie, że brak nowych wiadomości sam jest informacją. Gdyby nadawał
+wyłącznie zmiany stanu, wszystkie te przypadki wyglądałyby jak spokojne niebo.
+Żadne pomiary po stronie odbiorcy nie pozwoliłyby tego odróżnić z zewnątrz, bez
+względu na włożony wysiłek.
 
-Sygnał życia nie jest więc uprzejmością wobec konsumentów, którym zależy na
-potwierdzeniu, że feed działa. Jest jedynym, co pozwala w ogóle zmierzyć
-własny wskaźnik błędów.
+Sygnał życia nie jest zatem uprzejmością wobec tych, którzy chcą wiedzieć, czy
+kanał działa. Tylko dzięki niemu odbiorca może w ogóle zmierzyć częstość
+własnych błędów.
 
-**Zmierzone ponownie, tym razem u źródła.** Ten blok został dodany w 2.3, gdy
-tryb awarii tej sekcji przestał być argumentem i stał się datą. 2026-08-29 o
-04:55 UTC sam ukraiński kanał przestał publikować - nie nieudane odpytanie po
-stronie konsumenta, lecz wydawca - i milczał przez falę ataków, którą
-niezależne relacje zmierzyły na ponad dobę. Wynikły z tego trzy rzeczy i każda
-jest właściwością tej sekcji, a nie tego kanału.
+**Drugi pomiar, tym razem u źródła.** Ten fragment dodano w wydaniu 2.3, gdy
+opisana tu awaria przestała być hipotezą i zdarzyła się naprawdę. Ukraiński
+kanał przestał publikować 29 sierpnia 2026 r. o 4:55 UTC. Nie zawiodło zapytanie
+odbiorcy, lecz sam nadawca, który milczał przez całą falę ataków; według
+niezależnych relacji trwała ona ponad dobę. Wynikły z tego trzy wnioski. Każdy z
+nich dotyczy właściwości opisanej w tej sekcji, a nie tego jednego źródła.
 
-Po pierwsze, **cisza była czytelna**, dokładnie z powodu argumentowanego
-wyżej: źródło publikujące dostatecznie ciągle czyni nieobecność sygnałem, a
-strona tego projektu spędziła te godziny, mówiąc, że jej obraz jest stary i
-jak bardzo, zamiast rysować spokój. Feed samych przejść uczyniłby te same
-trzydzieści cztery godziny nieodróżnialnymi od spokojnego nieba, po stronie
-konsumenta, za żadną cenę.
+Po pierwsze, **milczenie dało się odczytać**, właśnie z powodu opisanego wyżej.
+Jeśli źródło publikuje dostatecznie regularnie, sama przerwa staje się sygnałem.
+Przez te godziny strona projektu informowała, że jej obraz sytuacji jest
+nieaktualny, i podawała, od kiedy, zamiast sugerować, że nic się nie dzieje.
+Przy kanale nadającym wyłącznie zmiany stanu te same trzydzieści cztery godziny
+wyglądałyby po stronie odbiorcy jak spokojne niebo i żaden wysiłek nie
+pozwoliłby tego rozróżnić.
 
-Po drugie, **zastępstwo było problemem przejść w odwrotną stronę.** Oficjalne
-API, na które ten projekt się przełączył, publikuje migawkę pełnego stanu i
-nic nie mówi o tym, co się skończyło, więc każde odwołanie musi być
-zsyntetyzowane z różnicy dwóch obserwacji - a to jest bezpieczne tylko wtedy,
-gdy poprzednia obserwacja dowodnie miała miejsce. Konsument buduje w końcu
-sygnał życia, którego feed nie daje: utrwaloną obserwację z pułapem wieku,
-powyżej którego przerwa do niczego nie upoważnia. Feed, który ma sygnał życia
-w środku, oszczędza tę pracę każdemu konsumentowi; przy feedzie bez niego
-każdy konsument musi ją wykonać osobno albo zawieść po cichu.
+Po drugie, **nowe źródło ma odwrotną wadę.** Oficjalne API, na które projekt się
+przełączył, podaje pełny stan w danej chwili, ale nie mówi, co się skończyło.
+Każde odwołanie alarmu trzeba więc wyprowadzić z różnicy między dwoma kolejnymi
+odczytami. Jest to bezpieczne tylko wtedy, gdy wiadomo na pewno, że wcześniejszy
+z nich rzeczywiście się odbył. W efekcie odbiorca sam buduje sygnał życia,
+którego nadawca nie zapewnia: zapisuje każdą obserwację i określa, jak długo
+wolno na niej polegać. Po tym czasie przerwa w danych nie upoważnia do żadnych
+wniosków. Kanał zaprojektowany z takim sygnałem zwalnia z tej pracy wszystkich,
+którzy z niego korzystają. Jeśli go nie ma, każdy musi ją wykonać osobno albo
+pogodzić się z tym, że jego awarie przejdą niezauważone.
 
-Po trzecie, **tryb dostępu był częścią dostępności.** Przełączenie zajęło
-mniej niż dobę tylko dlatego, że o klucz do alternatywy wystąpiono tygodnie
-wcześniej i przyznano go, zanim był potrzebny. Gdyby procedura wnioskowa
-zaczęła się rano w dniu śmierci kanału, jej czas trwania byłby przerwą w
-dostawie. Nic z tego nie łagodzi właściwości pierwszej: jawność rozstrzyga o
-tym, kto może weryfikować, a sygnał życia o tym, kto pozna, że feed jeszcze
-działa; 2026-08-29 jest pomiarem, że to dwie różne właściwości - to źródło bez
-tokena umarło, a jego śmierć była jedyną rzeczą, którą konsument mógł o nim
-odczytać.
+Po trzecie, **procedura przyznawania dostępu przesądziła o ciągłości pracy.**
+Przełączenie zajęło niecałą dobę tylko dlatego, że o klucz do źródła zastępczego
+wystąpiono z kilkutygodniowym wyprzedzeniem i otrzymano go, zanim okazał się
+potrzebny. Gdyby wniosek złożono dopiero rano w dniu, w którym kanał ucichł,
+przez cały czas jego rozpatrywania strona nie miałaby danych. Nie osłabia to
+właściwości pierwszej. Jawność decyduje o tym, kto może weryfikować, a sygnał
+życia o tym, czy da się stwierdzić, że kanał nadaje. Dzień 29 sierpnia 2026 r.
+pokazał, że to dwie różne właściwości: przestało działać właśnie źródło
+niewymagające tokena, a jego milczenie było jedyną informacją, jaką odbiorca
+mógł wtedy o nim uzyskać.
 
-**Zmierzone po raz trzeci, a instrumentem był własny dziennik prób
-konsumenta.** Dodane w 2.5. Kanał wrócił ze swojej ciszy z 2026-08-29 - w
-dniu, którego ten projekt nie zapisał, co jest ustaleniem na temat tego projektu - i
-zatrzymał się ponownie 2026-09-07 o 06:09 UTC `[zmierzone]`. Tym razem
-konsument mógł powiedzieć, która strona milczy, i mógł to powiedzieć z
-magazynu, a nie z nieba: dziennik prób (właściwość dziewiąta) zapisał 43 nowe
-identyfikatory wpisów w 69 minut przed zatrzymaniem, a potem ten sam
-identyfikator na 4 463 kolejnych udanych odczytach aż do wieczora 2026-09-08,
-wobec 592 identyfikatorów w kontrolnej dobie wcześniej. Ani jednej odmowy w
-oknie. Sprawny odbiór czytający milczącego wydawcę, jako para liczb.
+**Trzeci pomiar, tym razem z zapisów samego odbiorcy.** Fragment dodano w
+wydaniu 2.5. Po przerwie, która zaczęła się 29 sierpnia, ukraińskie źródło
+wznowiło publikację, ale projekt nie odnotował, kiedy to nastąpiło. To również
+jest ustalenie, tyle że o samym projekcie. Kanał ponownie zamilkł 7 września
+2026 r. o 6:09 UTC `[zmierzone]`. Tym razem odbiorca potrafił wskazać, która
+strona milczy, i opierał się na tym, co sam zarejestrował, a nie na obserwacji
+nieba. Rejestr zapytań (właściwość dziewiąta) wykazał 43 nowe numery wpisów w
+ciągu 69 minut przed przerwą. Potem, aż do wieczora 8 września 2026 r., w 4463
+kolejnych udanych odczytach powtarzał się ten sam numer, a w kontrolnej dobie
+wcześniej pojawiły się 592 różne. W tym czasie nie było ani jednej odmowy. Obie
+liczby razem opisują sytuację, w której połączenie działa, a nadawca milczy.
 
-Wynikają z tego dwie rzeczy. Po pierwsze, plik stanu, który ten projekt
-publikuje, nazywa teraz swoje źródła jedno po drugim i mówi, per źródło, czy
-odbiór działa i kiedy ostatnio przyjął zdarzenie, więc czytelnikowi można
-powiedzieć „główne dostarcza, strażnik milczy" zamiast podawać wiek bez
-atrybucji. Po drugie, instrumentem, który rozstrzyga powrót wydawcy, jest
-własny identyfikator strony feedu w dzienniku prób, a nie pierwsze
-sklasyfikowane zdarzenie: wydawca, który wraca z treścią, której klasyfikator
-nie czyta, nie produkuje żadnego wiersza zdarzenia i mimo to jest z powrotem.
-Ten projekt wpisał zły instrument do dwóch własnych dokumentów w dniu pomiaru
-i poprawił go dzień później; korekta jest tu zapisana, bo pomyłka ma dokładnie
-ten kształt, przed którym ta sekcja ostrzega wydawców - szukanie życia w
-niewłaściwym miejscu i czytanie jego nieobecności jako ciszy.
+Wynikają z tego dwie rzeczy. Po pierwsze, plik stanu publikowany przez projekt
+wymienia teraz każde źródło osobno i dla każdego podaje, czy dane napływają i
+kiedy przyjęto z niego ostatnie zdarzenie. Czytelnik może się więc dowiedzieć,
+że „główne źródło działa, a pomocnicze milczy”, zamiast widzieć sam wiek danych
+bez wskazania, skąd pochodzą. Po drugie, o powrocie nadawcy rozstrzyga
+identyfikator najnowszego wpisu na stronie kanału, zapisywany w rejestrze
+zapytań, a nie pierwsze sklasyfikowane zdarzenie. Kanał, który wraca z treścią
+nierozpoznawaną przez klasyfikator, nie wytworzy żadnego nowego wiersza, a
+przecież wrócił. W dniu pomiaru projekt wpisał do dwóch własnych dokumentów
+błędną metodę sprawdzania, a następnego dnia ją poprawił. Korektę odnotowano
+tutaj, ponieważ pomyłka miała dokładnie taką postać, przed jaką ta sekcja
+przestrzega nadawców: szukano oznak życia w niewłaściwym miejscu, a ich brak
+uznano za ciszę.
 
-**Dlaczego standard tego nie obejmuje i dlaczego to nie jest wobec niego
-zarzut.** Standard techniczny opisuje, jak zbiór danych jest sformatowany,
-opisany i licencjonowany. Zbiór danych to rzecz, która stoi w miejscu;
-strumień to rzecz, którą trzeba obserwować, żeby wiedzieć, że działa. Te dwie
-rzeczy potrzebują różnych gwarancji i tylko pierwsza jest w zakresie.
-`accrualPeriodicity` z DCAT-AP deklaruje zamierzoną częstotliwość aktualizacji
-w metadanych, co mówi konsumentowi, czego się spodziewać, i nic o tym, co
-dzieje się teraz. Dla większości danych publicznych ta luka nic nie kosztuje.
-Dla alarmowania to różnica między spokojną nocą a martwym systemem, a
-konsument nie odróżni ich z zewnątrz.
+**Dlaczego standard tego nie obejmuje i dlaczego nie jest to zarzut wobec
+niego.** Określa on, jak formatować, opisywać i licencjonować zbiory danych.
+Taki zbiór jest statyczny, strumień zaś trzeba obserwować, żeby wiedzieć, czy
+działa. Każdy z nich wymaga innych gwarancji i tylko pierwszy mieści się w jego
+zakresie. Pole `accrualPeriodicity` z DCAT-AP deklaruje w metadanych planowaną
+częstotliwość aktualizacji. Informuje więc odbiorcę, czego się spodziewać, ale
+nic nie mówi o tym, co dzieje się teraz. Dla większości danych publicznych ta
+luka nie ma znaczenia. W komunikatach alarmowych oznacza różnicę między spokojną
+nocą a systemem, który przestał działać, a z zewnątrz nie da się ich odróżnić.
 
-## 4a. Właściwości wzięte z wdrożenia, nie ze specyfikacji
+## 4a. Właściwości wyniesione z praktyki, a nie z założeń
 
-Sekcje 1 do 4 zostały napisane, zanim ten projekt miał konsumenta w produkcji.
-Ma go od 2026-08-11 i wyłoniło się pięć wymagań, których pierwotna piątka nie
-obejmowała. Są numerowane osobno, bo są słabszymi twierdzeniami: każde stoi na
-jednym wdrożeniu, a nie na korpusie. Dziewiąta i dziesiąta zostały dodane w
-1.5, z konsumowania dwóch kolejnych interfejsów: jednego osiągniętego na mocy
-odwoływalnej umowy, jednego limitowanego. Jedenasta została dodana w 1.6, gdy
-pole kategorii pomylono z opisem zagrożenia - ten projekt, na piśmie,
-dwukrotnie. Dwunasta została dodana w 1.7, po zmierzeniu, jak często źródło w
-ogóle nazywa środek ataku: odpowiedź ogranicza to, co którykolwiek konsument
-takiego feedu może wyświetlić, i nie jest to liczba, którą parser może
-poprawić. Trzynasta i czternasta zostały dodane w 1.8, z dwóch defektów
-znalezionych we własnym kontrakcie tego projektu jednego dnia, obu tego samego
-kształtu: fakt, który wydawca miał, a konsument nie mógł użyć. Piętnasta i
-siedemnasta zostały dodane w 1.9, jako pierwsze wpisy wzięte z **czytania
-polskiego źródła, a nie ukraińskiego**; ich dowodem jest jeden wieczór wobec
-jednego punktu końcowego, co czyni je węższymi niż reszta, i jest to
-powiedziane tutaj, a nie zakopane. Szesnasta została dodana w 1.9 i wycofana w
-2.0. Notatka poniżej mówi dlaczego, bo jawnie zapisane wycofanie jest częścią
-tej samej dyscypliny, o którą te właściwości proszą wydawcę. Osiemnasta i
-dziewiętnasta zostały dodane w 2.5, obie z tego, że ukraińskie źródło zmieniło
-się pod kolektorem tego projektu 2026-09-06: jedna z tego, co zmiana zepsuła,
-druga z tego, co opublikowała. Dwudziesta została dodana w 3.3, z jednej
-pary polskich komunikatów odczytanej 2026-09-16, i jej dowodem jest
-dokładnie to: jedna para.
+Sekcje 1–4 powstały, zanim w projekcie uruchomiono pierwszego odbiorcę danych.
+Działa on od 11 sierpnia 2026 r. i od tego czasu ujawniło się pięć wymagań,
+których nie obejmowało pierwotne pięć właściwości. Mają one osobną numerację,
+ponieważ są słabiej udokumentowane: każde opiera się na jednym wdrożeniu, a nie
+na dużym zbiorze danych.
 
-**Szósta. Limit, opublikowany, i flaga mówiąca, kiedy zadziałał.** Nauczka z produkcji.
+Kolejne właściwości dochodziły w następnych wydaniach dokumentu. W wydaniu 1.5
+pojawiły się dziewiąta i dziesiąta, oparte na doświadczeniach z dwoma dalszymi
+interfejsami: jednym udostępnianym na warunkach, które można cofnąć, i drugim z
+limitem zapytań. W 1.6 doszła jedenasta, po tym, jak projekt dwukrotnie, i to na
+piśmie, wziął pole kategorii za opis zagrożenia. Dwunastą dodano w 1.7, po
+zmierzeniu, jak często źródło w ogóle podaje środek ataku. Wynik ogranicza to,
+co może pokazać każdy odbiorca takiego kanału, a lepszy parser tego nie zmieni.
+Trzynasta i czternasta weszły do wydania 1.8 i wynikają z dwóch usterek
+wykrytych jednego dnia we własnym kontrakcie danych. Obie miały ten sam
+charakter: nadawca dysponował faktem, z którego odbiorca nie mógł skorzystać.
 
-Producent tutaj ogranicza swoje okno zdarzeń do 5 000 i publikuje flagę
-`truncated`. Budowanie konsumenta pokazało, dlaczego obie połowy są
-konieczne. Bez limitu okno, które rośnie z jakiegokolwiek powodu - przesunięcie
-zegara, uzupełnienie wstecz, zmiana schematu - to nieograniczona praca dla
-każdego czytelnika naraz; zmierzone na stronie, nieograniczone okno wyrenderowało
-stronę 5,6 MiB z 20 000 zdarzeń. Bez flagi ograniczona lista i spokojne okno
-wyglądają identycznie, a to ta sama awaria co w sekcji 4, tylko od innej strony.
+Piętnasta i siedemnasta, dodane w wydaniu 1.9, jako pierwsze wynikają z
+**lektury polskiego, a nie ukraińskiego źródła**. Opierają się na jednym
+wieczorze odczytów pojedynczego adresu, więc mają węższy zasięg niż pozostałe,
+co zaznaczono tu otwarcie. Szesnasta również pochodzi z 1.9, ale wycofano ją w
+wydaniu 2.0. Krótka notatka w jej miejscu wyjaśnia powody, ponieważ jawne
+odnotowanie wycofania należy do tej samej rzetelności, jakiej te właściwości
+oczekują od nadawcy. Osiemnasta i dziewiętnasta weszły do wydania 2.5. Obie są
+skutkiem zmiany, którą 6 września 2026 r. ukraińskie źródło wprowadziło w
+trakcie pracy programu zbierającego dane: pierwsza tego, co ta zmiana zepsuła,
+druga tego, co dzięki niej zaczęto publikować. Dwudziesta, z wydania 3.3, opiera
+się na jednej parze polskich komunikatów odczytanej 16 września 2026 r. Innej
+podstawy nie ma.
 
-**Konsument musi też ograniczyć je niezależnie**, i to jest ta część, o którą
-łatwo się potknąć. Własna strona tego projektu oddelegowała ograniczenie do
-producenta i go nie sprawdzała, a oboje są wdrażani osobno, ręcznie. Limit,
-który żyje tylko po stronie publikującej, to limit, który trzyma do dnia, w
-którym obie wersje się rozejdą.
+**Szósta. Jawny limit i znacznik informujący, że zadziałał.** Ta właściwość
+wynika z eksploatacji systemu.
 
-**Siódma. Lewa krawędź okna, opublikowana, a nie wyprowadzona.** Nauczka z produkcji.
+Nadawca w tym projekcie ogranicza okno zdarzeń do 5000 pozycji i publikuje
+znacznik `truncated`. Budowa odbiorcy pokazała, że potrzebne są oba te elementy.
+Bez limitu okno może się rozrosnąć z dowolnego powodu, na przykład przez
+rozbieżność zegarów, uzupełnianie danych wstecz albo zmianę schematu, a wtedy
+wszyscy czytający dostają naraz nieograniczoną pracę. Pomiar na witrynie
+projektu wykazał, że 20 000 zdarzeń wczytanych bez ograniczeń dało stronę o
+rozmiarze 5,6 MiB. Bez znacznika skrócona lista i spokojny okres wyglądają tak
+samo. To ta sama awaria, którą opisuje sekcja 4, tylko w innej postaci.
 
-Feed niosący „oto przejścia z ostatnich dwudziestu minut" nie wystarcza.
-Konsument potrzebuje znacznika czasu, od którego okno się zaczyna, bo
-urządzenie, które spało dwadzieścia pięć minut, nie odróżni inaczej luki od
-spokojnego odcinka, i osoba je trzymająca też nie. Wyprowadzanie krawędzi z
-czasu publikacji działa tylko wtedy, gdy zegar konsumenta i producenta się
-zgadzają, a przypadek, który ma znaczenie, to dokładnie ten, w którym
-konsumenta nie było.
+**Odbiorca musi też sam ograniczać rozmiar danych** i właśnie tę część łatwo
+przeoczyć. Witryna projektu zdała się w tej kwestii na nadawcę i niczego nie
+sprawdzała, choć obie aplikacje wdraża się osobno i ręcznie. Limit egzekwowany
+wyłącznie po stronie publikującej działa do dnia, w którym ich wersje się
+rozejdą.
 
-Koszt dla producenta: jedno pole. Wartość dla konsumenta: różnica między „nic
-się nie stało" a „nie widziałeś, co się stało", czyli niezmiennik sekcji 4
-zastosowany do czytelnika, a nie do systemu.
+**Siódma. Początek okna podawany jawnie, a nie wyliczany.** Ta właściwość wynika
+z eksploatacji systemu.
 
-**Ósma. Polityka wersji, która mówi, co dzieje się podczas przełączenia.**
-Nauczka z produkcji; kosztowała okno wdrożeniowe.
+Nie wystarczy, że kanał poda „zmiany z ostatnich dwudziestu minut”. Potrzebny
+jest znacznik czasu, od którego zaczyna się okno. Bez niego urządzenie uśpione
+przez dwadzieścia pięć minut nie odróżni luki w danych od spokojnego okresu,
+podobnie jak jego właściciel. Wyliczanie tego momentu z chwili publikacji działa
+tylko wtedy, gdy zegar urządzenia zgadza się z czasem nadawcy. A najważniejszy
+jest właśnie przypadek, w którym odbiorca przez pewien czas był odłączony.
 
-Czwarta właściwość prosi o wersjonowany schemat. To konieczne i
-niewystarczające. Kiedy ten projekt przeniósł własny kontrakt z v2 na v3,
-ładunek był ścisłym nadzbiorem - każde pole wymagane przez konsumenta v2 nadal
-w nim było - a konsument i tak go odrzucił, poprawnie, bo odrzuca wersje,
-których nie rozpoznaje. Oboje musieli zostać wdrożeni w jednym oknie, z
-producentem o minuty wcześniej, a strona była w międzyczasie ślepa.
+Nadawcę kosztuje to jedno pole. Odbiorca zyskuje rozróżnienie między „nic się
+nie działo” a „coś ci umknęło”. Jest to zasada z sekcji 4, zastosowana tym razem
+do czytelnika, a nie do systemu.
 
-Numer wersji bez zadeklarowanego okresu nakładania się spycha tę koordynację
-na każdego konsumenta, a publiczny feed ma konsumentów, których nigdy nie
-spotkał. Co polityka musi stwierdzać: jak długo poprzednia wersja jest nadal
-serwowana, co kończy ten okres, i czy konsument może traktować nieznaną
-wersję minor jako czytelną. Ten projekt jeszcze własnej polityki nie
-napisał, co jest zapisane w jego backlogu jako niedokończona połowa zadania,
-które wprowadziło v3. Pominięcie da się tu przeżyć, bo jest jeden konsument i
-ten sam autor go kontroluje. To jest dokładnie okoliczność, której publiczny
-feed nie ma.
+**Ósma. Zasady wersjonowania, które mówią, co się dzieje w okresie
+przejściowym.** Ta właściwość wynika z eksploatacji systemu, a jej poznanie
+kosztowało przerwę podczas wdrożenia.
 
-**Dziewiąta. Jeśli feed nie daje sygnału życia, konsument musi go sobie wystawić sam.**
-Nauczka z produkcji; naprawa powstała, zanim to zapisano.
+Czwarta właściwość wymaga wersjonowanego schematu. To warunek konieczny, ale
+niewystarczający. Gdy projekt przenosił własny kontrakt danych z v2 na v3, nowa
+postać zawierała wszystko, co poprzednia: każde pole wymagane przez odbiorcę
+działającego według v2 nadal było obecne. Mimo to odbiorca jej nie przyjął, i
+słusznie, bo nie akceptuje wersji, których nie rozpoznaje. Obie części trzeba
+było wdrożyć w jednym oknie wdrożeniowym, nadawcę kilka minut wcześniej, a w tym
+czasie strona działała na ślepo.
 
-Piąta właściwość należy do wydawcy. Konsument stojący przed feedem, który jej
-nie ma, nie jest zwolniony z niezmiennika sekcji 4, a odpowiednikiem po
-stronie konsumenta jest **dziennik prób**: trwały zapis każdego wykonanego
-odpytania, udanego lub nie, trzymany obok zapisu tego, co te odpytania
-zwróciły.
+Numer wersji bez określonego okresu przejściowego przerzuca tę koordynację na
+każdego użytkownika, a z danych publicznych korzystają także ci, których nadawca
+nigdy nie poznał. Reguły powinny więc określać, jak długo pozostaje dostępny
+poprzedni schemat, co kończy ten okres i czy odbiorca może uznać za czytelną
+nieznaną podwersję. Projekt nie spisał jeszcze własnych zasad; na liście zadań
+figuruje to jako niedokończona połowa pracy, która wprowadziła v3. W tym
+przypadku brak ten da się przetrwać, bo odbiorca jest tylko jeden i kontroluje
+go ten sam autor. Kanał publiczny takiego komfortu nie ma.
 
-Bez niego godzina, w której nic nie zgłoszono, i godzina, w której własny
-proces konsumenta był martwy, to ten sam pusty zbiór w magazynie. Żadna
-staranność przy renderowaniu nie odzyska tej różnicy, bo informacja nigdy nie
-została zapisana. Z nim rozróżnialne są trzy stany zamiast dwóch:
+**Dziewiąta. Jeśli kanał nie ma sygnału życia, odbiorca musi zapewnić go sobie
+sam.** Ta właściwość wynika z eksploatacji systemu, a rozwiązanie wdrożono,
+zanim ją opisano.
 
-| Dziennik prób | Zapis obserwacji | Co konsument może powiedzieć |
+Piąta właściwość to obowiązek nadawcy. Jeśli kanał jej nie spełnia, odbiorcy nie
+zwalnia to z zasady opisanej w sekcji 4. Po jego stronie odpowiednikiem jest
+**rejestr zapytań**: trwały zapis każdego zapytania, udanego lub nie,
+przechowywany obok otrzymanych wyników.
+
+Jeśli takiego rejestru nie ma, godzina bez żadnych zgłoszeń i taka, w której
+proces odbiorcy nie działał, wyglądają w zapisanych danych identycznie, jako
+pusty zbiór. Żadna staranność przy wyświetlaniu nie przywróci tej różnicy, bo
+nikt nigdy jej nie utrwalił. Z rejestrem da się odróżnić nie dwa, lecz trzy
+stany:
+
+| Rejestr zapytań | Zapis obserwacji | Co odbiorca może stwierdzić |
 | --- | --- | --- |
-| Odpytania obecne | Obserwacje obecne | Co zaobserwowano |
-| Odpytania obecne | Brak | Nic nie zgłoszono, a konsument patrzył |
-| Brak odpytań | Brak | Konsument nie patrzył. Nieznane |
+| Są zapytania | Są obserwacje | To, co zaobserwowano |
+| Są zapytania | Brak | Nic nie zgłoszono, a odbiorca obserwował źródło |
+| Brak zapytań | Brak | Odbiorca nie obserwował źródła. Stan nieznany |
 
-**Nieudane odpytanie jest zapisywane jako próba bez wyniku, a nie jako próba,
-która zwróciła zero.** Schemat musi uczynić te dwie rzeczy reprezentowalnymi
-osobno, inaczej rozróżnienie znika przy pierwszym timeoucie:
-w próbniku ADS-B tego projektu liczba wyników jest null dla niepowodzenia i
-zero dla pustej odpowiedzi, i istnieje test regresji, którego dane potrafią je
-odróżnić. Ten próbnik jest miejscem, gdzie tej właściwości się nauczono, i
-dlatego przychodzi w 1.5, a nie wcześniej.
+**Nieudane zapytanie zapisuje się jako próbę bez wyniku, a nie jako taką, która
+zwróciła zero.** Schemat musi przewidywać dla obu przypadków odmienną
+reprezentację, inaczej rozróżnienie zniknie przy pierwszym przekroczeniu czasu
+oczekiwania. W module projektu, który zbiera dane ADS-B, liczba wyników przy
+niepowodzeniu ma wartość null, a przy pustej odpowiedzi wynosi zero. Test
+regresyjny korzysta z danych, na których te przypadki się różnią. Właśnie przy
+pracy z tym modułem projekt poznał tę właściwość i dlatego pojawia się ona
+dopiero w wydaniu 1.5.
 
-Ta jedna ma najszersze zastosowanie z dziesięciu. Kosztuje jedną tabelę i
-obowiązuje każdego konsumenta każdego feedu bez sygnału życia, łącznie z
-konsumentem tego projektu.
+Spośród dziesięciu właściwości ta ma najszersze zastosowanie. Wymaga jednej
+tabeli i powinien ją mieć każdy, kto korzysta z kanału bez sygnału życia,
+łącznie z tym projektem.
 
-**Dziesiąta. Zadeklarowany budżet dostępu, jeśli istnieje, i oświadczenie,
-jeśli nie.** Nauczka z produkcji.
+**Dziesiąta. Jawny limit dostępu, a jeśli go nie ma, wyraźna informacja o tym.**
+Ta właściwość wynika z eksploatacji systemu.
 
-Feed, który limituje dostęp, czyni **pokrycie** konsumenta funkcją jego
-przydziału. Konsument odpytujący według harmonogramu wobec dziennego limitu
-albo wie, ile z niego zostało, i wtedy może uczciwie powiedzieć, jaka była
-jego gęstość próbkowania i gdzie ustała, albo nie wie, i wtedy jego własna
-kompletność jest mu nieznana, a każda luka w zapisie jest nieprzypisywalna:
-wydawca, sieć albo limit, który wyczerpał się o czwartej po południu, to trzy
-różne ustalenia i wyglądają identycznie.
+Jeśli kanał ogranicza dostęp, **kompletność** zebranych danych zależy od
+przydziału. Odbiorca, który odpytuje źródło według harmonogramu w ramach
+dziennej puli zapytań, albo wie, ile mu jeszcze zostało, albo nie. W pierwszym
+przypadku może rzetelnie podać, jak gęsto próbkował i od kiedy przestał. W
+drugim sam nie ma pewności, czy niczego mu nie brakuje, a żadnej luki w zapisie
+nie da się przypisać konkretnej przyczynie. Awaria po stronie nadawcy, kłopot z
+siecią i limit, który skończył się o czwartej po południu, to trzy różne
+ustalenia, a wyglądają identycznie.
 
-Opublikowanie limitu i zwracanie pozostałego przydziału w nagłówku odpowiedzi
-kosztuje jeden nagłówek i zamienia lukę nieprzypisywalną w diagnozowalną.
+Opublikowanie limitu i podawanie pozostałej puli w nagłówku odpowiedzi kosztuje
+niewiele, a pozwala ustalić przyczynę każdej luki.
 
-Właściwość jest równie dobrze spełniona przez brak limitu i powiedzenie tego.
-„Bez limitu, bez dławienia, odpytuj tak często, jak uważasz za użyteczne" to
-odpowiedź kompletna i to jest to, co ukraiński kanał daje przez brak
-jakiejkolwiek bramki. Właściwość łamie limit, który istnieje i nie jest
-zadeklarowany, bo konsument odkrywa go przez odcięcie.
+Warunek jest spełniony również wtedy, gdy żadnego ograniczenia nie ma i nadawca
+to zaznacza. Zdanie „bez limitów i spowalniania, pobieraj dane tak często, jak
+to przydatne” jest odpowiedzią wyczerpującą. Ukraiński kanał daje ją w praktyce,
+bo nie stosuje żadnych barier. Nie spełnia go natomiast limit, który istnieje,
+ale nie został ogłoszony, bo odbiorca dowiaduje się o nim dopiero wtedy, gdy
+zostaje odcięty.
 
-**Uwaga do właściwości pierwszej, z tego samego doświadczenia.** Sekcja 3
-argumentuje, że procedura wnioskowa to system zezwoleń z ikoną RSS. Ten projekt
-skonsumował od tamtej pory ten drugi rodzaj na warunkach odwoływalnych bez
-podania przyczyny, a koszt jest dotkliwszy, niż sugerowało pierwotne
-sformułowanie: **odtwarzalność staje się właściwością interfejsu, a nie
-staranności konsumenta.** Drugi czytelnik nie może powtórzyć pomiaru, który
-stoi na umowie, której nie był stroną i której może nie dostać. Pomiary
-ukraińskiego kanału w sekcji 1 są sprawdzalne dla każdego. Te, które stoją na
-interfejsie z kluczem, są sprawdzalne dla tego, kto klucz trzyma.
+**Uwaga do właściwości pierwszej, wynikająca z tych samych doświadczeń.** Sekcja
+3 wskazuje, że kanał dostępny dopiero po złożeniu wniosku jest usługą
+udostępnianą za zgodą, a nie infrastrukturą publiczną. Projekt korzystał od tego
+czasu z usługi tego drugiego rodzaju, na warunkach, które można cofnąć bez
+podania przyczyny. Okazało się to bardziej kosztowne, niż sugerowało pierwotne
+sformułowanie: **powtarzalność pomiaru zależy wtedy od interfejsu, a nie od
+staranności odbiorcy.** Osoba trzecia nie odtworzy ustalenia opartego na umowie,
+której nie jest stroną i której może nie uzyskać. Wyniki dotyczące ukraińskiego
+kanału z sekcji 1 może sprawdzić każdy. Te, które wymagają interfejsu z kluczem,
+zweryfikuje tylko jego posiadacz.
 
-**Jedenasta. Kategoria musi mówić, czego nie rozróżnia.** Nauczka z produkcji, z
-własnej pomyłki.
+**Jedenasta. Kategoria musi mówić, czego nie rozróżnia.** Ta właściwość wynika z
+eksploatacji systemu, a dokładniej z własnego błędu projektu.
 
-Feed, który opatruje alarm kategorią, sprawia, że każdy konsument bierze tę
-kategorię za opis zagrożenia. Zwykle nim nie jest, a luka jest
-niewidoczna z samego pola.
+Gdy kanał przypisuje alarmowi kategorię, każdy odbiorca ma pokusę, by
+potraktować ją jak opis zagrożenia. Zwykle nim nie jest, a z samego pola nie da
+się tego wyczytać.
 
-Konkretny przypadek. Zaplecze ukraińskich aplikacji alarmowych publikuje pięć
-kategorii: alarm lotniczy, artyleria, walki uliczne, chemiczne, radiologiczne.
-Konsument czytający `AIR` dowiaduje się, że ogłoszono coś powietrznego. **Nie**
-dowiaduje się, czy to coś to dron, bomba szybująca, pocisk manewrujący, pocisk
-balistyczny, start MiG-31K czy zagrożenie od strony morza. Wszystko to jest
-`AIR`. Najczęściej zadawane pytanie o alarm - co leci - to dokładnie to
-pytanie, na które kategoria nie odpowiada, i nic w polu, jego nazwie ani
-dokumentacji tego nie mówi.
+Oto konkretny przykład. Źródło, z którego korzystają ukraińskie aplikacje
+alarmowe, publikuje pięć kategorii: alarm lotniczy, ostrzał artyleryjski, walki
+uliczne, zagrożenie chemiczne i radiacyjne. Odczytując `AIR`, odbiorca dowiaduje
+się, że ogłoszono alarm z powodu czegoś w powietrzu. **Nie** wie jednak, czy to
+dron, bomba szybująca, pocisk manewrujący lub balistyczny, start samolotu
+MiG-31K, czy atak od strony morza. Wszystkie te przypadki mają oznaczenie `AIR`.
+Na pytanie zadawane najczęściej, czyli co nadlatuje, to pole właśnie nie
+odpowiada, a ani ono, ani jego nazwa, ani dokumentacja tego nie sygnalizują.
 
-Ten projekt dwa razy zmarnował pracę na założeniu, że odpowiada: raz planując
-wypełnić lukę we własnej klasyfikacji z tego pola, i raz w pisemnej
-rekomendacji, zanim ktokolwiek przeczytał, co znaczą wartości. Za każdym razem
-pole wyglądało jak odpowiedź, bo kategoria i rodzaj mają ten sam kształt -
-krótkie wyliczenie na alarmie - i nic ich nie odróżniało.
+Projekt dwa razy włożył pracę w założenie, że kategoria rozstrzyga tę kwestię.
+Najpierw planował uzupełnić lukę we własnej klasyfikacji danymi z tego pola,
+potem powtórzył je w pisemnej rekomendacji, zanim ktokolwiek sprawdził, co
+oznaczają poszczególne wartości. W obu przypadkach pole wyglądało na odpowiedź,
+bo kategoria i rodzaj zagrożenia mają tę samą postać: krótką listę wartości
+przypisaną do alarmu. Nic ich od siebie nie odróżniało.
 
-**Wydawca powinien tu napisać jedno zdanie na kategorię, a nie
-taksonomię.** „Alarm lotniczy: każde zagrożenie z powietrza, włącznie ze
-środkami, których ten feed nie rozróżnia." To zdanie nic nie kosztuje i usuwa
-klasę błędów konsumenta, której żadna staranność po stronie konsumenta nie
-zapobiegnie, bo konsument nie widzi, co kategoria zlewa.
+**Od nadawcy wystarczy tu jedno zdanie na kategorię, a nie cała taksonomia.** Na
+przykład: „Alarm lotniczy: każde zagrożenie z powietrza, także ze strony
+środków, których ten kanał nie rozróżnia”. Jego napisanie nic nie kosztuje, a
+eliminuje całą klasę błędów, przed którymi odbiorca nie ustrzeże się żadną
+starannością, bo nie widzi, co to oznaczenie w sobie łączy.
 
-**A czego to wymaga od konsumenta, i to jest trudniejsza połowa.** Kategoria nigdy
-nie może być renderowana jako zamknięty zbiór rodzajów, które może zawierać.
-Pokusa jest silna i wygląda na życzliwość wobec czytelnika: ten projekt był bliski narysowania
-trzech ikon - dron, bomba szybująca, pocisk - obok alarmu, którego rodzaju
-nigdy nie ogłoszono, żeby czytelnik widział, co to może być. Trzy ikony
-twierdzą **„jedno z tych trzech"**. Źródło nic takiego nie powiedziało, a
-`AIR` tego nie znaczy. Narysowanie ich byłoby przewidywaniem w postaci
-ikonografii, czyli tą samą awarią co strzałka pokazująca kierunek, którego
-feed nigdy nie opublikował.
+**Obowiązek odbiorcy jest trudniejszy.** Kategorii nigdy nie wolno przedstawiać
+jako zamkniętego zbioru rodzajów, które może obejmować. Pokusa jest silna i
+wygląda na życzliwość: projekt był bliski narysowania trzech ikon, drona, bomby
+szybującej i pocisku, obok alarmu, którego rodzaju nigdy nie podano, żeby było
+widać, czym może on być. Taki zestaw mówi jednak: **„jedno z tych trzech”**.
+Źródło niczego takiego nie stwierdziło, a `AIR` tego nie oznacza. Narysowane
+ikony byłyby przewidywaniem w formie grafiki, czyli tym samym błędem co strzałka
+pokazująca kierunek, którego kanał nigdy nie opublikował.
 
-Tekst potrafi unieść zbiór otwarty, bo ma słowa „albo coś innego". Rząd
-symboli nie potrafi i żaden układ symboli ich nie dostarcza. Tam, gdzie
-konsument chce jednak wizualizacji dla nieogłoszonego rodzaju, uczciwa forma
-to **jeden symbol, który czyta się jako klucz, a nie jako wyliczenie**, z
-otwartym końcem wypowiedzianym słowami obok. To jest to, co ten projekt
-wdrożył, a rozumowanie jest w rejestrze defektów jego konsumenta, nie tutaj,
-bo decyzja należy do konsumenta; do specyfikacji należy właściwość, która
-uczyniła ją konieczną.
+Tekst może wyrazić zbiór otwarty, bo ma do dyspozycji słowa „albo coś innego”.
+Rząd symboli nie ma takiej możliwości i żaden układ jej nie da. Jeśli odbiorca
+chce pokazać graficznie alarm bez podanego rodzaju, uczciwą formą jest **jeden
+symbol, który czyta się jak ogólne oznaczenie, a nie wyliczenie**, z dopiskiem
+obok, który słowami zaznacza, że możliwości jest więcej. Tak zrobił ten projekt.
+Uzasadnienie znajduje się w rejestrze błędów jego strony, a nie tutaj, bo to
+decyzja odbiorcy; do specyfikacji należy właściwość, która ją wymusiła.
 
-**Dwunasta. Pułap klasyfikacji należy do specyfikacji, bo jest właściwością
-źródła, a nie czytelnika.** Nauczka z produkcji.
+**Dwunasta. Górna granica klasyfikacji należy do specyfikacji, bo jest cechą
+źródła, a nie sposobu odczytu.** Ta właściwość wynika z eksploatacji systemu.
 
-Na 61 041 wiadomościach przez 118 dni ten kanał niósł stan alarmowy w 52 589 z
-nich i znacznik środka ataku w 7 428. Osiem rdzeni wyrazowych pokrywa 98,3%
-oznaczonych wiadomości; reszta to 122 wiadomości, 0,2% korpusu, a ich odczyt
-pokazuje, że wszystkie są odwołaniami niosącymi listy kontynuacji, które nie
-nazywają żadnego środka, bo nie ma czego nazwać. Pokrycie złączenia w całym
-korpusie wynosi **0,187** i nie porusza się z oknem złączenia: 1 godzina i 24
-godziny dają po 0,187, więc parametr, o którym zakładano, że tym rządzi, nie
-rządzi niczym.
+Spośród 61 041 wiadomości z 118 dni stan alarmu zawierało 52 589, a informację o
+środku ataku – 7428. Osiem rdzeni wyrazowych wystarcza do rozpoznania 98,3% tych
+drugich. Pozostają 122 wpisy, czyli 0,2% korpusu, a ich lektura pokazuje, że są
+to odwołania z listą obszarów, gdzie zagrożenie trwa nadal. Nie wymieniają
+środka ataku, bo w tej sytuacji żaden nie występuje. Odsetek alarmów, do których
+udaje się dopasować taką informację, wynosi w całym korpusie **0,187** i nie
+zależy od szerokości okna łączenia: zarówno przy 1 godzinie, jak i przy 24
+godzinach wynik jest ten sam, 0,187. Parametr, który miał o tym decydować, nie
+ma więc żadnego wpływu.
 
-Liczbą, która ma znaczenie, jest to, co ona ogranicza. **Mniej więcej cztery
-alarmy na pięć nie będą niosły ogłoszonego rodzaju i żaden parser tego nie
-zmieni**, bo źródło nie mówi. Ten projekt doszedł do tego wniosku drogą
-kosztowną: zaproponowano listę prawdopodobnego dodatkowego słownictwa z
-ogólnej wiedzy o wojnie - konkretne oznaczenia pocisków, samoloty nosiciele,
-sformułowania o odpaleniu, kierunek i liczba - i zmierzono ją na korpusie.
-Każda pozycja wystąpiła zero razy. Dwie z dwudziestu pięciu kandydatek
-wystąpiły w ogóle, łącznie osiem razy. Lista nie była częściowo trafna; była
-opisem tego, jak o tej wojnie pisze się gdzie indziej, wziętym za to, jak
-pisze ten kanał.
+Ważne jest to, co z tej liczby wynika. **Mniej więcej cztery alarmy na pięć nie
+będą miały podanego rodzaju i żaden parser tego nie zmieni**, bo źródło o tym
+milczy. Projekt doszedł do tego wniosku kosztowną drogą. Na podstawie ogólnej
+wiedzy o wojnie przygotowano listę dodatkowych określeń, które mogłyby się
+pojawiać: oznaczenia konkretnych pocisków, samoloty nosiciele, sformułowania o
+starcie, kierunek i liczbę. Następnie sprawdzono ją na korpusie. Żadne z nich
+nie wystąpiło. Spośród dwudziestu pięciu kandydatów pojawiły się tylko dwa, w
+sumie ośmiokrotnie. Lista nie była nawet częściowo trafna. Opisywała, jak
+relacjonuje się tę wojnę gdzie indziej, i została wzięta za opis języka tego
+kanału.
 
-Dwie konsekwencje dla specyfikacji.
+Dla specyfikacji wynikają z tego dwa wnioski.
 
-**Dla wydawcy.** Jeśli feed potrafi wyrazić rodzaj, powinien opublikować, jak
-często faktycznie to robi, jako zmierzony udział, a nie jako obietnicę. Pole
-wypełniane raz na pięć to nie jest zepsute pole, ale konsument, który odkrywa
-to z własnego ruchu, już zbudował interfejs wokół błędnego oczekiwania.
-Opublikowanie udziału kosztuje jedną linię i jest różnicą między polem
-dopuszczającym null a polem, które zwykle jest null.
+**Dla nadawcy.** Jeśli kanał może podawać rodzaj zagrożenia, powinien też
+publikować, jak często rzeczywiście to robi, w postaci zmierzonego odsetka, a
+nie zapewnienia. Pole wypełniane raz na pięć przypadków nie jest wadliwe.
+Odbiorca, który odkryje to dopiero na podstawie własnego ruchu, zdąży jednak
+zbudować interfejs wokół błędnego oczekiwania. Opublikowanie tej liczby wymaga
+jednej linijki, a odróżnia pole, które może być puste, od takiego, które
+zazwyczaj nic nie zawiera.
 
-**Dla konsumenta.** Przypadek nieogłoszony jest przypadkiem *normalnym* i musi
-być zaprojektowany jako taki, a nie obsługiwany jako wyjątek. To znaczy, że
-słowa „źródło nie powiedziało" to główny tekst interfejsu, widziany częściej
-niż jakakolwiek nazwa rodzaju, a nie zapasowa formułka. To znaczy też, że
-chęć bogatszego szczegółu jest pytaniem o **źródła**, nie o parsowanie: kiedy
-pułap wyznacza to, co kanał pisze, jedyną drogą przez niego jest inny kanał, z
-tym, co to kosztuje w zależnościach, warunkach i w kwestii prywatności. Lepsze
-parsowanie tego samego feedu nie da tego, czego feed nie zawiera.
+**Dla odbiorcy.** Alarm bez podanego rodzaju to przypadek *typowy* i tak trzeba
+go projektować, a nie obsługiwać jako wyjątek. Sformułowanie „źródło tego nie
+podało” nie jest więc wariantem awaryjnym, tylko kluczowym tekstem interfejsu,
+który czytelnik zobaczy częściej niż nazwę jakiegokolwiek środka ataku. Wynika z
+tego również, że chęć pokazania większej liczby szczegółów to kwestia
+**źródeł**, a nie parsowania: skoro granicę wyznacza to, co publikuje kanał,
+przekroczyć ją można tylko dzięki innemu kanałowi, ze wszystkimi kosztami w
+postaci zależności, warunków korzystania i ochrony prywatności. Lepsza analiza
+tych samych danych nie wydobędzie z nich tego, czego nie zawierają.
 
+**Trzynasta. Pusta wartość ma jedno znaczenie, a jeśli brak danych oznacza coś
+jeszcze, potrzebne jest drugie pole.** Ta właściwość wynika z eksploatacji
+systemu.
 
-**Trzynasta. Jeden null, jedno znaczenie - a tam, gdzie nieobecność jest
-drugim faktem, potrzebuje drugiego pola.** Nauczka z produkcji.
+Kanał tego projektu podaje dla każdego obwodu pole `last_alert_ended_at`,
+liczone w oknie obejmującym ostatnie dni. Pusta wartość oznacza tam, że *w tym
+oknie nie zakończył się żaden alarm*. Co innego znaczy sytuacja, w której
+*obwodu w ogóle nie policzono*, a samo to pole nie pozwala ich rozróżnić.
+Tymczasem odbiorca musi znać oba fakty, żeby napisać zgodne z prawdą zdanie. W
+pierwszym przypadku informuje, że w tym okresie żaden alarm się nie zakończył, w
+drugim milczy, a odróżnia je wyłącznie dzięki sąsiedniej wartości, czyli
+licznikowi. To działa, ale przypadkiem. Schemat nigdzie tego nie określał, a
+odbiorca kierujący się samym znacznikiem czasu napisałby nieprawdę i nie miałby
+jak tego zauważyć.
 
-Feed tego projektu niesie `last_alert_ended_at` per obwód wewnątrz okna
-kroczącego. Null oznacza tam, że *żaden epizod nie zamknął się wewnątrz
-okna*, co nie jest tym samym, co *ten obwód w ogóle nie został policzony*, a
-tych dwóch rzeczy nie da się odróżnić z samego pola. Konsument potrzebuje obu
-faktów, żeby napisać uczciwe zdanie: wypisuje „żaden alarm nie zamknął się w
-tym oknie" dla pierwszego i milczy dla drugiego, a odróżnia je tylko przez
-odczyt pola licznika obok. To działa, i działa przez przypadek: schemat nigdy
-tego nie powiedział, a konsument rozumujący z samego znacznika czasu
-wydrukowałby złe zdanie bez sposobu, żeby to zauważyć.
+Znaczenie pustej wartości trzeba więc opisać słownie, osobno dla każdego pola.
+Jeśli jego nieobecność znaczy co innego niż wartość null, należy wskazać, gdzie
+zapisano tę drugą informację. W przeciwnym razie dzieje się to, co tutaj:
+implementacja okazała się poprawna, ale równie dobrze mogła być błędna, a
+kontrakt w żaden sposób tego nie rozstrzygał.
 
-Określ znaczenie null per pole, słowami, a tam, gdzie nieobecność pola koduje
-inny fakt niż jego null, powiedz, które inne pole go niesie. Alternatywą jest
-to, co stało się tutaj: poprawna implementacja, która równie dobrze mogła być
-niepoprawna, bez niczego w kontrakcie, co by rozstrzygało.
+**Wynika z tego jeszcze jedno: pole, którego nikt nie czyta, to nieprzetestowana
+część kontraktu.** Tak było z `last_alert_ended_at`. Trafiało ono do każdej
+odpowiedzi od dnia, w którym kanał zaczął podawać liczby alarmów z ostatnich
+dni, a mimo to kod odbiorcy ani razu z niego nie skorzystał. Nie był to błąd
+żadnej ze stron. Dane były gotowe, tylko witryna, dla której je przygotowano,
+nigdy ich nie pokazała. Dotychczasowy test sprawdzał obecność elementów
+*potrzebnych* odbiorcy, a o tych, które nadawca wysyła na próżno, nie mówił nic.
+Warto kontrolować oba kierunki, a drugi to kwestia prostego skryptu. Przegląda
+on całą odpowiedź i pilnuje, żeby każdy klucz był albo odczytywany, albo wpisany
+na listę dopuszczonych wyjątków z podaniem powodu.
 
-**Wniosek uboczny wart osobnego akapitu: pole, którego nikt nie czyta, to
-nieprzetestowana powierzchnia kontraktu.** `last_alert_ended_at` był wysyłany
-w każdym ładunku od dnia, w którym powstały liczniki kroczące, i żadna linia
-konsumenta nigdy go nie czytała - nie błąd po żadnej ze stron, tylko
-zdolność leżąca na dysku, podczas gdy interfejs, dla którego była
-przeznaczona, nic nie mówił. Sprawdzenie kontraktu weryfikowało, że pola,
-których konsument *potrzebuje*, są obecne, co nic nie mówi o polach, które
-wydawca wysyła, a których nikt nie konsumuje. Oba kierunki warto sprawdzać, a
-drugi kosztuje skrypt: przejść ładunek i wymagać, żeby każdy klucz był albo
-czytany, albo jawnie wymieniony jako tolerowany z podaniem powodu.
+**Czternasta. Każda liczba ma obok swój mianownik w osobnym polu.** Ta
+właściwość wynika z eksploatacji systemu.
 
-**Czternasta. Liczba publikuje swój mianownik jako pole, obok siebie.**
-Nauczka z produkcji.
+Ten sam kanał publikuje liczbę alarmów z ostatnich dni, a w polu `window_days`
+długość tego okresu. To właściwe rozwiązanie. Jego sens widać po tym, co się
+stało, gdy odbiorca potrzebował obu wartości. Przez dwie wersje oprogramowania
+licznik występował na stronie wyłącznie w treści zdania. Interfejs, który jako
+pierwszy chciałby z niego skorzystać, musiałby więc analizować to zdanie.
+Ponieważ ten sam tekst podaje też długość okna, najprostszy sposób odczytu dałby
+błędny wynik.
 
-Ten sam feed publikuje liczbę alarmów w oknie kroczącym i długość okna jako
-`window_days`. To jest słuszne, a powód widać w tym, co się stało, gdy
-konsument potrzebował obu: przez dwa wydania liczba istniała na stronie tylko
-wewnątrz zdania, więc pierwszy interfejs, który chciałby tej liczby,
-musiałby sparsować zdanie, żeby ją dostać - a zdanie zawiera też długość okna,
-więc oczywiste parsowanie zwraca złą liczbę.
+Ta zasada wykracza poza ten jeden kanał. Każda wartość zbiorcza, na przykład
+liczba, wskaźnik czy maksimum, traci sens bez przedziału, z którego ją
+policzono. Należy go podawać jako osobne pole w danych, a nie jako część
+etykiety. Proza jest przeznaczona dla ludzi. Program, który musi wyłuskiwać
+liczby z tekstu, prędzej czy później trafi na niewłaściwą.
 
-Reguła obowiązuje szerzej niż ten feed. Każdy agregat - liczba, wskaźnik,
-maksimum - jest bez znaczenia bez interwału, na którym go wzięto, a interwał
-należy do danych jako pole, a nie do etykiety. Zdania są dla ludzi;
-konsument, który musi czytać zdanie, żeby wyłuskać z niego liczbę, kiedyś
-wyłuska złą.
+**Piętnasta. Kategoria musi być zapisana w samym rekordzie, inaczej dla odbiorcy
+nie istnieje.** Ta właściwość wynika z odczytu danych RSO z 22 sierpnia 2026 r.
 
+Polskie dane RSO są podzielone na pięć kategorii. Kategorie są rzeczywiste:
+rozdzielają zbiór, występują w adresie zapytania, a dokumentacja operatora
+wymienia ich identyfikatory w osobnym punkcie interfejsu. **W samym komunikacie
+nie ma jednak żadnej z nich.** Spośród 156 wiadomości zwracanych w zakresie
+„wszystkie” żadna nie zawierała pola kategorii: `type` występuje w każdej ze
+156, ale zawsze jest puste, podobnie jak `rso_icon`. Odbiorca może ustalić,
+czego dotyczy dany wiersz, tylko pamiętając, skąd go pobrał.
 
-**Piętnasta. Kategoria jest właściwością rekordu albo nie istnieje.**
-Nauczka z odczytu strumienia RSO 2026-08-22.
+Podobnie jest z informacją o nadawcy. Od kwietnia 2024 r. w RSO publikuje także
+Rządowe Centrum Bezpieczeństwa. Według udostępnionego opisu systemu odpowiada
+ono, obok ministerstwa, za wiadomości ogólnokrajowe, a pozostałe przygotowują
+wojewódzkie centra zarządzania kryzysowego. Ten podział pochodzi z informacji,
+które operator podaje o systemie, a nie z pomiarów projektu. **Żadne pole nie
+wskazuje jednak autora komunikatu.** Odbiorca, który chciałby przy ostrzeżeniu
+podać wydającą je instytucję, nie może tego zrobić, a jeśli cały blok podpisze
+jedną nazwą, w większości przypadków poda błędną informację.
 
-Polski feed RSO publikuje pięć kategorii. Są prawdziwe: dzielą dane, pojawiają
-się w adresie, a własna dokumentacja wydawcy wymienia ich slugi pod
-osobnym punktem końcowym. **Żadna z nich nie pojawia się w komunikacie.**
-Zmierzone na 156 wiadomościach, które zwraca zakres „wszystkie": ani jedna nie
-niosła pola kategorii: `type` jest obecne i puste we wszystkich 156,
-`rso_icon` tak samo. Jedyny sposób, w jaki konsument wie, czym jest wiersz,
-to pamiętać, który URL go zwrócił.
+Nie chodzi o rozbudowaną taksonomię. System przypisuje komunikatom kategorie,
+rozdziela je według nich i publikuje odpowiedni słownik jako osobny dokument.
+Informacji tej brakuje tylko tam, gdzie jej dodanie nic by nie kosztowało, czyli
+w samym rekordzie. Wystarczyłoby jedno pole na wiadomość, wypełniane wartością z
+listy, która już istnieje.
 
-To samo dotyczy autora. Od kwietnia 2024 Rządowe Centrum Bezpieczeństwa
-publikuje do tego feedu, a opublikowany opis samego systemu wskazuje je,
-obok ministerstwa, jako odpowiedzialne za wiadomości ogólnokrajowe, podczas
-gdy wojewódzkie centra zarządzania kryzysowego publikują resztę. Ten podział
-to, co wydawca publikuje sam o sobie, a nie coś, co ten projekt zmierzył. **Żadne pole ich nie odróżnia.** Konsument, który chce oznaczyć
-ostrzeżenie tym, kto je wydał, nie może, a konsument, który oznacza cały blok
-nazwą jednego wydawcy, myli się co do większości.
+**Ile dokładnie płaci za to odbiorca.** Pięć zapytań zamiast jednego,
+prowadzenie ewidencji, z którego z nich pochodzi dany wiersz, oraz pewność, że
+każdy, kto o tym nie wie, błędnie oznaczy wszystkie dane, nie zdając sobie z
+tego sprawy. Obejście istnieje, ale nie przemawia to przeciwko dodaniu pola.
+Pokazuje raczej, jaką cenę ma jego brak, pomnożoną przez liczbę wszystkich
+korzystających.
 
-To nie jest prośba o bogatą taksonomię. To obserwacja, że wydawca, który już
-klasyfikuje, już kieruje ruch według tej klasyfikacji i już publikuje
-słownik jako dokument, pomija go w jednym miejscu, w którym nic by nie
-kosztował: w rekordzie. Jedno pole na wiadomość, wzięte z listy, która już
-istnieje.
+**Najważniejszej kategorii nie ma przy tym wśród tych pięciu.** Ostrzeżenie o
+ataku powietrznym, które projekt odczytał 16 września 2026 r., trafiło do grupy
+`ogolne`, czyli ogólnej. Publikuje się w niej także ogłoszenia dla mieszkańców,
+więc odbiorca rysujący mapę zagrożeń z powietrza musi rozstrzygać na podstawie
+treści każdego komunikatu. Projekt robi to za pomocą dwóch list: dziesięć
+określeń oznacza, że wiadomość dotyczy alarmu lotniczego, a dwanaście wyklucza
+ją z mapy, nawet jeśli pasuje któreś z pierwszej grupy. Wykluczenie ma
+pierwszeństwo, bo w zapowiedzi próby syren też pojawiają się słowa *alarm
+powietrzny*. Każde z tych słów to założenie co do brzmienia kolejnych tekstów.
+Wiadomość sformułowana inaczej zostanie pominięta albo źle odczytana, a żadna ze
+stron nie dostanie o tym sygnału. Właściwość dwudziesta pokazuje, jaki był tego
+skutek przy parze z 16 września: odwołanie również mówi o zagrożeniu z
+powietrza.
 
-**Ile konsumenta kosztuje obejście, dokładnie.** Pięć żądań zamiast jednego,
-plus dodatkowa ewidencja, żeby pamiętać, które żądanie dało który wiersz, plus pewność,
-że każdy konsument, który nie wie, że ma to robić, po cichu źle oznaczył
-wszystko. Obejście istnieje. To, że istnieje, nie jest argumentem przeciw
-polu; jest miarą tego, ile brakujące pole kosztuje, pomnożoną przez każdego
-konsumenta.
+**Szesnasta. Wycofana w wydaniu 2.0.**
 
-**A kategorii, która miałaby największe znaczenie, nie ma wśród pięciu.**
-Alarm lotniczy, który ten projekt odczytał 2026-09-16, przyszedł w `ogolne`,
-kategorii ogólnej, która niesie też komunikaty obywatelskie, więc konsument
-rysujący mapę zagrożeń z powietrza musi rozstrzygać po słowach każdego
-komunikatu. Ten projekt tak robi: dziesięć terminów czyni komunikat
-komunikatem o powietrzu, dwanaście trzyma go z dala od mapy nawet wtedy, gdy
-któryś z tych dziesięciu pasuje, a wykluczenie wygrywa, bo test syren pisze w
-treści *alarm powietrzny*. Każdy termin jest zgadywaniem, jak zostanie
-sformułowany następny komunikat, a komunikat sformułowany inaczej zostaje
-pominięty albo źle odczytany bez sygnału dla którejkolwiek ze stron.
-Właściwość dwudziesta pokazuje, ile to kosztuje na parze z 2026-09-16:
-odwołanie też jest o powietrzu.
+W wydaniu 1.9 ten punkt zawierał prośbę do nadawców o podanie, w jakich wersjach
+protokołu IP odpowiadają ich serwery. Pomiar, na którym się opierał, był
+rzetelny: polskie serwisy państwowe odczytane tamtego wieczoru nie publikują
+adresów IPv6, a wszystkie źródła używane przez projekt podają adresy obu
+rodzajów. Awarię, która skłoniła do jego dodania, spowodowała jednak sieć samego
+projektu, skonfigurowana tylko pod usługi, z którymi miała się łączyć.
+Specyfikacja skierowana do nadawców nie jest miejscem na lekcję z konfiguracji
+po stronie odbiorcy. Dokument o takim zasięgu nie powinien też stawiać swojego
+najsłabszego twierdzenia na równi z najmocniejszymi.
 
-**Szesnasta. Wycofana w 2.0.**
+Z tego punktu zachowała się tylko część dotycząca odbiorcy, zapisana w rejestrze
+błędów repozytorium, a nie tutaj: rozwiązanie nazwy domeny nie oznacza jeszcze,
+że serwer odpowiada, a w dzienniku zdarzeń oba przypadki wyglądają tak samo.
 
-W postaci wysłanej w 1.9 ten wpis prosił wydawców o zadeklarowanie, na jakich
-rodzinach adresów odpowiadają ich punkty końcowe. Pomiar za nim był prawdziwy:
-polskie źródła państwowe czytane tego wieczoru nie publikują adresów IPv6,
-podczas gdy każde źródło konsumowane przez ten projekt publikuje oba. Ale
-awarią, która wywołała wpis, była własna sieć tego projektu, skonfigurowana
-pod źródła, do których miał sięgać, i pod nic więcej. Specyfikacja skierowana
-do wydawców nie jest miejscem na zapisanie lekcji o konfiguracji konsumenta,
-a dokument o takiej ekspozycji jak ten nie powinien nieść najsłabszego
-twierdzenia w tej samej randze co najmocniejsze.
+**Siedemnasta. Parametr, którego serwer nie obsługuje, powinien zostać
+odrzucony, a nie przyjęty.** Ta właściwość wynika z odczytu danych RSO z 22
+sierpnia 2026 r. i łączy trzy ustalenia tego samego rodzaju.
 
-To, co z niego przetrwało, jest po stronie konsumenta i żyje w rejestrze
-defektów tego repozytorium, a nie tutaj: rozwiązanie nazwy to nie to samo, co
-odpowiedź hosta, a w logu wyglądają tak samo.
+W ciągu jednego wieczoru odczytów źródło RSO w trzech sytuacjach zwróciło
+niepełną odpowiedź, która wyglądała na pełną:
 
-**Siedemnasta. Parametr, którego serwer nie obsługuje, musi być odrzucony, nie
-przyjęty.** Nauczka z odczytu strumienia RSO 2026-08-22; są to trzy
-ustalenia w jednym kształcie.
+- **Zakres „wszystkie” obejmuje tylko część danych.** Pięć kategorii zawiera
+  łącznie 461 różnych komunikatów, bez powtórzeń między nimi. Zakres `wszystkie`
+  zwraca 156 z nich. Pozostałe 305 pochodzi z jednej kategorii, a ani treść
+  odpowiedzi, ani blok stronicowania, ani strona integracyjna nie informują o
+  tym wyłączeniu. Program, który korzysta z najbardziej oczywistego adresu,
+  pobiera więc jedną trzecią zbioru i nie ma żadnego sygnału, że czegoś brakuje.
+  Wyłączenie może być zamierzone, bo nawigacja serwisu pokazuje stany wód w
+  osobnej zakładce. Jeśli tak jest, wystarczyłoby to zaznaczyć: zakres nadal
+  nazywa się *wszystkie*, a wyłączona kategoria jest dopuszczalną wartością tego
+  samego parametru. Nic, co odbiorca może odczytać, nie wskazuje, że jest
+  inaczej.
+- **Pole, którego nazwa wskazuje na sumę, podaje liczbę pozycji na stronie.**
+  Atrybut stronicowania nazywa się `totalItems`. Na stronie 1 ma wartość 20, na
+  stronie 2 także 20, a w zapytaniu bez podziału na strony, obejmującym te same
+  dane, 156. Odbiorca, który na tej podstawie wylicza liczbę stron, dzieli 20
+  przez 20 i kończy po pierwszej z ośmiu. Skuteczny warunek zakończenia to pusta
+  strona, którą serwer zwraca ze statusem 200.
+- **Parametry dat są przyjmowane, lecz pomijane.** Strona integracyjna operatora
+  opisuje `from` i `to` dla swojej wyszukiwarki. Po przekazaniu ich z oknem
+  siedmiodniowym do adresu zwracającego dane w formacie XML serwer przyjął je
+  bez zastrzeżeń: odpowiedź miała status 200 i zawierała 150 rekordów z siedmiu
+  miesięcy, z których w tym przedziale mieściło się dziesięć. Odbiorca, który
+  zlicza wiersze, widzi wiarygodną wartość i uznaje, że filtr działa.
 
-Trzy sposoby, w jakie ten feed zwrócił częściową odpowiedź nieodróżnialną od
-kompletnej, w jeden wieczór jego czytania:
+Trzeciemu przypadkowi najłatwiej zapobiec. **Nierozpoznany parametr powinien
+skutkować kodem 400, a nie 200.** Jeśli serwer go po cichu pomija, pomyłka
+odbiorcy zamienia się w jego fałszywe przekonanie, które przetrwa każdą dostępną
+mu kontrolę: zapytanie się powiodło, dane dały się odczytać, a liczba rekordów
+wyglądała rozsądnie.
 
-- **Zakres nazwany „wszystkie", który nie jest wszystkim.** Pięć kategorii
-  trzyma 461 różnych komunikatów i nie dzieli żadnego. Zakres `wszystkie`
-  zwraca 156. Pominiętych 305 to jedna kategoria i nic w ładunku, bloku
-  paginacji ani na stronie integracyjnej nie wspomina o pominięciu. Kolektor
-  czytający oczywisty adres czyta trzecią część feedu i nie ma żadnego sygnału,
-  że tak jest. Wykluczenie może być celowe - własna nawigacja serwisu traktuje
-  stany wód jako osobną zakładkę - a celowe-i-niezadeklarowane to dokładnie
-  problem: zakres nadal nazywa się *wszystkie*, w ścieżce, w której wykluczona
-  kategoria jest legalną wartością tego samego parametru, i nic, co konsument
-  może przeczytać, nie mówi inaczej.
-- **Licznik nazwany od sumy, który liczy stronę.** Atrybut paginacji to
-  `totalItems`. Na stronie 1 czyta się 20; na stronie 2 czyta się 20; na
-  żądaniu bez stronicowania na tych samych danych czyta się 156. Konsument
-  wyprowadzający liczbę stron dzieli 20 przez 20 i zatrzymuje się po jednej
-  stronie z ośmiu. Warunek stopu, który działa, to pusta strona, którą punkt
-  końcowy zwraca ze statusem 200.
-- **Parametry dat, które są przyjmowane i ignorowane.** Strona integracyjna
-  wydawcy dokumentuje `from` i `to` dla swojego interfejsu wyszukiwania.
-  Przekazane do punktu końcowego XML, który przyjmuje je bez sprzeciwu, z
-  siedmiodniowym oknem, dały odpowiedź 200 zawierającą 150 rekordów
-  rozpiętych na siedem miesięcy, z których dziesięć mieściło się w oknie.
-  Konsument liczący wiersze widzi wiarygodną liczbę i wnioskuje, że filtr
-  działa.
+Ogólna zasada brzmi więc: **jeśli zapytanie może zostać zrealizowane częściowo,
+odpowiedź musi o tym informować.** Wystarczy znacznik, status albo powtórzenie
+parametrów, które faktycznie zastosowano. Każde z tych rozwiązań to jedno pole.
+Jeśli nie ma żadnego z nich, każdy odbiorca takiego interfejsu może na podstawie
+wiarygodnej z pozoru liczby dojść do błędnego wniosku i tego nie zauważyć.
+Wynik, który tylko wygląda na poprawny, z samej konstrukcji nie różni się wtedy
+od prawidłowego.
 
-Trzecie jest najgorsze, bo najtańsze do zapobieżenia. **Nierozpoznany
-parametr powinien dać 400, nie 200.** Ciche zignorowanie go zamienia pomyłkę
-konsumenta w fałszywe przekonanie konsumenta, a fałszywe przekonanie
-przechodzi każde sprawdzenie, jakie konsument umie uruchomić: żądanie się
-powiodło, dane się sparsowały, liczba była rozsądna.
+To zasada z sekcji 4, przeniesiona z treści danych na protokół ich
+udostępniania. Tam chodziło o to, by cisza nie oznaczała bezpieczeństwa, tu o
+to, by **niepełna odpowiedź nie wyglądała na pełną.**
 
-Właściwość ogólna: **tam, gdzie żądanie może być zrealizowane częściowo,
-odpowiedź musi to powiedzieć w odpowiedzi.** Flaga, status, echo faktycznie
-zastosowanych parametrów. Każde z nich kosztuje jedno pole. Bez niego każdy
-konsument każdego takiego punktu końcowego jest o jedną wiarygodną liczbę od
-błędnego wniosku, którego nie może wykryć, a poprawnie wyglądający wynik jest
-z konstrukcji nieodróżnialny od poprawnego.
+**Osiemnasta. Pole, którego znaczenie się zmienia, dostaje nową nazwę, a
+odbiorca liczy klucze, których nie rozpoznaje.** Ta właściwość wynika z odczytu
+ukraińskiego API z 8 września 2026 r., dwa dni po zmianie wprowadzonej w trakcie
+pracy programu zbierającego dane `[zmierzone]`.
 
-To jest niezmiennik sekcji 4 przeniesiony z treści feedu na protokół feedu.
-Tam cisza nie może znaczyć bezpieczeństwa. Tu **częściowa odpowiedź nie może
-wyglądać na kompletną.**
+Od 6 września 2026 r. API dołącza do każdego alarmu listę wpisów o poziomie
+zagrożenia. Odpowiadają one dwustopniowej skali, którą wprowadziła uchwała rządu
+Ukrainy nr 1092 z 4 września 2026 r. Każda zmiana poziomu przesuwa przy tym
+istniejący znacznik czasu `lastUpdate`. Moduł odczytu od przełączenia na to API
+traktował `lastUpdate` jako początek alarmu, i do tamtej pory słusznie, bo nic
+go nie zmieniało w trakcie trwania. Pomiar z 8 września: w jednym mieście poziom
+żółty ogłoszono o 17:22:35, czerwony o 18:01:01, a `lastUpdate` wskazywał
+18:01:00. W jednej odpowiedzi siedem alarmów miało datę eskalacji zamiast daty
+początku i żaden test tego nie wykrył, bo każdy sprawdzał tylko znane sobie
+klucze.
 
-**Osiemnasta. Pole, które zmienia znaczenie, zmienia nazwę, a konsument liczy
-klucze, których nie umie czytać.** Nauczka z ukraińskiego API, 2026-09-08, dwa
-dni po tym, jak zmieniło się pod kolektorem tego projektu `[zmierzone]`.
+Wniosek ma dwie części. Nadawca, zmieniając znaczenie pola, powinien wprowadzić
+nowe pole, podnieść wersję rekordu albo zrobić jedno i drugie; kosztuje go to
+jedną nową nazwę. Drugą stroną tej reguły jest zasada, którą projekt stosuje
+wobec siebie: przy zmianie nazwy każde miejsce w kodzie zachowuje dawny sposób
+odczytu przez dwie podwersje. Odbiorcy potrzebny jest czujnik. Klucze rekordu,
+których parser nie rozpoznaje, są liczone przy każdym zapytaniu, wypisywane w
+podsumowaniu i zapisywane razem z wierszem w rejestrze. Dzięki temu kolejny
+niezapowiedziany klucz widać w dniu, w którym się pojawi, a nie wtedy, gdy ktoś
+przypadkiem przejrzy odpowiedź ręcznie. Obie części wymagają niewielkiego
+nakładu, a dwa dni, które upłynęły od zmiany do jej wykrycia, okazały się
+znacznie droższe.
 
-2026-09-06 API dołączyło do każdego alarmu listę rekordów poziomu -
-dwustopniowy schemat wprowadzony uchwałą rządu Ukrainy nr 1092 z 2026-09-04 -
-i zaczęło podbijać istniejący znacznik `lastUpdate` alarmu przy każdej zmianie
-poziomu. Od przełączenia adapter czytał `lastUpdate` jako początek alarmu,
-poprawnie: do tego dnia nic nie zmieniało alarmu w trakcie jego trwania. Zmierzone
-2026-09-08: miasto poszło na żółto o 17:22:35 i na czerwono o 18:01:01, a jego
-`lastUpdate` czytało się 18:01:00. Siedem alarmów w jednym ładunku było
-datowanych od eskalacji, a nie od początku, i ani jedno sprawdzenie nie
-zawiodło, bo każde sprawdzenie czytało tylko klucze, które znało.
+**Dziewiętnasta. Poziom zagrożenia to słowo nadawcy: ma własny znacznik czasu,
+towarzyszy stanowi alarmu i nigdy nie wchodzi w skład jego tożsamości.** Ta
+właściwość wynika z tej samej zmiany, rozpatrzonej pod kątem tego, co dzięki
+niej opublikowano, a nie tego, co zepsuła
+`[zmierzone: jedna utrwalona odpowiedź z czterdziestoma alarmami i wiersze zapisane później]`.
 
-Dwie połowy. Wydawcy: pole, którego znaczenie się zmienia, jest nowym polem
-albo podbiciem wersji rekordu, albo jednym i drugim. Reguła zmiany nazwy,
-którą ten projekt stosuje do siebie - każde miejsce odczytu trzyma stary
-czytnik przez dwie wersje minor - ma to jako swoją drugą stronę, a kosztem
-jest nazwa. Konsumenta: kanarek. Każdy klucz na rekordzie, dla którego parser
-nie ma odczytu, jest liczony per odpytanie, drukowany w podsumowaniu i
-utrwalany z wierszem próby, żeby następny niezapowiedziany klucz był widoczny
-w dniu, w którym się pojawi, a nie w dniu, w którym ktoś otworzy ładunek ręcznie.
-Obie połowy są tanie; dwa dni między zmianą a jej odkryciem nie były.
+Wpisy o poziomie tworzą listę przypisaną do alarmu, a ich kolejność nie
+odzwierciedla czasu. Każdy zawiera stopień, uzasadnienie w postaci wolnego
+tekstu oraz chwilę utworzenia; tekst ten mniej więcej równie często tylko
+powtarza stopień w nawiasie, co wnosi coś nowego. Poziom zmienia się w obrębie
+tego samego alarmu, bez zdarzenia kończącego i bez tworzenia nowego. Sześć z
+czterdziestu alarmów miało oznaczenie `Red` z datą między 2022 r. a sierpniem
+2026 r., bez żadnej innej wskazówki co do wieku.
 
-**Dziewiętnasta. Poziom zagrożenia jest słowem wydawcy, niesie własny
-znacznik czasu, siedzi obok stanu i nigdy wewnątrz tożsamości.** Nauczka z tej
-samej zmiany, czytanej pod kątem tego, co publikuje, a nie dla tego, co
-zepsuła `[zmierzone: jeden przechwycony ładunek czterdziestu alarmów i wiersze
-zapisane od tamtej pory]`.
+Wynikają z tego cztery zasady dotyczące pola poziomu zagrożenia, które nadawca
+może przyjąć wprost:
 
-Rekordy poziomu to lista per alarm; kolejność listy nie koduje czasu; każdy
-rekord ma poziom, powód w wolnym tekście, który mniej więcej tak samo często
-powtarza poziom w nawiasie, jak mówi cokolwiek, i moment utworzenia rekordu.
-Poziom zmienia się wewnątrz alarmu bez zdarzenia końca i bez nowego alarmu.
-Sześć z czterdziestu alarmów niosło `Red` datowane między 2022 a sierpniem
-2026 bez żadnego innego znaku wieku.
+- **Słowo jest publikowane dosłownie, a słownik pozostaje otwarty.** Odbiorca
+  przejmuje napis nadawcy bez zmian, a wartość, której nie rozpoznaje, traktuje
+  jako nieustaloną, nigdy jako najbliższy kolor z własnej palety. To zasada z
+  właściwości jedenastej, zastosowana do kolejnego pola.
+- **Każdy wpis o poziomie zawiera chwilę jego ogłoszenia.** Poziom bez znacznika
+  czasu to kolor nieznanego wieku. Sześć starych wpisów `Red` pokazuje, czym to
+  grozi: odbiorca, który je narysuje, pokaże zagrożenie ogłoszone w pierwszym
+  roku wojny tak, jakby dotyczyło bieżącej nocy.
+- **Uzasadnienie pozostaje osobnym polem.** Tekst objaśniający poziom nie jest
+  poziomem, a kto próbuje wydobyć jedno z drugiego, dostanie mieszankę obu.
+- **Eskalacja nie jest nowym alarmem.** O tożsamości epizodu decyduje alarm.
+  Odbiorca, który do klucza wierszy włącza także poziom, przy każdej takiej
+  zmianie tworzy fikcyjny rekord; w opisanej wyżej odpowiedzi byłoby ich siedem.
+  Poziom jest atrybutem wiersza i odczytuje się go ponownie. Sam wiersz
+  odpowiada alarmowi, który pozostał sobą, choć zmienił kolor.
 
-Co to rozstrzyga o polu poziomu zagrożenia, w czterech zdaniach, które wydawca
-może przyjąć:
+Jest też część dotycząca odbiorcy, którą projekt stosuje wobec siebie: **poziom
+zagrożenia najpierw się zbiera, a dopiero potem pokazuje.** Zasady tego, co
+zobaczy czytelnik, formułuje się na podstawie zgromadzonych wierszy, a nie
+jednej utrwalonej odpowiedzi, bo reguła oparta na założonej postaci danych to
+dokładnie ta klasa błędów, którą opisuje poprzednia właściwość. Do tego czasu
+strona zapowiada, że poziom wkrótce się pojawi, i wskazuje, kto będzie go
+ustalał.
 
-- **Słowo jest publikowane dosłownie, a słownik jest otwarty.** Konsument
-  powtarza słowo wydawcy dosłownie, a tego, którego nie rozpoznaje, traktuje jako
-  nieznany, nigdy jako najbliższy kolor, który zna: reguła właściwości
-  jedenastej, zastosowana do drugiego pola.
-- **Każdy rekord poziomu niesie moment, w którym go ogłoszono.** Poziom bez
-  znacznika czasu to kolor o nieznanym wieku, a sześć starych rekordów `Red`
-  to jest to, jak to wygląda: konsument, który je maluje, rysuje zagrożenie
-  ogłoszone w pierwszym roku wojny tak, jakby było dzisiejsze.
-- **Powód zostaje osobnym polem.** Tekst wyjaśniający poziom nie jest
-  poziomem, a konsument, który parsuje jedno po drugie, znajdzie oba.
-- **Eskalacja nie jest nowym alarmem.** Tożsamością epizodu jest alarm.
-  Konsument, który kluczuje swoje wiersze także na poziomie, otwiera wiersz
-  widmo przy każdej eskalacji - siedem w ładunku powyżej. Poziom jest
-  właściwością wiersza i jest czytany na nowo; wiersz jest alarmem, który się
-  nie zmienił, gdy zmienił się jego kolor.
+**Dwudziesta. Odwołanie wskazuje w osobnym polu alarm, którego dotyczy, a data
+ważności rzeczywiście wyznacza koniec.** Ta właściwość wynika z odczytu danych
+RSO z 16 września 2026 r.
+`[zmierzone: jedna para komunikatów, pobrana przez serwer strony tego projektu]`.
 
-I połowa konsumenta, której ten projekt trzyma się sam: **poziom zagrożenia
-jest przechwytywany, zanim jest pokazywany.** Reguła tego, co widzi czytelnik,
-jest pisana na zapisanych wierszach, a nie na jednym przechwyconym ładunku, bo
-reguła napisana z założonego kształtu to klasa defektu, którą zapisuje
-poprzednia właściwość. Do tego czasu strona mówi, że poziom nadchodzi, i
-mówi, czyj to będzie poziom.
+Tamtego ranka o 7:05 w kategorii `ogolne` pojawił się komunikat zatytułowany
+*Alert RCB*, o identyfikatorze 23337896, dotyczący rosyjskiego ataku
+powietrznego na Ukrainę. O 7:36 nadszedł drugi, o numerze 23337898 i tytule
+*ALERT RCB- ODWOŁANIE ZAGROŻENIA*. Oba miały w polu `valid_to` godzinę 23:59
+tego samego dnia. Odwołanie jest osobnym komunikatem. Nie wskazuje
+identyfikatora alarmu, który kończy, a żaden z rekordów nie łączy ich ze sobą.
+To, że drugi dotyczy końca pierwszego, człowiek odczytuje z tytułu i z treści.
 
-**Dwudziesta. Koniec mówi, co kończy, w polu, a pole nazwane końcem jest
-końcem.** Nauczka z odczytu strumienia RSO 2026-09-16
-`[zmierzone: jedna para komunikatów, odczytana na hoście strony tego projektu]`.
+Wniosek znowu ma dwie części. Po stronie nadawcy: **odwołanie musi wskazywać
+alarm, którego dotyczy.** CAP ma do tego gotową formę: `Cancel` z elementem
+`references`, w którym podaje się identyfikator odwoływanego `Alert` (sekcja
+10.1); po jego otrzymaniu indeks z sekcji 10.2 usuwa alarm. Pole ważności,
+którego nadawca nie używa do kończenia zagrożeń, może wprowadzać w błąd bardziej
+niż jego brak, bo wygląda na odpowiedź. Odbiorca, który uzna `valid_to` za
+chwilę zakończenia, pokaże województwa objęte tym ostrzeżeniem jako zagrożone od
+7:36 do 23:59. Dokładnie tak postępował ten projekt w wersji 0.55.0.0, której
+nigdy nie zainstalowano; dopiero 0.55.1.0 zaczęła łączyć oba komunikaty w parę
+(F169, D-055).
 
-O 07:05 tego ranka kategoria `ogolne` niosła komunikat zatytułowany *Alert
-RCB*, identyfikator 23337896, o rosyjskim ataku powietrznym na Ukrainę. O
-07:36 przyszedł drugi, identyfikator 23337898, zatytułowany *ALERT RCB-
-ODWOŁANIE ZAGROŻENIA*: odwołanie. Oba niosły `valid_to` na 23:59 tego samego
-dnia. Odwołanie jest osobnym komunikatem. Nie wskazuje żadnego identyfikatora
-alarmu, który kończy, i nic w żadnym z dwóch rekordów ich nie łączy; to, że
-drugi kończy pierwszy, wyczytuje z tytułu i z prozy człowiek.
-
-Dwie połowy, jak wcześniej. Wydawcy: **koniec jest wiadomością, która mówi, co
-kończy**, a CAP ma już na to formę, `Cancel`, którego `references` niesie
-identyfikator `Alert` (sekcja 10.1), po którym indeks z sekcji 10.2 usuwa
-alarm. Pole ważności, którego wydawca nie używa do kończenia, jest gorsze niż
-brak pola, bo wygląda jak odpowiedź: konsument, który bierze `valid_to` za
-koniec zagrożenia, pokazuje województwa tego alarmu jako zagrożone od 07:36 do
-23:59, a własna kompozycja tego projektu robiła dokładnie to w 0.55.0.0,
-nigdy niezainstalowanej, dopóki 0.55.1.0 nie sparowała obu (F169, D-055).
-
-Konsumenta: bez odwołania, za którym można pójść, musi parować koniec z
-alarmem po tym, co da się przeczytać, po województwach, które każdy z nich
-nazywa, i po kolejności, w jakiej przyszły, a reguła parowania napisana z
-jednej pary jest regułą o jednej parze, dopóki tydzień zapisanych wierszy nie
-powie inaczej. Dlatego zapis trzyma każdy komunikat, który ten projekt czyta,
-a nie tylko te, które klasyfikuje.
-
+Po stronie odbiorcy: skoro nie ma odnośnika, odwołanie trzeba powiązać z alarmem
+na podstawie tego, co jest dostępne, czyli województw wymienionych w obu
+wiadomościach i kolejności, w jakiej nadeszły. Reguła łączenia wyprowadzona z
+jednej pary opisuje tylko ten przypadek, dopóki tydzień zapisanych wierszy nie
+pokaże czegoś innego. Dlatego projekt zachowuje każdy odczytany komunikat, a nie
+tylko te, które sklasyfikował.
 
 ## 5. Zarzut i odpowiedź
 
-**„Publiczny feed alarmowy pomaga przeciwnikowi mierzyć naszą reakcję."**
+**„Publiczny kanał alarmowy ułatwi przeciwnikowi mierzenie naszej reakcji”.**
 
-Zarzut zasługuje na odpowiedź, a nie na zbycie, i odpowiedź istnieje.
+Ten zarzut zasługuje na rzeczowe potraktowanie, a nie na zbycie, i da się na
+niego odpowiedzieć.
 
-Ukraina publikuje znacznie mniej, niż prosi sekcja 3 - publiczny kanał z
-konwencją nazewniczą, bez kodów rejestru, bez schematu, bez sygnału życia - i
-robi to przez całą wojnę, pod przeciwnikiem atakującym codziennie. Tam ten
-zarzut ma największą siłę i tam odpowiedź na niego jest testowana w praktyce,
-a nie argumentowana.
+Ukraina publikuje znacznie mniej, niż postuluje sekcja 3: ma publiczny kanał z
+konwencją nazewniczą, ale bez kodów rejestru, bez schematu i bez sygnału życia.
+Tak jest przez całą wojnę, mimo codziennych ataków przeciwnika. Tam zarzut ma
+największą siłę, a odpowiedź na niego jest sprawdzana w praktyce, nie w
+dyskusji.
 
-Bliżej domu: stan alarmowy jest już obserwowalny dla każdego, kto ma uszy,
-okno albo telefon. Syreny słychać, ustawowy SMS dociera do telefonów w całym
-kraju i oba są publiczne w chwili wydania. To, co jest obecnie
-nieopublikowane, to nie informacja. To **format**.
+W Polsce to, czy trwa alarm, może już dziś stwierdzić każdy, kto ma słuch, okno
+albo telefon. Syreny słychać, Alert RCB wysyłany na podstawie ustawy dociera do
+abonentów w całym kraju, a oba sygnały stają się publiczne w chwili nadania.
+Tym, czego brakuje, nie jest więc informacja, lecz **jej format**.
 
-Nieczytelny format nie chroni celu przeciwnika przed obserwacją. Wyklucza
-obywateli, badaczy, gminy i narzędzia dostępności z używania informacji, która
-już została opublikowana, podczas gdy przeciwnik z odbiornikiem, telefonem
-albo kimś stojącym na zewnątrz nie jest nim dotknięty.
+Format nieczytelny dla maszyn nie chroni przed obserwacją celów ataku. Wyklucza
+natomiast obywateli, badaczy, gminy i narzędzia wspierające dostępność z
+korzystania z informacji, które już opublikowano. Przeciwnika, który ma
+odbiornik, telefon albo kogoś na miejscu, w ogóle to nie dotyczy.
 
-Jeśli jakieś konkretne pole naprawdę niesie ryzyko, odpowiedzią jest
-wyspecyfikowanie tego pola poza feed i powiedzenie tego, bo do tego jest
-specyfikacja. Nie jest to argument przeciw publikowaniu reszty.
+Jeśli jakieś konkretne pole rzeczywiście niesie ryzyko, należy je wyłączyć z
+kanału i jawnie to zapisać; do tego właśnie służy specyfikacja. Nie jest to
+jednak argument przeciwko publikowaniu pozostałych danych.
 
 ## 6. Czego ten dokument nie postuluje
 

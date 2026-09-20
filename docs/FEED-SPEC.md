@@ -292,12 +292,13 @@ they are not. This is not hypothetical: it is the founding invariant of this
 repository, that unknown never resolves to clear, and several entries in its
 defect log are instances of getting it wrong internally.
 
-The fix is trivial and has to be designed in from the start: a periodic
+The fix is simple, but it has to be designed in from the start: a periodic
 heartbeat carrying "as of this timestamp, the state is X", published whether or
 not the state changed. A consumer that has not seen a heartbeat within the
 stated interval knows it is blind, and can say so, instead of displaying calm.
 
-An alerting feed without a heartbeat is a system that fails silently by design.
+An alerting feed without a heartbeat is therefore a system whose failures, by
+design, go unnoticed.
 
 **Measured, and it is worse than the argument above assumed.** This project
 ran its own collector against the Ukrainian channel unattended for a night and
@@ -522,14 +523,15 @@ property is a limit that exists and is not stated, because a consumer then
 discovers it by being cut off.
 
 **Note on the first property, from the same experience.** Section 3 argues that
-an application process is a permission regime with an RSS icon. This project
-has since consumed the other kind under terms revocable without cause, and the
-cost is sharper than the original wording suggests: **reproducibility becomes a
-property of the interface rather than of the consumer's diligence.** A second
-reader cannot re-run a measurement that rests on an agreement they were not
-party to and may not be granted. The Ukrainian channel's measurements in
-section 1 are checkable by anyone. The ones resting on a keyed interface are
-checkable by whoever holds the key.
+a feed available only after an application is a service provided by permission
+rather than public infrastructure. This project has since consumed the other
+kind under terms revocable without cause, and the cost is sharper than the
+original wording suggests: **reproducibility becomes a property of the interface
+rather than of the consumer's diligence.** A second reader cannot re-run a
+measurement that rests on an agreement they were not party to and may not be
+granted. The Ukrainian channel's measurements in section 1 are checkable by
+anyone. The ones resting on a keyed interface are checkable by whoever holds the
+key.
 
 **Eleven. A category must say what it does not distinguish.** Learned in
 production, by getting it wrong.
@@ -684,18 +686,17 @@ something this project measured.
 who issued it cannot, and a consumer that labels the whole block with one
 issuer's name is wrong about most of it.
 
-This is not a request for a rich taxonomy. It is the observation that a
-publisher which already classifies, already routes by that classification, and
-already publishes the vocabulary as a document, leaves it out of the one place
-it would cost nothing: the record. One field per message, drawn from a list
-that already exists.
+This is not a request for a rich taxonomy. The publisher already classifies,
+routes by that classification and publishes the vocabulary as a document; the
+category is missing only from the one place where adding it would cost nothing,
+the record. One field per message, drawn from a list that already exists.
 
 **What it costs the consumer to work around, precisely.** Five requests instead
 of one, plus bookkeeping to remember which request produced which row, plus the
-certainty that any consumer who does not know to do this has silently mislabelled
-everything. The workaround exists. That it exists is not an argument against the
-field; it is a measure of what the missing field costs, multiplied by every
-consumer.
+certainty that any consumer who does not know to do this has silently
+mislabelled everything. The workaround exists, and it is better read as a
+measure of what the missing field costs, multiplied by every consumer, than as
+an argument against the field.
 
 **And the category that would matter most is not among the five.** The air
 alert this project read on 2026-09-16 arrived in `ogolne`, the general
@@ -725,40 +726,40 @@ rather than here: the name resolving is not the host answering, and in a log
 the two look the same.
 
 **Seventeen. A parameter the server does not honour must be refused, not
-accepted.** Learned by reading the RSO stream on 2026-08-22, and it is three
-findings wearing one shape.
+accepted.** Learned by reading the RSO stream on 2026-08-22, and it brings
+together three findings of the same kind.
 
 Three ways this feed returned a partial answer indistinguishable from a
 complete one, in a single evening of reading it:
 
-- **A scope named "all" that is not all.** The five categories hold 461
-  distinct communiques and share none. The `wszystkie` scope returns 156. The
-  305 it omits are one category, and nothing in the payload, the pagination
+- **The scope named "all" returns part of the feed.** The five categories hold
+  461 distinct communiques and share none. The `wszystkie` scope returns 156.
+  The 305 it omits are one category, and nothing in the payload, the pagination
   block or the integration page mentions the omission. A collector reading the
   obvious address reads a third of the feed and has no signal that it did. The
-  exclusion may well be deliberate - the site's own navigation treats water
-  levels as a separate tab - and deliberate-and-unstated is exactly the
-  problem: the scope is still called *all*, in a path where the excluded
-  category is a legal value of the same parameter, and nothing a consumer can
-  read says otherwise.
-- **A count named for the total that counts the page.** The pagination
+  exclusion may well be deliberate, since the site's own navigation shows water
+  levels in a separate tab; if it is, stating it would close the gap, because
+  the scope is still called *all*, in a path where the excluded category is a
+  legal value of the same parameter, and nothing a consumer can read says
+  otherwise.
+- **The count named for the total reports the size of the page.** The pagination
   attribute is `totalItems`. On page 1 it reads 20; on page 2 it reads 20; on
   the unpaged request over the same data it reads 156. A consumer deriving a
   page count from it divides 20 by 20 and stops after one page of eight. The
   stop condition that does work is an empty page, which the endpoint returns
   with status 200.
-- **Date parameters that are accepted and ignored.** The publisher's
-  integration page documents `from` and `to` for its search interface. Passed
-  to the XML endpoint, which accepts them without complaint, with a seven-day
-  window, the response was 200 and contained 150 records spanning seven
-  months, of which ten fell inside the window. A consumer counting rows sees a
-  plausible number and concludes the filter works.
+- **Date parameters are accepted but not applied.** The publisher's integration
+  page documents `from` and `to` for its search interface. Passed to the XML
+  endpoint, which accepts them without complaint, with a seven-day window, the
+  response was 200 and contained 150 records spanning seven months, of which ten
+  fell inside the window. A consumer counting rows sees a plausible number and
+  concludes the filter works.
 
-The third is the worst because it is the cheapest to prevent. **An unrecognised
-parameter should produce a 400, not a 200.** Silently ignoring it converts a
-consumer's mistake into a consumer's false belief, and the false belief
-survives every check the consumer knows how to run: the request succeeded, the
-data parsed, the count was reasonable.
+The third is the easiest to prevent. **An unrecognised parameter should produce
+a 400, not a 200.** Silently ignoring it converts a consumer's mistake into a
+consumer's false belief, and the false belief survives every check the consumer
+knows how to run: the request succeeded, the data parsed, the count was
+reasonable.
 
 The general property: **where a request can be partially honoured, the response
 must say so in the response.** A flag, a status, an echo of the parameters
@@ -795,10 +796,10 @@ unannounced key is visible on the day it lands rather than on the day someone
 opens a payload by hand. Both halves are cheap; the two days between the
 change and its discovery were not.
 
-**Nineteen. A severity is the publisher's word, carries its own timestamp,
-sits beside the state and never inside the identity.** Learned from the same
-change, read for what it publishes rather than for what it broke `[measured:
-one captured payload of forty alerts, and the rows stored since]`.
+**Nineteen. A severity is the publisher's word, carries its own timestamp, sits
+beside the state and never inside the identity.** Learned from the same change,
+read for what it publishes rather than for what it broke
+`[measured: one captured payload of forty alerts, and the rows stored since]`.
 
 The level records are a list per alert; the list's order does not encode
 time; each record carries a level, a free-text reason that repeats the level
@@ -845,15 +846,15 @@ a communique of its own. It names no identifier of the alert it ends, and
 nothing in either record links the two; that the second ends the first is read
 from its title and its prose, by a person.
 
-Two halves, as before. The publisher's: **an end is a message that says what
-it ends**, and CAP already has the form, a `Cancel` whose `references` carries
-the identifier of the `Alert` (section 10.1), after which the index of section
-10.2 drops the alert. A validity field the publisher does not use to end
-things is worse than no field, because it looks like the answer: a consumer
-that takes `valid_to` as the end of the threat shows the voivodeships of that
-alert as under threat from 07:36 to 23:59, and this project's own composition
-did exactly that at 0.55.0.0, which was never installed, until 0.55.1.0 paired
-the two (F169, D-055).
+Two halves, as before. The publisher's: **an end is a message that says what it
+ends**, and CAP already has the form, a `Cancel` whose `references` carries the
+identifier of the `Alert` (section 10.1), after which the index of section 10.2
+drops the alert. A validity field that the publisher does not use to end an
+alert can mislead more than a missing one, because it looks like the answer: a
+consumer that takes `valid_to` as the end of the threat shows the voivodeships
+of that alert as under threat from 07:36 to 23:59, and this project's own
+composition did exactly that at 0.55.0.0, which was never installed, until
+0.55.1.0 paired the two (F169, D-055).
 
 The consumer's: with no reference to follow, it has to pair an end with an
 alert by what it can read, the voivodeships each names and the order they
