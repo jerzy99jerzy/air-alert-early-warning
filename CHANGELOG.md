@@ -16,6 +16,45 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.3.0 - 2026-09-21
+
+**The host was read in full, and the section describing it was dated to one
+install and described two others.** `docs/DEPLOYMENT.md` said `Host state
+measured: 2026-09-10`; its table's first row named the install of 0.55.2.0 and
+thirteen rows under it described 0.53.4.0. The reading of 2026-09-21 replaces the table, meets the
+install half of T85, and found one defect in the code that writes the
+evidence.
+
+- **F183. The RSO reader timed every attempt and wrote none of the times
+  down.** `mavo rso` now passes the read's latency and the refusal's wait to
+  `feed_attempts`, as `mavo airspace` always has. On the host 775 of 775 RSO
+  rows read NULL beside 457 airspace rows that did not.
+  `tests/test_cli.py::test_rso_times_every_attempt_it_logs`, red on the
+  previous code.
+- **F184. The host section was dated to one install and described two others.**
+  Re-read whole; the 0.53.4.0 rows kept unchanged under a dated heading of
+  their own; the deploy history gains 0.55.2.0, 0.54.8.0 and 0.54.2.0 and stops
+  calling 0.53.4.0 current.
+- **`docs/DEPLOYMENT.md` 1.51, with Appendix A: the whole host read once.** The
+  package verified against the tag by content; twelve units with their spacing
+  measured over forty hours; paths, permissions and eleven points of return
+  (274 MB, 4.2 times the store they protect); the store table by table, growing
+  9.3 MB a day since the install against 1.4 before, mostly RSO revisions; the
+  contract; the run log at its ceiling; the journal's projected cap; and what
+  the reading does not establish. The 0.55.0.0 install section quotes the two
+  units the host runs in place of the plan.
+- **The plan PAŻP publishes does carry `ACTIVATED`**, read hour by hour from
+  this host's journal: 85 from Saturday evening until 06:00 UTC on Sunday, none
+  on Sunday, 91 from mid-morning on Monday, and the site's own reader held the
+  same plan in every hour the two overlapped. Recorded in Appendix A because it
+  settles a question the consumer had open.
+- **T85's install half met; T87 and T88 opened.** T87: the API collector and
+  the delivery unit run with none of the confinement the other four carry.
+  T88: whether the reading becomes a `mavo` subcommand, which D-038 requires of
+  anything that opens the store.
+- **`mavo/liveness.py`**: the RSO and PAŻP cadences are measured, not declared.
+- **`docs/METHODOLOGY.md` 2.68**: F183 and F184.
+
 ## 0.55.2.5 - 2026-09-20
 
 **The web-tier document described a map the reader stopped getting.**

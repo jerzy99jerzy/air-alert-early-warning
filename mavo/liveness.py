@@ -85,13 +85,13 @@ class FeedSpec:
 #:
 #: **RSO and PAŻP from 0.55.0.0 (D-053), with role `context`.** Until then RSO
 #: was absent deliberately, because no unit collected it and a spec would have
-#: published `unknown` for ever. The release that adds these two rows is the
-#: release whose deployment installs `mavo-rso.timer` and `mavo-airspace.timer`,
-#: so the rows go from `unknown` to a measured state on the first cycle after
-#: install. The cadences below are **declared, not read**: they are the values
-#: those units are written with, and `docs/DEPLOYMENT.md` owes the `systemctl
-#: cat` reading that turns them into measured ones, exactly as the two above
-#: were turned on 2026-09-08.
+#: published `unknown` for ever. Both units were installed with 0.55.2.0 on
+#: 2026-09-19 and both cadences are **measured, 2026-09-21**: `systemctl cat`
+#: reads `OnUnitActiveSec=900` and `OnUnitActiveSec=300`, and forty hours of
+#: `feed_attempts` put the spacing at a median of 931 s and 316 s, the
+#: configured value plus the randomised delay and the run. The units are
+#: quoted in `docs/DEPLOYMENT.md` where their plan stood, and the spacing is in
+#: its Appendix A.
 #:
 #: `context` is neither primary nor watchman. Neither feed is a delivery path of
 #: the Ukrainian system, so neither can make the page blind about Ukraine and

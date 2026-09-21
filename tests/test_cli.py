@@ -256,6 +256,26 @@ def test_rso_exits_three_when_any_category_refused(
     assert all(a["items"] is None for a in attempts)
 
 
+def test_rso_times_every_attempt_it_logs(tmp_path: Path) -> None:
+    """F183. A read and a refusal both carry their duration, as PAŻP's rows do.
+
+    `elapsed_s` is NULL only where the caller did not time itself. The RSO path
+    timed itself and dropped the figure, so every RSO row on the host read NULL
+    beside airspace rows written by the same kind of loop.
+    """
+    good = tmp_path / "page.xml"
+    good.write_text(Path("tests/fixtures/rso_page.xml").read_text(encoding="utf-8"),
+                    encoding="utf-8")
+    broken = tmp_path / "broken.xml"
+    broken.write_text("<newses><news><id>1</id>", encoding="utf-8")
+    for stub, outcome in ((good, "read"), (broken, "refused")):
+        store_path = tmp_path / f"{outcome}.sqlite3"
+        main(["rso", "--stub", str(stub), "--category", "ogolne", "--store", str(store_path)])
+        (attempt,) = EventStore(store_path).attempts("rso")
+        assert attempt["outcome"] == outcome
+        assert attempt["elapsed_s"] is not None and attempt["elapsed_s"] >= 0.0
+
+
 def test_collect_records_the_poll_it_made(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

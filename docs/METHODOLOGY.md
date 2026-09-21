@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.67
+Document:  docs/METHODOLOGY.md, version 2.68
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,68 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F184, 0.55.3.0. The host section was dated to one install and described two others
+
+`docs/DEPLOYMENT.md` says of its host table that it "is the newest reading,
+the deploy history below is every reading, and they share no rows". From
+0.55.2.2 the table's first row named the install of 0.55.2.0 on 2026-09-19,
+re-read from the machine and correct, and the thirteen rows under it
+(`Installed at`, `Wheel`, `Point of return` and ten more) described the
+install of 0.53.4.0 on 2026-09-09. The deploy history two screens further down
+still marked 0.53.4.0 `current`, and the line above both said the host was
+measured on 2026-09-10, the day of two further installs that neither
+described. Found on 2026-09-21 by reading the whole host at once, which is the
+first reading since 2026-09-10 that was not about one row.
+
+**Class.** F117 and F170, together in one table. A row re-measured on its own
+is repaired alone, because each repair touches the row it was about: 0.55.2.2
+re-read the `Installed` row and was right to, and nothing asked whether the
+rows beneath it described the same install. The three checks on this section
+all passed throughout, each reading one thing: the freshness check a date,
+the version check one row, the distance check two.
+
+**Repair.** The table is re-read whole (Appendix A of that document) and holds
+only the install it names. The thirteen rows move, unchanged, under a heading
+of their own that dates them as the record of 0.53.4.0; the deploy history
+gains 0.55.2.0, 0.54.8.0 and 0.54.2.0 and stops calling 0.53.4.0 current. No
+check is added: which install a row is about is prose, and the reading every
+fourteen days that the freshness check already forces is what re-reads it,
+provided it reads the whole table rather than the row that prompted it.
+
+**Reopen condition:** a row in the host table that names a date or a version
+belonging to an install other than the one its first row names.
+
+### F183, 0.55.3.0. The RSO reader timed every attempt and wrote none of the times down
+
+`mavo rso` measures each read (`poll_once` returns the page and how long it
+took, and the summary line prints it) and, on a refusal, the wait. Neither
+reached `feed_attempts`: the read row was written without `elapsed_s`, and the
+refusal row was written before the wait was computed. Measured on the host on
+2026-09-21: `elapsed_s` NULL on 775 of the 775 RSO rows written since the
+install, and on none of the 457 PAŻP rows written over the same forty hours by
+`mavo airspace`, which passes both. The column's own comment says NULL means
+the caller did not time itself; this caller did, so every RSO row stated
+something false about its own attempt, in the column T55 and D-036 created so
+that a stall and a fast rejection could be told apart.
+
+**Class.** F118's shape inside one function pair: a repair that reaches one
+caller of a writer and not the other. `mavo rso` wrote its attempt rows from
+0.38.0.0; 0.41.0.0 added `elapsed_s` and gave it to the channel collector, and
+the RSO path, the other caller of the same two writers, kept the call it had.
+0.55.0.0 then wrote `mavo airspace` as the twin of `mavo rso` and gave it the
+duration, so the omission sat beside its own repair for three releases. The
+tests of the RSO command asserted outcome and item counts and never the
+duration.
+
+**Repair.** Both writes pass the duration, and the refusal's is taken before
+its row is written; `tests/test_cli.py::test_rso_times_every_attempt_it_logs`
+reads the column for a read and for a refusal and was red on the previous
+code. Rows written before 0.55.3.0 reaches the host stay NULL, which is true of
+them.
+
+**Reopen condition:** a collector that writes `feed_attempts` without
+`elapsed_s` on a path where it measured one.
 
 ### F182, 0.55.2.5. A privacy property this document kept after the page lost it
 

@@ -7,7 +7,7 @@ godzinach. Projekt prywatny, w fazie pre-alfa; nikt nie dostaje z niego dziś
 Dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.26
+Document:  docs/BRIEF-PL.md, version 2.27
 Measured:  każdą zmierzoną liczbę z tego pliku bramka zestawia ze
            STATUS.json przy każdym przebiegu, więc ręczy za nią to
            porównanie, a nie data w nagłówku. Wartości, z którymi są
@@ -200,7 +200,7 @@ konstrukcja jest ułożona wokół tego rozróżnienia.
 Przy prywatnym projekcie wiarygodność waży więcej niż technologia, więc zamiast
 zapewnień konkrety. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Rejestr błędów ma 160 wpisów.** Każdy mówi, co się zepsuło, dlaczego nikt tego
+**Rejestr błędów ma 162 wpisy.** Każdy mówi, co się zepsuło, dlaczego nikt tego
 nie zauważył i jakiej klasy był to błąd. Są tam także wpisy przeciw interesowi
 projektu, w tym ten o wyniku 0 na 20 oraz ten, w którym dokumentacja twierdziła,
 że coś jest sprawdzane, a nie było. Osobno zapisano **54 decyzje projektowe**,
@@ -217,7 +217,7 @@ raportowana, wywnioskowana, założona. Te 57% wyżej to liczba cudza i jest tak
 oznaczona, razem z uwagą, że jej źródło mogło mieć na myśli inny obszar niż ten
 projekt.
 
-**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 937 testów, w
+**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 938 testów, w
 tym 13 scenariuszy ataku na zabezpieczenia samego projektu; pokrycie kodu
 wynosi 95,91% przy progu 95%, którego nigdy się nie obniża. Same ataki także są
 sprawdzane: 12 z 13 zweryfikowano, psując celowo chronioną przez nie kontrolę i

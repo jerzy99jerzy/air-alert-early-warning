@@ -4,14 +4,14 @@
 
 ### Where the backlog stands
 
-**43 of 84 closed, 41 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**43 of 86 closed, 43 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 38 | Finished, with the release that closed it named in the entry |
 | `moved` | 5 | Owned by another repository; the entry here is a pointer, not a copy |
 | `ready` | 31 | Nothing external blocks it; it needs a session |
-| `decision` | 5 | Waiting on a judgement rather than on work |
+| `decision` | 7 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
 
@@ -27,9 +27,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 
 **Tier 1, 12 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows)
 
-**Tier 2, 17 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T82](#t82-the-channels-silence-measured-as-a-distribution)
+**Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T87](#t87-the-primary-collector-and-the-delivery-unit-run-unconfined)
 
-**Tier 3, 12 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running)
+**Tier 3, 13 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T88](#t88-the-host-reading-as-a-mavo-subcommand)
 
 ### By sprint
 
@@ -41,7 +41,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows), [T87](#t87-the-primary-collector-and-the-delivery-unit-run-unconfined), [T88](#t88-the-host-reading-as-a-mavo-subcommand) |
 
 <!-- index:end -->
 
@@ -2765,6 +2765,23 @@ reported from the consumer's session, the areas page showing the producer's
 blocks (`data-state` on `#rcb` and `#airspace`) with the consumer's own timers
 still running beside them, which is the handover observed rather than read.
 
+**The install half is met**, read on the host on 2026-09-21 and recorded at
+0.55.3.0 (`docs/DEPLOYMENT.md`, the 0.55.0.0 section and Appendix A). Both
+units are quoted in place of the plan, with five lines more than it asked for;
+`mavo/liveness.py` calls both cadences measured; the first `snapshot=changed`
+lines came from both readers at 18:38:28 on 2026-09-19; the three
+`[STORE-MIGRATED] created ...` lines are in the report unit's journal alone,
+one second after `pip`; and both feeds have read `delivering` since their
+first read. The areas page showing the producer's block beside the consumer's
+own reader was observed on the wire the same morning for `#airspace`
+(`data-state="active"`, 91 activated, the tiled map's own reader reporting the
+same 91) and not yet for `#rcb`. **The week half is not met**: rows per day
+over seven days, the growth in bytes over a week and the largest `state.json`
+of that week need a reading taken after 2026-09-26 18:36 UTC. The first forty
+hours are in Appendix A, and they already say where the bytes go: 130
+snapshot rows, and a store growing 9.3 MB a day against 1.4 before, most of it
+`communiques`.
+
 **Not this task.** Pointing the consumer's `/airspace.json` at
 `pl_airspace.features` and removing its two readers are the consumer's release.
 
@@ -2780,3 +2797,43 @@ against its text; every threat that reached `valid_to` unended, read for the
 sentence that should have ended it; and the `ALL_CLEAR_*` terms revised from
 that reading, with the count of rows each term matched beside it. A threat the
 publisher ended in words this rule does not recognise reopens D-055.
+
+## T87. The primary collector and the delivery unit run unconfined
+Status: `decision` [tier 2]
+
+Read on the host on 2026-09-21 (`docs/DEPLOYMENT.md`, Appendix A). Four of this
+package's units carry the same five confinement lines: no new privileges, a
+private `/tmp`, the system read-only, home directories hidden, and
+`/var/lib/mavo` as the one writable path. `systemd-analyze security` scores
+them 8.3. `mavo-collect-api.service`, which reads the API key and has been the
+primary source since D-040, carries none of them and scores 9.2, and so does
+`mavo-push.service`, which carries the key to the site host. The ADS-B sampler
+beside them scores 1.5, so the host already holds a worked example.
+
+**The decision.** Whether the two units take the same five lines or the
+tighter set the sampler's unit shows. Neither changes what the units do; both
+are edits on the host that this repository can only quote, and each costs one
+restart window and a reading after it.
+
+**Acceptance.** Both units quoted in `docs/DEPLOYMENT.md` after the edit;
+`systemd-analyze security` read before and after; and one cycle of each
+observed completing under the new unit, which for the API collector is a row
+in `feed_attempts` and for delivery the site's `state.json` staying inside its
+age ceiling.
+
+## T88. The host reading, as a `mavo` subcommand
+Status: `decision` [tier 3]
+
+The reading behind `docs/DEPLOYMENT.md` Appendix A was taken by a session
+script, named there by its sha256, staged on the host and not in this tree. It
+cannot live in `tools/`: it opens the store, D-038 ships such an instrument as
+a `mavo` subcommand, and `tests/lint_domain.py` refuses the alternative. The
+freshness check forces a reading at least every fourteen days, so the question
+is whether a repeatable command is worth its tests: the reading calls
+`systemctl`, `journalctl` and `systemd-analyze`, and the coverage floor holds
+only if each of them is faked.
+
+**Acceptance, if taken.** One invocation on the host producing the appendix's
+sections, with tests that fake the three system commands. If declined, the
+decision recorded with the cost that decided it, and the appendix keeps naming
+the script by its digest.

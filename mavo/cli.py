@@ -819,9 +819,14 @@ def _cmd_rso(args: argparse.Namespace) -> int:
         try:
             page, elapsed = rso_poll_once(transport, url)
         except SourceUnavailable as unreachable_now:
-            if store is not None:
-                store.record_refusal(RSO_FEED, url, started, str(unreachable_now))
+            # F183. Timed before the row is written and written with it, as
+            # `_cmd_airspace` has done since it was added. Until 0.55.3.0 the
+            # wait was measured after the refusal was logged and neither it nor
+            # a read's latency reached the row: 775 of 775 RSO rows on the
+            # host read NULL in the column the 457 airspace rows filled.
             waited = (datetime.now(UTC) - started).total_seconds()
+            if store is not None:
+                store.record_refusal(RSO_FEED, url, started, str(unreachable_now), waited)
             print(f"[UNREACHABLE] {unreachable_now} (attempt {waited:.2f}s)")
             refused += 1
             # No break. One category refusing is not the feed refusing, and
@@ -842,7 +847,8 @@ def _cmd_rso(args: argparse.Namespace) -> int:
                 # write above failed, and every failing run refreshed it
                 # (F176). A run whose writes failed leaves no
                 # read row, and the pipe's liveness says so.
-                store.record_read(RSO_FEED, url, started, len(page.communiques), page.unreadable)
+                store.record_read(RSO_FEED, url, started, len(page.communiques),
+                                  page.unreadable, elapsed_s=elapsed)
             except Exception as failure:  # noqa: BLE001
                 print(f"[STORE-FAILED] {failure}")
                 return 7
