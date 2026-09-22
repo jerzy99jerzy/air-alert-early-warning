@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.68
+Document:  docs/METHODOLOGY.md, version 2.69
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,70 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F186, 0.56.0.0. One threat number named two threats
+
+`tests/harness/CATALOGUE.md`, `tools/harness_mutation.py` and the docstring of
+harness attack A14 have labelled the all-clear control MT15 since sprint 8: an
+all-clear must not speak for the areas its own message says are still under
+alert. In `docs/THREAT-MODEL.md`, MT15 is the directory lock, a pid read across
+namespaces, and the all-clear has no row at all. Both senses are in this
+repository's history: `docs/METHODOLOGY.md` uses MT15 for the all-clear in two
+entries and for the lock in four, and `docs/DATA-FLOW.md` cited it for the
+all-clear. Found at 0.56.0.0, when adding the next row meant choosing the next
+number and the table and the register disagreed about which one that was.
+
+**Class.** An identifier kept in two registers with nothing tying them: the
+threat table numbers rows, the harness labels attacks with those numbers, and
+`check_threat_model_numbering` counts the table while no check reads a label
+against the row it names. Two artefacts agreed with themselves, the shape of
+F156.
+
+**Repair.** The all-clear becomes a row of its own, MT16, and the live pointers
+move to it: the register, the catalogue, the attack's docstring and the
+DATA-FLOW row. The strike tally's row is MT17. Historical entries, here and in
+`docs/reviews/0.54.0.0.md`, are left as written: a record is what was said, and
+this entry is how to read it, **MT15 in the harness sense before 0.56.0.0 means
+MT16**. `tools/harness_mutation.py` now refuses a mutation whose row is absent
+from the threat table or whose attack does not open its docstring with that
+row, so the label and the table cannot part again without the gate saying so.
+
+**Reopen condition:** a harness label that names a threat row describing a
+different harm, which the new check reads as text it cannot judge.
+
+### F185, 0.56.0.0. Seven misreadings of the Air Force's summaries, found by reading them
+
+The strike tally's reader was written against a corpus of 98 summaries and was
+clean on it: 91 nights, every inventory equal to its items. Before the port into
+this tree, eighteen of the summaries were read by hand and every expected figure
+written down before the reader ran on them. That reading found four defects:
+three air-launched missiles read as three Banderols (post 73939); an unnumbered
+ballistic missile dropped from the launched side (74748); impacts with no
+numeral filtered out (66637, 68010, 79455); and a day tally's second sentence
+never read (78115). Fixing them surfaced three more on the corpus: a clause
+saying a missile did not reach its target read as a downed item (67362, 75536),
+a surface-to-air missile read as air-launched (71936), and a form of the word
+for one missing from the numerals, so one missile read as unknown (71719).
+
+**Class.** A check exists only where the source publishes a sum. 86 of the 91
+nights state no launched total, so a misread launched item contradicts nothing
+and a corpus run reports the night consistent. This is "fixtures written
+against implementation" in a new register: a reader and its corpus agreeing is
+agreement, not evidence, because the corpus was the reader's own input and the
+only arithmetic it offered covered five nights.
+
+**Repair.** In 0.55.4.0: the eighteen posts are recordings in the suite, byte for
+byte, each with figures read by hand; each of the reader's checks is observed
+firing on a one-figure change to a recording; and a new check reads the one
+thing a night without an inventory can contradict, more downed than launched in
+one class where both sides carry every count, which would have caught 73939.
+In 0.56.0.0 the rows carry the reader's version, so a figure read by an older
+rule stays attributable when the rule changes. What remains is stated in the
+module's docstring: a shape the 91 nights do not hold will be loud, not
+readable.
+
+**Reopen condition:** a published figure that disagrees with the summary it
+cites, found by anybody reading the two side by side.
 
 ### F184, 0.55.3.0. The host section was dated to one install and described two others
 

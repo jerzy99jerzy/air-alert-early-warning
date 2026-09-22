@@ -23,6 +23,7 @@ from __future__ import annotations
 import json
 import sys
 import tempfile
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -592,9 +593,60 @@ def check_every_kind_is_documented() -> list[str]:
     ]
 
 
+def check_strike_tally() -> list[str]:
+    """`strike_tally` in the states D-056 allows, from two recordings.
+
+    Built from the reader's own output rather than a hand-made dict, because
+    the rules that matter live between a reading and the contract: a flagged
+    night must reach the consumer as their headline alone, and a list with an
+    unknown count must not arrive beside a total derived from it. No store is
+    opened here (D-038: an instrument that opens one ships as a `mavo`
+    subcommand); the store's half, absent before a poll and `null` with no
+    night and never an empty object, is `tests/test_strike.py`.
+    """
+    from mavo import strike
+    from mavo.poland import Block
+    from mavo.sources import kpszsu
+
+    recordings = WEBAPP.parent.parent / "tests" / "fixtures" / "kpszsu"
+    now = datetime(2026, 9, 22, 6, 0, tzinfo=UTC)
+    base = compose([], as_of=now)
+    problems: list[str] = []
+    if "strike_tally" in to_contract(base):
+        problems.append("strike_tally present in a contract composed without a store")
+    if to_contract(replace(base, strike=Block(published=True, value=None))).get(
+            "strike_tally", "absent") is not None:
+        problems.append("a published null strike_tally did not reach the contract as null")
+
+    def value_of(post: str) -> dict[str, object]:
+        body = (recordings / f"{post}.html").read_text(encoding="utf-8")
+        [reading] = kpszsu.read_page(f'data-post="kpszsu/{post}"' + body).readings
+        row = strike.row_of(reading)
+        return strike.value(
+            {"night": row.night, "posted_at": row.posted_at.isoformat(),
+             "status": row.status, "tally": row.tally, "source_url": row.source_url},
+            read_at=now, stale_error=None)
+
+    ok = value_of("79455")
+    published = to_contract(replace(base, strike=Block(published=True, value=ok)))
+    if published.get("strike_tally") != ok:
+        problems.append("a night's value did not reach the contract unchanged")
+    if ok["check"] != "ok" or ok["launched_sum"] is not None:
+        problems.append("79455 published a launched total over counts it did not give")
+    flagged = value_of("72214")
+    if flagged["check"] != "flagged":
+        problems.append("72214 did not read as flagged; the fixture no longer tests the rule")
+    for key in ("downed", "launched", "launched_total", "launched_sum"):
+        if flagged[key] is not None:
+            problems.append(f"a flagged night published our reading in {key}")
+    if flagged["downed_total"] is None:
+        problems.append("a flagged night lost their headline, the one figure it may carry")
+    return problems
+
+
 def main() -> int:
     """Run the contract check. Returns a process exit code."""
-    problems = check_contract() + check_every_kind_is_documented()
+    problems = check_contract() + check_every_kind_is_documented() + check_strike_tally()
     for problem in problems:
         print(f"contract-check: {problem}", file=sys.stderr)
     if problems:

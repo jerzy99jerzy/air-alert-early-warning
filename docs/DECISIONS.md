@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.32
+Document:  docs/DECISIONS.md, version 2.33
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2373,6 +2373,21 @@ version that produced it, so a rule change re-reads the raw text a row keeps
 and the two readings sit side by side. What is not reversible is a figure
 published under the Air Force's name, which is why the flagged state publishes
 their headline alone.
+
+**Built at 0.56.0.0, with four readings of the specification made concrete.**
+(1) On a flagged night the contract carries `downed_total` from their headline
+and nothing else: `downed`, `launched`, `launched_total` and `launched_sum` are
+all `null`, the inventory included, because the check that flags an inventory
+cannot tell a misread inventory from misread items. (2) `downed_total` never
+adds up items, even where the reader may: `mavo/strike.py`'s `headline_total`
+reads their total or their two headline figures and stops. (3) The key has no
+empty state; a store with no readable night publishes `null`. (4) The catch-up's
+unbridged remainder is written as `skipped_before=<id>` in the attempt's
+`detail`, because `feed_attempts` has no `skipped` column and the gap is
+already derivable from `first_id` against the newest `last_id`, as it is for
+the alert channel; a first poll on an empty store reads one page. The backfill
+of decision 4 is `mavo kpszsu --from-file`, which reads the harvested file and
+reaches no network.
 
 
 ## D-055. An RCB all-clear ends the alert it names; `valid_to` is the publisher's day, not the threat's end

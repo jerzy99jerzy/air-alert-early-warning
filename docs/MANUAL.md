@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.14
+Document:  docs/MANUAL.md, version 3.15
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -48,6 +48,7 @@ Note:      every constant, exit code and output line here was read out of the
    11. [`mavo reconcile`](#411-mavo-reconcile---built)
    12. [`mavo latency`](#412-mavo-latency---built)
    13. [`mavo airspace`](#413-mavo-airspace---built)
+   14. [`mavo kpszsu`](#414-mavo-kpszsu---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -757,6 +758,56 @@ whether the list changed (`snapshot=changed` or `snapshot=unchanged`).
 | --- | --- |
 | 0 | fetched and parsed, whatever the zone count, including none |
 | 3 | the source was unreachable or answered with something that is not the plan. The attempt is logged first |
+| 7 | the store could not be opened or written |
+
+### 4.14 `mavo kpszsu` - BUILT
+
+Reads the Ukrainian Air Force's summaries from the public preview of the
+channel `@kpszsu` once, stores every summary it can read and every correction
+it refuses, and logs that it tried (D-056). Or, with `--from-file`, reads a
+file of recorded posts into the same rows without reaching the network.
+
+```
+mavo kpszsu --stub tests/fixtures/kpszsu/79455.html --store /tmp/mavo.sqlite3
+```
+
+Without `--stub` it fetches `https://t.me/s/kpszsu`, the page of the twenty
+newest posts. The stub above is one recorded post rather than a page, so it
+reads as zero messages; a page is those blocks one after another.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--url` | the channel's preview | Read this exact address instead. The catch-up below is off for it, because paging back from a page somebody chose is not a window the store can bound |
+| `--stub` | none | Read a saved page from disk instead of the network. No catch-up either |
+| `--from-file` | none | Read a JSONL of recorded posts, one object per line with `id`, `posted_at` (with an offset) and `text`. This is how the nights already harvested enter the store; it reads a file and reaches nothing, which is the point, because bulk reads run on the operator's machine and never from the production address |
+| `--store` | none | Append the readings and log the attempt whether or not it succeeded. A file read writes rows and no attempt, because it is not a read of the channel |
+
+**Catch-up, bounded.** The channel receives about 147 posts a day, so a busy
+night can push the morning summary off the first page between two reads. When
+the newest post the store has ever recorded is older than the oldest post on
+the page just read, the command walks back with `?before=` until the two meet,
+at most five pages. What it could not bridge is written on the attempt row as
+`skipped_before=<id>`: those posts were not read, and the row says so rather
+than letting the gap pass as a quiet channel. A first poll on an empty store
+reads one page, because there is nothing to bridge to.
+
+**What is stored.** A summary of a night or a day, read into figures, with the
+reasons any of its checks failed; a correction (`Уточнена інформація`),
+refused and kept with its text and no figures. Every other post is counted on
+the attempt row and kept nowhere: the channel is its own archive. Rows are
+keyed on the post and its text, so a re-read of the same page writes nothing
+and an edited post lands beside its earlier reading.
+
+**What is published** is decided when `strike_tally` is composed, in
+`mavo/strike.py`, over rows this command wrote: the latest night only, their
+headline alone when a check failed, and a launched total only when they
+published one or every launched item carries a count.
+
+| Code | Meaning |
+| --- | --- |
+| 0 | fetched and parsed, whatever it held, including no summary at all; or a file read |
+| 2 | the file named by `--from-file` could not be read |
+| 3 | the channel was unreachable. The attempt is logged first |
 | 7 | the store could not be opened or written |
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)

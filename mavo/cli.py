@@ -14,7 +14,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
-from mavo import __version__
+from mavo import __version__, strike
 from mavo.attempts import main as attempts_main
 from mavo.backfill import (
     DirectoryBusy,
@@ -30,6 +30,8 @@ from mavo.liveness import PRODUCTION_FEEDS, EventStamps, FeedLiveness
 from mavo.liveness import liveness as measure_liveness
 from mavo.obs import from_environment as sink_from_environment
 from mavo.poland import FAILED as POLAND_FAILED
+from mavo.poland import FAILED_BLOCK as STRIKE_FAILED
+from mavo.poland import Block as StrikeBlock
 from mavo.poland import PolandBlocks
 from mavo.poland import measure as measure_poland
 from mavo.policy import Regime, policy_of
@@ -57,6 +59,7 @@ from mavo.schema import (
     is_clear,
     redate_reassertions,
 )
+from mavo.sources import kpszsu
 from mavo.sources.fixture import FixtureSource, generate_history
 from mavo.sources.pansa import FEED as PANSA_FEED
 from mavo.sources.pansa import SOURCE_URL as PANSA_URL
@@ -75,6 +78,7 @@ from mavo.sources.ukrainealarm_source import (
     _load_snapshot,
 )
 from mavo.store import EventStore, migration_lines
+from mavo.strike import block as measure_strike
 from mavo.transport import StubTransport, Transport, UrllibTransport
 
 
@@ -934,6 +938,158 @@ def _cmd_airspace(args: argparse.Namespace) -> int:
     return 0
 
 
+#: The catch-up bound (D-056). A page carries twenty posts and the channel
+#: receives about 147 a day, so five pages reach back roughly sixteen hours,
+#: which covers any outage a 300 s timer can have without a human noticing.
+#: Bounded rather than open because an unbounded walk backwards through a
+#: channel is a bulk read, and bulk reads do not run from the production
+#: address (the Cloudflare block of August).
+KPSZSU_MAX_PAGES = 5
+
+
+def _cmd_kpszsu(args: argparse.Namespace) -> int:
+    """Read the Air Force's summaries once, or a file of them, and record what they say.
+
+    The twin of `_cmd_airspace`, with one addition: the channel can outrun the
+    timer. Twenty posts stand on a page, and a busy night pushes the morning
+    summary off it between two reads, so when the newest post this store has
+    ever seen is older than the oldest post on the page just read, the command
+    walks back with `?before=` until the two meet or `KPSZSU_MAX_PAGES` is
+    spent. What it did not bridge is written on the attempt row as
+    `skipped_before=<id>`: unknown is recorded as unknown, never as nothing.
+
+    `--from-file` is the backfill, and it reaches no network at all: a JSONL of
+    `id`, `posted_at` and `text` (the corpus the operator harvested) is read
+    into the same rows by the same rules, so the ninety-one nights already in
+    hand do not wait for the channel to serve them again.
+
+    Exit codes match `rso` and `airspace`: 3 for a refusal, 7 for a store that
+    failed, 2 for a file this command cannot read, 0 for a page that was read.
+    """
+    store = None
+    if args.store:
+        try:
+            store = EventStore(Path(args.store))
+        except Exception as failure:  # noqa: BLE001
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+        _announce_migrations(store)
+    if args.from_file:
+        return _kpszsu_from_file(Path(args.from_file), store)
+
+    transport: Transport = StubTransport(Path(args.stub).read_text(encoding="utf-8")) \
+        if args.stub else UrllibTransport()
+    url = args.url or kpszsu.SOURCE_URL
+    started = datetime.now(UTC)
+    try:
+        page, elapsed = kpszsu.poll_once(transport, url)
+    except SourceUnavailable as unreachable_now:
+        waited = (datetime.now(UTC) - started).total_seconds()
+        if store is not None:
+            store.record_refusal(kpszsu.FEED, url, started, str(unreachable_now), waited)
+        print(f"[UNREACHABLE] {unreachable_now} (attempt {waited:.2f}s)")
+        return 3
+
+    pages = [page]
+    skipped_before: int | None = None
+    if store is not None and args.stub is None and not args.url:
+        seen = store.newest_page_id(kpszsu.FEED)
+        oldest = page.first_id
+        while (seen is not None and oldest is not None and oldest > seen + 1
+               and len(pages) < KPSZSU_MAX_PAGES):
+            try:
+                older, spent = kpszsu.poll_once(transport, kpszsu.page_url(oldest))
+            except SourceUnavailable as unreachable_now:
+                print(f"[CATCH-UP-REFUSED] {unreachable_now}")
+                break
+            elapsed += spent
+            if older.first_id is None or (
+                older.first_id >= oldest and older.last_id is not None
+                and older.last_id >= oldest
+            ):
+                # A page that did not move backwards. Walking on would fetch
+                # the same posts until the bound is spent.
+                break
+            pages.append(older)
+            oldest = older.first_id
+        if seen is not None and oldest is not None and oldest > seen + 1:
+            skipped_before = oldest
+
+    rows = tuple(row for one in pages for row in strike.rows_of(one))
+    messages = sum(one.messages for one in pages)
+    unreadable = sum(one.unreadable for one in pages)
+    ids = [value for one in pages for value in (one.first_id, one.last_id)
+           if value is not None]
+    stored = 0
+    if store is not None:
+        note = f"skipped_before={skipped_before}" if skipped_before is not None else None
+        try:
+            stored = store.append_strike_tallies(rows)
+            # Last, for the reason `_cmd_rso` gives: the read row is `read_at`
+            # and must never vouch for rows that failed to land.
+            store.record_read(kpszsu.FEED, url, started, messages, unreadable,
+                              elapsed_s=elapsed, first_id=min(ids) if ids else None,
+                              last_id=max(ids) if ids else None, detail=note)
+        except Exception as failure:  # noqa: BLE001
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+    print(f"pages={len(pages)} messages={messages} unreadable={unreadable} "
+          f"{_kpszsu_counts(rows)} stored={stored} "
+          f"skipped_before={skipped_before if skipped_before is not None else 'none'} "
+          f"latency={elapsed:.3f}s {url}")
+    return 0
+
+
+def _kpszsu_counts(rows: tuple[strike.TallyRow, ...]) -> str:
+    """The readings by status, for the operator's line."""
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row.status] = counts.get(row.status, 0) + 1
+    return "summaries: " + (
+        " ".join(f"{name}={count}" for name, count in sorted(counts.items())) or "none"
+    )
+
+
+def _kpszsu_from_file(path: Path, store: EventStore | None) -> int:
+    """Read a JSONL of recorded posts into the same rows, with no network.
+
+    A line this reader cannot use is counted and named rather than skipped in
+    silence: a backfill that quietly drops half its input is a backfill that
+    reports a shorter war.
+    """
+    rows: list[strike.TallyRow] = []
+    refused = 0
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError as failure:
+        print(f"--from-file: {failure}", file=sys.stderr)
+        return 2
+    for line in lines:
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+            posted_at = datetime.fromisoformat(str(record["posted_at"]))
+            message = kpszsu.Message(int(record["id"]), posted_at.astimezone(UTC),
+                                     str(record["text"]))
+        except (ValueError, KeyError, TypeError):
+            refused += 1
+            continue
+        reading = kpszsu.read_message(message)
+        if reading is not None:
+            rows.append(strike.row_of(reading))
+    stored = 0
+    if store is not None:
+        try:
+            stored = store.append_strike_tallies(rows)
+        except Exception as failure:  # noqa: BLE001
+            print(f"[STORE-FAILED] {failure}")
+            return 7
+    print(f"file={path} lines={len(lines)} unreadable={refused} "
+          f"{_kpszsu_counts(tuple(rows))} stored={stored}")
+    return 0
+
+
 def _cmd_report(args: argparse.Namespace) -> int:
     """Render the current picture from a store, and optionally the contract file.
 
@@ -1011,11 +1167,27 @@ def _cmd_report(args: argparse.Namespace) -> int:
                 print(f"[POLAND-FAILED] {failure}", file=sys.stderr, flush=True)
                 return POLAND_FAILED
 
+        # D-056. The strike tally, on the terms of the Polish keys above and for
+        # their reason: a failure to compose it goes out `null` and the rest of
+        # the contract is written. Its own guard rather than a place inside
+        # theirs, so a fault in one feed's composition cannot null another's.
+        def strike_block(moment: datetime) -> StrikeBlock:
+            try:
+                block = measure_strike(store, moment)
+                json.dumps(
+                    block.value, ensure_ascii=False, indent=1, allow_nan=False
+                ).encode("utf-8")
+                return block
+            except Exception as failure:  # noqa: BLE001
+                print(f"[STRIKE-FAILED] {failure}", file=sys.stderr, flush=True)
+                return STRIKE_FAILED
+
         outcome = publish(
             store.replay,
             Path(args.json),
             sources=sources,
             poland=poland,
+            strike=strike_block,
             interval_s=args.interval,
             max_cycles=args.max_cycles,
             valid_for_s=args.valid_for,
@@ -1209,6 +1381,31 @@ def build_parser() -> argparse.ArgumentParser:
              "whether or not it succeeded",
     )
     airspace.set_defaults(func=_cmd_airspace)
+
+    kpszsu_cmd = subparsers.add_parser(
+        "kpszsu",
+        help="read the Ukrainian Air Force's summaries once and record what they said",
+    )
+    kpszsu_cmd.add_argument(
+        "--url",
+        help="read this exact address instead of the channel's public preview. "
+             "Catch-up is off for a hand-picked address: paging back from one "
+             "page of somebody's choosing is not a window this store can bound",
+    )
+    kpszsu_cmd.add_argument("--stub", help="read a saved page instead of the network")
+    kpszsu_cmd.add_argument(
+        "--from-file",
+        help="read a JSONL of recorded posts (`id`, `posted_at`, `text`) "
+             "instead of the network, which is how the nights already "
+             "harvested enter the store. Bulk reads run on the operator's "
+             "machine; this reads a file and reaches nothing",
+    )
+    kpszsu_cmd.add_argument(
+        "--store",
+        help="append the readings, and log the attempt whether or not it "
+             "succeeded. Without it a refusal leaves no trace",
+    )
+    kpszsu_cmd.set_defaults(func=_cmd_kpszsu)
 
     attempts = subparsers.add_parser(
         "attempts",

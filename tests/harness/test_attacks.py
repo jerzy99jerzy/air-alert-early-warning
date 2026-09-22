@@ -267,7 +267,7 @@ def test_a13_an_unknown_tag_is_not_replaced_by_a_prose_guess() -> None:
 
 
 def test_a14_a_still_dangerous_area_is_not_silently_dropped() -> None:
-    """MT15. An all-clear must not speak for the areas it says are still alight.
+    """MT16. An all-clear must not speak for the areas it says are still alight.
 
     The channel writes the cleared area as a tag and the areas where the alert
     continues as prose after a marker. Reading only the tags produced an
@@ -298,3 +298,25 @@ def test_a14_a_still_dangerous_area_is_not_silently_dropped() -> None:
     cleared = [event for event in events if event.role is AreaRole.SUBJECT]
     assert [event.state for event in cleared] == [AlertState.CLEAR]
     assert continuing[0].area_id != cleared[0].area_id
+
+
+def test_a15_a_night_read_as_empty_is_not_a_total_of_zero() -> None:
+    """MT17. A night whose launched list read empty must never total 0.
+
+    `all(...)` is true of nothing, so "sum when every item carries a count" is
+    satisfied by a night the reader failed to read, and the total it yields is
+    a zero the Air Force never stated. Reader v3 stored 01.08 with an empty
+    launched list and reported the night consistent. The attack empties a real
+    night's launched list and reads what the product would keep and publish.
+    """
+    from mavo import strike
+    from mavo.sources import kpszsu
+
+    recording = Path(__file__).parent.parent / "fixtures" / "kpszsu" / "79455.html"
+    body = 'data-post="kpszsu/79455"' + recording.read_text(encoding="utf-8")
+    [reading] = kpszsu.read_page(body).readings
+    assert reading.tally is not None
+    emptied = replace(reading.tally, launched=())
+    assert kpszsu.launched_sum(emptied) is None, "an empty launched list was totalled"
+    assert strike.tally_json(emptied)["launched_sum"] is None, "the stored reading carries a total"
+

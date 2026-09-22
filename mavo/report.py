@@ -44,7 +44,7 @@ from mavo.areas import AreaRef, AreaTable, oblast_slug
 from mavo.liveness import EventStamps, FeedLiveness
 from mavo.liveness import as_block as sources_block
 from mavo.obs import RunLog
-from mavo.poland import PolandBlocks
+from mavo.poland import Block, PolandBlocks
 from mavo.schema import (
     AlertState,
     AreaRole,
@@ -607,6 +607,11 @@ class Report:
     #: consumer's own reading in place; a block the caller measured decides
     #: per key between absent, `null` and a value.
     poland: PolandBlocks | None = None
+    #: The strike tally (D-056), on the same arrangement as `poland`: None when
+    #: the caller composed without a store, which publishes nothing and leaves
+    #: whatever the consumer shows in place. A block decides between absent,
+    #: `null` and the latest night.
+    strike: Block | None = None
 
     @property
     def staleness_s(self) -> float | None:
@@ -984,6 +989,7 @@ def compose(
     sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...]]
     | None = None,
     poland: Callable[[datetime], PolandBlocks] | None = None,
+    strike: Callable[[datetime], Block] | None = None,
 ) -> Report:
     """Fold an event log into the current picture.
 
@@ -1196,6 +1202,8 @@ def compose(
         # D-053. The same arrangement as `sources`: the callable holds the
         # store and this fold never learns about one.
         poland=poland(moment) if poland is not None else None,
+        # D-056. A third callable on the same terms as the two above.
+        strike=strike(moment) if strike is not None else None,
     )
 
 
@@ -1371,6 +1379,11 @@ def to_contract(report: Report) -> dict[str, object]:
                            ("pl_airspace", report.poland.airspace)):
             if block.published:
                 payload[key] = block.value
+    # D-056. Additive against v3 for the reason `pl_*` is: the consumer's
+    # validator refuses no field it did not expect, and a bump to 4 would risk
+    # a deployed page refusing the whole payload over one new key.
+    if report.strike is not None and report.strike.published:
+        payload["strike_tally"] = report.strike.value
     return payload
 
 
@@ -1561,6 +1574,7 @@ def publish(
     sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...]]
     | None = None,
     poland: Callable[[datetime], PolandBlocks] | None = None,
+    strike: Callable[[datetime], Block] | None = None,
 ) -> PublishReport:
     """Write the contract on a fixed interval until a named condition stops it.
 
@@ -1612,6 +1626,7 @@ def publish(
             report = compose(
                 events, as_of=clock(), table=table, valid_for_s=valid_for_s,
                 history_days=history_days, sources=sources, poland=poland,
+                strike=strike,
             )
             if report.feed_state is FeedState.BLIND:
                 blind += 1

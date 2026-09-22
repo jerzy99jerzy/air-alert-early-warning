@@ -16,6 +16,47 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.56.0.0 - 2026-09-22
+
+**`Bilans nalotu`, the strike tally, reaches the contract.** The Ukrainian Air
+Force publishes a summary of every night on `@kpszsu`; 0.55.4.0 put the reader
+of those summaries in the tree, and this release gives it a command, a table, a
+timer and a key in `state.json` (D-056). The key is additive against schema 3,
+so `SCHEMA_VERSION` stays 3 and a deployed page reads the payload as before
+until the consumer draws the block.
+
+- **`mavo kpszsu`** reads the channel's public preview once and stores every
+  summary it can read and every correction it refuses, keyed on the post and
+  its text. When the channel outran the timer it walks back, at most five
+  pages, and writes what it could not bridge as `skipped_before=<id>`.
+  `--from-file` reads the harvested summaries into the same rows with no
+  network, which is the backfill. Two units, `mavo-kpszsu.service` and its
+  300 s timer, in `docs/DEPLOYMENT.md`.
+- **`strike_tally`** carries the latest night: their downed total, their items
+  with a count only where they gave one, and a launched total only when they
+  published one or every launched item is numbered. **A night whose checks
+  failed is published as their headline alone**, so no figure of ours goes
+  out under their name. Absent before the first poll, `null` with no night,
+  never an empty object. `mavo/strike.py`.
+- **`strike_tallies`**, a recorded table added under D-036, so a 0.55 store
+  opens and gains it; every row keeps the post verbatim and the version of the
+  reader that read it.
+- **`sources` gains `kpszsu`**, role `context`: a dead channel shows there and
+  cannot make the page blind about Ukraine.
+- **The gate.** `contract_check` drives the key through a store and two
+  recordings; harness attack A15 (MT17) proves an empty launched list never
+  totals zero and is killed by removing that condition; 27 tests in
+  `tests/test_strike.py`.
+- **F185**: the reader's seven misreadings of 2026-09-22 and the class behind
+  them, a check that exists only where the source publishes a sum. **F186**:
+  one threat number, MT15, named two threats; the all-clear control becomes
+  MT16, and `tools/harness_mutation.py` now refuses a label that is not its
+  attack's threat row.
+- **T89** opened: the units, the backfill and the key read on the host.
+- `docs/DEPLOYMENT.md` 1.53, `docs/WEBAPP.md` 3.14, `docs/MANUAL.md` 3.15,
+  `docs/THREAT-MODEL.md` 2.7, `docs/METHODOLOGY.md` 2.69, `docs/DECISIONS.md`
+  2.33, `docs/DATA-FLOW.md` 1.7; review in `docs/reviews/0.56.0.0.md` (D-021).
+
 ## 0.55.4.0 - 2026-09-22
 
 **The reader for the strike tally, with the recordings that forced every rule

@@ -106,6 +106,11 @@ PRODUCTION_FEEDS: tuple[FeedSpec, ...] = (
              role="context", cadence_s=900.0),
     FeedSpec(feed="pansa", source_id="pansa",
              role="context", cadence_s=300.0),
+    # D-056. Context, like the two above: a dead channel shows here, and it
+    # cannot make the page blind about Ukraine. 300 s is the timer's own
+    # interval, declared here and measured on the host after the install.
+    FeedSpec(feed="kpszsu", source_id="kpszsu",
+             role="context", cadence_s=300.0),
 )
 
 

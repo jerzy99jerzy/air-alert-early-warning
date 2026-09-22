@@ -23,6 +23,7 @@ when a control changes, and at every release.
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import sys
@@ -46,6 +47,14 @@ class Mutation:
 
 
 MUTATIONS: tuple[Mutation, ...] = (
+    Mutation(
+        attack="test_a15_a_night_read_as_empty_is_not_a_total_of_zero",
+        row="MT17",
+        path="mavo/sources/kpszsu.py",
+        old="    if not tally.launched or any(item.count is None for item in tally.launched):",
+        new="    if any(item.count is None for item in tally.launched):",
+        disables="decision 9's non-empty condition on a launched total",
+    ),
     Mutation(
         attack="test_a1_broad_simultaneous_activation_raises_nothing",
         row="MT1",
@@ -133,7 +142,7 @@ MUTATIONS: tuple[Mutation, ...] = (
     ),
     Mutation(
         attack="test_a14_a_still_dangerous_area_is_not_silently_dropped",
-        row="MT15",
+        row="MT16",
         path="mavo/sources/telegram.py",
         old="    for ref in still_running:",
         new="    for ref in ():",
@@ -188,8 +197,37 @@ def _run_attack(tree: Path, attack: str) -> bool:
     return result.returncode == 0
 
 
+def labels_disagree(root: Path = ROOT) -> list[str]:
+    """Every mutation's row exists in the threat table and heads its attack.
+
+    F186. The register, the catalogue and attack A14 called the all-clear
+    control MT15 for eight months while the threat table's MT15 was the
+    directory lock. The numbering check counted the table and nothing read a
+    label against it. This reads both halves: the row must be a row of
+    `docs/THREAT-MODEL.md`, and the attack's docstring must open with it, so a
+    label cannot drift away from the threat it names without failing here. It
+    cannot judge whether the row's prose describes the attack, and says so in
+    F186's reopen condition.
+    """
+    threats = (root / "docs" / "THREAT-MODEL.md").read_text(encoding="utf-8")
+    attacks = (root / "tests" / "harness" / "test_attacks.py").read_text(encoding="utf-8")
+    problems: list[str] = []
+    for mutation in MUTATIONS:
+        if f"| {mutation.row} |" not in threats:
+            problems.append(f"{mutation.attack}: {mutation.row} is not a row of THREAT-MODEL.md")
+        head = rf'def {mutation.attack}\([^)]*\) -> None:\n    """{mutation.row}\. '
+        if re.search(head, attacks) is None:
+            problems.append(f"{mutation.attack}: its docstring does not open with {mutation.row}")
+    return problems
+
+
 def main() -> int:
     """Apply every mutation and report which attacks noticed."""
+    mislabelled = labels_disagree()
+    for problem in mislabelled:
+        print(f"harness-mutation: {problem}", file=sys.stderr)
+    if mislabelled:
+        return 1
     survived: list[Mutation] = []
     killed = 0
 

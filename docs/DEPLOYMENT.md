@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.52 / 2026-09-22
+Version: 1.53 / 2026-09-22
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -47,6 +47,7 @@ unit's own properties, cadence from its timer, spacing from forty hours of
 | `mavo-collect.service` | `oneshot`, `User=mavo` | `mavo-collect.timer`, 30 s plus up to 5 s, `AccuracySec=1s`; a median of 33 s and a maximum of 36.5 s over 4,376 | the watchman: one channel poll into the same store, so a returned publisher lands labelled |
 | `mavo-rso.service` | `oneshot`, `User=mavo` | `mavo-rso.timer`, 900 s plus up to 60 s; per address a median of 931 s and a maximum of 960.2 s over 154 | reads the five RSO categories into `communiques` and each address's list into `feed_snapshots` (D-053, D-054) |
 | `mavo-airspace.service` | `oneshot`, `User=mavo` | `mavo-airspace.timer`, 300 s plus up to 30 s; a median of 316 s and a maximum of 330.1 s over 456 | reads PAŻP's updated plan into `airspace_zones` and its list into `feed_snapshots` (D-053, D-054) |
+| `mavo-kpszsu.service` | `oneshot`, `User=mavo` | `mavo-kpszsu.timer`, 300 s plus up to 30 s **declared** for 0.56.0.0 and not yet read from the host | reads the Air Force's summaries from `@kpszsu` into `strike_tallies` (D-056); it replaces the corpus sampler that read the same page at the same cadence from the operator's home directory |
 | `mavo-push.service` | `oneshot`, `User=mavo` | `mavo-push.timer`, 30 s plus up to 15 s, `AccuracySec=1s`; 3,801 runs in the forty hours, one every 38 s on average | pushes `state.json` and `feed.json` to the site |
 | `mavo-report.service` | `simple`, `User=mavo`, one process since the install and no restart | continuous, `--interval 30` with `--feed`, from the one drop-in | writes the report |
 | `mavo-adsb.service` | `simple`, `User=mavo-adsb`, running since 2026-08-27 | continuous | the sampler, `mavo-adsb` repository |
@@ -66,8 +67,8 @@ never a decision until D-031 wrote it down.
 | First cycles under it | channel and API at 18:36:22 UTC; RSO and PAŻP at 18:38:27, each writing `snapshot=changed` on its first read |
 | Who owns the venv | `/opt/mavo/venv` is `root:root` 0755 `[measured 2026-09-21]`; why that matters is recorded under the 0.53.4.0 install below (F144) |
 | `feed_attempts` coverage | **begins 2026-08-29 14:39:05 UTC** `[measured 2026-09-21]`, eighteen days after collection began, so a query before that date returns an empty set rather than a silence (F159) |
-| `main` | 0.55.4.0 |
-| Behind by | **one** release: 0.55.4.0 adds `mavo/sources/kpszsu.py` and its recordings, and nothing calls the module, so the host runs the same code under either version and this install is bookkeeping rather than a change. The release that is worth an install is 0.56.0.0, which gives the reader a command, a table and a contract key (D-056). Superseded rows, kept for the record: at 0.55.3.0 this row read **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
+| `main` | 0.56.0.0 |
+| Behind by | **two** releases: 0.56.0.0 gives the strike tally's reader a command, a table and a contract key (D-056) and brings two units, `mavo-kpszsu.service` and its timer, so it is the install worth making; 0.55.4.0 added the reader with no caller. The install brings a schema move, one recorded table created by whichever process opens the store first, and so a point of return. Superseded rows, kept for the record: at 0.55.4.0 this row read **one**; at 0.55.3.0 **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
 
 ### The 0.53.4.0 install, as it was read on 2026-09-09
 
@@ -628,7 +629,7 @@ undocumented cannot be reasoned about by whoever runs it.
 
 | Destination | Purpose | Auth | Frequency |
 | --- | --- | --- | --- |
-| `t.me` (channel preview) | the only signal source | none. The channel is public | one request per cycle, and the cycle interval is the whole schedule |
+| `t.me` (channel preview) | the only signal source, and from 0.56.0.0 the Air Force's summaries too (`mavo kpszsu`, `@kpszsu`) | none. Both channels are public | one request per cycle for the alert channel; for `@kpszsu` one request per 300 s run, and up to five when a run pages back to meet the newest post it recorded. Bulk reads of the channel's history run on the operator's machine and never from this host (D-056) |
 | ntfy host (operator-controlled) | notification delivery, phase M1 onward | token, write-side only | on decision and on degradation, bounded by the alarm budget |
 | `opensky-network.org` | ADS-B state vectors over the Jasionka box, T42's sampler | OAuth2 client credentials, held on the host in `/etc/mavo-adsb/env` | one request per 60 s from 2026-08-14, 1,440 per day against a 4,000/day allowance |
 | `auth.opensky-network.org` | the token endpoint for the row above | the same credentials | once per token lifetime, roughly every 30 minutes |
@@ -1119,6 +1120,47 @@ AccuracySec=1s
 [Install]
 WantedBy=timers.target
 ```
+
+**0.56.0.0 adds two units** `[declared]`. The service reads the channel once;
+the timer runs it every five minutes, the cadence of the corpus sampler it
+replaces, so the production address carries no more reads than it did.
+
+```
+# /etc/systemd/system/mavo-kpszsu.service
+[Unit]
+Description=read the Air Force's summaries from @kpszsu once (D-056)
+
+[Service]
+Type=oneshot
+User=mavo
+ExecStart=/opt/mavo/venv/bin/mavo kpszsu --store /var/lib/mavo/events
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/mavo
+
+# /etc/systemd/system/mavo-kpszsu.timer
+[Unit]
+Description=read the Air Force's summaries every five minutes
+
+[Timer]
+OnBootSec=180
+OnUnitActiveSec=300
+RandomizedDelaySec=30
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
+```
+
+**Order at the install.** The package first, then the report restarted, so the
+table is created by the report and in its journal; then the backfill,
+`mavo kpszsu --from-file` as `mavo` over the harvested summaries, so the first
+contract after the install already carries the latest night; then these two
+units, `daemon-reload` and `enable --now` on the timer; and last the corpus
+sampler stopped, because it reads the same page at the same cadence and two
+readers would double the requests from this address.
 
 **Both cadences hold** `[measured over forty hours, Appendix A]`. The RSO
 reader started a median of 931 s apart per address, at most 960.2 s, against

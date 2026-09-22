@@ -64,6 +64,14 @@ RECORDED_TABLES = ("communiques", "feed_attempts", "alert_levels")
 #: project archives: the plan PAŻP serves at 03:10 is gone at 03:15, so no
 #: corpus and no re-read rebuilds them, and D-036's additive rule applies.
 RECORDED_TABLES_0_55 = ("feed_snapshots", "airspace_zones", "airspace_geometries")
+#: D-056 (0.56.0.0). One more recorded table, in its own tuple for the reason
+#: the tuple above has one: the order `_tables_this_version_adds` walks must
+#: not move when a version adds a table. `strike_tallies` holds the Air Force's
+#: own summaries as this package read them. The channel is their archive and a
+#: re-read rebuilds a row, but not the reading: the rule that read it may have
+#: changed, which is why every row carries `reader`. Additive under D-036, so a
+#: store written by 0.55.x opens here and gains the table.
+RECORDED_TABLES_0_56 = ("strike_tallies",)
 
 EXPECTED_KIND_COLUMNS = (
     "content_hash", "area_id", "oblast", "kind", "state",
@@ -242,6 +250,30 @@ CREATE TABLE IF NOT EXISTS airspace_geometries (
     geometry  TEXT NOT NULL,
     ts_ingest TEXT NOT NULL
 );
+-- D-056 (0.56.0.0). One summary of `@kpszsu` as this package read it, keyed on
+-- the digest of the post id and its text, so an edited post lands as a second
+-- row and both readings survive (the pattern of `airspace_zones`). `tally` is
+-- the whole reading as JSON and `checks` the reasons any of them failed, empty
+-- when the arithmetic closed. A post that is not a summary is counted on the
+-- attempt row and stored nowhere: the channel is its own archive, and a table
+-- of everything a channel said is a corpus, which lives on the operator's
+-- machine. `reader` is the version of the rules that produced `tally`, so a
+-- figure read by an older rule can be told apart from one read by this rule.
+CREATE TABLE IF NOT EXISTS strike_tallies (
+    digest     TEXT PRIMARY KEY,
+    post_id    INTEGER NOT NULL,
+    posted_at  TEXT NOT NULL,
+    ts_ingest  TEXT NOT NULL,
+    kind       TEXT,
+    status     TEXT NOT NULL,
+    night      TEXT,
+    as_of      TEXT,
+    tally      TEXT,
+    checks     TEXT NOT NULL,
+    raw_text   TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    reader     TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS feed_attempts (
     started_at TEXT NOT NULL,
     feed       TEXT NOT NULL,
@@ -285,6 +317,9 @@ CREATE INDEX IF NOT EXISTS idx_levels_area_kind ON alert_levels (area_id, kind, 
 -- 0.55.0.0. The newest snapshot of one address is read on every compose cycle
 -- and again on every poll that decides whether to write one.
 CREATE INDEX IF NOT EXISTS idx_snapshots_feed_url ON feed_snapshots (feed, url, observed_at);
+-- 0.56.0.0. The latest night is read on every compose cycle and the column is
+-- the one it orders by. Covering, so the read never touches the table.
+CREATE INDEX IF NOT EXISTS idx_strike_night ON strike_tallies (kind, status, night, posted_at);
 """
 
 
@@ -378,7 +413,7 @@ class EventStore:
             return ()
         return tuple(
             f"{table} (table)"
-            for table in RECORDED_TABLES + RECORDED_TABLES_0_55
+            for table in RECORDED_TABLES + RECORDED_TABLES_0_55 + RECORDED_TABLES_0_56
             if table not in present
         )
 
@@ -1064,6 +1099,89 @@ class EventStore:
             )
             conn.commit()
             return conn.total_changes - before
+
+    def append_strike_tallies(self, rows: Iterable[Any]) -> int:
+        """Insert readings of `@kpszsu`, ignoring what is already held.
+
+        Returns rows added. Idempotent on content for the reason
+        `append_airspace_zones` is: the reader polls every five minutes and the
+        same summary stands on the page for hours, so a key on the post id
+        would either refuse the second reading or overwrite the first. Keyed on
+        the digest of the post and its text, an edited post lands beside its
+        earlier reading and neither is lost.
+
+        No `feed` column, unlike the tables above. This one holds one channel's
+        posts and each row carries the post's own address, which is a stronger
+        statement than a feed name: it says which message a figure came from.
+        """
+        now = _stored_form(datetime.now(UTC), "ts_ingest")
+        items = list(rows)
+        if not items:
+            return 0
+        payload = [
+            (
+                row.digest(),
+                row.post_id,
+                _stored_form(row.posted_at, "posted_at"),
+                now,
+                row.kind,
+                row.status,
+                row.night,
+                _stored_form(row.as_of, "as_of") if row.as_of is not None else None,
+                json.dumps(row.tally, ensure_ascii=False) if row.tally is not None else None,
+                json.dumps(list(row.checks), ensure_ascii=False),
+                row.raw_text,
+                row.source_url,
+                row.reader,
+            )
+            for row in items
+        ]
+        with closing(self._connect()) as conn:
+            before = conn.total_changes
+            conn.executemany(
+                "INSERT OR IGNORE INTO strike_tallies (digest, post_id, posted_at, "
+                "ts_ingest, kind, status, night, as_of, tally, checks, raw_text, "
+                "source_url, reader) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                payload,
+            )
+            conn.commit()
+            return conn.total_changes - before
+
+    def newest_strike_night(self) -> dict[str, Any] | None:
+        """The latest night that was read, by the night it covers.
+
+        Ordered by `night` and not by `posted_at`, because the summary of a
+        night can be posted after a correction about an older one, and the
+        reader shows the latest night rather than the latest message. Ties
+        broken by `posted_at`, so a re-read of one night takes the later
+        reading. Refusals and day tallies are excluded here rather than by the
+        caller: a correction carries no figures, and a day tally is stored and
+        not displayed (D-056).
+        """
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT post_id, posted_at, status, night, as_of, tally, checks, "
+                "source_url, reader FROM strike_tallies "
+                "WHERE kind = 'night' AND status IN ('ok', 'flagged') AND night IS NOT NULL "
+                "ORDER BY night DESC, posted_at DESC, rowid DESC LIMIT 1"
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "post_id": row[0],
+            "posted_at": row[1],
+            "status": row[2],
+            "night": row[3],
+            "as_of": row[4],
+            "tally": json.loads(row[5]) if row[5] is not None else None,
+            "checks": json.loads(row[6]),
+            "source_url": row[7],
+            "reader": row[8],
+        }
+
+    def count_strike_tallies(self) -> int:
+        with closing(self._connect()) as conn:
+            return int(conn.execute("SELECT COUNT(*) FROM strike_tallies").fetchone()[0])
 
     def airspace_zones_by_digest(self, digests: Sequence[str]) -> dict[str, dict[str, Any]]:
         """The structure rows a snapshot names, each with its shape joined in.
