@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.31
+Document:  docs/DECISIONS.md, version 2.32
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2316,6 +2316,64 @@ written.
 **Reopen if:** the table grows faster than the event store it sits in, or the
 scrubber needs a question answered that one indexed read of this table cannot
 answer.
+
+## D-056. The strike tally publishes the Air Force's own figures, and one night at a time
+Date: 2026-09-22. Status: adopted
+
+**Decision.** MAVO reads the Ukrainian Air Force's morning summaries from the
+public channel `@kpszsu` and publishes what they state about one night. Ten
+questions were put and answered together, and they are the whole decision:
+
+1. The block a reader sees is headed `Bilans nalotu`, with a fixed attribution
+   line naming the Air Force and the channel wherever a figure renders.
+2. No border cut in version one. Splitting launches or impacts by distance to
+   the Polish border waits on the map layer it belongs to.
+3. No language model anywhere in the path. The figures are read by rules that
+   can be pointed at, and a rule that misreads a night can be shown the night.
+4. The backfill comes from the channel itself, already harvested on the
+   operator's machine. Kaggle is a reconciliation oracle, consulted by a person
+   and never at runtime.
+5. Numbers only: what was launched, what was downed. Geography waits on 2.
+6. No live in-attack counter in version one. It would be a claim about the
+   present made from a source that speaks in the morning.
+7. Day tallies are read and stored, and are not published. They cover hours a
+   night tally also covers, and which of the two a reader should see is not
+   settled.
+8. A reader sees the last night. The nights before it stay internal, because a
+   series of nights is a trend and this project does not publish trends about
+   somebody else's war.
+9. A launched total is published only when the Air Force published one, or when
+   the launched list is non-empty and every item in it carries a count. The
+   non-empty condition is the amendment: `all(...)` is true of an empty list,
+   and the first wording would have rendered a night we failed to read as a
+   total of zero.
+10. Their sentence saying some weapons did not reach their targets is stored
+    verbatim and never computed with. It stands in 22 of 97 summaries
+    `[measured, the corpus of 2026-09-22]`, and it is their category, not a
+    residue of ours.
+
+**What this rules out, in one sentence.** An interception rate, a series, a
+figure nobody published, and a count filled in for an item the Air Force left
+unnumbered. A count they did not give is unknown and renders as not given.
+
+**The one piece of arithmetic allowed** is on their own figures: a single
+unnumbered item closed by their own total, marked as derived. Two unnumbered
+items stay unknown, because the split between them is not theirs to infer and
+certainly not ours.
+
+**Cost, and it is the reason the reader came before the wiring.** Eighteen
+summaries were read by hand and every expected figure written down before the
+reader ran on them. That order found four defects the 98-message corpus could
+not have shown, because 86 of the 91 nights publish no launched total to check
+a reading against. A corpus run over a reader written against the same corpus
+is agreement, not evidence.
+
+**Reversible?** The store rows are, and cheaply: every row carries the reader
+version that produced it, so a rule change re-reads the raw text a row keeps
+and the two readings sit side by side. What is not reversible is a figure
+published under the Air Force's name, which is why the flagged state publishes
+their headline alone.
+
 
 ## D-055. An RCB all-clear ends the alert it names; `valid_to` is the publisher's day, not the threat's end
 Date: 2026-09-16; the meaning of `voivodeship` settled 2026-09-19, before release. Status: adopted

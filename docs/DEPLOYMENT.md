@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.51 / 2026-09-21
+Version: 1.52 / 2026-09-22
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -59,15 +59,15 @@ never a decision until D-031 wrote it down.
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.55.2.0`, **installed 2026-09-19 18:36 UTC** `[measured 2026-09-21]`: `mavo --version` prints `mavo 0.55.2.0`, there is one `.dist-info`, and its RECORD was written 2026-09-19 18:36:05 UTC. Every earlier install is in the deploy history below rather than in this row |
+| Installed | `air-alert-early-warning 0.55.3.0`, **installed 2026-09-21 14:27:50 UTC** `[measured at the install]`: the wheel `f5dd8206…4a1e3d3f`, 218,126 B, was transferred with its digest checked on both sides, and the content discriminator `elapsed_s=elapsed` in the installed `mavo/cli.py` read 1 before `pip` and 2 after. No migration line followed, which is the release having no schema move. Every earlier install is in the deploy history below rather than in this row |
 | Verified | **by content, against the tag.** The sha256 over the 26 installed `mavo/*.py` files, sorted by path, is `ee3734cf…d16e61`, the figure `git archive v0.55.2.0` gives, fixed from the tree before the host was read. RECORD's own hashes hold for all 38 files that carry one, and none is missing `[measured]` |
 | Point of return | `events.pre-0.55.2.0`, 49,803,264 B, written 18:35:26 UTC, beside ten older ones (Appendix A). Its `-shm` and `-wal` siblings were written one second later, so the copy was opened by SQLite once after it was taken `[inference]`; the WAL is empty and a restore copies the main file alone |
 | The schema move | three `[STORE-MIGRATED] created ...` lines, for `feed_snapshots`, `airspace_zones` and `airspace_geometries`, all in the report unit's journal at 18:36:06 UTC and in no other: the install restarted the report one second after RECORD was written, before either collector's timer fired, so it opened the store first. F168's case, read on the host |
 | First cycles under it | channel and API at 18:36:22 UTC; RSO and PAŻP at 18:38:27, each writing `snapshot=changed` on its first read |
 | Who owns the venv | `/opt/mavo/venv` is `root:root` 0755 `[measured 2026-09-21]`; why that matters is recorded under the 0.53.4.0 install below (F144) |
 | `feed_attempts` coverage | **begins 2026-08-29 14:39:05 UTC** `[measured 2026-09-21]`, eighteen days after collection began, so a query before that date returns an empty set rather than a silence (F159) |
-| `main` | 0.55.3.0 |
-| Behind by | **six** releases: 0.55.3.0 carries F183, the RSO path writing how long each attempt took, and this reading; 0.55.2.1 to 0.55.2.5 change nothing under `mavo/` but the version string. So 0.55.3.0 is an install worth making rather than bookkeeping, because it is the release after which RSO rows carry `elapsed_s`. Superseded rows, kept for the record: at 0.55.2.5 this row read **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**, both counted from an `Installed` row naming 0.54.8.0 while the host had run 0.55.2.0 since 2026-09-19; at 0.55.1.0 it read **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
+| `main` | 0.55.4.0 |
+| Behind by | **one** release: 0.55.4.0 adds `mavo/sources/kpszsu.py` and its recordings, and nothing calls the module, so the host runs the same code under either version and this install is bookkeeping rather than a change. The release that is worth an install is 0.56.0.0, which gives the reader a command, a table and a contract key (D-056). Superseded rows, kept for the record: at 0.55.3.0 this row read **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
 
 ### The 0.53.4.0 install, as it was read on 2026-09-09
 
@@ -141,6 +141,7 @@ rows.
 
 | Version | Installed at (UTC) | Fate |
 | --- | --- | --- |
+| 0.55.3.0 | 2026-09-21 14:27:50 UTC; wheel `f5dd8206…4a1e3d3f` (218,126 B) from a worktree of the tag, its digest checked on both sides; the five timers stopped for the install and started unconditionally after it; `elapsed_s=elapsed` in the installed `mavo/cli.py` as the content discriminator, 1 before and 2 after; no migration line, the release having no schema move; F183 confirmed on the first RSO run at 14:39:01, which carried a non-null `elapsed_s` | **current** |
 | 0.55.2.0 | 2026-09-19 18:36 UTC, RECORD 18:36:05; return point `events.pre-0.55.2.0` taken at 18:35:26; the three recorded tables created by the report at 18:36:06; `mavo-rso.timer` and `mavo-airspace.timer` written at 18:37 and first fired at 18:38:27; installed source verified against the tag on 2026-09-21 | **current**; D-053 and D-054, the Polish readers moved into this package, with D-055 and the review of 0.55.0.1 |
 | 0.54.8.0 | 2026-09-10 09:53 UTC, RECORD 09:53:44 `[measured 2026-09-18]` | superseded 2026-09-19 18:36 |
 | 0.54.2.0 | 2026-09-10 08:02 UTC; wheel `de5dd320…c06684` from a worktree of the tag; `mavo/latency.py` as the content discriminator, absent before and carrying `def _summary_of` once and `kind_events` twice after | superseded 2026-09-10 09:53, the same morning (F170) |

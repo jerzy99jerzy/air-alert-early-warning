@@ -16,6 +16,43 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.55.4.0 - 2026-09-22
+
+**The reader for the strike tally, with the recordings that forced every rule
+in it.** Part one of the feature: `mavo/sources/kpszsu.py` turns the Ukrainian
+Air Force's morning summaries into figures, and nothing calls it yet. The
+command, the store table and the `strike_tally` contract key are 0.56.0.0 under
+D-056, so this release changes what the package *contains* and not what it
+does: no unit, no timer, no schema move, nothing a reader of mavo.org.pl can
+see.
+
+- **`mavo/sources/kpszsu.py`, 74 tests on eighteen recordings.** Three summary
+  shapes (prose, a list after `противник атакував:`, and a combined report
+  recognised by its inventory rather than by its opening phrase); counts
+  written as words; designations that carry digits and are not counts;
+  parentheses that hold shares; the night's date and the source's own hour,
+  stored as UTC. A count the summary does not give is unknown and never 0.
+- **Reading the recordings by hand found four defects no corpus run could
+  show**, because 86 of the 91 nights publish no launched total to check a
+  reading against: three air-launched missiles read as three Banderols; an
+  unnumbered ballistic missile dropped from the launched side; impacts without
+  a numeral filtered out; a day tally's second sentence never read. Fixing them
+  surfaced three more on the corpus: a `не досягла цілі` clause read as a
+  downed item, `зенітними керованими ракетами С-400` read as air-launched, and
+  a missing form of `one`. All seven are fixed and pinned.
+- **Every check is observed firing**: ten one-figure changes to recordings,
+  each required to raise its reason. A check never seen failing is not
+  evidence.
+- **`launched_sum` returns None for an empty list as well as for a list with an
+  unknown count**, so no caller can derive a total from nothing.
+- **The fixtures are recordings.** `tests/fixtures/kpszsu/` holds eighteen
+  posts as raw HTML and as text, byte for byte as the preview served them, plus
+  the 98 summary messages as one file. They carry trailing whitespace on
+  purpose: applying a patch that touches them with `--whitespace=fix` edits the
+  evidence.
+- **`docs/DEPLOYMENT.md` 1.52**: the `Installed` row moves to 0.55.3.0, read on
+  the host at the install of 2026-09-21, and the distance row with it.
+
 ## 0.55.3.0 - 2026-09-21
 
 **The host was read in full, and the section describing it was dated to one

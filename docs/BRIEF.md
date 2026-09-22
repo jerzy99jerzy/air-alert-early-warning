@@ -6,7 +6,7 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.26
+Document:  docs/BRIEF.md, version 2.27
 Measured:  every pinned figure here is compared against STATUS.json on each
            run of the gate, so what vouches for those figures is that
            comparison and not a date in this header. The pins they are read
@@ -206,7 +206,7 @@ author for an opinion.
 **The defect log holds 162 entries.** Each states what broke, why nobody
 noticed, and what class of error it was. Entries against the project's own
 interest are in there too, including the 0 of 20 above, and one where the
-documentation claimed something was checked and it was not. Separately, **54
+documentation claimed something was checked and it was not. Separately, **55
 design decisions** are recorded, each with the condition that would reopen it.
 
 **Part of the data was sealed before anyone read any of it.** 20.01% of the
@@ -221,9 +221,9 @@ reported, inferred, assumed. The 57% above is somebody else's figure and is
 labelled as such, including a note that the source may have meant a different
 area than this project does.
 
-**The gate is single and mechanical.** One command runs 938 tests, of which 13
+**The gate is single and mechanical.** One command runs 1012 tests, of which 13
 are scripted attacks against the project's own controls; code coverage is
-95.91% against a floor of 95% that is never lowered. The attacks are themselves
+96.26% against a floor of 95% that is never lowered. The attacks are themselves
 checked: 12 of 13 were verified by deliberately breaking the control they guard
 and requiring the attack to catch it. The one without such verification is
 printed as unverified on every run rather than passed over.
