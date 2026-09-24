@@ -1,7 +1,7 @@
 {
   "project": "air-alert-early-warning",
   "codename": "MAVO",
-  "version": "0.56.0.0",
+  "version": "0.57.0.0",
   "python_requires": ">=3.11",
   "sprint_test_files": [
     0,
@@ -18,23 +18,23 @@
   "gate": "make verify",
   "documents": {
     "docs/ARCHITECTURE.md": "2.8",
-    "docs/BRIEF-PL.md": "2.29",
-    "docs/BRIEF.md": "2.28",
+    "docs/BRIEF-PL.md": "2.30",
+    "docs/BRIEF.md": "2.29",
     "docs/CHANNEL.md": "1.12",
     "docs/COMPUTATION.md": "1.1",
     "docs/DATA-FLOW.md": "1.7",
-    "docs/DECISIONS.md": "2.33",
-    "docs/DEPLOYMENT.md": "1.53",
+    "docs/DECISIONS.md": "2.34",
+    "docs/DEPLOYMENT.md": "1.54",
     "docs/FEED-SPEC.md": "3.5",
     "docs/FOUNDATIONS.md": "1.2",
     "docs/MANUAL.md": "3.15",
     "docs/MECHANISMS.md": "2.6",
-    "docs/METHODOLOGY.md": "2.69",
+    "docs/METHODOLOGY.md": "2.70",
     "docs/MOBILE.md": "1.6",
     "docs/MVP.md": "3.11",
     "docs/OBSERVABILITY.md": "1.1",
     "docs/THREAT-MODEL.md": "2.7",
-    "docs/WEBAPP.md": "3.14",
+    "docs/WEBAPP.md": "3.15",
     "docs/reviews/0.10.1.0.md": "1.0",
     "docs/reviews/0.11.1.0.md": "1.0",
     "docs/reviews/0.13.0.0.md": "1.0",
@@ -85,13 +85,14 @@
     "docs/FEED-SPEC-PL.md": "3.5",
     "docs/reviews/0.54.0.0.md": "1.0",
     "docs/reviews/0.55.0.0.md": "1.1",
-    "docs/reviews/0.56.0.0.md": "1.0"
+    "docs/reviews/0.56.0.0.md": "1.0",
+    "docs/reviews/0.57.0.0.md": "1.0"
   },
   "threat_model_rows": 17,
   "harness_attacks": 14,
   "measured": {
-    "tests_passing": 1040,
-    "coverage_percent": 96.33,
+    "tests_passing": 1059,
+    "coverage_percent": 96.34,
     "coverage_floor_percent": 95,
     "candidate_rules_passing_gate": 1,
     "policy_combined_alarms_per_week": 1.96,
@@ -167,17 +168,17 @@
     "taken_at": "2026-08-11"
   },
   "statistics": {
-    "package_lines": 12958,
+    "package_lines": 13234,
     "package_files": 28,
-    "test_lines": 17401,
+    "test_lines": 17730,
     "test_files": 76,
     "tool_lines": 8080,
     "tool_files": 28,
-    "documentation_lines": 36110,
-    "documentation_files": 76,
+    "documentation_lines": 36366,
+    "documentation_files": 77,
     "runtime_dependencies": 0
   },
-  "defects_logged": 164,
-  "decisions_recorded": 55,
-  "releases": 161
+  "defects_logged": 165,
+  "decisions_recorded": 56,
+  "releases": 162
 }

@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.33
+Document:  docs/DECISIONS.md, version 2.34
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2317,6 +2317,74 @@ written.
 scrubber needs a question answered that one indexed read of this table cannot
 answer.
 
+## D-057. The nights are published as a series, and clause 8 of D-056 is amended
+
+Date: 2026-09-24. Status: adopted. Amends: D-056 clause 8 and its one-sentence
+exclusion list.
+
+**What D-056 said, and what it was protecting.** Clause 8 kept the nights
+before the last one internal, on the ground that a series of nights is a trend
+and this project does not publish trends about somebody else's war. The
+sentence below it ruled out "an interception rate, a series, a figure nobody
+published". The thing worth protecting there was never the second word. It was
+the third and the first: a figure nobody published, and a claim of ours wearing
+the Air Force's name.
+
+**What is decided now.** `state.json` carries a second key, `strike_history`,
+holding one point per night for ninety nights and three windows over them, and
+the page draws those points as a column each. Each column is a figure the Air
+Force published for that night, standing beside the others. Nothing is
+interpolated, smoothed, averaged or extended.
+
+**Why the amendment rather than a new rule beside the old one.** A single night
+cannot be read. `Zestrzelone: 186` tells a reader on the Polish side of the
+border nothing at all unless they already know whether 186 is an ordinary night
+or the worst of the quarter, and that is precisely the question the block was
+built to answer. Withholding the comparison does not stop a reader making it;
+it sends them to make it somewhere that computes rates from figures with no
+provenance at all. Publishing the nights side by side is the cheaper honesty.
+
+**What stays ruled out, and this list is the decision's real content.** A rate
+of any kind, an interception percentage, a moving average, a mean per night, a
+trend line, a projection, and any sentence comparing one window with another.
+The page states sums and a peak, both of them additions over figures the Air
+Force printed, and says nothing about direction. The difference the amendment
+turns on: putting their numbers next to each other is arrangement, while
+dividing one by another is an argument.
+
+**The one new piece of arithmetic, and the guard on it.** A window sum adds
+figures across nights, which D-056 had not allowed. It ships with the count of
+nights that went into it and a completeness flag, so the page writes `co
+najmniej` whenever the count falls short of the window, and a night with no
+figure is drawn as a gap. A sum over 89 of 90 nights presented as the total for
+ninety would be exactly the claim this project refuses, one aggregation up.
+
+**The series is dense, and that is the second guard.** One entry per calendar
+night of the longest window, read or not. A series carrying only the nights it
+has readings for would draw four columns spread evenly across seven days, and
+the three dead days would not be missing from the picture - they would be
+invisible in it, which is worse, because the chart would look complete. A night
+nobody read and a night read that gave no figure are both blanks and are told
+apart by `read`, because they are different claims about us.
+
+**Anchored on the clock, not on the newest row.** The last seven days is seven
+days of the calendar. A window ending at the newest night in the store would
+slide backwards with a dead pipe and keep reporting a full week, which is the
+shape of F85 one window out. One exception, and it is data rather than a
+threshold: the night in progress has no summary until morning, so a window ends
+on today's Kyiv date when a reading for it is held and on yesterday's when it is
+not. A clock-hour cutoff would be a number to defend at every change of time.
+
+**Cost.** 9,906 B added to `state.json` in the writer's own formatting, 1,048 B
+compressed `[measured, the recorded corpus folded at ninety nights]`. The
+windows are the same triple as `history.json` and the constant is imported
+rather than written again.
+
+**Reopen if:** a reader is measured reading the chart as a forecast; or the
+window sums start being quoted outside the page without the coverage count
+beside them; or the series is asked to carry a figure the Air Force did not
+publish for that night.
+
 ## D-056. The strike tally publishes the Air Force's own figures, and one night at a time
 Date: 2026-09-22. Status: adopted
 
@@ -2341,7 +2409,9 @@ questions were put and answered together, and they are the whole decision:
    settled.
 8. A reader sees the last night. The nights before it stay internal, because a
    series of nights is a trend and this project does not publish trends about
-   somebody else's war.
+   somebody else's war. **Amended by D-057 (0.57.0.0):** ninety nights are
+   published as a series of their own published figures, with rates, averages
+   and comparisons between windows still refused.
 9. A launched total is published only when the Air Force published one, or when
    the launched list is non-empty and every item in it carries a count. The
    non-empty condition is the amendment: `all(...)` is true of an empty list,
@@ -2355,6 +2425,8 @@ questions were put and answered together, and they are the whole decision:
 **What this rules out, in one sentence.** An interception rate, a series, a
 figure nobody published, and a count filled in for an item the Air Force left
 unnumbered. A count they did not give is unknown and renders as not given.
+(`A series` was struck by D-057; the rate, the unpublished figure and the
+filled-in count stand.)
 
 **The one piece of arithmetic allowed** is on their own figures: a single
 unnumbered item closed by their own total, marked as derived. Two unnumbered

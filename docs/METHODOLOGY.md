@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.69
+Document:  docs/METHODOLOGY.md, version 2.70
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,41 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F187, 0.57.0.0. A figure they printed in their first line, published as an unknown
+
+`strike.headline_total` accepted two shapes of headline: a total, or a missile
+figure and a drone figure to add together. A drone-only night carries neither.
+`ЗБИТО/ПОДАВЛЕНО 63 ВОРОЖІ БПЛА` is one class, one number, for the whole night,
+and the contract answered `null` for it, so `/pl/areas` printed "Liczby
+zestrzelonych nie podano" directly above a breakdown reading `drony uderzeniowe
+63`. Over the 91 nights of the recorded corpus the rule found a figure on 55
+and missed it on 35 `[measured, tests/fixtures/kpszsu/summaries.jsonl]`: two
+nights in five, for the six weeks the block has been live.
+
+**Class.** F118's shape, in the direction nothing looks in. The function was
+written against the eighteen summaries read by hand for D-056, and all eighteen
+carry a total or both figures; the third shape is the commonest in the corpus
+and is absent from the sample the rule was designed on. The corpus run that
+followed compared the reader against itself and never against the contract's
+narrower rule, so the two disagreed for six weeks with every test green. Same
+seam as F157: an instrument exercised through one of its two callers. The
+narrower rule was argued for in the release review of 0.56.0.0, section 2, and
+the argument is still right: the contract must not add up our items on a night
+our own checks refused. What that argument never had in view is a third shape
+of *their* headline, which is why a decision can be correct and incomplete at
+once, and why the review recorded it as settled.
+
+**Repair.** A third branch takes the single headline figure when the other
+class is absent and the headline names no unnumbered class. The guard is the
+whole of the repair: on 2026-07-01 the headline reads `РАКЕТУ Х-59 ТА 130
+ВОРОЖИХ БПЛА`, a missile without a number beside 130 drones, and there the
+single figure is not the night's total. One night in 91 takes that branch and
+it is the one night that must not. Coverage after the repair: 90 of 91.
+
+**Reopen condition:** a night whose headline figure differs from the figure the
+contract publishes for it, or a headline shape the corpus holds and the three
+branches do not read.
 
 ### F186, 0.56.0.0. One threat number named two threats
 

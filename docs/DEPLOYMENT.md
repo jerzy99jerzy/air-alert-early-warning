@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.53 / 2026-09-22
+Version: 1.54 / 2026-09-24
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -67,8 +67,8 @@ never a decision until D-031 wrote it down.
 | First cycles under it | channel and API at 18:36:22 UTC; RSO and PAŻP at 18:38:27, each writing `snapshot=changed` on its first read |
 | Who owns the venv | `/opt/mavo/venv` is `root:root` 0755 `[measured 2026-09-21]`; why that matters is recorded under the 0.53.4.0 install below (F144) |
 | `feed_attempts` coverage | **begins 2026-08-29 14:39:05 UTC** `[measured 2026-09-21]`, eighteen days after collection began, so a query before that date returns an empty set rather than a silence (F159) |
-| `main` | 0.56.0.0 |
-| Behind by | **two** releases: 0.56.0.0 gives the strike tally's reader a command, a table and a contract key (D-056) and brings two units, `mavo-kpszsu.service` and its timer, so it is the install worth making; 0.55.4.0 added the reader with no caller. The install brings a schema move, one recorded table created by whichever process opens the store first, and so a point of return. Superseded rows, kept for the record: at 0.55.4.0 this row read **one**; at 0.55.3.0 **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
+| `main` | 0.57.0.0 |
+| Behind by | **three** releases against the `Installed` row above, which describes the 0.55.3.0 install of 2026-09-21: 0.55.4.0, 0.56.0.0 and this one. **That row is itself owed a rewrite, and the debt is stated rather than counted away.** 0.56.0.0 was installed on `vm-mavo` on 2026-09-22 at 20:22 UTC `[reported, the operator's own record]`; the session that cut 0.57.0.0 had no route to the host and left the figure `[nieustalone]`. Read it with `gcloud compute ssh vm-mavo --tunnel-through-iap --command "sudo /opt/mavo/venv/bin/python -c 'import mavo; print(mavo.__version__)'"` and rewrite the `Installed` row whole from the reading, per F184, rather than the one line that prompted it. 0.57.0.0 brings no schema move and no unit: a contract key is added beside an existing one and the reader of one headline shape is repaired (D-057, F187), so the install is a wheel and a restart. Superseded rows, kept for the record: at 0.56.0.0 this row read **two**; at 0.55.4.0 **one**; at 0.55.3.0 **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
 
 ### The 0.53.4.0 install, as it was read on 2026-09-09
 

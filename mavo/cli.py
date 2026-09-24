@@ -79,6 +79,7 @@ from mavo.sources.ukrainealarm_source import (
 )
 from mavo.store import EventStore, migration_lines
 from mavo.strike import block as measure_strike
+from mavo.strike import history as measure_strike_history
 from mavo.transport import StubTransport, Transport, UrllibTransport
 
 
@@ -1182,12 +1183,28 @@ def _cmd_report(args: argparse.Namespace) -> int:
                 print(f"[STRIKE-FAILED] {failure}", file=sys.stderr, flush=True)
                 return STRIKE_FAILED
 
+        # D-057. The windows, guarded apart from the night above. A fold over
+        # ninety nights has more ways to fail than a read of one, and the night
+        # is the figure a reader came for: it goes out whatever the windows do.
+        def strike_history_block(moment: datetime) -> StrikeBlock:
+            try:
+                block = measure_strike_history(store, moment)
+                json.dumps(
+                    block.value, ensure_ascii=False, indent=1, allow_nan=False
+                ).encode("utf-8")
+                return block
+            except Exception as failure:  # noqa: BLE001
+                print(f"[STRIKE-HISTORY-FAILED] {failure}",
+                      file=sys.stderr, flush=True)
+                return STRIKE_FAILED
+
         outcome = publish(
             store.replay,
             Path(args.json),
             sources=sources,
             poland=poland,
             strike=strike_block,
+            strike_history=strike_history_block,
             interval_s=args.interval,
             max_cycles=args.max_cycles,
             valid_for_s=args.valid_for,

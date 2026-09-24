@@ -6,7 +6,7 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.28
+Document:  docs/BRIEF.md, version 2.29
 Measured:  every pinned figure here is compared against STATUS.json on each
            run of the gate, so what vouches for those figures is that
            comparison and not a date in this header. The pins they are read
@@ -203,10 +203,10 @@ With a private project this weighs more than the technology, so specifics
 instead of assurances. Every one of them can be checked without asking the
 author for an opinion.
 
-**The defect log holds 164 entries.** Each states what broke, why nobody
+**The defect log holds 165 entries.** Each states what broke, why nobody
 noticed, and what class of error it was. Entries against the project's own
 interest are in there too, including the 0 of 20 above, and one where the
-documentation claimed something was checked and it was not. Separately, **55
+documentation claimed something was checked and it was not. Separately, **56
 design decisions** are recorded, each with the condition that would reopen it.
 
 **Part of the data was sealed before anyone read any of it.** 20.01% of the
@@ -221,9 +221,9 @@ reported, inferred, assumed. The 57% above is somebody else's figure and is
 labelled as such, including a note that the source may have meant a different
 area than this project does.
 
-**The gate is single and mechanical.** One command runs 1040 tests, of which 14
+**The gate is single and mechanical.** One command runs 1059 tests, of which 14
 are scripted attacks against the project's own controls; code coverage is
-96.33% against a floor of 95% that is never lowered. The attacks are themselves
+96.34% against a floor of 95% that is never lowered. The attacks are themselves
 checked: 12 of 13 were verified by deliberately breaking the control they guard
 and requiring the attack to catch it. The one without such verification is
 printed as unverified on every run rather than passed over.

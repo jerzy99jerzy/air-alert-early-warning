@@ -445,3 +445,332 @@ def test_a_store_that_fails_mid_write_leaves_no_read_row(
                       .splitlines()[0] + "\n", encoding="utf-8")
     assert main(["kpszsu", "--from-file", str(corpus), "--store", str(store_path)]) == 7
 
+
+
+# --- the headline of a night that names one class (F187) --------------------
+
+CORPUS = FIXTURES / "summaries.jsonl"
+
+
+def _corpus_readings() -> tuple[kpszsu.Reading, ...]:
+    """The 98 recorded summaries as readings, in the order the file holds them."""
+    readings = []
+    for line in CORPUS.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        record = json.loads(line)
+        message = kpszsu.Message(
+            int(record["id"]),
+            datetime.fromisoformat(str(record["posted_at"])).astimezone(UTC),
+            str(record["text"]),
+        )
+        reading = kpszsu.read_message(message)
+        if reading is not None:
+            readings.append(reading)
+    return tuple(readings)
+
+
+def _corpus_nights() -> dict[str, kpszsu.Reading]:
+    """One recording per night, by the night it covers."""
+    return {
+        reading.tally.night.isoformat(): reading
+        for reading in _corpus_readings()
+        if reading.tally is not None
+        and reading.tally.kind == "night"
+        and reading.tally.night is not None
+    }
+
+
+def _corpus_row(night: str) -> dict[str, object]:
+    reading = _corpus_nights()[night]
+    row = strike.row_of(reading)
+    return {
+        "night": row.night, "posted_at": row.posted_at.isoformat(),
+        "status": row.status, "tally": row.tally, "source_url": row.source_url,
+    }
+
+
+def test_a_drone_only_headline_is_a_figure_they_published() -> None:
+    """78455, read by hand: `ЗБИТО/ПОДАВЛЕНО 63 ВОРОЖІ БПЛА`, and below it 80
+    launched. One class named, one figure stated, for the whole night. Until
+    0.57.0.0 the contract answered `null` here and the page printed that no
+    figure was given above a breakdown listing those same 63 drones."""
+    value = strike.value(_corpus_row("2026-09-16"), read_at=T0, stale_error=None)
+    assert value["downed_total"] == 63
+
+
+def test_an_unnumbered_class_in_the_headline_withholds_the_single_figure() -> None:
+    """66963: a Kh-59 `ТА 130 ВОРОЖИХ БПЛА`, the missile carrying no number.
+    The night's total is not 130 and we do not know what it is."""
+    value = strike.value(_row("66963"), read_at=T0, stale_error=None)
+    assert value["downed_total"] is None
+
+
+def test_the_repair_is_the_size_the_defect_log_claims() -> None:
+    """91 nights recorded: 55 carried a headline figure under the two-branch
+    rule, 90 carry one under this one. The difference is 35 nights, two in
+    five, on which their own number was published as an unknown (F187)."""
+    def two_branch(tally: dict[str, object]) -> int | None:
+        head = tally["headline"]
+        assert isinstance(head, dict)
+        if head["total"] is not None:
+            return int(head["total"])
+        if head["missiles"] is not None and head["drones"] is not None:
+            return int(head["missiles"]) + int(head["drones"])
+        return None
+
+    tallies = [strike.tally_json(reading.tally)
+               for reading in _corpus_nights().values()
+               if reading.tally is not None]
+    assert len(tallies) == 91
+    assert sum(two_branch(one) is not None for one in tallies) == 55
+    assert sum(strike.headline_total(one) is not None for one in tallies) == 90
+
+
+# --- the series the store keeps ---------------------------------------------
+
+def test_the_series_keeps_the_latest_reading_of_each_night(tmp_path: Path) -> None:
+    """A night re-read after an edit is one column of the chart, not two, and
+    the column is the reading `newest_strike_night` publishes."""
+    store = _store(tmp_path)
+    first = strike.row_of(_reading("79455"))
+    edited = replace(first, post_id=79456, raw_text=first.raw_text + " (уточнено)",
+                     posted_at=first.posted_at + timedelta(hours=1))
+    store.append_strike_tallies([first, edited])
+    series = store.strike_nights_since("2026-09-01")
+    assert [row["night"] for row in series] == ["2026-09-22"]
+    assert series[0]["post_id"] == 79456
+    newest = store.newest_strike_night()
+    assert newest is not None and newest["post_id"] == series[-1]["post_id"]
+
+
+def test_the_series_is_oldest_first_and_starts_where_it_was_told(
+    tmp_path: Path,
+) -> None:
+    store = _store(tmp_path)
+    store.append_strike_tallies(
+        [strike.row_of(reading) for reading in _corpus_nights().values()])
+    series = store.strike_nights_since("2026-09-16")
+    nights = [row["night"] for row in series]
+    assert nights == sorted(nights)
+    assert nights[0] == "2026-09-16" and nights[-1] == "2026-09-22"
+
+
+def test_a_day_tally_and_a_refusal_stay_out_of_the_series(tmp_path: Path) -> None:
+    """The same filter as the block above it: a day is stored and not shown,
+    and a correction carries no figures to draw."""
+    store = _store(tmp_path)
+    store.append_strike_tallies(
+        [strike.row_of(_reading(post)) for post in ("78115", "69965", "79455")])
+    assert [row["night"] for row in store.strike_nights_since("2026-01-01")] == [
+        "2026-09-22"]
+
+
+# --- the windows (D-057) ----------------------------------------------------
+
+def _corpus_store(tmp_path: Path, read_at: datetime = T0) -> EventStore:
+    store = _store(tmp_path)
+    store.append_strike_tallies(
+        [strike.row_of(reading) for reading in _corpus_readings()])
+    store.record_read(strike.FEED, kpszsu.SOURCE_URL, read_at, 20, 0,
+                      first_id=1, last_id=20)
+    return store
+
+
+def test_the_windows_are_absent_before_the_channel_was_ever_polled(
+    tmp_path: Path,
+) -> None:
+    assert strike.history(_store(tmp_path), T0).published is False
+
+
+def test_a_read_with_no_night_publishes_null_windows(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    store.record_read(strike.FEED, kpszsu.SOURCE_URL, T0, 20, 0,
+                      first_id=1, last_id=20)
+    block = strike.history(store, T0)
+    assert block.published and block.value is None
+
+
+def test_the_corpus_folds_into_the_three_windows_as_measured(
+    tmp_path: Path,
+) -> None:
+    """Read off the recordings: seven nights to 22.09 give 842 shot down, the
+    thirty to the same night 4300, and the ninety 12034 over 89 of 90 nights.
+    The ninetieth is 01.07, whose headline names a missile without a number,
+    so the window is complete in nights read and incomplete in figures - the
+    two counts the page needs to choose its sentence."""
+    value = strike.history(_corpus_store(tmp_path), T0).value
+    assert value is not None
+    assert value["latest_night"] == "2026-09-22"
+    assert value["as_of_date"] == "2026-09-22"
+    windows = {one["days"]: one for one in value["windows"]}
+    assert sorted(windows) == [7, 30, 90]
+    assert windows[7]["start"] == "2026-09-16" and windows[7]["end"] == "2026-09-22"
+    assert windows[7]["downed"] == {
+        "sum": 842, "nights": 7, "complete": True,
+        "max": 186, "max_night": "2026-09-22"}
+    assert windows[30]["downed"]["sum"] == 4300
+    assert windows[30]["downed"]["complete"] is True
+    assert windows[90]["start"] == "2026-06-25"
+    assert windows[90]["nights_read"] == 90
+    assert windows[90]["downed"] == {
+        "sum": 12034, "nights": 89, "complete": False,
+        "max": 524, "max_night": "2026-07-02"}
+    assert len(value["nights"]) == 90, "the series spans the longest window"
+    assert value["nights"][0]["night"] == "2026-06-25"
+    assert value["nights"][-1]["night"] == "2026-09-22"
+
+
+def test_the_night_with_no_figure_is_a_gap_and_never_a_zero(
+    tmp_path: Path,
+) -> None:
+    value = strike.history(_corpus_store(tmp_path), T0).value
+    assert value is not None
+    gaps = [one for one in value["nights"] if one["downed"] is None]
+    assert [one["night"] for one in gaps] == ["2026-07-01"]
+    assert all(one["downed"] != 0 for one in value["nights"])
+
+
+def test_launched_is_counted_only_where_they_gave_every_number(
+    tmp_path: Path,
+) -> None:
+    """Three of the last seven nights carry a launched figure. The sum stands
+    with the count beside it, so the page can say `at least` rather than pass
+    off four unknown nights as nothing."""
+    value = strike.history(_corpus_store(tmp_path), T0).value
+    assert value is not None
+    week = {one["days"]: one for one in value["windows"]}[7]
+    assert week["launched"] == {
+        "sum": 394, "nights": 3, "complete": False,
+        "max": 176, "max_night": "2026-09-19"}
+
+
+def test_a_flagged_night_keeps_its_headline_and_loses_its_launched(
+    tmp_path: Path,
+) -> None:
+    """72214 is the one flagged night in the corpus. Its headline is theirs
+    and stays in the series; everything our reading produced is withheld, as
+    it is in the night's own block."""
+    value = strike.history(_corpus_store(tmp_path), T0).value
+    assert value is not None
+    flagged = [one for one in value["nights"] if one["check"] == "flagged"]
+    assert [one["night"] for one in flagged] == ["2026-08-10"]
+    assert flagged[0]["downed"] == 96
+    assert flagged[0]["launched"] is None
+
+
+def test_an_empty_window_has_no_sum_rather_than_a_zero(tmp_path: Path) -> None:
+    """A store holding one old night: the week is empty, and an empty week is
+    not a week on which nothing was shot down."""
+    store = _store(tmp_path)
+    store.append_strike_tallies([strike.row_of(_reading("66440"))])
+    store.record_read(strike.FEED, kpszsu.SOURCE_URL, T0, 20, 0,
+                      first_id=1, last_id=20)
+    value = strike.history(store, T0).value
+    assert value is not None
+    week = {one["days"]: one for one in value["windows"]}[7]
+    assert week["nights_read"] == 0
+    assert week["downed"] == {"sum": None, "nights": 0, "complete": False,
+                              "max": None, "max_night": None}
+
+
+def test_the_window_ends_on_the_night_a_summary_was_read_for(
+    tmp_path: Path,
+) -> None:
+    """The night in progress has no summary until the morning. With today's
+    reading held the window ends today; without it, yesterday - asked of the
+    store rather than of a clock hour nobody could defend twice a year."""
+    store = _corpus_store(tmp_path)
+    value = strike.history(store, T0).value
+    assert value is not None and value["windows"][0]["end"] == "2026-09-22"
+    later = strike.history(store, T0 + timedelta(days=1)).value
+    assert later is not None
+    assert later["as_of_date"] == "2026-09-23"
+    assert later["windows"][0]["end"] == "2026-09-22", "no reading for the 23rd"
+    assert later["windows"][0]["start"] == "2026-09-16", "seven nights, not six"
+
+
+def test_a_pipe_that_stopped_shows_the_days_it_missed(tmp_path: Path) -> None:
+    """The window is seven days of the calendar and not seven days of ours.
+    Four days after the last summary the week holds three nights, and the
+    figure the page prints is a figure over three nights, marked as one."""
+    store = _corpus_store(tmp_path)
+    value = strike.history(store, T0 + timedelta(days=4)).value
+    assert value is not None
+    week = {one["days"]: one for one in value["windows"]}[7]
+    assert week["end"] == "2026-09-25" and week["start"] == "2026-09-19"
+    assert week["nights_read"] == 4
+    assert week["downed"]["nights"] == 4 and week["downed"]["complete"] is False
+    assert value["latest_night"] == "2026-09-22", "the tally above says the same"
+
+
+def test_the_contract_carries_the_windows_only_when_published() -> None:
+    report = compose([], as_of=T0)
+    assert "strike_history" not in to_contract(report)
+    published = replace(report, strike_history=Block(published=True, value=None))
+    assert to_contract(published)["strike_history"] is None
+    absent = replace(report, strike_history=Block(published=False))
+    assert "strike_history" not in to_contract(absent)
+
+
+def test_a_failure_to_fold_the_windows_leaves_the_night_standing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The night is the figure a reader came for. A fold over ninety nights
+    has more ways to fail than a read of one, and its own guard is why the
+    first cannot take the second down with it."""
+    monkeypatch.delenv("MAVO_LOG_FILE", raising=False)
+    store = _corpus_store(tmp_path)
+    assert store.newest_strike_night() is not None
+
+    def broken(_store: EventStore, _moment: datetime) -> Block:
+        raise sqlite3.OperationalError("disk I/O error")
+
+    monkeypatch.setattr("mavo.cli.measure_strike_history", broken)
+    state = tmp_path / "state.json"
+    assert main(["report", "--store", str(tmp_path / "events"),
+                 "--json", str(state), "--watch", "--interval", "0",
+                 "--max-cycles", "1"]) == 0
+    payload = json.loads(state.read_text(encoding="utf-8"))
+    assert payload["strike_history"] is None
+    assert payload["strike_tally"] is not None, "the night survives the windows"
+    assert "[STRIKE-HISTORY-FAILED] disk I/O error" in capsys.readouterr().err
+
+
+def test_the_series_carries_a_column_for_every_night_of_the_window(
+    tmp_path: Path,
+) -> None:
+    """Dense, and this is the property the chart rests on. Four days after the
+    last summary the week still has seven entries: three of them are nights
+    nobody read, and a series that simply left them out would draw four
+    columns across seven days and look complete."""
+    value = strike.history(_corpus_store(tmp_path), T0 + timedelta(days=4)).value
+    assert value is not None
+    week = {one["days"]: one for one in value["windows"]}[7]
+    nights = [one["night"] for one in value["nights"]
+              if week["start"] <= one["night"] <= week["end"]]
+    assert nights == ["2026-09-19", "2026-09-20", "2026-09-21", "2026-09-22",
+                      "2026-09-23", "2026-09-24", "2026-09-25"]
+    unread = [one for one in value["nights"] if not one["read"]]
+    assert [one["night"] for one in unread[-3:]] == [
+        "2026-09-23", "2026-09-24", "2026-09-25"]
+    assert all(one["downed"] is None and one["check"] is None for one in unread)
+    assert week["nights_read"] == 4, "read nights, not entries"
+
+
+def test_a_night_read_without_a_figure_is_not_a_night_nobody_read(
+    tmp_path: Path,
+) -> None:
+    """Two kinds of blank, told apart by `read`. 01.07 was read and gave no
+    figure the Air Force stated; a night after the last summary was not read
+    at all. Both draw empty and they are different claims about us."""
+    value = strike.history(_corpus_store(tmp_path), T0).value
+    assert value is not None
+    by_night = {one["night"]: one for one in value["nights"]}
+    assert by_night["2026-07-01"] == {
+        "night": "2026-07-01", "read": True, "downed": None,
+        "launched": None, "check": "ok"}, (
+        "read, and neither figure survives their own wording: a missile with "
+        "no number stands in the headline and another in the launched list")
+    assert all(one["read"] for one in value["nights"]), "the corpus has no hole"

@@ -612,6 +612,12 @@ class Report:
     #: whatever the consumer shows in place. A block decides between absent,
     #: `null` and the latest night.
     strike: Block | None = None
+    #: The windows over that tally (D-057), a fourth block on the terms of the
+    #: third. Separate from `strike` rather than nested inside it, because a
+    #: producer that reads the channel and cannot fold the windows still owes
+    #: the consumer last night, and one key going `null` must not take the
+    #: other with it.
+    strike_history: Block | None = None
 
     @property
     def staleness_s(self) -> float | None:
@@ -990,6 +996,7 @@ def compose(
     | None = None,
     poland: Callable[[datetime], PolandBlocks] | None = None,
     strike: Callable[[datetime], Block] | None = None,
+    strike_history: Callable[[datetime], Block] | None = None,
 ) -> Report:
     """Fold an event log into the current picture.
 
@@ -1204,6 +1211,10 @@ def compose(
         poland=poland(moment) if poland is not None else None,
         # D-056. A third callable on the same terms as the two above.
         strike=strike(moment) if strike is not None else None,
+        # D-057. A fourth, and the last one the contract needs a store for.
+        strike_history=(
+            strike_history(moment) if strike_history is not None else None
+        ),
     )
 
 
@@ -1384,6 +1395,11 @@ def to_contract(report: Report) -> dict[str, object]:
     # a deployed page refusing the whole payload over one new key.
     if report.strike is not None and report.strike.published:
         payload["strike_tally"] = report.strike.value
+    # D-057. Its own key beside the night rather than a field inside it: a
+    # consumer that renders one and not the other reads one key and not the
+    # other, and the windows can go `null` while the night stands.
+    if report.strike_history is not None and report.strike_history.published:
+        payload["strike_history"] = report.strike_history.value
     return payload
 
 
@@ -1575,6 +1591,7 @@ def publish(
     | None = None,
     poland: Callable[[datetime], PolandBlocks] | None = None,
     strike: Callable[[datetime], Block] | None = None,
+    strike_history: Callable[[datetime], Block] | None = None,
 ) -> PublishReport:
     """Write the contract on a fixed interval until a named condition stops it.
 
@@ -1626,7 +1643,7 @@ def publish(
             report = compose(
                 events, as_of=clock(), table=table, valid_for_s=valid_for_s,
                 history_days=history_days, sources=sources, poland=poland,
-                strike=strike,
+                strike=strike, strike_history=strike_history,
             )
             if report.feed_state is FeedState.BLIND:
                 blind += 1

@@ -1179,6 +1179,52 @@ class EventStore:
             "reader": row[8],
         }
 
+    def strike_nights_since(self, start: str) -> tuple[dict[str, Any], ...]:
+        """One reading per night from `start` onwards, oldest first (D-057).
+
+        `newest_strike_night` answers which night is the latest; this answers
+        which nights there are. The two share a filter, so the last entry here
+        is the row that block publishes and a reader cannot find the tally
+        above the windows disagreeing with the last column of the chart.
+
+        **One row per night, and the latest reading of it.** A night can hold
+        several rows - a summary re-read after an edit, a backfill run twice -
+        and a series carrying both would draw the night twice. The order is
+        the order `newest_strike_night` picks by, so the reading kept here is
+        the reading published there.
+
+        `start` is a Kyiv calendar date in the form the rows hold, YYYY-MM-DD.
+        The comparison is lexicographic, which is chronological over ISO dates
+        of one form, and the column holds no other form: `night` is written
+        from `date.isoformat()` and from nothing else.
+        """
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT post_id, posted_at, status, night, as_of, tally, checks, "
+                "source_url, reader FROM strike_tallies "
+                "WHERE kind = 'night' AND status IN ('ok', 'flagged') "
+                "AND night IS NOT NULL AND night >= ? "
+                "ORDER BY night DESC, posted_at DESC, rowid DESC",
+                (start,),
+            ).fetchall()
+        kept: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            night = str(row[3])
+            if night in kept:
+                continue
+            kept[night] = {
+                "post_id": row[0],
+                "posted_at": row[1],
+                "status": row[2],
+                "night": night,
+                "as_of": row[4],
+                "tally": json.loads(row[5]) if row[5] is not None else None,
+                "checks": json.loads(row[6]),
+                "source_url": row[7],
+                "reader": row[8],
+            }
+        return tuple(kept[night] for night in sorted(kept))
+
     def count_strike_tallies(self) -> int:
         with closing(self._connect()) as conn:
             return int(conn.execute("SELECT COUNT(*) FROM strike_tallies").fetchone()[0])

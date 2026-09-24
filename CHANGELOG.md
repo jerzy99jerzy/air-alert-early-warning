@@ -16,6 +16,51 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.57.0.0 - 2026-09-24
+
+**The nights the reader could not see, and a figure they printed that this
+producer called unknown.** `Bilans nalotu` published one night, on the reading
+that a series of nights is a trend (D-056 clause 8). A single night has no
+scale: 186 shot down means nothing to a reader who cannot tell it from the
+worst night of the quarter. D-057 amends that clause - the nights are published
+as their own figures side by side, and every rate, average, trend line and
+comparison between windows stays refused.
+
+- **`strike_history`, a second key beside `strike_tally`.** One point per night
+  across ninety nights, three windows over them (7, 30, 90 - the same triple as
+  `history.json`, imported from it rather than written again), and per window a
+  sum, the count of nights that went into the sum, a completeness flag and the
+  peak night. Additive against schema 3, like the key it sits beside.
+- **A window sum ships with its coverage or it is not readable.** Adding figures
+  across nights is the one new piece of arithmetic in this release, and a sum
+  over 89 of 90 nights presented as ninety nights would be the claim this
+  project exists to refuse. The count travels with the sum and the page writes
+  `co najmniej` when the two disagree. A night with no figure is `null`, drawn
+  as a gap, never as a column of zero.
+- **The series is dense.** One entry per calendar night, read or not, because
+  a series holding only the nights it has draws four columns across seven days
+  and looks complete. `read` false is a night nobody read and `read` true with
+  no figure is a night read that gave none; both are blanks on the page and
+  they are different claims about us.
+- **The window is anchored on the clock, not on the newest row.** A window
+  ending at the last night in the store slides backwards with a dead pipe and
+  keeps reporting a full week. The one exception is data rather than a
+  threshold: the night in progress has no summary until morning, so a window
+  ends on today's Kyiv date when a reading for it is held and on yesterday's
+  when it is not.
+- **F187: a figure printed in their first line, published as an unknown.**
+  `headline_total` read a total, or a missile figure and a drone figure to add;
+  a drone-only night (`ЗБИТО/ПОДАВЛЕНО 63 ВОРОЖІ БПЛА`) carries neither, so the
+  contract said `null` and the page printed that no figure was given above a
+  breakdown listing those same 63 drones. 35 of 91 recorded nights, six weeks
+  live. A third branch takes the single headline figure when the other class is
+  absent and the headline names no unnumbered class; the guard is the repair,
+  because on 2026-07-01 a missile with no number stands beside 130 drones and
+  there the single figure is not the night's total. Coverage 55 to 90 of 91.
+- **`EventStore.strike_nights_since`** returns one reading per night, the
+  latest, under the filter `newest_strike_night` uses, so the tally above the
+  windows and the last column of the chart cannot disagree.
+
 ## 0.56.0.0 - 2026-09-22
 
 **`Bilans nalotu`, the strike tally, reaches the contract.** The Ukrainian Air
