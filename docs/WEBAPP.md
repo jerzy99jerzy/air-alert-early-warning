@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.15 / 2026-09-24
+Version: 3.16 / 2026-09-27
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -118,9 +118,12 @@ lives above the fold rather than in a footer.
 ## The contract, and who owns it
 
 Two files, `state.json` and `feed.json`, schema v3, and from 0.52.1.0 a
-third, `history.json`, that the site does not yet read (D-048). MAVO writes
-them (`mavo report --json ... --feed ... --history ...`, and `--watch` for
-the loop); the site reads them and imports nothing from this package.
+third, `history.json`, that the site does not yet read (D-048). From 0.58.0.0
+a fourth, `timeline.json`, the past week as intervals, which the site's
+seven-day slider is planned to read and no unit writes yet (D-058). MAVO writes
+them (`mavo report --json ... --feed ... --history ... --timeline ...`, and
+`--watch` for the loop); the site reads them and imports nothing from this
+package.
 
 **Two files rather than one, and the reason is cost rather than tidiness.**
 `state.json` is re-read on every cycle, so whatever it carries is a recurring
@@ -159,6 +162,11 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `feed.json: recent_7d_areas[].alert_seconds` | The same quantity per raion, with `still_under_alert` beside it | Summing it across an oblast's areas is **not** that oblast's `alert_seconds`, for the same reason the counts do not sum: the oblast figure is a union over simultaneous raions |
 | `history.json: windows[]` | The trailing window at 7, 30 and 90 days, each with `oblasts[]` in the `recent_7d` shape and `areas[]` in the `recent_7d_areas` shape (D-048) | One fold at three lengths: the 7-day entry is byte for byte the `recent_7d` block of `state.json` and the `recent_7d_areas` block of `feed.json`, held by `tools/contract_check.py`. A third file on D-024's argument: a reader who opens the quarter pays for the quarter. 19 KiB gzipped on a synthetic 180,000-event log across the packaged table's 126 areas [measured 2026-09-04, this tree]; production resolves more areas and is unmeasured |
 | `history.json: windows[].log_reaches_window_start` | Whether the oldest stamp in the store, `log_oldest_at`, lies at or before `window_start` | **`false` means the counts cover the part of the window the store has observed, and a page must say so.** A quarter published over a store three weeks old is not a quiet quarter; rendering it as one is unknown-resolves-to-calm one window out (F85's shape). Always present, always a boolean. What it does not say: a gap inside the window. The collector's attempt record could, and does not travel here yet |
+| `timeline.json` | From 0.58.0.0, written by `--timeline`: `v` (its own version, 1), `generated_at`, `window` (`start`, `days`) and four layers, `areas`, `rcb`, `airspace` and `coverage` (D-058) | **Every interval is half-open, `[from, to)`, and `to: null` is open when the file was written, never "ended".** Stamps carry microseconds, because the rules turn a tick after an edge: a communique valid until 23:59:00 is still valid at 23:59:00. A moment outside `window` has no answer in this file, and a page must not draw one as a quiet map. `generated_at` is the moment of the contract written in the same cycle, to the microsecond; a file whose `generated_at` stops moving is a producer that stopped writing it, and the page says how old it is. **A week is about a megabyte**: 1,143,022 B as written and 113,149 B gzipped for the week ending 2026-09-26, nine tenths of it area intervals [measured on a week recorded from `vm-mavo`, 2026-09-27], so a phone should receive it compressed and only after a touch (D-024) |
+| `timeline.json: areas` | `oldest_observation`, `log_reaches_window_start`, `places` (per `area_id`: `katottg`, `oblast`, `oblast_name`, `border_km_lower`, `border_km_upper`) and `intervals[]` (`area_id`, `alert`, `kind`, `since`, `kinds`, `from`, `to`) | **An interval joined to its place is exactly an entry of `areas[]` in `state.json`**, one serialisation, held by `tools/contract_check.py`. The picture of a moment is the entries whose interval holds it, and an area in no interval at that moment was cleared, as in `state.json`. Changes at the source's own stamp, so a row that reached the store after an outage sits where the source put it. A standing older than the window starts at the window's start; when it began is its `since` |
+| `timeline.json: rcb` | `recorded_since` and `intervals[]`, each holding `pl_warnings` and `pl_all_clear` exactly as the contract would have published them, `null` where it would have said `null` | **Before `recorded_since` there is no record, and that is not a stretch without communiques.** `null` inside is polled and unreadable, the hour-old ceiling included (D-053). Changes at read time: a list reaches the file up to one poll after the publisher changed it |
+| `timeline.json: airspace` | `recorded_since`, `unread[]` (the stretches where the contract would have said `null`), `geometries` (an outline per digest) and `intervals[]` (`designator`, `kind`, `geometry`, `properties`, `from`, `to`), one per zone drawn | `properties` is the feature's own object in `pl_airspace`. The text block's `read_at`, `statuses` and `stale_error` are not carried: they change at every read, and a stretch without reads is `coverage`'s to report |
+| `timeline.json: coverage` | Per pipe, under the name `feed_attempts` uses: `role`, `silence_is_an_outage_s`, `recorded_since` and `gaps[]` | **A gap is a stretch in which the live `sources` block would not have said `delivering`**, by its own threshold, the edge included. Over a gap the record is incomplete and a page draws that, never a quiet map. `role` says which pipe's gap blinds the Ukrainian picture: the primary's does; the watchman's and the context pipes' do not (D-049) |
 | `border_km_lower` / `_upper` | Interval to the border, may be `null` | A single number here would be false with a decimal point on it |
 | `kind` | `missile`, `drone`, `glide_bomb`, `artillery`, `unknown` | Five values, and the consumer currently labels three. See below |
 | `events` | The twenty-minute window, **always present** | An absent block and an empty one read alike to a careless reader. Empty means nothing happened, and the page must say so in words |

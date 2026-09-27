@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.34
+Document:  docs/DECISIONS.md, version 2.35
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2309,13 +2309,99 @@ change, and a scrubber built on this table must draw it as unmeasured.
 
 **What this does not decide.** How history reaches a reader - a day file, one
 bounded payload, a range query - is the scrubber's open question and is not
-answered here; nothing in the contract carries history yet. Retention is not
+answered here; nothing in the contract carries history yet. D-058 answers it
+(2026-09-27): one bounded file of intervals. Retention is not
 set: growth is owed as a measurement from the host (T85) before a policy is
 written.
 
 **Reopen if:** the table grows faster than the event store it sits in, or the
 scrubber needs a question answered that one indexed read of this table cannot
 answer.
+
+## D-058. The past week reaches a reader as one file of intervals, each layer on the clock its data has
+
+Date: 2026-09-27. Status: adopted. Answers: the question D-054 left open.
+
+**Decision.** `mavo report --timeline PATH` writes `timeline.json` from the
+same replay and at the same moment as the other files: the trailing seven
+days, as half-open intervals `[from, to)` of what the live contract said or
+would have said, per layer, and per pipe the stretches in which the record is
+incomplete. Areas are intervals per area carrying the contract's own area item,
+the place written once under `places`. The communique keys are intervals of
+the exact `pl_warnings` and `pl_all_clear` values. The airspace is intervals
+per drawn zone, each outline written once under `geometries`. Coverage lists,
+per pipe, the stretches after its first poll in which the live `sources` rule
+would not have said `delivering`. The operator chose one interval file over
+day files and over a range query on the site host on 2026-09-27, with the
+plan's reasons: day files cost seven fetches to scrub one week and cut every
+night at midnight; a range query costs a request per slider move from a phone
+that may have one bar, and a store read on the host that must not fail, which
+is D-018's line.
+
+**Two clocks, one per layer, each the only one its data has.** The picture of
+an area at a moment is `compose` over every event the source stamped at or
+before it: what the store knows today about that moment, rows that reached it
+later, after an outage, included. The other reading, the rows ingested by that
+moment, would replay what the page said then, blindness included, as if it
+were the sky; the blindness has a layer of its own. The Polish lists have no
+clock but the read that saw them, so their picture at a moment is the newest
+list read at or before it, and a change reaches the file up to one poll late:
+RSO is read every 900 s plus up to 60, PAŻP every 300 s plus up to 30
+(`docs/DEPLOYMENT.md`).
+
+**One rule, two implementations, and the test that holds them together.**
+Nothing in `mavo/timeline.py` decides what a moment looked like. An area is
+named by `report.area_picture`, the rule `compose` applies; the communique keys
+by `poland.warnings_verdict`, the rule `warnings_blocks` applies; a zone by
+`poland.airspace_reading` and `poland.drawn`; a pipe by the threshold
+`liveness.measure_feed` applies. The module's own work is finding every instant
+at which one of those answers can change, and asking there. The test takes the
+file's picture of a moment, built by selection alone, and the live rules asked
+about the same moment directly, at random instants and at every boundary a tick
+either side; the two must be equal. `mavo timeline --store --at` and
+`--file --at` print both sides in one shape, so the same comparison is a `diff`
+on the host.
+
+**What the file refuses to say.** A cycle whose replay failed writes no file,
+because a week folded from an empty log is a week without alerts. A moment
+outside the window is refused rather than answered with nothing. Before a
+pipe's first poll the file says where its record starts and never draws an
+empty layer there. A stretch without reads is a gap, not a stretch without
+change (D-054).
+
+**Stamps at microseconds.** A communique valid until 23:59:00 is valid at
+23:59:00 and not one tick later, so the interval ends a microsecond after it.
+Rounded to the second, the file and the rules it is checked against would
+disagree by a tick at every such edge.
+
+**The slider's step is not the file's.** The consumer steps in fifteen minutes
+(the operator's decision of 2026-09-27, against five); the file carries
+intervals, which no step rounds. A state shorter than the step is in the file
+and may fall on no stop of the slider, and saying so is the consumer's work
+(D-S92).
+
+**Deployment order, D-048's.** The consumer's `timeline` target and
+`/timeline.json` route first, then the push unit's third file, then the flag,
+because the forced command refuses a target it does not know and the other
+order fails every push in a journal nobody reads. Before the flag enters the
+unit, T90 measures the file and the cycle on the host, and `--timeline-every`
+lets the unit pay the cost less often without a release if the figure asks for
+it.
+
+**Cost, measured on a recorded week and not yet on the host.** For the week
+ending 2026-09-26, recorded from `vm-mavo` by `mavo record-week`, the file is
+1,143,022 B as written and 113,149 B gzipped; nine tenths of it are the 3,753
+area intervals, beside 26 communique intervals, 174 zone intervals and 8 gaps,
+all eight on the channel `[measured in the session's container]`. Written every
+thirty seconds that is about 3.3 GB a day through the push unit `[inference]`.
+The cycle's cost on the host, with the whole log replayed, is T90's,
+measured on the installed release before the flag goes into the unit, and
+`--timeline-every` is the answer if the figure asks for one.
+
+**Reopen if:** the file outgrows a push every thirty seconds at the measured
+size; the consumer needs a question that choosing intervals cannot answer; or a
+live rule starts to depend on the moment in a way this module does not know as
+a change point, which the agreement test is the place to see first.
 
 ## D-057. The nights are published as a series, and clause 8 of D-056 is amended
 

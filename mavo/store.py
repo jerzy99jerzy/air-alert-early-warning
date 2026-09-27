@@ -1045,6 +1045,42 @@ class EventStore:
             return None
         return {"observed_at": row[0], "digest": row[1], "members": json.loads(row[2])}
 
+    def snapshots(
+        self,
+        feed: str,
+        url: str,
+        since: datetime | None = None,
+        until: datetime | None = None,
+    ) -> tuple[dict[str, Any], ...]:
+        """Every list one address served between two moments, oldest first.
+
+        The range form of `newest_snapshot`, for a caller that walks a window
+        instead of asking about one moment (D-058). Same window semantics as
+        `attempts`: ``since`` inclusive, ``until`` exclusive, both compared in
+        stored form. A row is a change of list and not a read, so a window with
+        no row is a window in which the list did not change *as far as the
+        reads went*; whether reads went at all is `feed_attempts`' answer.
+        """
+        clauses = ["feed = ?", "url = ?"]
+        values: list[Any] = [feed, url]
+        if since is not None:
+            clauses.append("observed_at >= ?")
+            values.append(_stored_form(since, "since"))
+        if until is not None:
+            clauses.append("observed_at < ?")
+            values.append(_stored_form(until, "until"))
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT observed_at, digest, members FROM feed_snapshots "
+                f"WHERE {' AND '.join(clauses)} "
+                "ORDER BY observed_at, rowid",
+                tuple(values),
+            ).fetchall()
+        return tuple(
+            {"observed_at": row[0], "digest": row[1], "members": json.loads(row[2])}
+            for row in rows
+        )
+
     def count_snapshots(self, feed: str | None = None) -> int:
         """Rows held, for the whole table or one feed."""
         with closing(self._connect()) as conn:
@@ -1440,7 +1476,9 @@ class EventStore:
                     "last_id": row[8],
                 }
 
-    def newest_attempt_at(self, feed: str, url: str | None = None) -> str | None:
+    def newest_attempt_at(
+        self, feed: str, url: str | None = None, at: datetime | None = None
+    ) -> str | None:
         """Stored form of the most recent poll of this feed, whatever happened.
 
         `ORDER BY started_at DESC LIMIT 1` over `idx_attempts_feed`, so it stops
@@ -1454,30 +1492,65 @@ class EventStore:
         ``url`` narrows the tail to one address of the feed (0.55.0.0): RSO is
         five addresses under one feed name, and the one the map reads can be
         refused while the other four answer.
-        """
-        return self._tail(feed, None, url)
 
-    def newest_read_at(self, feed: str, url: str | None = None) -> str | None:
+        ``at`` makes it the tail as it stood at that moment: the newest poll
+        started at or before it (D-058). Omitted, it is the tail of the table,
+        which is what every live caller wants; a caller composing a past moment
+        passes it, or it describes that moment with polls made after it.
+        """
+        return self._tail(feed, None, url, at)
+
+    def newest_read_at(
+        self, feed: str, url: str | None = None, at: datetime | None = None
+    ) -> str | None:
         """Stored form of the most recent poll of this feed that succeeded.
 
         The quantity a liveness check turns on: an attempt that happened proves
-        a timer is running, and only a *read* proves data arrived.
+        a timer is running, and only a *read* proves data arrived. ``at`` as in
+        `newest_attempt_at`.
         """
-        return self._tail(feed, "read", url)
+        return self._tail(feed, "read", url, at)
 
-    def newest_refusal_detail(self, feed: str, url: str | None = None) -> str | None:
+    def oldest_attempt_at(self, feed: str, url: str | None = None) -> str | None:
+        """Stored form of the first poll of this feed ever recorded, or None.
+
+        The start of the record, which is not the start of the world: before
+        this row the store cannot say what the feed held, and a layer drawn
+        from the feed has to say *not recorded* there rather than *nothing*
+        (D-058). One seek over `idx_attempts_feed`, like the tail.
+        """
+        clauses = ["feed = ?"]
+        values: list[Any] = [feed]
+        if url is not None:
+            clauses.append("url = ?")
+            values.append(url)
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT started_at FROM feed_attempts "
+                f"WHERE {' AND '.join(clauses)} "
+                "ORDER BY started_at ASC, rowid ASC LIMIT 1",
+                tuple(values),
+            ).fetchone()
+        return str(row[0]) if row and row[0] is not None else None
+
+    def newest_refusal_detail(
+        self, feed: str, url: str | None = None, at: datetime | None = None
+    ) -> str | None:
         """`detail` of the most recent refusal, for classifying why.
 
         Reported, never load-bearing. A refusal that carried no detail returns
         None rather than an empty string, because "we did not record why" and
         "there was no reason given" are different and only one of them is a
-        fact about the far end.
+        fact about the far end. ``at`` as in `newest_attempt_at`.
         """
         clauses = ["feed = ?", "outcome = ?"]
         values: list[Any] = [feed, "refused"]
         if url is not None:
             clauses.append("url = ?")
             values.append(url)
+        if at is not None:
+            clauses.append("started_at <= ?")
+            values.append(_stored_form(at, "at"))
         with closing(self._connect()) as conn:
             row = conn.execute(
                 "SELECT detail FROM feed_attempts "
@@ -1487,7 +1560,13 @@ class EventStore:
             ).fetchone()
         return str(row[0]) if row and row[0] is not None else None
 
-    def _tail(self, feed: str, outcome: str | None, url: str | None = None) -> str | None:
+    def _tail(
+        self,
+        feed: str,
+        outcome: str | None,
+        url: str | None = None,
+        at: datetime | None = None,
+    ) -> str | None:
         clauses = ["feed = ?"]
         values: list[Any] = [feed]
         if outcome is not None:
@@ -1496,6 +1575,9 @@ class EventStore:
         if url is not None:
             clauses.append("url = ?")
             values.append(url)
+        if at is not None:
+            clauses.append("started_at <= ?")
+            values.append(_stored_form(at, "at"))
         with closing(self._connect()) as conn:
             row = conn.execute(
                 "SELECT started_at FROM feed_attempts "
@@ -1505,18 +1587,28 @@ class EventStore:
             ).fetchone()
         return str(row[0]) if row and row[0] is not None else None
 
-    def newest_read(self, feed: str, url: str | None = None) -> dict[str, Any] | None:
+    def newest_read(
+        self, feed: str, url: str | None = None, at: datetime | None = None
+    ) -> dict[str, Any] | None:
         """The most recent successful read of a feed, or of one of its addresses.
 
         The row rather than its stamp, because the Polish blocks need what the
         read counted beside when it happened: `unreadable` is how many features
         that very page refused (0.55.0.0). None when no read is on record.
+
+        ``at``: the newest read started at or before that moment (D-058), the
+        rule `newest_snapshot` has had since 0.55.0.0. Until this release the
+        composers passed a moment and read the table's tail whatever it was,
+        so a past moment was drawn with a later list (F188).
         """
         clauses = ["feed = ?", "outcome = ?"]
         values: list[Any] = [feed, "read"]
         if url is not None:
             clauses.append("url = ?")
             values.append(url)
+        if at is not None:
+            clauses.append("started_at <= ?")
+            values.append(_stored_form(at, "at"))
         with closing(self._connect()) as conn:
             row = conn.execute(
                 "SELECT started_at, url, items, unreadable, detail FROM feed_attempts "

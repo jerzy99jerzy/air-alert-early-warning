@@ -50,6 +50,7 @@ show.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
@@ -257,15 +258,26 @@ def is_expired(valid_to: str | None, as_of: datetime) -> bool:
     either reading; kept as no end, it stayed painted for as long as the feed
     listed it (F177).
     """
+    end = expiry_instant(valid_to)
+    return end is not None and end < as_of
+
+
+def expiry_instant(valid_to: str | None) -> datetime | None:
+    """The instant after which `is_expired` calls a communique over, or None.
+
+    The reading `is_expired` makes, as an instant rather than a verdict, so the
+    timeline asks this function where the verdict turns and does not keep a
+    second copy of the three cases (D-058). None: no end this module can
+    establish, which keeps the communique.
+    """
     if valid_to is None:
-        return False
+        return None
     try:
-        end = rso.to_utc(valid_to, ZONE)
+        return rso.to_utc(valid_to, ZONE)
     except rso.AmbiguousLocalTime:
-        end = _later_reading(valid_to)
+        return _later_reading(valid_to)
     except SourceUnavailable:
-        return False
-    return end < as_of
+        return None
 
 
 def _later_reading(stamp: str) -> datetime:
@@ -440,33 +452,62 @@ def warnings_rows(
     return _rows_by_voivodeship(painted), _rows_by_voivodeship(cleared)
 
 
-def warnings_blocks(store: EventStore, as_of: datetime) -> tuple[Block, Block]:
-    """`pl_warnings` and `pl_all_clear` for one moment, or why they are absent or null.
+def warnings_verdict(
+    attempted: bool,
+    read_at: datetime | None,
+    members: Sequence[str] | None,
+    held: Mapping[str, dict[str, Any]],
+    as_of: datetime,
+) -> tuple[Block, Block]:
+    """`pl_warnings` and `pl_all_clear` from what the store held at `as_of` (D-058).
 
-    One reading, two keys, one verdict: whatever makes the first key `null`
-    makes the second `null` too, so a consumer never sees a clearance beside a
-    warning list it cannot read.
+    The rule `warnings_blocks` applies, taken out of the reads that feed it, so
+    the live cycle and the timeline are one rule over two ways of fetching the
+    same rows. `attempted`: a poll of the feed started at or before `as_of`.
+    `read_at`: when the newest read of the map scope at or before `as_of`
+    started. `members`: the newest list of that address at or before `as_of`.
     """
-    if store.newest_attempt_at(rso.FEED) is None:
+    if not attempted:
         return UNPUBLISHED, UNPUBLISHED
     null = Block(published=True, value=None)
-    read = store.newest_read(rso.FEED, WARNINGS_URL)
-    if read is None:
+    if read_at is None:
         return null, null
-    age = (as_of - _parse_stored(str(read["started_at"]))).total_seconds()
-    if age > WARNINGS_VALID_FOR_S:
+    if (as_of - read_at).total_seconds() > WARNINGS_VALID_FOR_S:
         return null, null
-    snapshot = store.newest_snapshot(rso.FEED, WARNINGS_URL)
-    if snapshot is None:
+    if members is None:
         return null, null
-    members = [str(member) for member in snapshot["members"]]
-    held = store.communiques_by_digest(members)
     if any(member not in held for member in members):
         # A list naming a row nobody wrote is a store this cycle cannot read,
         # and a partial list would render as a complete one.
         return null, null
     warnings, cleared = warnings_rows([held[m] for m in members], as_of)
     return Block(published=True, value=warnings), Block(published=True, value=cleared)
+
+
+def warnings_blocks(store: EventStore, as_of: datetime) -> tuple[Block, Block]:
+    """`pl_warnings` and `pl_all_clear` for one moment, or why they are absent or null.
+
+    One reading, two keys, one verdict: whatever makes the first key `null`
+    makes the second `null` too, so a consumer never sees a clearance beside a
+    warning list it cannot read.
+
+    **The moment is the one asked about (D-058, F188).** Every read below is
+    the newest at or before `as_of`. Until 0.58.0.0 this took `as_of` and read
+    the newest poll, read and list in the table whatever it was: harmless for
+    the live cycle, whose moment is now, and wrong for any other, where a past
+    moment was drawn with a later list.
+    """
+    attempted = store.newest_attempt_at(rso.FEED, at=as_of) is not None
+    read = store.newest_read(rso.FEED, WARNINGS_URL, at=as_of) if attempted else None
+    read_at = _parse_stored(str(read["started_at"])) if read is not None else None
+    fresh = (read_at is not None
+             and (as_of - read_at).total_seconds() <= WARNINGS_VALID_FOR_S)
+    snapshot = store.newest_snapshot(rso.FEED, WARNINGS_URL, at=as_of) if fresh else None
+    members = (
+        [str(member) for member in snapshot["members"]] if snapshot is not None else None
+    )
+    held = store.communiques_by_digest(members) if members is not None else {}
+    return warnings_verdict(attempted, read_at, members, held, as_of)
 
 
 def warnings_block(store: EventStore, as_of: datetime) -> Block:
@@ -604,6 +645,38 @@ def airspace_value(
     }
 
 
+@dataclass(frozen=True, slots=True)
+class Drawable:
+    """A reading of the plan this module can draw from: its zones and its read row."""
+
+    zones: tuple[pansa.Zone, ...]
+    read: Mapping[str, Any]
+
+
+def airspace_reading(
+    attempted: bool,
+    read: Mapping[str, Any] | None,
+    members: Sequence[str] | None,
+    held: Mapping[str, dict[str, Any]],
+) -> Block | Drawable:
+    """The zones a reading lets this module draw, or the block saying why not (D-058).
+
+    The refusals `airspace_block` makes, taken out of its reads so the live
+    cycle and the timeline apply one rule. Arguments as in `warnings_verdict`,
+    each the newest at or before the moment being composed.
+    """
+    if not attempted:
+        return UNPUBLISHED
+    if read is None or members is None:
+        return Block(published=True, value=None)
+    if any(member not in held for member in members):
+        return Block(published=True, value=None)
+    return Drawable(
+        zones=tuple(pansa.zone_from_record(held[member]) for member in members),
+        read=read,
+    )
+
+
 def airspace_block(store: EventStore, as_of: datetime) -> Block:
     """`pl_airspace` for one moment, or the reason it is absent or null.
 
@@ -611,28 +684,32 @@ def airspace_block(store: EventStore, as_of: datetime) -> Block:
     shape.** This object carries `read_at` and `stale_error`, and the page
     prints both, so an old reading is shown as old. The consumer did exactly
     this and it is kept.
+
+    **The moment is the one asked about (D-058, F188)**, as in
+    `warnings_blocks`: every poll, read and list below is the newest at or
+    before `as_of`, and so is the refusal `stale_error` quotes.
     """
-    if store.newest_attempt_at(pansa.FEED) is None:
-        return UNPUBLISHED
-    read = store.newest_read(pansa.FEED, pansa.SOURCE_URL)
-    if read is None:
-        return Block(published=True, value=None)
-    snapshot = store.newest_snapshot(pansa.FEED, pansa.SOURCE_URL)
-    if snapshot is None:
-        return Block(published=True, value=None)
-    members = [str(member) for member in snapshot["members"]]
-    held = store.airspace_zones_by_digest(members)
-    if any(member not in held for member in members):
-        return Block(published=True, value=None)
-    zones = tuple(pansa.zone_from_record(held[member]) for member in members)
-    read_at = _parse_stored(str(read["started_at"]))
-    newest_attempt = store.newest_attempt_at(pansa.FEED, pansa.SOURCE_URL)
+    attempted = store.newest_attempt_at(pansa.FEED, at=as_of) is not None
+    read = store.newest_read(pansa.FEED, pansa.SOURCE_URL, at=as_of) if attempted else None
+    snapshot = (
+        store.newest_snapshot(pansa.FEED, pansa.SOURCE_URL, at=as_of)
+        if read is not None else None
+    )
+    members = (
+        [str(member) for member in snapshot["members"]] if snapshot is not None else None
+    )
+    held = store.airspace_zones_by_digest(members) if members is not None else {}
+    reading = airspace_reading(attempted, read, members, held)
+    if isinstance(reading, Block):
+        return reading
+    read_at = _parse_stored(str(reading.read["started_at"]))
+    newest_attempt = store.newest_attempt_at(pansa.FEED, pansa.SOURCE_URL, at=as_of)
     stale_error = None
     if newest_attempt is not None and _parse_stored(newest_attempt) > read_at:
-        stale_error = store.newest_refusal_detail(pansa.FEED, pansa.SOURCE_URL)
+        stale_error = store.newest_refusal_detail(pansa.FEED, pansa.SOURCE_URL, at=as_of)
     return Block(published=True, value=airspace_value(
-        zones, as_of, read_at=read_at,
-        unreadable=int(read["unreadable"] or 0), stale_error=stale_error,
+        reading.zones, as_of, read_at=read_at,
+        unreadable=int(reading.read["unreadable"] or 0), stale_error=stale_error,
     ))
 
 

@@ -984,6 +984,63 @@ def trailing_areas(
     return tuple(sorted(found, key=key))
 
 
+def area_picture(
+    area_id: str, standing: Iterable[ThreatEvent], table: AreaTable
+) -> AreaPicture | None:
+    """One area's picture from the newest event of each of its kinds (D-044).
+
+    None when every kind is clear: a cleared area is dropped, an unknown one is
+    kept, and the asymmetry is the contract `compose` documents. Taken out of
+    `compose` at 0.58.0.0 so the timeline names an area by the same rule the
+    live picture does (D-058); two copies of this block would be two pictures.
+
+    **A full tie is decided by the kind's name (0.58.0.0).** Two kinds of one
+    area can carry the same state, the same source stamp and the same ingest
+    stamp: one API poll reporting two threats that began in the same second.
+    `max` then returned whichever kind the fold had met first, which depends on
+    the order the rows reached it, and the live cycle and the timeline reach
+    them in different orders. Sorting by the kind's value first makes the
+    headline a function of the rows alone.
+    """
+    live = sorted(
+        (event for event in standing if not is_clear(event.state)),
+        key=lambda event: event.kind.value,
+    )
+    if not live:
+        return None
+    headline = max(
+        live,
+        key=lambda event: (
+            state_precedence(event.state),
+            event.ts_source,
+            event.ts_ingest,
+        ),
+    )
+    return AreaPicture(
+        area_id=area_id,
+        state=headline.state,
+        kind=headline.kind,
+        since=headline.ts_source,
+        area=table.by_code(area_id),
+        kinds=tuple(
+            sorted(
+                (
+                    KindStanding(
+                        kind=event.kind,
+                        state=event.state,
+                        since=event.ts_source,
+                    )
+                    for event in live
+                ),
+                key=lambda standing: (
+                    -state_precedence(standing.state),
+                    standing.kind.value,
+                ),
+            )
+        ),
+    )
+
+
 def compose(
     events: Iterable[ThreatEvent],
     *,
@@ -1078,45 +1135,12 @@ def compose(
     pictures: list[AreaPicture] = []
     unresolved: list[str] = []
     for area_id in sorted(by_area):
-        live = [event for event in by_area[area_id] if not is_clear(event.state)]
-        if not live:
+        picture = area_picture(area_id, by_area[area_id], table)
+        if picture is None:
             continue
-        headline = max(
-            live,
-            key=lambda event: (
-                state_precedence(event.state),
-                event.ts_source,
-                event.ts_ingest,
-            ),
-        )
-        area = table.by_code(area_id)
-        if area is None:
+        if picture.area is None:
             unresolved.append(area_id)
-        pictures.append(
-            AreaPicture(
-                area_id=area_id,
-                state=headline.state,
-                kind=headline.kind,
-                since=headline.ts_source,
-                area=area,
-                kinds=tuple(
-                    sorted(
-                        (
-                            KindStanding(
-                                kind=event.kind,
-                                state=event.state,
-                                since=event.ts_source,
-                            )
-                            for event in live
-                        ),
-                        key=lambda standing: (
-                            -state_precedence(standing.state),
-                            standing.kind.value,
-                        ),
-                    )
-                ),
-            )
-        )
+        pictures.append(picture)
     moment = as_of if as_of is not None else datetime.now(UTC)
     # F120. Two quantities, deliberately not one. `raw_newest` is what the
     # source said and is reported as such; `newest` is the newest stamp this
@@ -1260,6 +1284,37 @@ def render_text(report: Report) -> str:
     return "\n".join(lines)
 
 
+def area_item(picture: AreaPicture) -> dict[str, object]:
+    """One entry of the contract's `areas` block.
+
+    A function since 0.58.0.0 so `timeline.json` carries an area in the words
+    `state.json` does (D-058): a past moment and the present that name the same
+    standing differently would be two contracts.
+    """
+    return {
+        "katottg": picture.area.code if picture.area is not None else "",
+        "area_id": picture.area_id,
+        "oblast": picture.oblast_slug,
+        "oblast_name": picture.oblast,
+        "alert": picture.state.value,
+        "kind": picture.kind.value,
+        "since": picture.since.isoformat(timespec="seconds"),
+        # D-044. Every kind not affirmatively cleared. `alert`, `kind`
+        # and `since` above stay exactly what they were, so a consumer
+        # reading v3 today reads the same fields tomorrow; this block
+        # is what a consumer needs to stop treating one headline as the
+        # whole of an area's standing. Never empty for a published
+        # area: an area with no live kind is not published at all.
+        "kinds": [standing.as_item() for standing in picture.kinds],
+        "border_km_lower": (
+            picture.area.border_lower_km if picture.area is not None else None
+        ),
+        "border_km_upper": (
+            picture.area.border_upper_km if picture.area is not None else None
+        ),
+    }
+
+
 def to_contract(report: Report) -> dict[str, object]:
     """The `state.json` payload, at the version `SCHEMA_VERSION` names.
 
@@ -1338,31 +1393,9 @@ def to_contract(report: Report) -> dict[str, object]:
             if report.nearest_recent is not None
             else None
         ),
-        "areas": [
-            {
-                "katottg": picture.area.code if picture.area is not None else "",
-                "area_id": picture.area_id,
-                "oblast": picture.oblast_slug,
-                "oblast_name": picture.oblast,
-                "alert": picture.state.value,
-                "kind": picture.kind.value,
-                "since": picture.since.isoformat(timespec="seconds"),
-                # D-044. Every kind not affirmatively cleared. `alert`, `kind`
-                # and `since` above stay exactly what they were, so a consumer
-                # reading v3 today reads the same fields tomorrow; this block
-                # is what a consumer needs to stop treating one headline as the
-                # whole of an area's standing. Never empty for a published
-                # area: an area with no live kind is not published at all.
-                "kinds": [standing.as_item() for standing in picture.kinds],
-                "border_km_lower": (
-                    picture.area.border_lower_km if picture.area is not None else None
-                ),
-                "border_km_upper": (
-                    picture.area.border_upper_km if picture.area is not None else None
-                ),
-            }
-            for picture in report.areas
-        ],
+        # One serialisation for this block and for every interval of
+        # `timeline.json` (D-058); the field comments live on `area_item`.
+        "areas": [area_item(picture) for picture in report.areas],
         # v3. Always present, empty or not: an absent block and an empty one
         # read identically to a careless consumer, and with roughly eleven
         # events per twenty minutes the empty case is the common case at four
@@ -1514,10 +1547,23 @@ def write_history(report: Report, path: Path) -> Path:
     return _write_json(to_history(report), path, prefix=".history-")
 
 
-def _write_json(payload: dict[str, object], path: Path, *, prefix: str) -> Path:
-    """The atomic write both files use. One implementation, one guarantee."""
+def write_timeline(payload: dict[str, object], path: Path) -> Path:
+    """Write `timeline.json` atomically (D-058), without indentation.
+
+    The other files are indented for the person who opens one on the host; this
+    one is read by the site's code, is the largest of the four, and is pushed
+    beside them every cycle it is written, so its whitespace is a cost with no
+    reader. The guarantees are the other files' and so is the writer.
+    """
+    return _write_json(payload, path, prefix=".timeline-", compact=True)
+
+
+def _write_json(payload: dict[str, object], path: Path, *, prefix: str,
+                compact: bool = False) -> Path:
+    """The atomic write every file uses. One implementation, one guarantee."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    body = json.dumps(payload, ensure_ascii=False, indent=1)
+    body = (json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+            if compact else json.dumps(payload, ensure_ascii=False, indent=1))
     # mkstemp rather than NamedTemporaryFile: the file must outlive the handle
     # so it can be renamed, and a context manager that deletes on close is the
     # opposite of what an atomic replace needs. Same directory as the target,
@@ -1592,6 +1638,10 @@ def publish(
     poland: Callable[[datetime], PolandBlocks] | None = None,
     strike: Callable[[datetime], Block] | None = None,
     strike_history: Callable[[datetime], Block] | None = None,
+    timeline_path: Path | None = None,
+    timeline: Callable[[Sequence[ThreatEvent], datetime], dict[str, object] | None]
+    | None = None,
+    timeline_every: int = 1,
 ) -> PublishReport:
     """Write the contract on a fixed interval until a named condition stops it.
 
@@ -1613,7 +1663,17 @@ def publish(
     dead producer from a quiet night. That is the failure `docs/FEED-SPEC.md`
     section 4 spends a section on, and this is the one place in the codebase
     where it would be easiest to reintroduce.
+
+    **The timeline is the exception, and the exception is the same rule (D-058).**
+    A cycle whose replay failed writes no `timeline.json`: a week built from an
+    empty log is a week with no alerts, and a file that says so is silence
+    published as calm. Left unwritten, the file ages, and its `generated_at`
+    says how old it is. It is written every `timeline_every` cycles, the first
+    included, so the cost T90 measures can be paid less often without a
+    release.
     """
+    if timeline_every < 1:
+        raise ValueError(f"timeline_every must be at least 1: {timeline_every}")
     table = table if table is not None else AreaTable.from_csv()
     clock = now if now is not None else (lambda: datetime.now(UTC))
     pick = draw if draw is not None else random.uniform
@@ -1624,8 +1684,9 @@ def publish(
         while max_cycles is None or cycles < max_cycles:
             cycles += 1
             cycle_id = log.cycle_id() if log is not None else ""
+            replayed = True
             try:
-                events: Iterable[ThreatEvent] = list(load())
+                events: list[ThreatEvent] = list(load())
             except Exception as failure:  # noqa: BLE001
                 # Deliberately broad. Whatever went wrong reading the store,
                 # the answer is the same: publish blindness rather than
@@ -1633,6 +1694,7 @@ def publish(
                 # somewhere below turns the loop silent, and silence is the
                 # one outcome this function exists to prevent.
                 events = []
+                replayed = False
                 # F83. Unconditionally, and on stderr. The old guard printed
                 # the cause only when no callback was installed, and the CLI
                 # always installs one, so in the one mode anybody runs the
@@ -1663,6 +1725,14 @@ def publish(
                 # same defect one file over.
                 if history_path is not None:
                     write_history(report, history_path)
+                # D-058. The fourth file, on the same cycle and the same
+                # failure, from the same replay at the same moment, and only
+                # from a replay that happened (see above).
+                if (timeline_path is not None and timeline is not None and replayed
+                        and (cycles - 1) % timeline_every == 0):
+                    payload = timeline(events, report.as_of)
+                    if payload is not None:
+                        write_timeline(payload, timeline_path)
             except OSError as failure:
                 reason = f"write failed: {failure}"
                 break

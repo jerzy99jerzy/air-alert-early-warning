@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.54 / 2026-09-24
+Version: 1.55 / 2026-09-27
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -56,19 +56,44 @@ unit's own properties, cadence from its timer, spacing from forty hours of
 unit is the supervision mechanism this project actually runs on, and it was
 never a decision until D-031 wrote it down.
 
-### The installed package, as read on 2026-09-21
+### The installed package, as read on 2026-09-27
+
+**A partial reading, and named as one.** Three read-only commands on 2026-09-27
+at 17:47 and 17:51 UTC: `pip show` and a content discriminator in the venv;
+`systemctl list-timers`, and the report and push units reduced to their
+`ExecStart` and the file names they carry; and a listing of `/var/lib/mavo`
+with the store's tables counted. The rows below are what they printed. The
+rows of the 2026-09-21 reading they do not cover are kept as read in the next
+section, and the date at the top of this section stays 2026-09-21, because
+this reading did not re-read every row that date covers (F184).
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.55.3.0`, **installed 2026-09-21 14:27:50 UTC** `[measured at the install]`: the wheel `f5dd8206…4a1e3d3f`, 218,126 B, was transferred with its digest checked on both sides, and the content discriminator `elapsed_s=elapsed` in the installed `mavo/cli.py` read 1 before `pip` and 2 after. No migration line followed, which is the release having no schema move. Every earlier install is in the deploy history below rather than in this row |
+| Installed | `air-alert-early-warning 0.57.0.0` `[measured 2026-09-27, pip show]`, and by content: `strike_history`, which 0.57.0.0 added, occurs 12 times in the installed `mavo/report.py`. Installed on 2026-09-24 over 0.56.0.0 `[reported, the operator's record]`, which the point of return below dates to the second |
+| Point of return | `events.pre-0.57.0.0`, 97,021,952 B, written 2026-09-24 21:34:12 UTC; before it `events.pre-0.56.0.0`, 78,082,048 B, written 2026-09-22 20:20:28 UTC `[measured 2026-09-27, the directory listing]` |
+| The store | `events`, 121,810,944 B at 17:47 UTC, 24.8 MB more than its copy of three days before. `communiques` holds 59,516 rows since the first RSO read of 2026-09-19, the largest table by the bytes of its columns; almost all of them come from the four categories the map does not paint, whose lists change with every water level and road notice `[measured 2026-09-27; which categories, inferred from the lists per address]`. This is the growth D-054 left to be measured before retention is written |
+| The report unit | the drop-in's `ExecStart` writes `state.json` and `feed.json` every 30 s and passes neither `--history` nor `--timeline` `[measured 2026-09-27]` |
+| The push unit | `ExecStart=/bin/sh`, naming `state.json` and `feed.json` and no other file `[measured 2026-09-27, the file names only: the unit carries an internal address and a key path this document does not publish]` |
+| Timers | six, `mavo-push`, `mavo-collect`, `mavo-collect-api`, `mavo-kpszsu`, `mavo-airspace` and `mavo-rso`, each with a next run scheduled `[measured 2026-09-27, systemctl list-timers]`. The kpszsu unit's own text is still T89's to read |
+
+### The 0.55.3.0 install, as it was read on 2026-09-21
+
+**Kept as read, and no longer the newest reading.** Until 0.58.0.0 these rows
+sat under the heading for the current install while the host ran 0.56.0.0 and
+then 0.57.0.0, which is F184's defect again, one table later. They describe
+the install of 0.55.3.0 on 2026-09-21 and are true of that day.
+
+| | |
+| --- | --- |
+| Installed at | `air-alert-early-warning 0.55.3.0`, **installed 2026-09-21 14:27:50 UTC** `[measured at the install]`: the wheel `f5dd8206…4a1e3d3f`, 218,126 B, was transferred with its digest checked on both sides, and the content discriminator `elapsed_s=elapsed` in the installed `mavo/cli.py` read 1 before `pip` and 2 after. No migration line followed, which is the release having no schema move. Every earlier install is in the deploy history below rather than in this row |
 | Verified | **by content, against the tag.** The sha256 over the 26 installed `mavo/*.py` files, sorted by path, is `ee3734cf…d16e61`, the figure `git archive v0.55.2.0` gives, fixed from the tree before the host was read. RECORD's own hashes hold for all 38 files that carry one, and none is missing `[measured]` |
 | Point of return | `events.pre-0.55.2.0`, 49,803,264 B, written 18:35:26 UTC, beside ten older ones (Appendix A). Its `-shm` and `-wal` siblings were written one second later, so the copy was opened by SQLite once after it was taken `[inference]`; the WAL is empty and a restore copies the main file alone |
 | The schema move | three `[STORE-MIGRATED] created ...` lines, for `feed_snapshots`, `airspace_zones` and `airspace_geometries`, all in the report unit's journal at 18:36:06 UTC and in no other: the install restarted the report one second after RECORD was written, before either collector's timer fired, so it opened the store first. F168's case, read on the host |
 | First cycles under it | channel and API at 18:36:22 UTC; RSO and PAŻP at 18:38:27, each writing `snapshot=changed` on its first read |
 | Who owns the venv | `/opt/mavo/venv` is `root:root` 0755 `[measured 2026-09-21]`; why that matters is recorded under the 0.53.4.0 install below (F144) |
 | `feed_attempts` coverage | **begins 2026-08-29 14:39:05 UTC** `[measured 2026-09-21]`, eighteen days after collection began, so a query before that date returns an empty set rather than a silence (F159) |
-| `main` | 0.57.0.0 |
-| Behind by | **three** releases against the `Installed` row above, which describes the 0.55.3.0 install of 2026-09-21: 0.55.4.0, 0.56.0.0 and this one. **That row is itself owed a rewrite, and the debt is stated rather than counted away.** 0.56.0.0 was installed on `vm-mavo` on 2026-09-22 at 20:22 UTC `[reported, the operator's own record]`; the session that cut 0.57.0.0 had no route to the host and left the figure `[nieustalone]`. Read it with `gcloud compute ssh vm-mavo --tunnel-through-iap --command "sudo /opt/mavo/venv/bin/python -c 'import mavo; print(mavo.__version__)'"` and rewrite the `Installed` row whole from the reading, per F184, rather than the one line that prompted it. 0.57.0.0 brings no schema move and no unit: a contract key is added beside an existing one and the reader of one headline shape is repaired (D-057, F187), so the install is a wheel and a restart. Superseded rows, kept for the record: at 0.56.0.0 this row read **two**; at 0.55.4.0 **one**; at 0.55.3.0 **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
+| `main` | 0.58.0.0 |
+| Behind by | **one** release against the `Installed` row above, read on 2026-09-27: this one. 0.58.0.0 brings no schema move and no unit. The composers and the liveness measure now read the store at the moment they are asked about (F188), which for the live cycle is the moment they always read, and the timeline is built only under a flag no unit passes, so the install is a wheel and a restart; switching the timeline on is the order below and T90, not the install. Superseded rows, kept for the record: at 0.57.0.0 this row read **three**, counted from an `Installed` row naming 0.55.3.0 while the host ran 0.57.0.0 from 2026-09-24; at 0.56.0.0 **two**; at 0.55.4.0 **one**; at 0.55.3.0 **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
 
 ### The 0.53.4.0 install, as it was read on 2026-09-09
 
@@ -587,6 +612,23 @@ forced command on every push cycle, visible in the producer's journal and
 nowhere a reader can see, so the order is fixed: consumer target and route,
 then the push unit's third file, then the flag. D-048 is built and not
 deployed, and this paragraph is the record of which half is missing.
+
+**A fourth file from 0.58.0.0, in the same order (D-058).** `mavo report
+--timeline /var/lib/mavo/timeline.json` writes the trailing week as intervals
+from the same replay as the other files, and `--timeline-every N` writes it on
+every Nth cycle. The same three steps in the same order: a `timeline` target
+in the consumer's forced command and a `/timeline.json` route in its server,
+then the push unit's third file, then the flag. On 2026-09-27 the push unit
+named `state.json` and `feed.json` and nothing else `[measured]`, and the
+forced command knew the targets `state` and `feed` `[read in the mavo-site
+tree at 4.86.2.0 with the 4.87.0.0 patch, 2026-09-27]`. One step comes before
+the flag that `history.json` never had, because this file is built every cycle
+from a week of the store: T90, the file's size and the cycle's cost measured
+on this host with `mavo timeline --out`, run from the release, installed or in
+a venv beside the installed one, and **as `mavo`**, the owner of the store; the
+figure decides `--timeline-every`. The install itself does not wait for T90:
+without the flag nothing builds the file, and the fallback T90 might ask for
+is already a flag.
 
 **The producer and the consumer deploy in one window.** The consumer refuses
 any schema version it does not recognise, so a producer at v3 in front of a

@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.15
+Document:  docs/MANUAL.md, version 3.16
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -49,6 +49,8 @@ Note:      every constant, exit code and output line here was read out of the
    12. [`mavo latency`](#412-mavo-latency---built)
    13. [`mavo airspace`](#413-mavo-airspace---built)
    14. [`mavo kpszsu`](#414-mavo-kpszsu---built)
+   15. [`mavo timeline`](#415-mavo-timeline---built)
+   16. [`mavo record-week`](#416-mavo-record-week---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -521,6 +523,8 @@ is an output, not an error.
 | `--json` | none | Also write the `state.json` contract to this path, atomically |
 | `--feed` | none | Also write `feed.json`: the day-long event window and the trailing window per raion. A second file rather than a longer window inside `state.json`, because that one is re-read on every cycle and this one is fetched when a reader opens the panel |
 | `--history` | none | Also write `history.json`: every window in `--windows`, at oblast and raion granularity, from the same fold as the other two files (D-048). Each window says where it starts, the oldest stamp the store holds and whether the store reaches the start; a quarter the collector has watched for three weeks is published with that fact beside it, never as a quiet quarter. Fetched on demand, like `feed.json`. The one-shot path prints one coverage word per window |
+| `--timeline` | none | Also write `timeline.json`: the trailing week as intervals, per area, for the communique keys, per drawn airspace zone, and per pipe where the record is incomplete, from the same replay at the same moment (D-058). What the site's seven-day slider repaints from. Fetched on demand, like `feed.json`. Written compact, and not written at all on a cycle whose replay failed |
+| `--timeline-every` | 1 | Under `--watch`, write `--timeline` every N cycles, the first included. The file's cost per cycle is T90's measurement; this is how the unit pays it less often without a release |
 | `--windows` | `7,30,90` | The trailing windows in days for `--history`. Must include 7, the window `state.json` shades by, so the week on the map and the week in the history are one fold; a duplicate, a zero or a word is refused before any file is written |
 | `--valid-for` | 600 | Seconds a report may be trusted after its newest observation. An assumption rather than a measurement, and labelled as one in `mavo/report.py` |
 | `--watch` | off | Publish on an interval until stopped. Needs `--json`: the loop exists to write the contract, and a loop that only prints is a heartbeat nobody can read |
@@ -575,6 +579,14 @@ a list or object means read. A failure composing them prints
 `[POLAND-FAILED] <reason>` on stderr and publishes every Polish key `null`, and the
 Ukrainian picture is published regardless. The one-shot path composes neither,
 as it composes no `sources` block.
+
+**Under `--watch` with `--timeline` the loop writes the week as intervals**
+(D-058), after the other files and from the same replay, so the file and the
+contract describe one moment. A cycle whose replay failed publishes the blind
+contract and writes no `timeline.json`: a week folded from an empty log is a
+week without alerts, and the file left unwritten ages instead, with its
+`generated_at` saying by how much. A failure building it prints
+`[TIMELINE-FAILED] <reason>` on stderr and costs the contract nothing.
 
 **`--valid-for` is an assumption, not a measurement.** The default of 600
 seconds is five times the two-minute polling requirement derived from the page
@@ -809,6 +821,73 @@ published one or every launched item carries a count.
 | 2 | the file named by `--from-file` could not be read |
 | 3 | the channel was unreachable. The attempt is logged first |
 | 7 | the store could not be opened or written |
+
+### 4.15 `mavo timeline` - BUILT
+
+The seven-day `timeline.json` (D-058), written once, or one moment of the week
+printed two ways so the two can be compared.
+
+```
+mavo timeline --store /var/lib/mavo/events --out /tmp/timeline.json
+mavo timeline --store /var/lib/mavo/events --at 2026-09-24T21:00:00+00:00 > asked.json
+mavo timeline --file /tmp/timeline.json --at 2026-09-24T21:00:00+00:00 > chosen.json
+diff asked.json chosen.json
+```
+
+**The two ways to print a moment are the check.** `--store --at` asks the
+live rules directly: `compose` over the events stamped at or before the
+moment, the two Polish composers at it, each pipe's liveness at it. `--file
+--at` only chooses, from a written file, the intervals that hold the moment,
+and decides nothing. Both print one JSON shape with sorted keys, so an empty
+`diff` is the file holding to the rules on the real store. A moment outside
+the file's window is refused with exit 2 rather than printed as an empty map.
+
+**`--out` is the instrument for T90.** It writes the file for the week ending
+now, or at `--as-of`, and prints one line: its size raw and gzipped, the
+number of events replayed, the seconds the replay, the build and the write
+each took, and how many intervals each layer holds. Opening the store prints
+what the open changed, as every command that opens one does.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--store` | none | The event store: the input of `--out`, and of `--at` when no `--file` is given |
+| `--file` | none | With `--at`: a written `timeline.json` to choose the moment from instead of asking the store |
+| `--at` | one of `--at` and `--out` | An ISO timestamp with an offset. A moment without an offset names no instant and is refused |
+| `--out` | one of `--at` and `--out` | Write the file to this path once and print what it cost |
+| `--as-of` | now | With `--out`: the end of the window, an ISO timestamp with an offset |
+| `--days` | 7 | With `--out`: the window in days. The unit writes seven, the week the map shades by |
+
+### 4.16 `mavo record-week` - BUILT
+
+Copies one week of a store into a new file holding exactly the rows the
+timeline's check reads, so the check runs on a week the store recorded rather
+than one written for it (D-058). Read-only on the store, refuses to overwrite
+its output, and prints one JSON line: the window, the rows per table, the
+file's size.
+
+```
+mavo record-week /var/lib/mavo/events /tmp/week.sqlite3 2026-09-26T00:00:00+00:00 7
+```
+
+What it copies, for the window ending at `END`: per area and kind the rows at
+the newest source stamp at or before the start, which holds the fold's winner
+there; every event stamped inside; the lists of the two addresses the timeline
+reads, the communique scope and the updated plan, with the rows they name; and
+per pipe its first poll, its newest poll, read and refusal at or before the
+start, and every poll inside. The other RSO categories stay behind: nothing in
+the timeline reads them.
+
+**It imports nothing from this package**, so a host that does not have the
+release yet can run the same file with its own interpreter:
+`sudo /usr/bin/python3 - STORE OUT END DAYS < mavo/recorder.py`. That is how
+the week behind `tests/test_timeline_recorded_week.py` left `vm-mavo`.
+
+| Argument | Default | Meaning |
+| --- | --- | --- |
+| `store` | required | The event store, opened read-only |
+| `out` | required | The file to write; refused if it exists |
+| `end` | required | An ISO timestamp with an offset, the end of the week |
+| `days` | 7 | The window in days |
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)
 

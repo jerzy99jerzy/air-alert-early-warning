@@ -279,15 +279,21 @@ def measure_feed(
     **`>` and not `>=`.** At exactly the threshold the weaker claim holds, the
     same direction F-S72 chose on the consumer for the same reason: the
     sentence that asserts less about the source is the one to keep at the edge.
+
+    **Every read is the newest at or before `as_of` (D-058, F188).** For the
+    live cycle, whose moment is now, nothing changes. Until 0.58.0.0 a caller
+    asking about an earlier moment got the pipe's tail instead, so every past
+    moment read as delivering: the age of a read made after the moment is
+    negative, and it was floored at zero.
     """
-    last_attempt = _parse(store.newest_attempt_at(spec.feed))
+    last_attempt = _parse(store.newest_attempt_at(spec.feed, at=as_of))
     if last_attempt is None:
         return FeedLiveness(
             spec=spec, as_of=as_of, state=PipeState.UNKNOWN,
             last_attempt_at=None, last_read_at=None,
             last_event_ingest_at=None, last_event_source_at=None,
         )
-    last_read = _parse(store.newest_read_at(spec.feed))
+    last_read = _parse(store.newest_read_at(spec.feed, at=as_of))
     ingest, source = (events or EventStamps()).for_source(spec.source_id)
     threshold = spec.silence_is_an_outage_s
     read_age = (
@@ -301,7 +307,7 @@ def measure_feed(
         status = None
     elif attempt_age <= threshold:
         state = PipeState.REFUSING
-        status = _newest_refusal_status(store, spec.feed)
+        status = _newest_refusal_status(store, spec.feed, as_of)
     else:
         state = PipeState.STALLED
         status = None
@@ -313,8 +319,8 @@ def measure_feed(
     )
 
 
-def _newest_refusal_status(store: EventStore, feed: str) -> int | None:
-    detail = store.newest_refusal_detail(feed)
+def _newest_refusal_status(store: EventStore, feed: str, as_of: datetime) -> int | None:
+    detail = store.newest_refusal_detail(feed, at=as_of)
     if detail is None:
         return None
     found = _STATUS.search(detail)

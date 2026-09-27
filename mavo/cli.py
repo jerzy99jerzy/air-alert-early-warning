@@ -8,13 +8,16 @@ somebody who has neither.
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import sys
+import time
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
 from mavo import __version__, strike
+from mavo.areas import AreaTable
 from mavo.attempts import main as attempts_main
 from mavo.backfill import (
     DirectoryBusy,
@@ -35,6 +38,7 @@ from mavo.poland import Block as StrikeBlock
 from mavo.poland import PolandBlocks
 from mavo.poland import measure as measure_poland
 from mavo.policy import Regime, policy_of
+from mavo.recorder import main as record_week_main
 from mavo.report import (
     DEFAULT_TRAILING_DAYS,
     DEFAULT_VALID_FOR_S,
@@ -49,6 +53,7 @@ from mavo.report import (
     write_contract,
     write_feed,
     write_history,
+    write_timeline,
 )
 from mavo.rules import CANDIDATE_RULES, conjunction, drone_conjunction
 from mavo.schema import (
@@ -80,6 +85,9 @@ from mavo.sources.ukrainealarm_source import (
 from mavo.store import EventStore, migration_lines
 from mavo.strike import block as measure_strike
 from mavo.strike import history as measure_strike_history
+from mavo.timeline import WINDOW_DAYS as TIMELINE_DAYS
+from mavo.timeline import build as build_timeline
+from mavo.timeline import interval_counts, picture_from_file, picture_from_store
 from mavo.transport import StubTransport, Transport, UrllibTransport
 
 
@@ -1107,6 +1115,9 @@ def _cmd_report(args: argparse.Namespace) -> int:
     except ValueError as failure:
         print(f"--windows: {failure}", file=sys.stderr)
         return 2
+    if args.timeline_every < 1:
+        print("--timeline-every must be at least 1", file=sys.stderr)
+        return 2
     if args.watch:
         if not args.json:
             print("--watch needs --json: the loop exists to publish the contract",
@@ -1198,6 +1209,23 @@ def _cmd_report(args: argparse.Namespace) -> int:
                       file=sys.stderr, flush=True)
                 return STRIKE_FAILED
 
+        # D-058. The timeline, guarded like the blocks above and for their
+        # reason: a failure to build it leaves the file unwritten and aging,
+        # says why on stderr, and costs the contract nothing.
+        table = AreaTable.from_csv()
+
+        def timeline_payload(
+            events: Sequence[ThreatEvent], moment: datetime
+        ) -> dict[str, object] | None:
+            try:
+                payload = build_timeline(store, events, moment, table=table,
+                                         feeds=PRODUCTION_FEEDS)
+                json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8")
+                return payload
+            except Exception as failure:  # noqa: BLE001
+                print(f"[TIMELINE-FAILED] {failure}", file=sys.stderr, flush=True)
+                return None
+
         outcome = publish(
             store.replay,
             Path(args.json),
@@ -1213,6 +1241,9 @@ def _cmd_report(args: argparse.Namespace) -> int:
             history_path=Path(args.history) if args.history else None,
             history_days=windows,
             log=log,
+            timeline_path=Path(args.timeline) if args.timeline else None,
+            timeline=timeline_payload if args.timeline else None,
+            timeline_every=args.timeline_every,
         )
         print(outcome.line())
         # A loop that ends is not an error: it was told to stop, or the
@@ -1247,7 +1278,98 @@ def _cmd_report(args: argparse.Namespace) -> int:
             for window in report.history
         )
         print(f"history={written_history} v={SCHEMA_VERSION} {coverage}")
+    if args.timeline:
+        written_timeline = write_timeline(
+            build_timeline(store, list(store.replay()), report.as_of,
+                           table=AreaTable.from_csv(), feeds=PRODUCTION_FEEDS),
+            Path(args.timeline),
+        )
+        print(f"timeline={written_timeline} days={TIMELINE_DAYS}")
     return {FeedState.OK: 0, FeedState.DEGRADED: 5, FeedState.BLIND: 6}[report.feed_state]
+
+
+def _cmd_record_week(args: argparse.Namespace) -> int:
+    """Delegates to `mavo.recorder`, which the host can also run from stdin (D-038)."""
+    return record_week_main([args.store, args.out, args.end, args.days])
+
+
+def _moment(text: str, flag: str) -> datetime | None:
+    """An ISO timestamp with an offset, or None after saying why on stderr."""
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError as failure:
+        print(f"{flag}: {failure}", file=sys.stderr)
+        return None
+    if parsed.tzinfo is None:
+        print(f"{flag}: {text!r} has no offset, and a moment without one names "
+              "no instant", file=sys.stderr)
+        return None
+    return parsed.astimezone(UTC)
+
+
+def _cmd_timeline(args: argparse.Namespace) -> int:
+    """Write the timeline once, or print one moment of it, two ways (D-058, T90).
+
+    **Two ways to print a moment, and the diff between them is the check.**
+    `--store --at` asks the live rules about the moment directly: `compose`
+    over the events stamped at or before it, the Polish composers at it, each
+    pipe's liveness at it. `--file --at` only chooses, from a written file, the
+    intervals holding the moment. Both print one JSON shape with sorted keys,
+    so on the host `diff` between them is the acceptance check P0 names, run on
+    the real store rather than on a fixture.
+    """
+    if args.at is not None:
+        moment = _moment(args.at, "--at")
+        if moment is None:
+            return 2
+        if args.file:
+            payload = json.loads(Path(args.file).read_text(encoding="utf-8"))
+            try:
+                picture = picture_from_file(payload, moment)
+            except ValueError as failure:
+                print(f"--at: {failure}", file=sys.stderr)
+                return 2
+        elif args.store:
+            store = EventStore(Path(args.store))
+            _announce_migrations(store)
+            picture = picture_from_store(store, list(store.replay()), moment,
+                                         table=AreaTable.from_csv(), feeds=PRODUCTION_FEEDS)
+        else:
+            print("--at needs --store or --file", file=sys.stderr)
+            return 2
+        print(json.dumps(picture, ensure_ascii=False, sort_keys=True, indent=1))
+        return 0
+    if not args.store or args.file:
+        print("--out needs --store and takes no --file", file=sys.stderr)
+        return 2
+    if args.days < 1:
+        print("--days must be at least 1", file=sys.stderr)
+        return 2
+    end = datetime.now(UTC)
+    if args.as_of is not None:
+        parsed = _moment(args.as_of, "--as-of")
+        if parsed is None:
+            return 2
+        end = parsed
+    store = EventStore(Path(args.store))
+    _announce_migrations(store)
+    started = time.perf_counter()
+    events = list(store.replay())
+    replayed = time.perf_counter()
+    payload = build_timeline(store, events, end, table=AreaTable.from_csv(),
+                             feeds=PRODUCTION_FEEDS, days=args.days)
+    built = time.perf_counter()
+    written = write_timeline(payload, Path(args.out))
+    done = time.perf_counter()
+    body = written.read_bytes()
+    counts = interval_counts(payload)
+    print(
+        f"timeline={written} bytes={len(body)} gzip_bytes={len(gzip.compress(body))} "
+        f"events={len(events)} replay_s={replayed - started:.2f} "
+        f"build_s={built - replayed:.2f} write_s={done - built:.2f} "
+        + " ".join(f"{name}={count}" for name, count in counts.items())
+    )
+    return 0
 
 
 def parse_windows(spec: str) -> tuple[int, ...]:
@@ -1493,6 +1615,18 @@ def build_parser() -> argparse.ArgumentParser:
              "D-048)",
     )
     report_cmd.add_argument(
+        "--timeline",
+        help="also write the timeline.json seven-day intervals to this path "
+             "(areas, RCB communiques, PANSA zones and per-pipe coverage, from "
+             "the same replay at the same moment; fetched on demand, D-058)",
+    )
+    report_cmd.add_argument(
+        "--timeline-every", type=int, default=1,
+        help="under --watch, write --timeline every N cycles, the first "
+             "included (default %(default)s); T90 decides N on the measured "
+             "cost",
+    )
+    report_cmd.add_argument(
         "--windows", default=",".join(str(d) for d in HISTORY_WINDOWS_DAYS),
         help="trailing windows in days for --history, comma-separated "
              f"(default %(default)s). Must include {DEFAULT_TRAILING_DAYS}, "
@@ -1517,6 +1651,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="stop after this many cycles; omit to run until interrupted",
     )
     report_cmd.set_defaults(func=_cmd_report)
+
+    record_week = subparsers.add_parser(
+        "record-week",
+        help="copy one week of a store into a new file holding exactly the rows "
+             "the timeline's check reads, as a fixture recorded rather than "
+             "written (D-058); read-only on the store",
+    )
+    record_week.add_argument("store", help="path to the event store")
+    record_week.add_argument("out", help="the file to write; refused if it exists")
+    record_week.add_argument("end", help="ISO timestamp with an offset ending the week")
+    record_week.add_argument("days", nargs="?", default="7",
+                             help="the window in days (default %(default)s)")
+    record_week.set_defaults(func=_cmd_record_week)
+
+    timeline_cmd = subparsers.add_parser(
+        "timeline",
+        help="the seven-day timeline.json: write it once and say what it cost "
+             "(T90), or print one moment, asked of the store directly or "
+             "chosen from a written file, so the two can be compared (D-058)",
+    )
+    timeline_cmd.add_argument("--store", help="path to the event store")
+    timeline_cmd.add_argument(
+        "--file",
+        help="with --at: choose the moment from this timeline.json instead of "
+             "asking the store; the output has the same shape, so a diff of "
+             "the two is the check",
+    )
+    timeline_mode = timeline_cmd.add_mutually_exclusive_group(required=True)
+    timeline_mode.add_argument(
+        "--at", help="ISO timestamp with an offset: print the picture at this moment"
+    )
+    timeline_mode.add_argument(
+        "--out",
+        help="write timeline.json to this path once and print its size, raw and "
+             "gzipped, and the time each step took",
+    )
+    timeline_cmd.add_argument(
+        "--as-of", help="with --out: ISO timestamp with an offset ending the window (default now)"
+    )
+    timeline_cmd.add_argument(
+        "--days", type=int, default=TIMELINE_DAYS,
+        help="with --out: the window in days (default %(default)s)",
+    )
+    timeline_cmd.set_defaults(func=_cmd_timeline)
 
     reconcile_cmd = subparsers.add_parser(
         "reconcile",

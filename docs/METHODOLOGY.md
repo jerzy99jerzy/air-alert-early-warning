@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.70
+Document:  docs/METHODOLOGY.md, version 2.71
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,38 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F188, 0.58.0.0. Three functions asked about a moment answered about the newest row
+
+`poland.warnings_blocks`, `poland.airspace_block` and `liveness.measure_feed`
+each took a moment, `as_of`, and read the newest poll, read, list and refusal
+the table held, whatever the moment was. For the live cycle the moment is now
+and the newest row is the right one, so nothing a reader was shown was wrong.
+For any other moment the answer described a later one: a past moment drawn
+with a communique list read after it, a `stale_error` quoting a refusal that
+had not happened yet, and every past moment reported as `delivering`, because
+the age of a read made after the moment is negative and `measure_feed` floors
+an age at zero. The composers' half was found on 2026-09-27 by the check of
+the slider's plan, which read the bodies rather than the signatures; the
+liveness half was found building the slider, one module over.
+
+**Class.** Argument against use, the shape `learnings` names: the parameter
+was the promise and the body never kept it. And F157's seam, an instrument
+exercised through one kind of caller: every caller passed now, so no test
+could tell a function that honoured its moment from one that ignored it.
+`newest_snapshot` had taken the moment since 0.55.0.0 (D-054), and no caller
+passed one.
+
+**Repair.** `newest_attempt_at`, `newest_read`, `newest_read_at` and
+`newest_refusal_detail` take `at`, the newest row at or before it; the three
+functions pass their moment to every read; and the rules they apply are taken
+out of the reads (`warnings_verdict`, `airspace_reading`) so the timeline
+applies the same ones (D-058). Each is asked about a past moment with later
+rows in the store, in `tests/test_timeline.py`, and the timeline's agreement
+test asks all three at every boundary of a week.
+
+**Reopen condition:** a function taking a moment whose reads of the store are
+not bounded by it.
 
 ### F187, 0.57.0.0. A figure they printed in their first line, published as an unknown
 

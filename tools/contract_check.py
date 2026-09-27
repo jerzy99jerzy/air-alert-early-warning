@@ -41,6 +41,7 @@ from mavo.report import (  # noqa: E402
     write_contract,
     write_feed,
     write_history,
+    write_timeline,  # noqa: E402
 )
 from mavo.schema import (  # noqa: E402
     AlertState,
@@ -644,9 +645,103 @@ def check_strike_tally() -> list[str]:
     return problems
 
 
+REQUIRED_TIMELINE_TOP = ("v", "generated_at", "window", "areas", "rcb", "airspace",
+                         "coverage")
+REQUIRED_TIMELINE_AREAS = ("oldest_observation", "log_reaches_window_start", "places",
+                           "intervals")
+REQUIRED_TIMELINE_INTERVAL = ("area_id", "alert", "kind", "since", "kinds", "from", "to")
+REQUIRED_TIMELINE_LAYER = {"rcb": ("recorded_since", "intervals"),
+                           "airspace": ("recorded_since", "unread", "geometries", "intervals")}
+REQUIRED_TIMELINE_PIPE = ("role", "silence_is_an_outage_s", "recorded_since", "gaps")
+
+
+def check_timeline() -> list[str]:
+    """D-058. The fourth file is the areas of `state.json` over a week, and says what it lacks.
+
+    Built without a store, like `check_strike_tally` (D-038): the areas are
+    folded from synthetic events and the Polish layers and the pipes are the
+    ones a store that never polled them gives, which is also the shape a
+    consumer must survive on its first day. What it holds: the file names its
+    version, window and every layer; each interval carries the fields
+    `docs/WEBAPP.md` lists; and the areas whose interval holds the file's own
+    moment, joined to their places, are the `areas` block of the contract
+    composed at that moment, entry for entry. That last property is the
+    arrangement: one serialisation, `report.area_item`, two files. The store's
+    half, the lists and the gaps, is `tests/test_timeline.py`.
+    """
+    from mavo import timeline
+    from mavo.liveness import PRODUCTION_FEEDS
+
+    table = AreaTable.from_csv()
+    end = datetime(2026, 9, 20, 12, 0, 30, 250000, tzinfo=UTC)
+    start = end - timedelta(days=timeline.WINDOW_DAYS)
+    western = [area for area in (table.resolve(tag) for tag in table.tags)
+               if area is not None and area.is_western]
+    if len(western) < 2:
+        return ["fewer than two western areas in the map to build a timeline check on"]
+    events = [
+        _event(western[0].code, AlertState.ACTIVE, 60 * 24 * 9, end),  # older than the week
+        _event(western[1].code, AlertState.ACTIVE, 60 * 24 * 3, end),
+        _event(western[1].code, AlertState.CLEAR, 60 * 24 * 2, end),
+        _event(western[1].code, AlertState.UNKNOWN, 30, end),
+        _event("UA00000000000000000", AlertState.ACTIVE, 90, end),  # unresolvable
+    ]
+    payload = timeline.to_timeline(
+        timeline.area_layer(events, start, end, table),
+        timeline.RcbLayer(recorded_since=None, spans=()),
+        timeline.AirspaceLayer(recorded_since=None, unread=(), geometries={}, spans=()),
+        [timeline.FeedCoverage(spec=spec, recorded_since=None, gaps=())
+         for spec in PRODUCTION_FEEDS],
+        start=start, end=end, days=timeline.WINDOW_DAYS,
+    )
+    with tempfile.TemporaryDirectory() as directory:
+        written = write_timeline(payload, Path(directory) / "timeline.json")
+        back = json.loads(written.read_text(encoding="utf-8"))
+    problems: list[str] = []
+    for key in REQUIRED_TIMELINE_TOP:
+        if key not in back:
+            problems.append(f"timeline.json is missing {key!r}")
+    if problems:
+        return problems
+    if back["v"] != timeline.TIMELINE_VERSION:
+        problems.append(f"timeline version {back['v']} != {timeline.TIMELINE_VERSION}")
+    if back["window"] != {"start": start.isoformat(), "days": timeline.WINDOW_DAYS}:
+        problems.append(f"the window reads {back['window']}, not the week before the moment")
+    areas = back["areas"]
+    problems += [f"timeline areas are missing {key!r}"
+                 for key in REQUIRED_TIMELINE_AREAS if key not in areas]
+    if not isinstance(areas.get("log_reaches_window_start"), bool):
+        problems.append("log_reaches_window_start must be a boolean, never absent or null")
+    for interval in areas.get("intervals", []):
+        problems += [f"an area interval is missing {key!r}"
+                     for key in REQUIRED_TIMELINE_INTERVAL if key not in interval]
+    for layer, keys in REQUIRED_TIMELINE_LAYER.items():
+        problems += [f"timeline {layer} is missing {key!r}"
+                     for key in keys if key not in back[layer]]
+        if back[layer].get("recorded_since") is not None or back[layer].get("intervals"):
+            problems.append(f"a {layer} layer never polled drew something instead of "
+                            "saying it has no record")
+    for spec in PRODUCTION_FEEDS:
+        pipe = back["coverage"].get(spec.feed)
+        if pipe is None:
+            problems.append(f"coverage has no entry for {spec.feed}")
+            continue
+        problems += [f"coverage {spec.feed} is missing {key!r}"
+                     for key in REQUIRED_TIMELINE_PIPE if key not in pipe]
+    contract = to_contract(compose(events, as_of=end, table=table))
+    chosen = timeline.picture_from_file(back, end)["areas"]
+    if chosen != contract["areas"]:
+        problems.append("the areas the timeline holds at its own moment differ from the areas "
+                        "block of the contract composed then; one serialisation, two files")
+    if back["generated_at"][:19] != str(contract["generated_at"])[:19]:
+        problems.append("the timeline and the contract describe different moments")
+    return problems
+
+
 def main() -> int:
     """Run the contract check. Returns a process exit code."""
-    problems = check_contract() + check_every_kind_is_documented() + check_strike_tally()
+    problems = (check_contract() + check_every_kind_is_documented() + check_strike_tally()
+                + check_timeline())
     for problem in problems:
         print(f"contract-check: {problem}", file=sys.stderr)
     if problems:

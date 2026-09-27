@@ -16,6 +16,74 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.58.0.0 - 2026-09-27
+
+**The past had no file, and three functions asked about it answered about the
+present.** The site's seven-day slider needs the week as a record, and nothing
+in the contract carried one: D-054 recorded the lists and left open how history
+reaches a reader. Building the answer found that the Polish composers and the
+liveness measure took a moment and read the newest row the table held,
+whatever the moment was, so a past moment was drawn with a later list and
+every past pipe read as delivering (F188). D-058 answers D-054: one file of
+intervals, each layer on the clock its data has.
+
+- **`timeline.json`, written by `mavo report --timeline PATH`**, from the same
+  replay and at the same moment as the other files, compact, over the trailing
+  seven days: the areas as intervals of the contract's own area item, the
+  place written once; `pl_warnings` and `pl_all_clear` as intervals of their
+  exact values; the drawn PAŻP zones per zone, the outline written once; and
+  per pipe the gaps in which the live `sources` rule would not have said
+  `delivering`. Half-open intervals, `to: null` still open, stamps at
+  microseconds. No unit passes the flag: the consumer's target and route, the
+  push unit's third file and T90 come first, in that order
+  (`docs/DEPLOYMENT.md`).
+- **Two clocks, and the file says which.** An area changes at source time: its
+  picture at a moment is `compose` over the events stamped at or before it,
+  which is what the store knows today about that moment, rows that arrived
+  after an outage included. The Polish lists change at read time, the only
+  clock they have, so a change reaches the file up to one poll late.
+- **One rule, two implementations, and a test between them.** The timeline
+  decides nothing. It finds the instants at which `report.area_picture`,
+  `poland.warnings_verdict`, `poland.airspace_reading` with `poland.drawn`, and
+  the threshold of `measure_feed` can change, and asks them there.
+  `tests/test_timeline.py` holds the file's picture of a moment, built by
+  selection alone, equal to those rules asked directly, at random instants and
+  at every boundary a microsecond either side: on generated logs, on the RSO
+  page of 2026-09-16 and the UUP plan of 2026-09-14, and on a week recorded
+  from the production store.
+- **The file refuses what would read as calm.** A cycle whose replay failed
+  writes no file, because a week folded from an empty log is a week without
+  alerts. A moment outside the window is refused, not answered empty. Before a
+  pipe's first poll the file says where its record starts.
+- **F188: a moment asked, the newest row answered.** `warnings_blocks`,
+  `airspace_block` and `measure_feed` read the table's tail whatever `as_of`
+  said; harmless for the live cycle, whose moment is now, and wrong for every
+  other. `newest_attempt_at`, `newest_read`, `newest_read_at` and
+  `newest_refusal_detail` take `at`; the three pass their moment; and the
+  rules they apply are taken out of their reads so the timeline applies the
+  same ones.
+- **A full tie is named by the kind, not by the order of the rows.** Two kinds
+  of one area with the same state and both stamps equal, one API poll
+  reporting both, took the headline from whichever kind the fold met first,
+  and the live cycle and the timeline meet rows in different orders.
+  `report.area_picture` sorts by the kind's name first.
+- **`mavo timeline`.** `--out` writes the file once and prints its size raw and
+  gzipped and the time each step took, which is T90's instrument; `--store
+  --at` and `--file --at` print one moment asked of the rules and chosen from a
+  file, in one shape, so a `diff` is the acceptance check on the host.
+- **`mavo record-week`.** One week of a store, holding the rows the timeline's
+  check reads and nothing else, read-only. A subcommand because its input is
+  the store (D-038), and stdlib only, so the host's own interpreter ran the
+  same file before this release existed.
+- **Measured on a week the host recorded** (the one ending 2026-09-26, now
+  `tests/fixtures/store_week_2026-09-26.sqlite3.xz`, 1,350,168 B): the file is
+  1,143,022 B as written and 113,149 B gzipped; 3,753 area intervals are nine
+  tenths of it, beside 26 communique intervals, 174 zone intervals and 8
+  gaps. Built in 1.79 s in the session's container, which replays 7,491
+  events where the host replays its whole log.
+- **T90 opened**: the file's size and the cost of a cycle, measured on the host
+  before the flag goes in.
+
 ## 0.57.0.0 - 2026-09-24
 
 **The nights the reader could not see, and a figure they printed that this
