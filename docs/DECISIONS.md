@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.35
+Document:  docs/DECISIONS.md, version 2.36
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2397,6 +2397,11 @@ thirty seconds that is about 3.3 GB a day through the push unit `[inference]`.
 The cycle's cost on the host, with the whole log replayed, is T90's,
 measured on the installed release before the flag goes into the unit, and
 `--timeline-every` is the answer if the figure asks for one.
+
+**On the host from 2026-09-28.** T90 measured the week there at 1,097,908 B
+and its build at 5.2 s on the installed release, and the report unit writes it
+on every tenth cycle, so the push carries it about every five minutes rather
+than every thirty seconds. `docs/DEPLOYMENT.md` holds the reading.
 
 **Reopen if:** the file outgrows a push every thirty seconds at the measured
 size; the consumer needs a question that choosing intervals cannot answer; or a

@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.55 / 2026-09-27
+Version: 1.56 / 2026-09-28
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -31,15 +31,18 @@ said 2026-09-10 while the rows under it described the installs of 2026-09-09
 and 2026-09-19 (F184), and the release that moved the date is the release that
 re-read every row it covers.
 
-### Units, and there are seven services and five timers
+### Units, and there are eight services and six timers
 
-**Seven from 0.55.2.0**, when `mavo-rso` and `mavo-airspace` were installed
-beside the five this table used to list; one of the seven, `mavo-adsb`, belongs
-to the `mavo-adsb` repository. An earlier revision said four and omitted
+**Eight from 0.56.0.0**, when `mavo-kpszsu` joined the seven of 0.55.2.0, the
+release that installed `mavo-rso` and `mavo-airspace` beside the five this
+table used to list. The heading kept seven and five for three releases after
+the eighth row arrived (F189). One of the eight, `mavo-adsb`, belongs to the
+`mavo-adsb` repository. An earlier revision said four and omitted
 `mavo-collect-api`, the unit that has fed the entire project since D-040
 (F134). Every row is re-read 2026-09-21 (Appendix A): type and user from the
 unit's own properties, cadence from its timer, spacing from forty hours of
-`feed_attempts`, which is the collector's record of when it actually ran.
+`feed_attempts`, which is the collector's record of when it actually ran. The
+push and report rows add what the reading of 2026-09-28 changed.
 
 | Unit | Type | Cadence | What it does |
 | --- | --- | --- | --- |
@@ -48,15 +51,62 @@ unit's own properties, cadence from its timer, spacing from forty hours of
 | `mavo-rso.service` | `oneshot`, `User=mavo` | `mavo-rso.timer`, 900 s plus up to 60 s; per address a median of 931 s and a maximum of 960.2 s over 154 | reads the five RSO categories into `communiques` and each address's list into `feed_snapshots` (D-053, D-054) |
 | `mavo-airspace.service` | `oneshot`, `User=mavo` | `mavo-airspace.timer`, 300 s plus up to 30 s; a median of 316 s and a maximum of 330.1 s over 456 | reads PAŻP's updated plan into `airspace_zones` and its list into `feed_snapshots` (D-053, D-054) |
 | `mavo-kpszsu.service` | `oneshot`, `User=mavo` | `mavo-kpszsu.timer`, 300 s plus up to 30 s **declared** for 0.56.0.0 and not yet read from the host | reads the Air Force's summaries from `@kpszsu` into `strike_tallies` (D-056); it replaces the corpus sampler that read the same page at the same cadence from the operator's home directory |
-| `mavo-push.service` | `oneshot`, `User=mavo` | `mavo-push.timer`, 30 s plus up to 15 s, `AccuracySec=1s`; 3,801 runs in the forty hours, one every 38 s on average | pushes `state.json` and `feed.json` to the site |
-| `mavo-report.service` | `simple`, `User=mavo`, one process since the install and no restart | continuous, `--interval 30` with `--feed`, from the one drop-in | writes the report |
+| `mavo-push.service` | `oneshot`, `User=mavo` | `mavo-push.timer`, 30 s plus up to 15 s, `AccuracySec=1s`; 3,801 runs in the forty hours, one every 38 s on average | pushes `state.json` and `feed.json` to the site, and from 2026-09-28 `timeline.json` after each rewrite of it (the reading of that date, below) |
+| `mavo-report.service` | `simple`, `User=mavo`, one process since its restart of 2026-09-28 06:00:41 UTC, which added `--timeline` | continuous, `--interval 30` with `--feed`, and from 2026-09-28 `--timeline` on every tenth cycle, from the one drop-in | writes the report |
 | `mavo-adsb.service` | `simple`, `User=mavo-adsb`, running since 2026-08-27 | continuous | the sampler, `mavo-adsb` repository |
 
 **There is no daemon and the collector is not one.** A timer plus a `oneshot`
 unit is the supervision mechanism this project actually runs on, and it was
 never a decision until D-031 wrote it down.
 
-### The installed package, as read on 2026-09-27
+### The installed package, as read on 2026-09-28
+
+**A partial reading, taken around the switch-on it records.** Read-only
+commands on 2026-09-28 between 05:04 and 08:40 UTC: `pip show` and the content
+discriminator; `systemctl cat` of the push and report units, and a `diff` of
+each drop-in against the copy taken before it was edited; `mavo timeline --out`
+and `--at`, run as `mavo`, for T90; the push unit's journal; and a listing of
+`/var/lib/mavo`. Between the readings the host was changed three times, in
+D-058's order: the site took the week's target and routes with its 4.88.0.0
+on `vm-site` at 05:45 UTC, the push unit gained its third file at about 05:58,
+and the report unit gained the flag at 06:00:41. As with the reading of
+2026-09-27, the date at the top of this section stays 2026-09-21, because
+neither reading re-read every row that date covers (F184).
+
+| | |
+| --- | --- |
+| Installed | `air-alert-early-warning 0.58.0.0` `[measured 2026-09-28, pip show]`, and by content: `timeline_every`, which 0.58.0.0 added, occurs 6 times in the installed `mavo/report.py` and never in `v0.57.0.0`'s. Installed on 2026-09-27 at 19:03:37 UTC over 0.57.0.0 `[measured 2026-09-28, the modification time of its dist-info directory]`, the second at which the report unit's journal records its restart; no `[STORE-MIGRATED]` line followed, which is the release having no schema move |
+| Point of return | none taken for 0.58.0.0, which moves no schema: the newest copy is still `events.pre-0.57.0.0`, 97,021,952 B, written 2026-09-24 21:34:12 UTC `[measured 2026-09-28, the directory listing]`. The store itself, `events`, held 127,365,120 B at 09:14 UTC |
+| `main` | 0.58.0.1 |
+| Behind by | **one** release against the `Installed` row above, read on 2026-09-28: this one, which is documents only, so nothing under `mavo/` differs from what runs but the version string. Superseded rows, kept for the record: at 0.58.0.0 this row read **one**, counted from an `Installed` row naming 0.57.0.0 that was read on 2026-09-27, before 0.58.0.0 was installed; at 0.57.0.0 **three**, counted from an `Installed` row naming 0.55.3.0 while the host ran 0.57.0.0 from 2026-09-24; at 0.56.0.0 **two**; at 0.55.4.0 **one**; at 0.55.3.0 **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
+| The report unit | the drop-in quoted below, where `--timeline /var/lib/mavo/timeline.json --timeline-every 10` stands before `--watch` and nothing else changed `[measured, the diff against the copy taken before the edit]`. The unit restarted with it at 06:00:41 UTC and wrote its first week six seconds later |
+| The push unit | `two-files.conf` replaced by `three-files.conf`: `state.json` and `feed.json` on every run as before, and `timeline.json` only on a run after the report has rewritten it. A marker beside the week takes its modification time before the send and becomes the record of the last delivery only once the site has accepted it, so a week rewritten during a send goes out again rather than never. The test for a missing marker is written out, because shells disagree there: `dash` answers `-nt` false when the second file does not exist and `bash` answers true `[measured in a container]`. The file names and the rule only, as above: the unit carries an internal address and a key path |
+| The week | 1,097,908 B as written, 109,491 B gzipped: 3,554 area intervals, 26 communique intervals, 187 zone intervals and 7 gaps `[measured 2026-09-28 at 05:09 UTC, mavo timeline --out, as mavo]` |
+| What it costs here | the replay of 42,758 events in 1.0 s, the build in 5.2 s and the write in under a tenth of a second, on 2 vCPU at a load average of 0.1 `[measured, the same run]`. The loop builds the week from the events its cycle has already replayed (`mavo/cli.py`, `mavo/report.py`), so a cycle that writes it adds the build and the write |
+| The check | three moments, 2026-09-24 21:00, 2026-09-25 03:45 and 2026-09-27 21:00 UTC, printed by `--store --at` and by `--file --at` and the same byte for byte `[measured]`. The site printed the same three from the copy it received, with its own `mavosite-timeline --file --at`, and matched them digest for digest `[measured on vm-site, mavo-site 4.88.0.0]` |
+| Delivered | 303 report cycles between the restart and 08:40 UTC `[measured, the report unit's journal]`, so 31 of them wrote the week, and the push unit's journal holds 31 deliveries of it, 275 to 363 s apart, the file between 1,098,148 and 1,102,120 B `[measured]`. The site derived the first week it received in 1.3 s for Polish and 1.2 s for English `[measured on vm-site, mavosite-timeline --measure]` |
+
+**Why `--timeline-every 10`.** T90's figure, and the choice its acceptance
+asks to be written beside it. At every cycle the week would take some 15% of
+one core and push the whole file every thirty seconds, about 2.6 GB a day
+`[inference, the size times the cycles]`. At every tenth it takes under 2%
+and a tenth of the bytes, and the week a reader scrubs is at most about six
+minutes older than the page, against the fifteen minutes between the slider's
+stops `[inference]`. The number lives in the drop-in, so it moves without a
+release if the figure does.
+
+```
+# /etc/systemd/system/mavo-report.service.d/interval.conf
+[Service]
+ExecStart=
+ExecStart=/opt/mavo/venv/bin/mavo report --store /var/lib/mavo/events --json /var/lib/mavo/state.json --feed /var/lib/mavo/feed.json --timeline /var/lib/mavo/timeline.json --timeline-every 10 --watch --interval 30
+```
+
+### The 0.57.0.0 install, as it was read on 2026-09-27
+
+**Kept as read, and no longer the newest reading.** These rows describe the
+host at 17:47 UTC on 2026-09-27, an hour and a quarter before 0.58.0.0 was
+installed over 0.57.0.0.
 
 **A partial reading, and named as one.** Three read-only commands on 2026-09-27
 at 17:47 and 17:51 UTC: `pip show` and a content discriminator in the venv;
@@ -69,7 +119,7 @@ this reading did not re-read every row that date covers (F184).
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.57.0.0` `[measured 2026-09-27, pip show]`, and by content: `strike_history`, which 0.57.0.0 added, occurs 12 times in the installed `mavo/report.py`. Installed on 2026-09-24 over 0.56.0.0 `[reported, the operator's record]`, which the point of return below dates to the second |
+| Installed at | `air-alert-early-warning 0.57.0.0` `[measured 2026-09-27, pip show]`, and by content: `strike_history`, which 0.57.0.0 added, occurs 12 times in the installed `mavo/report.py`. Installed on 2026-09-24 over 0.56.0.0 `[reported, the operator's record]`, which the point of return below dates to the second |
 | Point of return | `events.pre-0.57.0.0`, 97,021,952 B, written 2026-09-24 21:34:12 UTC; before it `events.pre-0.56.0.0`, 78,082,048 B, written 2026-09-22 20:20:28 UTC `[measured 2026-09-27, the directory listing]` |
 | The store | `events`, 121,810,944 B at 17:47 UTC, 24.8 MB more than its copy of three days before. `communiques` holds 59,516 rows since the first RSO read of 2026-09-19, the largest table by the bytes of its columns; almost all of them come from the four categories the map does not paint, whose lists change with every water level and road notice `[measured 2026-09-27; which categories, inferred from the lists per address]`. This is the growth D-054 left to be measured before retention is written |
 | The report unit | the drop-in's `ExecStart` writes `state.json` and `feed.json` every 30 s and passes neither `--history` nor `--timeline` `[measured 2026-09-27]` |
@@ -92,8 +142,6 @@ the install of 0.55.3.0 on 2026-09-21 and are true of that day.
 | First cycles under it | channel and API at 18:36:22 UTC; RSO and PAŻP at 18:38:27, each writing `snapshot=changed` on its first read |
 | Who owns the venv | `/opt/mavo/venv` is `root:root` 0755 `[measured 2026-09-21]`; why that matters is recorded under the 0.53.4.0 install below (F144) |
 | `feed_attempts` coverage | **begins 2026-08-29 14:39:05 UTC** `[measured 2026-09-21]`, eighteen days after collection began, so a query before that date returns an empty set rather than a silence (F159) |
-| `main` | 0.58.0.0 |
-| Behind by | **one** release against the `Installed` row above, read on 2026-09-27: this one. 0.58.0.0 brings no schema move and no unit. The composers and the liveness measure now read the store at the moment they are asked about (F188), which for the live cycle is the moment they always read, and the timeline is built only under a flag no unit passes, so the install is a wheel and a restart; switching the timeline on is the order below and T90, not the install. Superseded rows, kept for the record: at 0.57.0.0 this row read **three**, counted from an `Installed` row naming 0.55.3.0 while the host ran 0.57.0.0 from 2026-09-24; at 0.56.0.0 **two**; at 0.55.4.0 **one**; at 0.55.3.0 **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
 
 ### The 0.53.4.0 install, as it was read on 2026-09-09
 
@@ -628,7 +676,10 @@ on this host with `mavo timeline --out`, run from the release, installed or in
 a venv beside the installed one, and **as `mavo`**, the owner of the store; the
 figure decides `--timeline-every`. The install itself does not wait for T90:
 without the flag nothing builds the file, and the fallback T90 might ask for
-is already a flag.
+is already a flag. **All of it was done on 2026-09-28, in that order**: the
+site's target and routes with its 4.88.0.0, T90 on the installed release,
+then the push unit's third file and the flag at `--timeline-every 10`. The
+reading of that date, at the top of this document, holds the figures.
 
 **The producer and the consumer deploy in one window.** The consumer refuses
 any schema version it does not recognise, so a producer at v3 in front of a

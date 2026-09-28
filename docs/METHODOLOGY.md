@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.71
+Document:  docs/METHODOLOGY.md, version 2.72
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,25 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F189, 0.58.0.1. A heading counted the units before the strike tally's arrived
+
+`docs/DEPLOYMENT.md` headed its unit table "seven services and five timers"
+from 0.55.2.0, and the count was right then. 0.56.0.0 added
+`mavo-kpszsu.service` and its timer as a row of the same table, and the
+heading and the paragraph under it kept the old count for three releases,
+while the reading of 2026-09-27 under the same heading measured six timers.
+Found by the release that edited the rows beneath it.
+
+**Class.** F158's blind spot, one table later: a count spelled in prose sits
+outside every check, and a row added to a table does not move the sentence
+that counts the rows.
+
+**Repair.** The heading and its paragraph say eight services and six timers
+and name the release that added the eighth.
+
+**Reopen condition:** a unit table whose rows differ in number from the count
+its heading states.
 
 ### F188, 0.58.0.0. Three functions asked about a moment answered about the newest row
 

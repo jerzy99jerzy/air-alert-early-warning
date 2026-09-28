@@ -16,6 +16,31 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.58.0.1 - 2026-09-28
+
+**The host ran 0.58.0.0 and wrote the week, and the tree said it ran 0.57.0.0
+and wrote none.** The switch-on D-058 ordered was carried out on 2026-09-28
+and T90 was measured on the way to it, so the host table, the backlog and two
+documents described a state the host had left. Documents only; nothing under
+`mavo/` moves but the version string.
+
+- **T90 closed with the host's figures.** On the installed 0.58.0.0, as
+  `mavo`: 1,097,908 B written, 109,491 B gzipped, the replay of 42,758 events in
+  1.0 s, the build in 5.2 s, and three moments printed from the store and from
+  the file the same byte for byte. The report unit carries
+  `--timeline-every 10`, and the reason stands beside the reading.
+- **`docs/DEPLOYMENT.md` 1.56.** A reading of 2026-09-28 with the switch-on in
+  D-058's order: the site's target and routes first, then the push unit's
+  third file, sent only after a rewrite, then the flag. 31 writes and 31
+  deliveries in the first 303 cycles. The `main` and `Behind by` rows move to
+  the newest table; the host runs 0.58.0.0.
+- **F189. A heading counted seven services and five timers** for three releases
+  after `mavo-kpszsu` made them eight and six. The two briefs count 167
+  defects.
+- **`docs/DECISIONS.md` 2.36 and `docs/WEBAPP.md` 3.17.** D-058's cost is
+  measured on the host now, and the contract section no longer says that no
+  unit writes the week.
+
 ## 0.58.0.0 - 2026-09-27
 
 **The past had no file, and three functions asked about it answered about the

@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.16 / 2026-09-27
+Version: 3.17 / 2026-09-28
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -120,7 +120,8 @@ lives above the fold rather than in a footer.
 Two files, `state.json` and `feed.json`, schema v3, and from 0.52.1.0 a
 third, `history.json`, that the site does not yet read (D-048). From 0.58.0.0
 a fourth, `timeline.json`, the past week as intervals, which the site's
-seven-day slider is planned to read and no unit writes yet (D-058). MAVO writes
+seven-day slider reads from its 4.88.0.0 and the report unit writes on every
+tenth cycle from 2026-09-28 (D-058). MAVO writes
 them (`mavo report --json ... --feed ... --history ... --timeline ...`, and
 `--watch` for the loop); the site reads them and imports nothing from this
 package.
