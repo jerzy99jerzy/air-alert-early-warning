@@ -7,7 +7,7 @@ godzinach. Projekt prywatny, w fazie pre-alfa; nikt nie dostaje z niego dziś
 Dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.32
+Document:  docs/BRIEF-PL.md, version 2.33
 Measured:  każdą zmierzoną liczbę z tego pliku bramka zestawia ze
            STATUS.json przy każdym przebiegu, więc ręczy za nią to
            porównanie, a nie data w nagłówku. Wartości, z którymi są
@@ -200,10 +200,10 @@ konstrukcja jest ułożona wokół tego rozróżnienia.
 Przy prywatnym projekcie wiarygodność waży więcej niż technologia, więc zamiast
 zapewnień konkrety. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Rejestr błędów ma 167 wpisów.** Każdy mówi, co się zepsuło, dlaczego nikt tego
+**Rejestr błędów ma 169 wpisów.** Każdy mówi, co się zepsuło, dlaczego nikt tego
 nie zauważył i jakiej klasy był to błąd. Są tam także wpisy przeciw interesowi
 projektu, w tym ten o wyniku 0 na 20 oraz ten, w którym dokumentacja twierdziła,
-że coś jest sprawdzane, a nie było. Osobno zapisano **57 decyzji projektowych**,
+że coś jest sprawdzane, a nie było. Osobno zapisano **58 decyzji projektowych**,
 każdą z warunkiem, który otworzyłby ją z powrotem.
 
 **Część danych zapieczętowano, zanim ktokolwiek je przeczytał.** Odłożono 20,01%
@@ -217,9 +217,9 @@ raportowana, wywnioskowana, założona. Te 57% wyżej to liczba cudza i jest tak
 oznaczona, razem z uwagą, że jej źródło mogło mieć na myśli inny obszar niż ten
 projekt.
 
-**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 1093 testy, w
+**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 1135 testów, w
 tym 14 scenariuszy ataku na zabezpieczenia samego projektu; pokrycie kodu
-wynosi 96,45% przy progu 95%, którego nigdy się nie obniża. Same ataki także są
+wynosi 96,61% przy progu 95%, którego nigdy się nie obniża. Same ataki także są
 sprawdzane: 12 z 13 zweryfikowano, psując celowo chronioną przez nie kontrolę i
 wymagając, żeby atak to wychwycił. Ten jeden bez takiej weryfikacji jest przy
 każdym uruchomieniu wypisywany jako niezweryfikowany, zamiast przemilczany.

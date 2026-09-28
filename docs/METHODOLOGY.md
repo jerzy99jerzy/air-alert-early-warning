@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.72
+Document:  docs/METHODOLOGY.md, version 2.73
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,168 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F194, 0.59.0.0. The new key's documents said what its code and the recording did not
+
+The first design of `pl_rcb_recent` was reviewed before release by a second
+agent, given the tree and a brief but not the session's reasoning. Every
+defect it found sat in one of two places, the reason an alert stopped and the
+sentences about it, and each sentence it found false was checkable against
+the code or against the fixture the decision cited. What painted was right
+throughout.
+
+- **Silence offered as calm.** `docs/WEBAPP.md` told a consumer that an empty
+  `unread` meant RCB raised nothing elsewhere. `unread` held only the
+  verdict's `null` stretches, and the verdict accepts a list an hour old, so
+  a read, three refused polls and a read 59 minutes 59 seconds later left it
+  empty, while the pipe's own `liveness` rule calls thirty minutes without a
+  read an outage. And an alert raised and withdrawn between two reads is
+  never seen at all, whatever `unread` says.
+- **A repair that was not in the code.** F193 as first written said that
+  removing a redundant condition made an alert whose `valid_from` RCB moves
+  back end at its all-clear. The module compared the all-clear with the
+  version that painted last, which is the old one; in a store served that
+  way the alert read `withdrawn` while the same payload's all-clear listed it
+  in `ended`.
+- **`withdrawn` as a catch-all.** The ending was read off the verdict, which
+  drops an expired communique, so an alert rewritten into an all-clear whose
+  shortened `valid_to` had passed by the next read, and one whose `valid_to`
+  RCB moved into the past, both read `withdrawn`, and the first took its
+  all-clear out of the window as well. RCB shortens an all-clear's `valid_to`
+  in the recorded week: 23364006 went from 23:59 to 06:00, and the read that
+  saw the change came six minutes before the new `valid_to`.
+- **"The feed carries no other stamp."** D-062, the module, the WEBAPP row and
+  the changelog put a rewrite on the read's clock because RCB was said to
+  leave no stamp. `updated_at` moves on all three of the week's rewrites, 3.7
+  to 9.5 minutes before the read that saw each, and `mavo/sources/rso.py`
+  already says that it moves on edits. D-062's own reopen condition, RCB
+  starting to stamp its rewrites, was met by the fixture it cited.
+- **An old all-clear as a new event.** An all-clear counted as one of the
+  window's unless the window's first list held it, so a window opening on a
+  `null` stretch counted every all-clear standing through it: for 48 hours
+  after each such stretch, and for as long as the stretch had lasted.
+- **Smaller.** The sizes were code points and not bytes, 2,497 against 2,507;
+  `unread`'s `at` was documented as the read that saw it and was where the
+  block went `null`, an hour after the last read; the stamp helpers accepted
+  aware text the composer's reader refuses; the WEBAPP row left out that a
+  gap's `to` can be `null` and that only alerts that painted are listed; T92
+  compared the key with `pl_warnings` in the same file without saying that
+  the two come from separate reads of the store, which a poll between them
+  can make disagree for a cycle; and the review's claims about the consumer
+  carried no provenance.
+
+A second reading, of the reworked tree by two more agents on the same terms,
+found the class once more before release. An end by an all-clear was dated
+by that all-clear's `valid_from`, which for an all-clear rewritten from an
+alert is the minute that alert was raised: the first finding again, one
+field over. An end nobody read was dated, after a list naming a missing row,
+by the read that recorded that list rather than by the last read that saw the
+alert. And five sentences overstated: that the map was right because each
+alert left the list, when six of the eight stopped painting while still
+listed; that the key and the `sources` block cannot disagree about an outage,
+when `sources` counts the reads of every list the pipe fetches; that gaps
+run from the last read before them, when they are clipped to the window; that
+the stamp helpers were gone, when `feed_instant` remains for `updated_at`;
+and a shortest listing of half an hour, true only of one all-clear.
+
+**Class.** An argument from the verdict where the question was about the
+lists: the key was designed as a regrouping of what painted, and the reasons
+were then read off the same filtered intervals, which had already thrown away
+what told them apart. And claims about the feed written from what it was
+assumed to hold, F154's and F157's shape again, this time in prose rather than
+in a test.
+
+**Repair.** The reasons and the all-clears are read off the recorded lists
+with the composer's own readings of a row. The module's `issued_at` and
+`expires_at` are gone; `feed_instant` stays, for `updated_at`, which the
+composer never reads, and a test holds it to `rso.to_utc`. `rewritten` is on
+RCB's `updated_at`, and an end by an all-clear on that all-clear's
+`announced`; an alert's issue time is its version in the list where it still
+is; `expired` reads the version last listed, so a `valid_to` moved into the
+past ends it there; an end nobody read is dated by the last read that saw the
+alert; an all-clear is the window's when RCB's `updated_at` for it falls
+inside; and `unread` also holds the stretches between reads further apart
+than the pipe's own threshold. D-062, the WEBAPP rows, the changelog and the
+review now say what the code does, and the hand mutations F193 counts hold
+each part.
+
+**Reopen condition:** a sentence in D-062, `docs/WEBAPP.md` or the module's
+docstring, about what the feed carries or what an empty `unread` licenses,
+that the recorded week or the code contradicts.
+
+### F193, 0.59.0.0. Rules of the new key that no test could fail, found three times before release
+
+`tests/test_rcb_recent.py` was green on its first full run, and eleven hand
+mutations of `mavo/rcb_recent.py` then left three rules standing unnoticed.
+Two were the tests' own premises. The test that an all-clear standing before
+the window is not one of its events used a window opening at 12:00 UTC on
+2026-09-23, when the recorded list had dropped that all-clear at 10:18:39, so
+there was nothing standing for the rule to exclude; it had been written from
+the all-clear's `valid_to`, 23:59, and not from the list. The test that an
+all-clear issued before an alert cannot end it served the all-clear of
+2026-09-16 against an alert of 2026-09-24, a week past that all-clear's
+`valid_to`, so the composer never listed it and the rule never saw it. The
+third was the rule itself: a test that the all-clear was new at the read
+could not fail, because one issued after the alert and listed while it
+painted would have ended it under D-055 already. The two tests were re-aimed
+on what the recording held, the condition was removed, and all eleven
+mutations turned the suite red.
+
+The review F194 records then patched that tree in memory, one rule at a time,
+and found five more the suite let through: the name shown replaced by the
+slug, which no served row could tell apart; an alert with no readable issue
+time ended by any later all-clear, which is D-055's safety side; the latest of
+two qualifying all-clears taken for the earliest; a standing all-clear with an
+unreadable stamp dropped; and `expired` tested before `all_clear`, against the
+order the docstring states. One more test compared the module's stamp readings
+with literals rather than with the composer's. The first round was written by
+the author of the rules and missed five that a reader who had not written
+them found.
+
+The rework then went out with twenty-five mutations, all killed, and
+documents that called them every rule of the module. A second reader of the
+reworked tree found six edits more that the suite let through, and they are
+not small:
+
+- an all-clear whose stamp does not convert dropped from the window;
+- a later threat taken for the all-clear that ends an alert;
+- a rewrite with no readable stamp put on RCB's clock with no time at all;
+- a voivodeship with an all-clear alone shown by its slug;
+- a gap not clipped to the window;
+- the oldest version of an alert shown instead of the newest.
+
+Writing mutations for those found two boundaries more: a hole lying wholly
+before the window, which only a caller other than the walk can hand to
+`holes`, and an alert gone at the very instant of its `valid_to`. Nothing was
+published.
+
+**Class.** Fixtures written against implementation, F154's and F157's shape
+in a test's inputs rather than in its table names: the expected rows came from
+what the feed was assumed to hold, and the recording disagreed. And rules
+whose removal no test notices, which are preferences.
+
+**Repair.** The module was reworked for F194, and forty hand mutations of the
+reworked one, each a single edit of a rule and each run on a copy of the tree,
+turn `tests/test_rcb_recent.py` red `[measured]`. Forty is a count, not a
+claim of completeness: two readers found edits the author had not thought
+of, and a third may. Among the tests they asked for:
+
+- a voivodeship whose feed name differs from its slug (`śląskie`), with an
+  alert and with an all-clear alone;
+- an alert with no issue stamp beside a later all-clear;
+- two all-clears issued after one alert, and a later threat in an alert's
+  place;
+- an all-clear beside a `valid_to` that passed at the same read;
+- stamps that do not convert, on a rewrite and on an all-clear;
+- the newest version shown;
+- gaps clipped to the window;
+- the instant of `valid_to` itself.
+
+The mutations ran from the session and are not in the gate, so the reopen
+condition below is a reading until they are.
+
+**Reopen condition:** a rule of `mavo/rcb_recent.py` whose removal leaves
+`tests/test_rcb_recent.py` green.
 
 ### F189, 0.58.0.1. A heading counted the units before the strike tally's arrived
 

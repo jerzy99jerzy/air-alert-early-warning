@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.16
+Document:  docs/MANUAL.md, version 3.17
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -579,6 +579,14 @@ a list or object means read. A failure composing them prints
 `[POLAND-FAILED] <reason>` on stderr and publishes every Polish key `null`, and the
 Ukrainian picture is published regardless. The one-shot path composes neither,
 as it composes no `sources` block.
+
+**Under `--watch` the loop also composes `pl_rcb_recent`** (D-062): the last
+forty-eight hours of RCB air alerts per voivodeship, walked over the same
+recorded lists `pl_warnings` is read from, with the reason each alert stopped
+painting, whose clock that moment is on, and the stretches the reads could not
+cover. It is absent whenever `pl_warnings` is. Its guard is its own: a failure
+composing it prints `[RCB-RECENT-FAILED] <reason>` on stderr and publishes that
+key `null`, and every other key goes out as it would have.
 
 **Under `--watch` with `--timeline` the loop writes the week as intervals**
 (D-058), after the other files and from the same replay, so the file and the

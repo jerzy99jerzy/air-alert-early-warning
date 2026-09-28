@@ -618,6 +618,10 @@ class Report:
     #: the consumer last night, and one key going `null` must not take the
     #: other with it.
     strike_history: Block | None = None
+    #: The last forty-eight hours of RCB air alerts per voivodeship (D-062), a
+    #: fifth block on the terms of the fourth and for its reason: the live list
+    #: is what paints, and a fold over two days that fails must not take it down.
+    rcb_recent: Block | None = None
 
     @property
     def staleness_s(self) -> float | None:
@@ -1054,6 +1058,7 @@ def compose(
     poland: Callable[[datetime], PolandBlocks] | None = None,
     strike: Callable[[datetime], Block] | None = None,
     strike_history: Callable[[datetime], Block] | None = None,
+    rcb_recent: Callable[[datetime], Block] | None = None,
 ) -> Report:
     """Fold an event log into the current picture.
 
@@ -1235,10 +1240,12 @@ def compose(
         poland=poland(moment) if poland is not None else None,
         # D-056. A third callable on the same terms as the two above.
         strike=strike(moment) if strike is not None else None,
-        # D-057. A fourth, and the last one the contract needs a store for.
+        # D-057. A fourth.
         strike_history=(
             strike_history(moment) if strike_history is not None else None
         ),
+        # D-062. A fifth, over the RCB record the Polish keys above read.
+        rcb_recent=rcb_recent(moment) if rcb_recent is not None else None,
     )
 
 
@@ -1433,6 +1440,10 @@ def to_contract(report: Report) -> dict[str, object]:
     # other, and the windows can go `null` while the night stands.
     if report.strike_history is not None and report.strike_history.published:
         payload["strike_history"] = report.strike_history.value
+    # D-062. Beside `pl_warnings` and not inside it, for D-057's reason: the
+    # live list is what paints, and the two days can go `null` while it stands.
+    if report.rcb_recent is not None and report.rcb_recent.published:
+        payload["pl_rcb_recent"] = report.rcb_recent.value
     return payload
 
 
@@ -1638,6 +1649,7 @@ def publish(
     poland: Callable[[datetime], PolandBlocks] | None = None,
     strike: Callable[[datetime], Block] | None = None,
     strike_history: Callable[[datetime], Block] | None = None,
+    rcb_recent: Callable[[datetime], Block] | None = None,
     timeline_path: Path | None = None,
     timeline: Callable[[Sequence[ThreatEvent], datetime], dict[str, object] | None]
     | None = None,
@@ -1705,7 +1717,7 @@ def publish(
             report = compose(
                 events, as_of=clock(), table=table, valid_for_s=valid_for_s,
                 history_days=history_days, sources=sources, poland=poland,
-                strike=strike, strike_history=strike_history,
+                strike=strike, strike_history=strike_history, rcb_recent=rcb_recent,
             )
             if report.feed_state is FeedState.BLIND:
                 blind += 1

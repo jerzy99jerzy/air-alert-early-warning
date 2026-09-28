@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 1093](https://img.shields.io/badge/tests-1093-brightgreen)](tests/)
-[![coverage 96.45%](https://img.shields.io/badge/coverage-96.45%25-brightgreen)](Makefile)
+[![tests 1135](https://img.shields.io/badge/tests-1135-brightgreen)](tests/)
+[![coverage 96.61%](https://img.shields.io/badge/coverage-96.61%25-brightgreen)](Makefile)
 [![harness 14 attacks, 13 mutation-verified](https://img.shields.io/badge/harness-14%20attacks%2C%2013%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 167](https://img.shields.io/badge/defects%20logged-167-informational)](docs/METHODOLOGY.md)
+[![defects logged 169](https://img.shields.io/badge/defects%20logged-169-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -454,7 +454,7 @@ look.
 | **alerts.in.ua** | The same alerts, through another API | Token applied for 2026-08-06, unanswered | **Not independent.** Draws from the same upstream (D-010). Two feeds, one dependency, and treating them as two would be the kind of false redundancy that reads as robustness right up until the day it matters |
 | **KATOTTG**, the Ukrainian state register of administrative units | The code, oblast and hierarchy behind every area the channel names | A file, published as open data under Creative Commons Attribution | Used offline, versioned in the tree, never called at runtime (D-016). No API key in the warning path, no rate limit where latency is the product, and no third party learning which raions a Polish user asks about at three in the morning |
 | **OpenSky Network** (ADS-B) | A second, physically different kind of observation: aircraft that broadcast their own position | Registered 2026-08-10, 4,000 credits a day, one credit per call over the western box [measured] | **Not a drone-tier source, and the premise that it was is recorded as false.** Transponders are carried by aircraft that choose to be seen; Shahed-type munitions and missiles carry none. What it can measure is **the operating intensity of the Rzeszow-Jasionka hub**, which has potential diagnostic value during a war and is reported rather than scored (D-019, T42) |
-| **komunikaty.tvp.pl**, the RSO stream, run for MSWiA by TVP | Civil-protection communiques by voivodeship: weather, water, road and general notices, and air threats, published into it by RCB among others | Public XML, no token. A CAP resource beside it needs one; this project's credentials for it are bound to the producer's host, and the resource has not been read | **Context, never a warning channel** (D-053). Composed into `pl_warnings` from the words of each communique, because no record carries a category (FEED-SPEC property fifteen). An all-clear is a communique too: at 0.55.0.0 it painted (F169), and from 0.55.1.0 it ends the alert it names and is published apart, in `pl_all_clear` (D-055) |
+| **komunikaty.tvp.pl**, the RSO stream, run for MSWiA by TVP | Civil-protection communiques by voivodeship: weather, water, road and general notices, and air threats, published into it by RCB among others | Public XML, no token. A CAP resource beside it needs one; this project's credentials for it are bound to the producer's host, and the resource has not been read | **Context, never a warning channel** (D-053). Composed into `pl_warnings` from the words of each communique, because no record carries a category (FEED-SPEC property fifteen). An all-clear is a communique too: at 0.55.0.0 it painted (F169), and from 0.55.1.0 it ends the alert it names and is published apart, in `pl_all_clear` (D-055). From 0.59.0.0 the last forty-eight hours of its air alerts, per voivodeship and with how each ended, are one more key, `pl_rcb_recent` (D-062) |
 | **airspace.pansa.pl**, PAŻP's updated airspace use plan | Reserved airspace structures over Poland, with their windows, limits and outlines | Public, no token | **Context** (D-053). `pl_airspace` draws only structures the plan marks `ACTIVATED`; the structures and their windows are recorded whether drawn or not |
 
 **What follows from that table.** Everything this tool says about Ukraine is
@@ -829,10 +829,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 30 | 14,593 |
-| Tests | 78 | 18,535 |
-| Tools | 28 | 8,175 |
-| Documentation | 78 | 37,002 |
+| Package `mavo/` | 31 | 15,070 |
+| Tests | 79 | 19,417 |
+| Tools | 28 | 8,273 |
+| Documentation | 79 | 37,584 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -843,13 +843,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 1093, of which 14 are scripted attacks |
-| Coverage | 96.45% against a floor of 95, a ratchet that is never lowered |
+| Tests | 1135, of which 14 are scripted attacks |
+| Coverage | 96.61% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 13 of 14 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 17, each with a control or a named acceptance |
-| Defects logged with their class | 167, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 57, counted from the log itself |
-| Releases | 164 in the changelog; tags are fewer and some are cumulative (A11) |
+| Defects logged with their class | 169, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 58, counted from the log itself |
+| Releases | 165 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation

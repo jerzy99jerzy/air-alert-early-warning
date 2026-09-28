@@ -16,6 +16,62 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.59.0.0 - 2026-09-28
+
+**An RCB alert that ended in the morning was in no key by the evening.**
+`pl_warnings` holds what paints now and `pl_all_clear` what is cleared and
+still listed, so the question the operator asked for the areas page - which
+voivodeships had RCB alerts in the last forty-eight hours - had no answer in
+the contract, only in the slider, for a reader who scrubbed to the right
+quarter-hour. D-062 publishes it.
+
+- **`pl_rcb_recent`, additive against schema 3.** The trailing forty-eight
+  hours, one row per voivodeship with an alert that painted or an all-clear
+  announced in them: each alert with RCB's `valid_from`, the stretches it
+  painted and why the last one stopped, each all-clear with RCB's own stamp for
+  it and the read that first listed it, and `unread`, the stretches the reads
+  could not cover. Its own guard in the report loop, so it goes `null` alone,
+  `[RCB-RECENT-FAILED]` on stderr.
+- **What painted is the week's own walk; why it stopped is read off the
+  lists.** `mavo/rcb_recent.py` takes the painted stretches from
+  `timeline.rcb_layer` and decides nothing about them, and
+  `tests/test_rcb_recent.py` asks `warnings_blocks` at the first instant, the
+  last tick and the end of every stretch, and at sampled window ends compares
+  the alerts still open with the list the composer paints. The end of a
+  stretch is read off the list the store recorded, version by version, with
+  the composer's own readings of a row, because the verdict drops an expired
+  communique and would call a rewrite that had already expired a withdrawal.
+- **Five endings, each naming its clock**: `rewritten` at the `updated_at` RCB
+  wrote on the rewrite, `all_clear` at that all-clear's `announced`, never its
+  `valid_from`, and `expired` at `valid_to`, all three RCB's; `withdrawn` at
+  the read, and `unread` at the last read that saw the alert, both the read's.
+- **`unread` at the pipe's own threshold.** Two reads further apart than
+  `silence_is_an_outage_s`, 1,800 s for RSO, leave the stretch between them
+  unread, as do the verdict's `null` stretches and the stretch before the
+  first poll. An empty `unread` says what the reads found, not what RCB did:
+  an alert raised and taken off the list between two reads is never seen.
+- **Measured on the week the host recorded.** Its eight alerts end three
+  rewritten in place, three past `valid_to`, one swapped for an all-clear at a
+  single read and one first read gone 4.5 minutes before its `valid_to`;
+  D-055's pairing inside one list ends none of them, and the map was right
+  each time because each stopped painting on its own terms. RCB also moves
+  `valid_to` (23362967, 23:59 to 02:00), which is one of D-055's reopen
+  conditions and is left to T86. Over the last two days of that week the key
+  is 2,705 B compact and takes about 0.12 s a cycle in the session's
+  container.
+- **F193 and F194: the first design passed its own tests with rules taken out,
+  and its documents said what the code and the recording did not.** Eleven hand
+  mutations left three rules no test could fail, a review by a second agent
+  found five more, and a second reading of the reworked tree six more (F193).
+  The same review found an empty `unread` vouching for an hour without a read,
+  an alert whose `valid_from` RCB moved back reported as withdrawn while its
+  all-clear named it, and a rewrite put on the read's clock while the feed
+  carries RCB's `updated_at`; the second reading, an end dated by an
+  all-clear's `valid_from` and five sentences that overstated (F194). All were
+  repaired before release, and forty hand mutations of the module, each a
+  single edit of a rule, turn its tests red.
+- **T92 opened**: the key on the host, read rather than declared.
+
 ## 0.58.0.1 - 2026-09-28
 
 **The host ran 0.58.0.0 and wrote the week, and the tree said it ran 0.57.0.0

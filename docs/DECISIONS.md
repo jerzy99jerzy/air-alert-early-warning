@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.36
+Document:  docs/DECISIONS.md, version 2.37
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2317,6 +2317,146 @@ written.
 **Reopen if:** the table grows faster than the event store it sits in, or the
 scrubber needs a question answered that one indexed read of this table cannot
 answer.
+
+## D-062. Two days of RCB alerts reach a reader per voivodeship: what painted from the week's own walk, why it stopped from the lists
+
+Date: 2026-09-28. Status: adopted.
+
+**Decision.** `state.json` carries `pl_rcb_recent`, the trailing forty-eight
+hours of RCB air alerts: one row per voivodeship with an alert that painted or
+an all-clear RCB announced in the window. An alert carries RCB's `valid_from`,
+the stretches it painted, and `ended`, which says why its last stretch
+stopped: a reason from a closed list of five, the moment, whose clock that
+moment is on, and the communique that ended it where one did. An all-clear
+carries RCB's stamp for it, the read that first listed it and the alerts
+D-055 paired it with. The window lists `unread`, the stretches the reads could
+not cover. The operator asked for it on 2026-09-28, for the areas page, in
+those words: which voivodeships had RCB alerts in the last forty-eight hours.
+
+**What painted is the composer's.** The window is walked by
+`timeline.rcb_layer`, which asks `poland.warnings_verdict` at every instant
+the verdict can change, so what this key calls painted at a moment is what the
+map painted then and what the slider repaints there. The test asks
+`warnings_blocks` directly at the first instant of every stretch, at its last
+tick and at its end, and at a sample of window ends compares the alerts still
+open with the list the composer paints; the two agree or the gate fails.
+
+**Why it stopped is read off the lists, not off the verdict.** The verdict
+drops a communique whose `valid_to` has passed, so from the verdict alone an
+alert rewritten into an all-clear that had already expired by the next read,
+or one whose `valid_to` RCB moved into the past, reads as withdrawn. The end
+of a stretch is read instead off the list the store recorded at the read where
+the painting stopped, version by version, with the composer's own readings of
+a row: `classify` for threat or all-clear, `_issued_at` for the issue time,
+`expiry_instant` for `valid_to`.
+
+**Why five endings, and why each names its clock.** The week recorded from the
+production store ends its eight alerts in four ways `[measured,
+tests/fixtures/store_week_2026-09-26.sqlite3.xz]`: three rewritten in place
+into their own all-clears, three past a `valid_to`, one swapped for a separate
+all-clear at a single read, one taken off the list with no all-clear at all.
+D-055's pairing, which needs the alert and its all-clear in one list, ends
+none of them; the map was right each time anyway, because each alert stopped
+painting on its own terms: rewritten into an all-clear, past its `valid_to`,
+or gone from the list. A reader asking whether an alert was called off gets a
+different answer from each, and the moment has a different owner, which
+`clock` names: `rcb`
+for a stamp RCB wrote, `read` for a read of this pipe, which only bounds the
+change, from above for a rewrite or a withdrawal and from below for an end
+nobody read. In order of preference, the publisher's own words first, then a
+field running out, then an absence:
+
+- `rewritten`: the same id listed as an all-clear. RCB keeps the alert's
+  `valid_from` on the rewrite and moves `updated_at`: the three of the week
+  carry stamps 3.7 to 9.5 minutes before the read that saw each `[measured]`,
+  so `at` is that stamp, on RCB's clock, and the read, on its own, where the
+  stamp does not convert.
+- `all_clear`: an all-clear naming the voivodeship, issued after the alert,
+  listed at the read where the alert stops painting. D-055's pairing is this
+  case and so is the swap. The alert's issue time is its version in that list
+  where it is still there, as D-055 compares them, so an alert whose
+  `valid_from` RCB moved back to before a standing all-clear ends at that
+  all-clear. `at` is RCB's stamp for that all-clear, the `announced` its own
+  line carries, on RCB's clock, and the read where that stamp does not
+  convert. Not its `valid_from`: an all-clear that was itself an alert
+  rewritten keeps the moment that alert was raised.
+- `expired`: the `valid_to` of the version last listed passed before the read;
+  `at` is that `valid_to`, RCB's clock. At the instant of `valid_to` itself an
+  alert still stands, as `poland.is_expired` has it, so one gone from a read
+  taken at that instant was withdrawn.
+- `withdrawn`: off the list, or no longer naming the voivodeship or the air,
+  with none of the above; `at` is the read. The first read without the week's
+  one case came 4.5 minutes before its `valid_to`, and the first reads without
+  the three that expired came 2.7 to 14.8 minutes after theirs `[measured]`.
+  A read only says a communique is gone, not when it went, so the withdrawal
+  may be the feed's own early expiry rather than an act of RCB `[inference]`.
+- `unread`: the communique block went `null`, and how the alert ended is not
+  known; `at` is the last read before that, the last one that saw the alert.
+
+**Which all-clears are the window's.** Every version the composer classifies
+as an all-clear, in any list the window holds, per voivodeship it names, when
+RCB announced it inside the window. `announced` is RCB's `updated_at` of the
+first version that is an all-clear, which for a rewrite is the rewrite and not
+the alert's `valid_from`. So an all-clear RCB announced before the window is
+not one of its events, even when the window opens on a stretch that could not
+be read; only one whose stamp does not convert falls back on the first read
+that listed it.
+
+**Why the window lists what it could not read, and at the pipe's threshold.**
+The sentence a reader wants most is the one about the voivodeships the list
+does not name, and it is only true across a window the reads covered.
+`unread` joins three kinds of stretch: two reads of the list further apart
+than the RSO pipe's own outage threshold, `silence_is_an_outage_s`, from the
+last read before the gap to the next, and open at the end when the newest read
+is older than that, each clipped to the window; the verdict's `null`
+stretches; and the stretch before the first poll when the record starts inside
+the window. The threshold is the one the `sources` block judges the pipe by,
+taken from the same table, so the two use one number. They still count
+different reads: `sources` every list the pipe fetches, this key only the
+`ogolne` list the air communiques are in. The first draft of this
+decision used the verdict's hour-old ceiling alone, on the argument that the
+key describes the map; the review of the release found that an empty `unread`
+then vouched for up to an hour without a read, and the pipe's threshold
+replaced it. Even empty, `unread` speaks of the reads and not of RCB: an alert
+raised and taken off the list between two reads is never seen. In the week,
+every alert stayed listed for more than an hour and a half, and the
+shortest-lived air communique, an all-clear, was on the list at reads fifteen
+minutes apart and gone within half an hour of the first `[measured]`; the
+reads are a quarter of an hour apart while the pipe delivers. So a consumer
+may say that the reads found no alert elsewhere when `unread` is empty, must
+name the gaps when it is not, and may not say that RCB raised nothing.
+
+**Why beside the live list and not inside it.** D-057's reason: `pl_warnings`
+is what paints now, and a walk over two days of lists has more ways to fail
+than one read of one list. The key has its own guard in the report loop and
+goes `null` alone, `[RCB-RECENT-FAILED]` on stderr. Absent is what it is for
+`pl_warnings`: this producer never polled RSO. The walk reads the store apart
+from the live key's read, so a poll written between the two can make them
+disagree for one cycle, and the next cycle reads both again.
+
+**What stays out.** The communique's text, which the live key carries for what
+is standing; two days of bodies on every push would buy a paragraph nobody
+asked the list to hold. Any count: the lists are the counts, and one number is
+one fewer place to disagree. `title` stays for whoever reads the contract and
+needs to tell two alerts apart without the text.
+
+**Not this decision.** The register of RCB alerts over 7, 30 and 90 days the
+operator committed to on 2026-09-24 answers another question and remains its
+own key; `summarise` takes any window, so it can walk longer ones when that
+key is built. And the recorded week meets one of D-055's reopen conditions:
+RCB moves `valid_to` while a communique stands, later (23362967 went from 23:59
+to 02:00) and earlier (the all-clear 23364006 went from 23:59 to 06:00). That
+is T86's to act on, and nothing here changes D-055.
+
+**Cost.** About an eighth of a second a cycle over the recorded two days,
+2,705 B compact, and 3,913 B added to `state.json` as the contract writer
+indents it `[measured in the session's container]`. The host's figure is
+T92's.
+
+**Reopen if:** T86 finds an end these five words do not name, or a rewrite
+whose `updated_at` does not move; the page needs a window other than
+forty-eight hours; or the cycle's cost on the host asks for the key to be
+composed less often than the contract is written.
 
 ## D-058. The past week reaches a reader as one file of intervals, each layer on the clock its data has
 

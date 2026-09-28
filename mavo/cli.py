@@ -38,6 +38,7 @@ from mavo.poland import Block as StrikeBlock
 from mavo.poland import PolandBlocks
 from mavo.poland import measure as measure_poland
 from mavo.policy import Regime, policy_of
+from mavo.rcb_recent import measure as measure_rcb_recent
 from mavo.recorder import main as record_week_main
 from mavo.report import (
     DEFAULT_TRAILING_DAYS,
@@ -1209,6 +1210,20 @@ def _cmd_report(args: argparse.Namespace) -> int:
                       file=sys.stderr, flush=True)
                 return STRIKE_FAILED
 
+        # D-062. Two days of RCB alerts, guarded apart from the live list for
+        # D-057's reason: the list is what paints now, and a walk over two days
+        # of lists has more ways to fail than one read of one.
+        def rcb_recent_block(moment: datetime) -> StrikeBlock:
+            try:
+                block = measure_rcb_recent(store, moment)
+                json.dumps(
+                    block.value, ensure_ascii=False, indent=1, allow_nan=False
+                ).encode("utf-8")
+                return block
+            except Exception as failure:  # noqa: BLE001
+                print(f"[RCB-RECENT-FAILED] {failure}", file=sys.stderr, flush=True)
+                return STRIKE_FAILED
+
         # D-058. The timeline, guarded like the blocks above and for their
         # reason: a failure to build it leaves the file unwritten and aging,
         # says why on stderr, and costs the contract nothing.
@@ -1233,6 +1248,7 @@ def _cmd_report(args: argparse.Namespace) -> int:
             poland=poland,
             strike=strike_block,
             strike_history=strike_history_block,
+            rcb_recent=rcb_recent_block,
             interval_s=args.interval,
             max_cycles=args.max_cycles,
             valid_for_s=args.valid_for,

@@ -26,6 +26,7 @@ import tempfile
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -645,6 +646,103 @@ def check_strike_tally() -> list[str]:
     return problems
 
 
+REQUIRED_RCB_RECENT = ("hours", "start", "end", "recorded_since", "unread", "voivodeships")
+REQUIRED_RCB_RECENT_ROW = ("slug", "voivodeship", "alerts", "all_clears")
+REQUIRED_RCB_RECENT_ALERT = ("id", "title", "valid_from", "air_term", "painted", "ended")
+REQUIRED_RCB_RECENT_ENDED = ("reason", "at", "clock", "by")
+REQUIRED_RCB_RECENT_CLEAR = ("id", "title", "valid_from", "air_term", "announced", "appeared",
+                             "ended")
+
+
+def check_rcb_recent() -> list[str]:
+    """D-062. `pl_rcb_recent` in its states, from the recorded page of 2026-09-16.
+
+    Built without a store, like `check_strike_tally` (D-038): the two lists a
+    store would hold are the recorded page, first with the alert alone and
+    then with its all-clear, the verdict over each is `poland.warnings_rows`,
+    and `rcb_recent.summarise` reads them as a store would hand them over.
+    What it holds: the key is absent without a store, `null` passes as `null`,
+    a value reaches the contract unchanged, every level carries the fields
+    `docs/WEBAPP.md` lists, an end is one of the closed words on one of the
+    two clocks, and the stretch before the record is unread rather than quiet.
+    The walk over a real store, the agreement with the live composer and the
+    recorded week are `tests/test_rcb_recent.py`.
+    """
+    from mavo import poland, rcb_recent
+    from mavo.poland import Block
+    from mavo.sources import rso
+    from mavo.timeline import RcbLayer, RcbSpan, Span
+
+    page = WEBAPP.parent.parent / "tests" / "fixtures" / "rso_ogolne_2026-09-16.xml"
+    items = list(rso.parse_page(page.read_bytes()).communiques)
+    held: dict[str, dict[str, Any]] = {
+        item.digest(): {"digest": item.digest(), "source_id": item.id, "fields": item.fields,
+                        "provinces": [[p.slug, p.name, p.city] for p in item.provinces]}
+        for item in items}
+    everything = [item.digest() for item in items]
+    alone = [item.digest() for item in items
+             if "odwołan" not in str(item.fields.get("title") or "").lower()]
+    t0 = datetime(2026, 9, 16, 5, 10, tzinfo=UTC)
+    t1 = datetime(2026, 9, 16, 5, 40, tzinfo=UTC)
+    end = datetime(2026, 9, 16, 6, 0, tzinfo=UTC)
+    start = end - timedelta(hours=rcb_recent.RECENT_HOURS)
+
+    def span(listed: list[str], since: datetime, until: datetime | None) -> RcbSpan:
+        warnings, cleared = poland.warnings_rows([held[one] for one in listed], since)
+        return RcbSpan(Block(True, warnings), Block(True, cleared), Span(since, until))
+
+    record = rcb_recent.Record(
+        layer=RcbLayer(recorded_since=t0,
+                       spans=(span(alone, t0, t1), span(everything, t1, None))),
+        lists=((t0, tuple(alone)), (t1, tuple(everything))),
+        held=held,
+        reads=(t0, t1),
+    )
+    value = rcb_recent.summarise(record, start, end, hours=rcb_recent.RECENT_HOURS)
+    problems: list[str] = []
+    base = compose([], as_of=end)
+    if "pl_rcb_recent" in to_contract(base):
+        problems.append("pl_rcb_recent present in a contract composed without a store")
+    if to_contract(replace(base, rcb_recent=Block(published=True, value=None))).get(
+            "pl_rcb_recent", "absent") is not None:
+        problems.append("a published null pl_rcb_recent did not reach the contract as null")
+    if value is None:
+        return [*problems, "the recorded page summarised to nothing"]
+    if to_contract(replace(base, rcb_recent=Block(published=True, value=value))).get(
+            "pl_rcb_recent") != value:
+        problems.append("the two days did not reach the contract unchanged")
+    problems += [f"pl_rcb_recent is missing {key!r}"
+                 for key in REQUIRED_RCB_RECENT if key not in value]
+    if value.get("unread") != [{"from": start.isoformat(), "to": t0.isoformat()}]:
+        problems.append("the stretch before the first poll is not listed as unread")
+    for row in value.get("voivodeships", []):
+        problems += [f"a voivodeship row is missing {key!r}"
+                     for key in REQUIRED_RCB_RECENT_ROW if key not in row]
+        for alert in row.get("alerts", []):
+            problems += [f"an alert is missing {key!r}"
+                         for key in REQUIRED_RCB_RECENT_ALERT if key not in alert]
+            ended = alert.get("ended")
+            if isinstance(ended, dict):
+                problems += [f"an alert's end is missing {key!r}"
+                             for key in REQUIRED_RCB_RECENT_ENDED if key not in ended]
+                if ended.get("reason") not in rcb_recent.ENDINGS:
+                    problems.append(f"an end reads {ended.get('reason')!r}, not one of "
+                                    f"{rcb_recent.ENDINGS}")
+                if ended.get("clock") not in rcb_recent.CLOCKS:
+                    problems.append(f"an end is on the clock {ended.get('clock')!r}, not one "
+                                    f"of {rcb_recent.CLOCKS}")
+        for clear in row.get("all_clears", []):
+            problems += [f"an all-clear is missing {key!r}"
+                         for key in REQUIRED_RCB_RECENT_CLEAR if key not in clear]
+    ends = [alert["ended"] for row in value.get("voivodeships", [])
+            for alert in row.get("alerts", [])]
+    if ends != [{"reason": "all_clear", "at": "2026-09-16T05:37:29+00:00", "clock": "rcb",
+                 "by": "23337898"}]:
+        problems.append(f"the recorded pair ends as {ends}, not as the all-clear "
+                        "RCB stamped at 07:37:29")
+    return problems
+
+
 REQUIRED_TIMELINE_TOP = ("v", "generated_at", "window", "areas", "rcb", "airspace",
                          "coverage")
 REQUIRED_TIMELINE_AREAS = ("oldest_observation", "log_reaches_window_start", "places",
@@ -741,7 +839,7 @@ def check_timeline() -> list[str]:
 def main() -> int:
     """Run the contract check. Returns a process exit code."""
     problems = (check_contract() + check_every_kind_is_documented() + check_strike_tally()
-                + check_timeline())
+                + check_rcb_recent() + check_timeline())
     for problem in problems:
         print(f"contract-check: {problem}", file=sys.stderr)
     if problems:

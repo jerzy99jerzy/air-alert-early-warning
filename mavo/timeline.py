@@ -215,9 +215,13 @@ def _newest_at(stamps: Sequence[datetime], moment: datetime) -> int | None:
     return found if found >= 0 else None
 
 
-def _reads(store: EventStore, feed: str, url: str, start: datetime,
-           end: datetime) -> list[datetime]:
-    """The newest read at or before `start`, then every read in `(start, end]`."""
+def reads_over(store: EventStore, feed: str, url: str, start: datetime,
+               end: datetime) -> list[datetime]:
+    """The newest read at or before `start`, then every read in `(start, end]`.
+
+    Public from 0.59.0.0, when `mavo/rcb_recent.py` began reading the same
+    reads over its own window (D-062).
+    """
     reads: list[datetime] = []
     prior = store.newest_read(feed, url, at=start)
     if prior is not None:
@@ -228,9 +232,12 @@ def _reads(store: EventStore, feed: str, url: str, start: datetime,
     return reads
 
 
-def _lists(store: EventStore, feed: str, url: str, start: datetime,
-           end: datetime) -> list[tuple[datetime, list[str]]]:
-    """The newest list at or before `start`, then every list recorded in `(start, end]`."""
+def lists_over(store: EventStore, feed: str, url: str, start: datetime,
+               end: datetime) -> list[tuple[datetime, list[str]]]:
+    """The newest list at or before `start`, then every list recorded in `(start, end]`.
+
+    Public from 0.59.0.0, for the reason `reads_over` is.
+    """
     lists: list[tuple[datetime, list[str]]] = []
     prior = store.newest_snapshot(feed, url, at=start)
     if prior is not None:
@@ -275,8 +282,8 @@ def rcb_layer(store: EventStore, start: datetime, end: datetime) -> RcbLayer:
     first = _optional_stamp(store.oldest_attempt_at(rso.FEED))
     if first is None or first > end:
         return RcbLayer(recorded_since=first, spans=())
-    reads = _reads(store, rso.FEED, poland.WARNINGS_URL, start, end)
-    lists = _lists(store, rso.FEED, poland.WARNINGS_URL, start, end)
+    reads = reads_over(store, rso.FEED, poland.WARNINGS_URL, start, end)
+    lists = lists_over(store, rso.FEED, poland.WARNINGS_URL, start, end)
     list_stamps = [stamp for stamp, _members in lists]
     wanted = sorted({member for _stamp_, members in lists for member in members})
     held = store.communiques_by_digest(wanted)
@@ -373,8 +380,8 @@ def airspace_layer(store: EventStore, start: datetime, end: datetime) -> Airspac
     first = _optional_stamp(store.oldest_attempt_at(pansa.FEED))
     if first is None or first > end:
         return AirspaceLayer(recorded_since=first, unread=(), geometries={}, spans=())
-    reads = _reads(store, pansa.FEED, pansa.SOURCE_URL, start, end)
-    lists = _lists(store, pansa.FEED, pansa.SOURCE_URL, start, end)
+    reads = reads_over(store, pansa.FEED, pansa.SOURCE_URL, start, end)
+    lists = lists_over(store, pansa.FEED, pansa.SOURCE_URL, start, end)
     list_stamps = [stamp for stamp, _members in lists]
     wanted = sorted({member for _stamp_, members in lists for member in members})
     held = store.airspace_zones_by_digest(wanted)
