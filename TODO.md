@@ -4,13 +4,13 @@
 
 ### Where the backlog stands
 
-**44 of 89 closed, 45 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**44 of 90 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 39 | Finished, with the release that closed it named in the entry |
 | `moved` | 5 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 33 | Nothing external blocks it; it needs a session |
+| `ready` | 34 | Nothing external blocks it; it needs a session |
 | `decision` | 7 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -25,7 +25,7 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 14 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows), [T89](#t89-the-strike-tally-on-the-host-read-rather-than-declared), [T92](#t92-the-two-days-of-rcb-alerts-on-the-host-read-rather-than-declared)
+**Tier 1, 15 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows), [T89](#t89-the-strike-tally-on-the-host-read-rather-than-declared), [T92](#t92-the-two-days-of-rcb-alerts-on-the-host-read-rather-than-declared), [T93](#t93-the-level-on-the-host-read-rather-than-declared-and-the-reading-a-decision-defers-to)
 
 **Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T87](#t87-the-primary-collector-and-the-delivery-unit-run-unconfined)
 
@@ -41,7 +41,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows), [T87](#t87-the-primary-collector-and-the-delivery-unit-run-unconfined), [T88](#t88-the-host-reading-as-a-mavo-subcommand), [T89](#t89-the-strike-tally-on-the-host-read-rather-than-declared), [T92](#t92-the-two-days-of-rcb-alerts-on-the-host-read-rather-than-declared) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows), [T87](#t87-the-primary-collector-and-the-delivery-unit-run-unconfined), [T88](#t88-the-host-reading-as-a-mavo-subcommand), [T89](#t89-the-strike-tally-on-the-host-read-rather-than-declared), [T92](#t92-the-two-days-of-rcb-alerts-on-the-host-read-rather-than-declared), [T93](#t93-the-level-on-the-host-read-rather-than-declared-and-the-reading-a-decision-defers-to) |
 
 <!-- index:end -->
 
@@ -2910,3 +2910,46 @@ written into `docs/DEPLOYMENT.md` beside the reading; and, reported from the
 consumer's session, the areas page carrying the block with `data-recent` other
 than `unknown`. A figure above a second is a finding for D-062's last reopen
 condition, not a failure of the install.
+
+## T93. The level on the host, read rather than declared, and the reading a decision defers to
+Status: `ready` [tier 1]
+
+0.60.0.0 adds `level` to every area and kind of `state.json` and to every area
+interval of `timeline.json`, plus `alert_levels` (D-063), and moves a recorded
+table: `alert_levels` gains `first_read` and `last_read` on the first opening of
+the production store, and the collector records its read after the rows it
+listed. It declares what no reading supports yet: that the two
+`[STORE-MIGRATED] added alert_levels.…` lines print once; that the presence
+record opens when the first API poll after the install that listed a level had
+its page; that the level read costs a report cycle a few small queries; and
+that the week, which a level change splits into more intervals, stays inside
+T90's budget. On the recorded week, 0.59.0.0 writes 1,143,021 B, 113,147 B
+gzipped, in 3,753 area intervals; 0.60.0.0 writes 1,241,535 B, 114,421 B
+gzipped, for the same week with no level stream, because every area interval
+and every kind gains `"level": null`; and 1,723,564 B, 150,503 B gzipped, in
+3,778 area intervals, with the stream rebuilt as one declaration per alarm
+from the rows' `api_level` `[measured 2026-10-04 in the session, by a script
+not in the tree, on tests/fixtures/store_week_2026-09-26.sqlite3.xz; the
+host's figure is this task's]`.
+
+**Acceptance, first half.** On `vm-mavo`, after the install: the two migration
+lines in the journal of the first unit that opened the store, once; the D-050
+reading the install took first, its three figures and the script's digest,
+written into `docs/DEPLOYMENT.md`; `alert_levels.recorded_since` in
+`/var/lib/mavo/state.json` equal to the smallest `first_read` in the table
+plus that read's `elapsed_s` in `feed_attempts`, truncated to the second, the
+precision the file publishes; for every kind
+of the same file whose `level` is not `null`, a row of `alert_levels` on its
+key with that word and that stamp, listed by one of the two newest API reads;
+in `/var/lib/mavo/timeline.json`, no interval of an open alarm with `level:
+null` under five seconds long whose predecessor on the same area and the same
+`since` carries a level, the sliver F198 repaired; one composition and one
+timeline build timed against the installed package and written beside T90's
+figures, with the week's size raw and gzipped; and, from the consumer's
+session, the map filling a levelled raion by its word with no "not read"
+sentence under it.
+
+**Acceptance, second half (F195).** A gate line that reads every decision
+naming an earliest reading and fails once that date has passed with no reading
+recorded against it, or the decision recorded not to build it with the cost
+that decided it.

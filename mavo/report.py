@@ -41,6 +41,7 @@ from enum import Enum
 from pathlib import Path
 
 from mavo.areas import AreaRef, AreaTable, oblast_slug
+from mavo.levels import Horizon, LevelIndex, LevelReader, Listed, word_rank
 from mavo.liveness import EventStamps, FeedLiveness
 from mavo.liveness import as_block as sources_block
 from mavo.obs import RunLog
@@ -169,6 +170,10 @@ class KindStanding:
     kind: ThreatKind
     state: AlertState
     since: datetime
+    #: The source's declared level standing beside this kind (D-063), or None:
+    #: the kind is not ACTIVE, or the source has stamped no declaration inside
+    #: this alarm. Defaulted for the reason `AreaPicture.kinds` is.
+    level: Listed | None = None
 
     def as_item(self) -> dict[str, object]:
         """The contract form, field names matching the area block it sits in."""
@@ -176,7 +181,23 @@ class KindStanding:
             "kind": self.kind.value,
             "alert": self.state.value,
             "since": self.since.isoformat(timespec="seconds"),
+            "level": level_item(self.level),
         }
+
+
+def level_item(level: Listed | None) -> dict[str, object] | None:
+    """A declaration in the contract: the word verbatim and the source's stamp.
+
+    `null` is "no declaration stands beside this alarm", never a quiet colour.
+    Seconds, like every other stamp in the contract; the store keeps the
+    source's precision and the rule compares at it (`mavo.levels`).
+    """
+    if level is None:
+        return None
+    return {
+        "word": level.word,
+        "declared_at": level.level_at.isoformat(timespec="seconds"),
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,6 +216,29 @@ class AreaPicture:
     #: `Report` constructed directly by a tool that predates the field is still
     #: well formed rather than a TypeError at import time.
     kinds: tuple[KindStanding, ...] = ()
+
+    @property
+    def level(self) -> KindStanding | None:
+        """The kind whose declared level names the area's level, or None (D-063).
+
+        The loudest word among the kinds that carry one (`mavo.levels.word_rank`:
+        a word no release knows outranks every known one), ties to the later
+        declaration, then to the kind's name so the answer is a function of the
+        rows alone. Not the headline kind: the headline is chosen by state and
+        stamp, and an artillery alarm raised after a red air alert would name
+        the area while carrying no level, painting a red area as unlevelled.
+        """
+        levelled = [standing for standing in self.kinds if standing.level is not None]
+        if not levelled:
+            return None
+        return max(
+            levelled,
+            key=lambda standing: (
+                word_rank(standing.level.word) if standing.level else 0,
+                standing.level.level_at if standing.level else self.since,
+                standing.kind.value,
+            ),
+        )
 
     @property
     def oblast(self) -> str:
@@ -622,6 +666,12 @@ class Report:
     #: fifth block on the terms of the fourth and for its reason: the live list
     #: is what paints, and a fold over two days that fails must not take it down.
     rcb_recent: Block | None = None
+    #: D-063. Whether this picture read the level stream, and when the stream's
+    #: first row was written. Two fields because `False` and an empty stream
+    #: are different answers: the first publishes no `alert_levels` key, the
+    #: second publishes one with `recorded_since: null`.
+    levels_read: bool = False
+    levels_recorded_since: datetime | None = None
 
     @property
     def staleness_s(self) -> float | None:
@@ -989,7 +1039,12 @@ def trailing_areas(
 
 
 def area_picture(
-    area_id: str, standing: Iterable[ThreatEvent], table: AreaTable
+    area_id: str,
+    standing: Iterable[ThreatEvent],
+    table: AreaTable,
+    *,
+    levels: LevelIndex | None = None,
+    at: datetime | None = None,
 ) -> AreaPicture | None:
     """One area's picture from the newest event of each of its kinds (D-044).
 
@@ -1005,6 +1060,13 @@ def area_picture(
     the order the rows reached it, and the live cycle and the timeline reach
     them in different orders. Sorting by the kind's value first makes the
     headline a function of the rows alone.
+
+    **The level (D-063).** With `levels` and `at`, every ACTIVE kind carries
+    the declaration `mavo.levels` says stands at `at`: the newest the source
+    stamped by then whose newest listing is no older than the read in effect
+    at `at`.
+    Without them no kind carries one, which is the picture of a caller that
+    did not read the stream; `to_contract` says which of the two a payload is.
     """
     live = sorted(
         (event for event in standing if not is_clear(event.state)),
@@ -1033,6 +1095,7 @@ def area_picture(
                         kind=event.kind,
                         state=event.state,
                         since=event.ts_source,
+                        level=_standing_level(event, levels, at),
                     )
                     for event in live
                 ),
@@ -1043,6 +1106,15 @@ def area_picture(
             )
         ),
     )
+
+
+def _standing_level(
+    event: ThreatEvent, levels: LevelIndex | None, at: datetime | None
+) -> Listed | None:
+    """The rule of `mavo.levels`, asked for one kind's newest row: ACTIVE only."""
+    if levels is None or at is None or event.state is not AlertState.ACTIVE:
+        return None
+    return levels.standing((event.area_id, event.kind), at)
 
 
 def compose(
@@ -1059,6 +1131,7 @@ def compose(
     strike: Callable[[datetime], Block] | None = None,
     strike_history: Callable[[datetime], Block] | None = None,
     rcb_recent: Callable[[datetime], Block] | None = None,
+    levels: LevelIndex | None = None,
 ) -> Report:
     """Fold an event log into the current picture.
 
@@ -1137,16 +1210,17 @@ def compose(
     for (area_id, _kind), event in latest.items():
         by_area.setdefault(area_id, []).append(event)
 
+    moment = as_of if as_of is not None else datetime.now(UTC)
     pictures: list[AreaPicture] = []
     unresolved: list[str] = []
     for area_id in sorted(by_area):
-        picture = area_picture(area_id, by_area[area_id], table)
+        picture = area_picture(area_id, by_area[area_id], table,
+                               levels=levels, at=moment)
         if picture is None:
             continue
         if picture.area is None:
             unresolved.append(area_id)
         pictures.append(picture)
-    moment = as_of if as_of is not None else datetime.now(UTC)
     # F120. Two quantities, deliberately not one. `raw_newest` is what the
     # source said and is reported as such; `newest` is the newest stamp this
     # pipeline may treat as evidence that it is not blind, which excludes
@@ -1246,6 +1320,8 @@ def compose(
         ),
         # D-062. A fifth, over the RCB record the Polish keys above read.
         rcb_recent=rcb_recent(moment) if rcb_recent is not None else None,
+        levels_read=levels is not None,
+        levels_recorded_since=levels.recorded_since if levels is not None else None,
     )
 
 
@@ -1313,6 +1389,12 @@ def area_item(picture: AreaPicture) -> dict[str, object]:
         # whole of an area's standing. Never empty for a published
         # area: an area with no live kind is not published at all.
         "kinds": [standing.as_item() for standing in picture.kinds],
+        # D-063. The area's level: the loudest declared word among its ACTIVE
+        # kinds, with the kind it came from, or `null` when none carries one.
+        # Read `alert_levels` at the top of the payload before trusting a
+        # `null` here: without that key the producer did not read the stream
+        # and `null` is "not read", not "not declared".
+        "level": area_level_item(picture),
         "border_km_lower": (
             picture.area.border_lower_km if picture.area is not None else None
         ),
@@ -1320,6 +1402,15 @@ def area_item(picture: AreaPicture) -> dict[str, object]:
             picture.area.border_upper_km if picture.area is not None else None
         ),
     }
+
+
+def area_level_item(picture: AreaPicture) -> dict[str, object] | None:
+    """`areas[].level`: `level_item` of the chosen kind, plus which kind it was."""
+    chosen = picture.level
+    item = level_item(chosen.level) if chosen is not None else None
+    if chosen is None or item is None:
+        return None
+    return {**item, "kind": chosen.kind.value}
 
 
 def to_contract(report: Report) -> dict[str, object]:
@@ -1444,6 +1535,20 @@ def to_contract(report: Report) -> dict[str, object]:
     # live list is what paints, and the two days can go `null` while it stands.
     if report.rcb_recent is not None and report.rcb_recent.published:
         payload["pl_rcb_recent"] = report.rcb_recent.value
+    # D-063. Present when this cycle read the level stream, absent when it did
+    # not, so an absent key and a `null` level cannot be confused: the first is
+    # a producer that did not look, the second a source that said nothing.
+    # `recorded_since` is when the stream's first row was written; before it
+    # every level is unrecorded, and on a fresh store it is `null`.
+    if report.levels_read:
+        payload["alert_levels"] = {
+            "source": "api.ukrainealarm.com",
+            "recorded_since": (
+                report.levels_recorded_since.isoformat(timespec="seconds")
+                if report.levels_recorded_since is not None
+                else None
+            ),
+        }
     return payload
 
 
@@ -1651,9 +1756,11 @@ def publish(
     strike_history: Callable[[datetime], Block] | None = None,
     rcb_recent: Callable[[datetime], Block] | None = None,
     timeline_path: Path | None = None,
-    timeline: Callable[[Sequence[ThreatEvent], datetime], dict[str, object] | None]
+    timeline: Callable[[Sequence[ThreatEvent], datetime, Horizon | None],
+                       dict[str, object] | None]
     | None = None,
     timeline_every: int = 1,
+    levels: LevelReader | None = None,
 ) -> PublishReport:
     """Write the contract on a fixed interval until a named condition stops it.
 
@@ -1683,6 +1790,16 @@ def publish(
     says how old it is. It is written every `timeline_every` cycles, the first
     included, so the cost T90 measures can be paid less often without a
     release.
+
+    **The level stream is read per cycle and fails alone (D-063).** A cycle
+    that cannot read `alert_levels` publishes the picture without the
+    `alert_levels` key, so the consumer reads "not read" and never a store of
+    unlevelled alarms; the alerts themselves are untouched. Its horizon, the
+    newest read on record, is taken before the replay and the declarations
+    after it, and the week is drawn to the same horizon: a read recorded
+    while the replay ran may have ended an alarm the replay still holds open
+    (`mavo.levels`, F198). A cycle whose picture went out without levels
+    writes its week without them too, so the two files of one cycle agree.
     """
     if timeline_every < 1:
         raise ValueError(f"timeline_every must be at least 1: {timeline_every}")
@@ -1696,6 +1813,12 @@ def publish(
         while max_cycles is None or cycles < max_cycles:
             cycles += 1
             cycle_id = log.cycle_id() if log is not None else ""
+            horizon: Horizon | None = None
+            if levels is not None:
+                try:
+                    horizon = levels.horizon()
+                except Exception as failure:  # noqa: BLE001
+                    print(f"[LEVELS-FAILED] {failure}", file=sys.stderr, flush=True)
             replayed = True
             try:
                 events: list[ThreatEvent] = list(load())
@@ -1714,8 +1837,14 @@ def publish(
                 # so a redirected stdout still carries only the announcements.
                 print(f"[BLIND] store unreadable: {failure}",
                       file=sys.stderr, flush=True)
+            index: LevelIndex | None = None
+            if levels is not None and horizon is not None and replayed:
+                try:
+                    index = levels.live(horizon)
+                except Exception as failure:  # noqa: BLE001
+                    print(f"[LEVELS-FAILED] {failure}", file=sys.stderr, flush=True)
             report = compose(
-                events, as_of=clock(), table=table, valid_for_s=valid_for_s,
+                events, as_of=clock(), table=table, valid_for_s=valid_for_s, levels=index,
                 history_days=history_days, sources=sources, poland=poland,
                 strike=strike, strike_history=strike_history, rcb_recent=rcb_recent,
             )
@@ -1742,7 +1871,11 @@ def publish(
                 # from a replay that happened (see above).
                 if (timeline_path is not None and timeline is not None and replayed
                         and (cycles - 1) % timeline_every == 0):
-                    payload = timeline(events, report.as_of)
+                    # The week reads the stream when this cycle's picture
+                    # did, so the two files of one cycle never disagree on
+                    # whether the levels were read.
+                    payload = timeline(events, report.as_of,
+                                       horizon if index is not None else None)
                     if payload is not None:
                         write_timeline(payload, timeline_path)
             except OSError as failure:

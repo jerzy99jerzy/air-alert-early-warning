@@ -26,9 +26,11 @@ window `(END - DAYS, END]`:
   newest poll, read and refusal at or before the start; every poll inside the
   window.
 
-The stream tables (`kind_events`, `alert_levels`, `strike_tallies`) are not
-read by the timeline and are copied empty. The schema is the store's own, read
-from `sqlite_master`, so the fixture opens as the store it came from.
+The stream tables (`kind_events`, `alert_levels`, `strike_tallies`) are copied
+empty. The timeline reads `alert_levels` from 0.60.0.0 (D-063), so a recorded
+week carries no levels and draws every one of its moments as unrecorded,
+which is what it says. The schema is the store's own, read from
+`sqlite_master`, so the fixture opens as the store it came from.
 
 Prints one JSON line: the window, the rows per table, the file's size.
 """

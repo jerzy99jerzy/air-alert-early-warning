@@ -65,12 +65,17 @@ REQUIRED_STREAM = ("window_start", "window_s", "truncated", "items")
 REQUIRED_ITEM = ("area_id", "oblast", "oblast_name", "alert", "kind", "role",
                  "at", "west")
 REQUIRED_AREA = ("katottg", "area_id", "oblast", "oblast_name", "alert", "kind",
-                 "since", "border_km_lower", "border_km_upper", "kinds")
+                 "since", "border_km_lower", "border_km_upper", "kinds", "level")
 # D-044. The per-kind standings inside an area block. Required rather than
 # optional, and checked non-empty below: an area is published only when it has
 # a live kind, so an empty list here means the fold and the publisher disagree
 # about what the area is, which is the shape F133 took.
-REQUIRED_KIND_STANDING = ("kind", "alert", "since")
+REQUIRED_KIND_STANDING = ("kind", "alert", "since", "level")
+# D-063. A level, where one stands: the word verbatim and the source's stamp,
+# and on the area the kind it was taken from. `null` is never one of these
+# with empty fields: it is the whole value.
+REQUIRED_LEVEL = ("word", "declared_at")
+REQUIRED_AREA_LEVEL = ("word", "declared_at", "kind")
 # The trailing block had no key set here for eleven releases while every other
 # block in the payload had one. `recent_7d` is the layer the consumer shades a
 # whole oblast from, so a rename here repaints the map rather than emptying a
@@ -747,7 +752,8 @@ REQUIRED_TIMELINE_TOP = ("v", "generated_at", "window", "areas", "rcb", "airspac
                          "coverage")
 REQUIRED_TIMELINE_AREAS = ("oldest_observation", "log_reaches_window_start", "places",
                            "intervals")
-REQUIRED_TIMELINE_INTERVAL = ("area_id", "alert", "kind", "since", "kinds", "from", "to")
+REQUIRED_TIMELINE_INTERVAL = ("area_id", "alert", "kind", "since", "kinds", "level",
+                              "from", "to")
 REQUIRED_TIMELINE_LAYER = {"rcb": ("recorded_since", "intervals"),
                            "airspace": ("recorded_since", "unread", "geometries", "intervals")}
 REQUIRED_TIMELINE_PIPE = ("role", "silence_is_an_outage_s", "recorded_since", "gaps")
@@ -836,10 +842,101 @@ def check_timeline() -> list[str]:
     return problems
 
 
+def check_levels() -> list[str]:
+    """D-063. The level in both files, from a listing the check writes itself.
+
+    Without a store, like `check_timeline`: one western area in a red alarm
+    that went yellow, one in an alarm the source lists no level for, one whose
+    alarm went unknown under a listed red, and one whose red the API stopped
+    listing while the alarm went on. What it holds: `alert_levels` is absent
+    from a picture that did not read the stream and present, with its source
+    and the start of the presence record, in one that did; every level carries
+    the fields `docs/WEBAPP.md` lists, or is `null`; only an ACTIVE kind wears
+    one, and only while a read lists it; and the week, built over the same
+    listing, says what the contract says at its end.
+    """
+    from mavo import timeline
+    from mavo.levels import LevelIndex, Listed
+    from mavo.liveness import PRODUCTION_FEEDS
+
+    table = AreaTable.from_csv()
+    end = datetime(2026, 9, 20, 12, 0, 30, tzinfo=UTC)
+    start = end - timedelta(days=timeline.WINDOW_DAYS)
+    western = [area for area in (table.resolve(tag) for tag in table.tags)
+               if area is not None and area.is_western]
+    if len(western) < 4:
+        return ["fewer than four western areas in the map to build a level check on"]
+    red, bare, unknown, dropped = (area.code for area in western[:4])
+
+    def minutes_ago(count: int) -> datetime:
+        return end - timedelta(minutes=count)
+
+    def listed(code: str, word: str, stamped: int, last: int) -> Listed:
+        return Listed(code, ThreatKind.MISSILE, word, minutes_ago(stamped), minutes_ago(last))
+
+    events = [_event(red, AlertState.ACTIVE, 120, end), _event(bare, AlertState.ACTIVE, 30, end),
+              _event(unknown, AlertState.ACTIVE, 200, end),
+              _event(unknown, AlertState.UNKNOWN, 10, end),
+              _event(dropped, AlertState.ACTIVE, 300, end)]
+    # Read every two minutes, each page in hand a second after asking.
+    reads = [(minutes_ago(m), 1.0) for m in range(240, 0, -2)]
+    index = LevelIndex.build(
+        [listed(red, "Red", 110, 22), listed(red, "Yellow", 20, 2),
+         listed(unknown, "Red", 190, 2), listed(dropped, "Red", 290, 60)],
+        reads, first_listing=minutes_ago(240),
+        recorded_since=minutes_ago(240) + timedelta(seconds=1))
+    problems: list[str] = []
+    if "alert_levels" in to_contract(compose(events, as_of=end, table=table)):
+        problems.append("alert_levels present in a contract composed without the stream")
+    contract = to_contract(compose(events, as_of=end, table=table, levels=index))
+    if contract.get("alert_levels") != {
+        "source": "api.ukrainealarm.com",
+        "recorded_since": (minutes_ago(240) + timedelta(seconds=1)).isoformat(
+            timespec="seconds"),
+    }:
+        problems.append(f"alert_levels reads {contract.get('alert_levels')!r}")
+    listed_areas: list[dict[str, Any]] = json.loads(json.dumps(contract["areas"]))
+    by_area = {area["area_id"]: area for area in listed_areas}
+    for area in by_area.values():
+        for value, keys, where in [(area["level"], REQUIRED_AREA_LEVEL, "area")] + [
+            (standing["level"], REQUIRED_LEVEL, "kind") for standing in area["kinds"]
+        ]:
+            if value is not None:
+                problems += [f"{where} level of {area['area_id']} is missing {key!r}"
+                             for key in keys if key not in value]
+        for standing in area["kinds"]:
+            if standing["alert"] != "active" and standing["level"] is not None:
+                problems.append(f"kind {standing['kind']} of {area['area_id']} is "
+                                f"{standing['alert']} and wears a "
+                                "level; only an active alarm has one the source still stands by")
+    if (by_area[red]["level"] or {}).get("word") != "Yellow":
+        problems.append("the red alarm that went yellow does not read its newest word")
+    if by_area[bare]["level"] is not None:
+        problems.append("an alarm the source lists no level for publishes a level")
+    if by_area[unknown]["level"] is not None:
+        problems.append("an alarm gone unknown publishes the level it last had")
+    if by_area[dropped]["level"] is not None:
+        problems.append("an alarm whose level the source stopped listing still wears it")
+    payload = timeline.to_timeline(
+        timeline.area_layer(events, start, end, table, levels=index),
+        timeline.RcbLayer(recorded_since=None, spans=()),
+        timeline.AirspaceLayer(recorded_since=None, unread=(), geometries={}, spans=()),
+        [timeline.FeedCoverage(spec=spec, recorded_since=None, gaps=())
+         for spec in PRODUCTION_FEEDS],
+        start=start, end=end, days=timeline.WINDOW_DAYS,
+    )
+    back = json.loads(json.dumps(payload))
+    if "levels" not in back["areas"]:
+        problems.append("a timeline built over the stream does not say so in areas.levels")
+    if timeline.picture_from_file(back, end)["areas"] != listed_areas:
+        problems.append("the levels the week holds at its own moment differ from the contract's")
+    return problems
+
+
 def main() -> int:
     """Run the contract check. Returns a process exit code."""
     problems = (check_contract() + check_every_kind_is_documented() + check_strike_tally()
-                + check_rcb_recent() + check_timeline())
+                + check_rcb_recent() + check_timeline() + check_levels())
     for problem in problems:
         print(f"contract-check: {problem}", file=sys.stderr)
     if problems:

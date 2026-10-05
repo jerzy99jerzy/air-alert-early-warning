@@ -22,6 +22,9 @@ difference stated below.
 | A13 | MT14 | A message tagging an area the map does not know, with an oblast named in prose | Classification returns nothing rather than the prose guess; the unknown tag is the only outcome |
 | A14 | MT16 | An all-clear whose continuation list names another area as still under alert | Both areas reach the store, the continuation one distinguishable by its role; a single all-clear event fails |
 | A15 | MT17 | A real night with its launched list emptied, the shape reader v3 produced for the night of 1 August | `launched_sum` is null in the reading the store keeps; a total of 0 fails |
+| A16 | MT18 | A red alarm, its all-clear and a second alarm on the same area and kind that the source lists no level for, through `compose` | The second alarm publishes `level: null`; the first alarm's `Red` fails |
+| A17 | MT18 | Two alerts folded onto one key: a chronic one listing a `Red`, an air alert listing a `Yellow` while it runs; the air alert ends and the alarm goes on | The alarm publishes the `Red` the source lists again; the ended alert's `Yellow` fails |
+| A18 | MT18 | A red alarm ended by a read that has its page 1.5 s after asking, its all-clear stamped 0.8 s after asking, read 0.5 s after asking | The alarm, still open, publishes its `Red`; `level: null` beside an open red alarm fails |
 | A12 | MT13 | Two messages in the live footer-time order, exact timestamps asserted | Each event carries its own footer's timestamp; a one-message shift in either direction fails |
 
 ## The honest difference from `pirx`

@@ -27,7 +27,12 @@ Polish layers change at read time: a list has no clock but the read that saw
 it, so the picture at a moment is the newest list read at or before it. The
 first is the better reconstruction of the sky; the second is the only one the
 lists allow. Where the record at a moment was incomplete, `coverage` says so,
-per pipe and by the rule the live `sources` block uses.
+per pipe and by the rule the live `sources` block uses. The level beside an
+alarm (D-063) has one of each: it begins at the source's stamp for the
+declaration and ends when the first read that no longer listed it took
+effect, because the payload dates a declaration and never its withdrawal; a
+read takes effect when its page was in hand, the moment its all-clears are
+stamped by, and not when it was asked for (`mavo.levels`, F198).
 
 **What an interval means.** Half-open `[from, to)`; `to: null` is still open
 when the file was written and never "ended". Stamps at the store's own
@@ -41,6 +46,7 @@ standing began is the item's own `since`.
 from __future__ import annotations
 
 import bisect
+import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -48,6 +54,7 @@ from typing import Any
 
 from mavo import poland
 from mavo.areas import AreaTable
+from mavo.levels import Horizon, LevelIndex, index_at, window_index
 from mavo.liveness import FeedSpec, PipeState, measure_feed
 from mavo.poland import Block, Drawable
 from mavo.report import DEFAULT_TRAILING_DAYS, area_item, area_picture, compose
@@ -114,7 +121,8 @@ class Span:
 @dataclass(frozen=True, slots=True)
 class AreaSpan:
     area_id: str
-    #: The area item's fields that change: `alert`, `kind`, `since`, `kinds`.
+    #: The area item's fields that change: `alert`, `kind`, `since`, `kinds`,
+    #: and from 0.60.0.0 `level` (D-063).
     standing: dict[str, Any]
     span: Span
 
@@ -124,6 +132,11 @@ class AreaLayer:
     oldest_observation: datetime | None
     places: dict[str, dict[str, Any]]
     spans: tuple[AreaSpan, ...]
+    #: D-063. Whether the layer was built with the level stream, and when the
+    #: stream's first row was written; `to_timeline` publishes them as
+    #: `areas.levels`, absent when not read, as `state.json` does.
+    levels_read: bool = False
+    levels_recorded_since: datetime | None = None
 
     def reaches(self, start: datetime) -> bool:
         """Whether the log reaches back to `start`, so a quiet start is a quiet start."""
@@ -140,7 +153,8 @@ def _split(item: dict[str, object]) -> tuple[dict[str, Any], dict[str, Any]]:
 
 
 def area_layer(
-    events: Iterable[ThreatEvent], start: datetime, end: datetime, table: AreaTable
+    events: Iterable[ThreatEvent], start: datetime, end: datetime, table: AreaTable,
+    levels: LevelIndex | None = None,
 ) -> AreaLayer:
     """Every area's standing over `[start, end]`, changing at source time.
 
@@ -150,6 +164,13 @@ def area_layer(
     at every instant, the winner `compose` picks from the rows stamped at or
     before it. An event stamped after `end` is not in this file: the present
     belongs to `state.json`.
+
+    **Levels (D-063).** With `levels`, an area is also re-asked at every
+    moment `LevelIndex.instants` names for one of its keys - a declaration's
+    own stamp, the moment the first read after its newest listing took
+    effect, and the opening of the presence record - the only other instants
+    at which `mavo.levels` can answer differently. The ACTIVE state that
+    gates a level is this layer's.
     """
     ordered = sorted(
         (event for event in events if event.ts_source <= end),
@@ -157,35 +178,45 @@ def area_layer(
     )
     oldest = ordered[0].ts_source if ordered else None
     standing: dict[str, dict[ThreatKind, ThreatEvent]] = {}
+
+    def apply(event: ThreatEvent) -> None:
+        standing.setdefault(event.area_id, {})[event.kind] = event
+
     split = bisect.bisect_right([event.ts_source for event in ordered], start)
     for event in ordered[:split]:
-        standing.setdefault(event.area_id, {})[event.kind] = event
+        apply(event)
 
     places: dict[str, dict[str, Any]] = {}
     current: dict[str, tuple[dict[str, Any], datetime]] = {}
 
-    def picture(area_id: str) -> tuple[dict[str, Any], dict[str, Any]] | None:
-        found = area_picture(area_id, standing[area_id].values(), table)
+    def picture(area_id: str, at: datetime) -> tuple[dict[str, Any], dict[str, Any]] | None:
+        found = area_picture(area_id, standing[area_id].values(), table,
+                             levels=levels, at=at)
         return None if found is None else _split(area_item(found))
 
     for area_id in sorted(standing):
-        opened = picture(area_id)
+        opened = picture(area_id, start)
         if opened is not None:
             places[area_id], state = opened
             current[area_id] = (state, start)
 
+    # Every instant at which some area must be re-asked: a row's source stamp,
+    # or a declaration's. Merged once, walked in order.
+    declared = levels.instants(start, end) if levels is not None else {}
+    instants = sorted({event.ts_source for event in ordered[split:]} | set(declared))
     spans: list[AreaSpan] = []
     index = split
-    while index < len(ordered):
-        instant = ordered[index].ts_source
-        touched: set[str] = set()
+    for instant in instants:
+        touched: set[str] = set(declared.get(instant, ()))
         while index < len(ordered) and ordered[index].ts_source == instant:
             event = ordered[index]
-            standing.setdefault(event.area_id, {})[event.kind] = event
+            apply(event)
             touched.add(event.area_id)
             index += 1
         for area_id in sorted(touched):
-            found = picture(area_id)
+            if area_id not in standing:
+                continue
+            found = picture(area_id, instant)
             held = current.get(area_id)
             if held is not None and found is not None and held[0] == found[1]:
                 continue
@@ -203,6 +234,8 @@ def area_layer(
         oldest_observation=oldest,
         places={area_id: places[area_id] for area_id in sorted(named)},
         spans=tuple(spans),
+        levels_read=levels is not None,
+        levels_recorded_since=levels.recorded_since if levels is not None else None,
     )
 
 
@@ -526,6 +559,10 @@ def to_timeline(
         "areas": {
             "oldest_observation": _iso(areas.oldest_observation),
             "log_reaches_window_start": areas.reaches(start),
+            **(
+                {"levels": {"recorded_since": _iso(areas.levels_recorded_since)}}
+                if areas.levels_read else {}
+            ),
             "places": areas.places,
             "intervals": [
                 {"area_id": span.area_id, **span.standing, **span.span.as_item()}
@@ -572,11 +609,25 @@ def build(
     table: AreaTable,
     feeds: Sequence[FeedSpec],
     days: int = WINDOW_DAYS,
+    horizon: Horizon | None = None,
 ) -> dict[str, object]:
-    """The whole file for the week ending at `end`, from one replay and the store."""
+    """The whole file for the week ending at `end`, from one replay and the store.
+
+    `horizon` is the newest API read on record when `events` was replayed
+    (`mavo.levels.read_horizon`); None draws the week without levels.
+    """
     start = end - timedelta(days=days)
+    # D-063. A failed read of the level stream costs the week its levels and
+    # nothing else: the layer is built without them and `areas.levels` is
+    # absent, which the consumer reads as "not recorded", never "not stated".
+    levels: LevelIndex | None = None
+    if horizon is not None:
+        try:
+            levels = window_index(store, start, end, horizon)
+        except Exception as failure:  # noqa: BLE001
+            print(f"[LEVELS-FAILED] timeline: {failure}", file=sys.stderr, flush=True)
     return to_timeline(
-        area_layer(events, start, end, table),
+        area_layer(events, start, end, table, levels=levels),
         rcb_layer(store, start, end),
         airspace_layer(store, start, end),
         [feed_coverage(store, spec, start, end) for spec in feeds],
@@ -619,17 +670,27 @@ def picture_from_store(
     *,
     table: AreaTable,
     feeds: Sequence[FeedSpec],
+    horizon: Horizon | None = None,
 ) -> dict[str, object]:
     """What the live rules say about one moment, asked directly: the reference.
 
     `compose` over the events stamped at or before it, the two composers at
     it, and each pipe's liveness at it. This is what `mavo timeline --at`
-    prints, and what the file is compared with.
+    prints, and what the file is compared with. `horizon` as in `build`.
     """
     # Only the areas are read off the report, and they do not depend on the
     # history windows, so only the week is folded; the fold is `compose`'s.
+    # D-063. A failed read of the level stream costs the picture its levels
+    # and nothing else, as it costs the week (`build`).
+    levels: LevelIndex | None = None
+    if horizon is not None:
+        try:
+            levels = index_at(store, moment, horizon)
+        except Exception as failure:  # noqa: BLE001
+            print(f"[LEVELS-FAILED] timeline --at: {failure}", file=sys.stderr, flush=True)
     report = compose([event for event in events if event.ts_source <= moment],
-                     as_of=moment, table=table, history_days=(DEFAULT_TRAILING_DAYS,))
+                     as_of=moment, table=table, history_days=(DEFAULT_TRAILING_DAYS,),
+                     levels=levels)
     warnings, cleared = poland.warnings_blocks(store, moment)
     air = poland.airspace_block(store, moment)
     zones: object

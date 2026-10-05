@@ -393,9 +393,10 @@ class UkrainealarmSource:
                 # cannot join the identity, because it changes inside an
                 # alert without an end event and without a new key, so a
                 # level in the key would open a ghost on every escalation
-                # (measured 2026-09-08, seven alerts in one payload). What a
-                # reader is shown is D-050's open half; this is the record
-                # that half will be decided against.
+                # (measured 2026-09-08, seven alerts in one payload). This is
+                # the level at the alarm's first sighting and is read as
+                # nothing else: a reader is shown the `alert_levels` stream,
+                # by what the reads listed (D-063).
                 level, level_at = level_of[key]
                 fields["api_level"] = level
                 fields["api_level_at"] = level_at.isoformat()

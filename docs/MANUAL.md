@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.17
+Document:  docs/MANUAL.md, version 3.18
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -51,6 +51,7 @@ Note:      every constant, exit code and output line here was read out of the
    14. [`mavo kpszsu`](#414-mavo-kpszsu---built)
    15. [`mavo timeline`](#415-mavo-timeline---built)
    16. [`mavo record-week`](#416-mavo-record-week---built)
+   17. [`mavo level-reading`](#417-mavo-level-reading---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -449,6 +450,15 @@ a level. The first run after the 0.53.4.0 install prints one more line,
 `[STORE-MIGRATED] created alert_levels, empty until the first cycle writes it`,
 once.
 
+**From 0.60.0.0 every read also records what it listed** (D-063): each
+declaration it handed over gets the read's stamp as `last_read`, and as
+`first_read` the first time. The order of the writes is the rule's: the
+declarations, then the events, then the read itself, so a report cycle never
+finds a recorded read whose listing has not landed, and a run that fails to
+store leaves its read unrecorded. The first run after that install prints
+`[STORE-MIGRATED] added alert_levels.first_read, NULL for every earlier row`
+and the same line for `last_read`, once.
+
 **All-clears are synthesised, and the rule that makes that safe is the one this
 project holds everywhere else.** The API lists what is alerting now and says
 nothing about what stopped, so an area leaving the snapshot is the only signal
@@ -587,6 +597,17 @@ painting, whose clock that moment is on, and the stretches the reads could not
 cover. It is absent whenever `pl_warnings` is. Its guard is its own: a failure
 composing it prints `[RCB-RECENT-FAILED] <reason>` on stderr and publishes that
 key `null`, and every other key goes out as it would have.
+
+**Every cycle reads the level stream** (D-063). `areas[].level` and every
+kind's `level` carry the declaration the Ukrainian source still lists for an
+open alarm, or `null` when it lists none, and `alert_levels` says from when
+the record runs. The newest read on record is taken before the replay and the
+declarations after it, so an alarm the replay holds open is never drawn
+against a read newer than the replay. A failure reading it prints
+`[LEVELS-FAILED] <reason>` on stderr and publishes the alerts without the
+`alert_levels` key, which a consumer reads as "not read"; under `--timeline`
+the week is then written without `areas.levels`. The one-shot path, and
+`mavo timeline`, read it the same way.
 
 **Under `--watch` with `--timeline` the loop writes the week as intervals**
 (D-058), after the other files and from the same replay, so the file and the
@@ -896,6 +917,39 @@ the week behind `tests/test_timeline_recorded_week.py` left `vm-mavo`.
 | `out` | required | The file to write; refused if it exists |
 | `end` | required | An ISO timestamp with an offset, the end of the week |
 | `days` | 7 | The window in days |
+
+### 4.17 `mavo level-reading` - BUILT
+
+D-050's reading of the level stream, the one the release that first shows a
+level waited for (D-063). Read-only on the store, and prints three figures and
+a verdict:
+
+```
+mavo level-reading /var/lib/mavo/events
+```
+
+1. **Changes inside an alarm**: two consecutive declarations on one area and
+   kind, by the source's own stamp, with different words and no API all-clear
+   between them, and how many keys they fall on. D-050's condition is 50 on
+   15. A key on which one alarm ends and the next begins between two polls
+   leaves no all-clear, so the figure is an upper bound by those.
+2. **The vocabulary**: every word the stream holds, with its count, and the
+   ones outside `Red` and `Yellow`, which the map draws as unrecognised.
+3. **The age of the newest declaration** on every key whose newest API row is
+   active: median, p90, maximum, and how many are older than thirty days.
+
+The last line is `D-050 condition: MET` or `D-050 condition: NOT MET`, and the
+exit status says the same: 0 met, 1 not met, 2 a usage error.
+
+**It imports nothing from this package**, so a host that does not have the
+release yet runs the same file with its own interpreter, as the store's owner
+so that nothing it opens is created under another account:
+`sudo -u mavo /usr/bin/python3 - STORE < mavo/level_reading.py`. That is the
+first step of 0.60.0.0's install.
+
+| Argument | Default | Meaning |
+| --- | --- | --- |
+| `store` | required | The event store, opened read-only |
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)
 

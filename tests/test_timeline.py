@@ -567,7 +567,7 @@ def test_a_cycle_that_could_not_replay_writes_no_timeline(tmp_path: Path) -> Non
 
     built: list[datetime] = []
 
-    def builder(events: object, moment: datetime) -> dict[str, object]:
+    def builder(events: object, moment: datetime, horizon: object) -> dict[str, object]:
         built.append(moment)
         return {"v": timeline.TIMELINE_VERSION}
 
@@ -584,7 +584,7 @@ def test_the_timeline_is_written_on_its_own_cadence(tmp_path: Path) -> None:
 
     built: list[datetime] = []
 
-    def builder(events: object, moment: datetime) -> dict[str, object]:
+    def builder(events: object, moment: datetime, horizon: object) -> dict[str, object]:
         built.append(moment)
         return {"v": timeline.TIMELINE_VERSION}
 

@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 1135](https://img.shields.io/badge/tests-1135-brightgreen)](tests/)
-[![coverage 96.61%](https://img.shields.io/badge/coverage-96.61%25-brightgreen)](Makefile)
-[![harness 14 attacks, 13 mutation-verified](https://img.shields.io/badge/harness-14%20attacks%2C%2013%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 169](https://img.shields.io/badge/defects%20logged-169-informational)](docs/METHODOLOGY.md)
+[![tests 1194](https://img.shields.io/badge/tests-1194-brightgreen)](tests/)
+[![coverage 96.72%](https://img.shields.io/badge/coverage-96.72%25-brightgreen)](Makefile)
+[![harness 17 attacks, 16 mutation-verified](https://img.shields.io/badge/harness-17%20attacks%2C%2016%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
+[![defects logged 174](https://img.shields.io/badge/defects%20logged-174-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -449,7 +449,7 @@ look.
 
 | Source | What it gives | Access | Standing |
 | --- | --- | --- | --- |
-| **api.ukrainealarm.com**, the official alerting API | A snapshot of every area alerting now, with type and start time; all-clears are synthesised as the difference between two snapshots | Key granted 2026-08-13 under a signed offer agreement (TOV STFALCON); about a quarter of a second to answer, measured live | **The primary signal source since 0.44.0.0 (D-040).** Same upstream as the channel below - a delivery path, never a second observation |
+| **api.ukrainealarm.com**, the official alerting API | A snapshot of every area alerting now, with type and start time; all-clears are synthesised as the difference between two snapshots. Since 2026-09-06 each alert also carries the level the source declares, published verbatim while the source lists it (D-063) | Key granted 2026-08-13 under a signed offer agreement (TOV STFALCON); about a quarter of a second to answer, measured live | **The primary signal source since 0.44.0.0 (D-040).** Same upstream as the channel below - a delivery path, never a second observation |
 | **t.me/s/air_alert_ua**, the public web preview of the official Ukrainian air-alert channel | Every alert and all-clear, tagged with the area and its unit type, within seconds of publication - while the publisher publishes | Public page, no token, no account, no agreement. It can be withdrawn at any time and nothing obliges anyone to keep it - **and on 2026-08-29 at 04:55 UTC it was**: the channel went silent mid-attack, through 28+ hours of measured strikes, cause unestablished | **The primary until it died; its collector still runs as the watchman for the publisher's return.** ~20 messages per page, ~514 messages a day measured over the corpus, when it published |
 | **alerts.in.ua** | The same alerts, through another API | Token applied for 2026-08-06, unanswered | **Not independent.** Draws from the same upstream (D-010). Two feeds, one dependency, and treating them as two would be the kind of false redundancy that reads as robustness right up until the day it matters |
 | **KATOTTG**, the Ukrainian state register of administrative units | The code, oblast and hierarchy behind every area the channel names | A file, published as open data under Creative Commons Attribution | Used offline, versioned in the tree, never called at runtime (D-016). No API key in the warning path, no rate limit where latency is the product, and no third party learning which raions a Polish user asks about at three in the morning |
@@ -829,10 +829,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 31 | 15,070 |
-| Tests | 79 | 19,417 |
-| Tools | 28 | 8,273 |
-| Documentation | 79 | 37,584 |
+| Package `mavo/` | 33 | 15,961 |
+| Tests | 81 | 20,670 |
+| Tools | 28 | 8,394 |
+| Documentation | 80 | 38,321 |
 
 **Documentation outweighs the package by nearly three to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -843,13 +843,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 1135, of which 14 are scripted attacks |
-| Coverage | 96.61% against a floor of 95, a ratchet that is never lowered |
-| Mutation-verified controls | 13 of 14 attacks; the one without a mutation is printed as unverified on every run |
-| Threat-model rows | 17, each with a control or a named acceptance |
-| Defects logged with their class | 169, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 58, counted from the log itself |
-| Releases | 165 in the changelog; tags are fewer and some are cumulative (A11) |
+| Tests | 1194, of which 17 are scripted attacks |
+| Coverage | 96.72% against a floor of 95, a ratchet that is never lowered |
+| Mutation-verified controls | 16 of 17 attacks; the one without a mutation is printed as unverified on every run |
+| Threat-model rows | 18, each with a control or a named acceptance |
+| Defects logged with their class | 174, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 59, counted from the log itself |
+| Releases | 166 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation

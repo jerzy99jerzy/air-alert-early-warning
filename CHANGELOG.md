@@ -16,6 +16,60 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.60.0.0 - 2026-10-04
+
+**The level the source declared for every alarm reached the store from
+2026-09-09 and reached no reader.** D-050 held it back until the rows had been
+read; the reading was due on 2026-09-12 and was never recorded (F195). It is
+now the first step of this release's install, and D-063 publishes the level.
+
+- **`areas[].level`, `areas[].kinds[].level` and `alert_levels`, additive
+  against schema 3.** A level is `{"word", "declared_at"}` (on the area also
+  `kind`), the word verbatim, or `null`; `alert_levels` is present when the
+  cycle read the stream, so `null` and "not read" cannot be confused, and its
+  `recorded_since` says from when the record runs.
+- **A level stands while the source lists it.** `alert_levels` gains
+  `first_read` and `last_read`, stamped by the read that listed a declaration;
+  `collect-api` writes them before its rows and records the read last. An
+  ACTIVE kind wears the newest declaration on its key, stamped by the moment,
+  whose newest listing is no older than the read in effect: a declaration
+  stands from its own stamp until a read asked after its newest listing has
+  its page in hand. Nothing else wears one. The area's level is the loudest of
+  its kinds, a word no release knows above `Red` above `Yellow`, not the
+  headline kind's. The first design bounded a level by the alert rows, and the
+  rows cannot say what the source still lists (F196).
+- **A read speaks from its page, and a picture from one horizon.** The read in
+  effect is the newest asked among those whose page was in hand, so no alarm
+  loses its level before its own all-clear; every command that replays takes
+  the newest read before its replay and uses none after it (F198).
+- **The week carries it.** Every area interval gains `level`, a level change
+  inside an alarm is a new interval at the declaration's stamp, and
+  `areas.levels` carries `recorded_since`. The agreement test holds the file
+  to `compose` at every edge over generated alarms, declarations and reads,
+  slow pages included.
+- **MT18 and harness A16, A17 and A18**: a new alarm never wears its
+  predecessor's colour, a level the source stopped listing leaves an alarm
+  that goes on, and an alarm keeps its level until it ends; each attack has a
+  mutation in the register.
+- **Failures cost the level only.** A failed read drops `alert_levels`, and the
+  levels of a week written in the same cycle, for that cycle
+  (`[LEVELS-FAILED]`), and nothing else; `timeline --at` prints the same line
+  and draws its moment without levels.
+- **The store moves**: two nullable columns, announced by two
+  `[STORE-MIGRATED]` lines on the first opening, and two indexes, so the
+  install takes a point of return (`docs/DEPLOYMENT.md`).
+- **The install starts with D-050's reading**: `mavo level-reading STORE`,
+  read-only, whose module imports nothing from this package, so the host's
+  own python3 runs it from stdin before the release is installed (D-038). Its
+  verdict is the stop condition of the first step, and its count is pinned by
+  `tests/test_level_reading.py`.
+- **DECISIONS** (2.38): D-063, and D-050's status closed by it.
+  **METHODOLOGY** (2.74): F195 to F199. **THREAT-MODEL** (2.8): MT18.
+  **WEBAPP** (3.19), **DATA-FLOW** (1.8), **MANUAL** (3.18), **MECHANISMS**
+  (2.7), **FEED-SPEC** in both editions (3.6), **DEPLOYMENT** (1.58). **TODO**:
+  T93. **Review**: `docs/reviews/0.60.0.0.md`. Two historical figures a
+  pattern replacement had rewritten are restored (F197).
+
 ## 0.59.0.0 - 2026-09-28
 
 **An RCB alert that ended in the morning was in no key by the evening.**

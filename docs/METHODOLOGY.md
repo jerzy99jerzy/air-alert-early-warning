@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.73
+Document:  docs/METHODOLOGY.md, version 2.74
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,213 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F199, 0.60.0.0. The third round's repairs, checked by the tests written with them
+
+Found by the fourth review of this release, an agent run given both trees
+after F198's repairs, before the release was tagged. It ran mutants against
+the repairs instead of reading them, and found what the third round's own
+tests could not fail on:
+
+- **A write order asserted by its outcome.** The collector stores a read's
+  listing, then its rows, then the read, because the read in effect must never
+  name a listing the store lacks (D-063). The test read the store after the
+  run, and a collector that recorded the read first leaves the same rows: 87
+  tests passed against it `[reported]`. The test now asserts
+  the listing is stored at the moment the rows are appended and at the moment
+  the read is recorded.
+- **A scan where every other level query seeks.** `MIN(first_read)`, asked by
+  every cycle and every week, read the whole table: 38 to 41 ms over a
+  synthetic year of 200,000 declarations, against under 20 microseconds with
+  an index `[reported, re-run: measured]`. `idx_levels_first_read` joins the
+  store's indexes, and the migration test reads the query's plan.
+- **The rule written four ways.** F196's repair and the test module's
+  docstring still gave the pre-F198 rule, the newest read at or before the
+  moment; MT18 said a declaration stands only while the read in effect lists
+  it, where the code shows it from its own stamp before any read has; a
+  comment in `mavo/levels.py` dated a later alarm's declaration from its first
+  listing. Each now gives the code's rule.
+- **Two files of one cycle that could disagree, and a manual that said they
+  could not.** A failed live read published the contract without
+  `alert_levels`, while the week, handed the horizon, read the stream on its
+  own. The week now reads levels only when the picture could, in the loop and
+  in the one-shot report; the one-shot's half of that repair was itself
+  unpinned until its mutant survived while the review's list of mutants was
+  drawn up. `timeline --at` let the same failure escape as a traceback where
+  `--out` printed `[LEVELS-FAILED]`; it is guarded the same way.
+- **Three behaviours no test pinned:** a declaration stamped while the
+  horizon's read was in flight, which the live index must still show; the
+  clamp on a negative fetch time; and an area's tie going to the later
+  declaration. A hand mutant of each survived every test, the harness and the
+  contract check. Each now has a test that kills it.
+- **The install's first step outside the tree.** D-063 named `d050_read.py` by
+  a digest of a file no clone holds, the review cited a hand-mutant script
+  equally absent, T93 compared its sizes against the 0.59.0.0 file, and
+  DEPLOYMENT counted three releases behind an `Installed` row its own text
+  showed stale (F170's shape). Put into `tools/`, the reader then failed the
+  gate, rightly: an instrument whose input is the store ships in the package
+  (D-038).
+
+**Class.** None is new. The write order and the three unpinned behaviours are
+class 2, a check that cannot fail, found by mutants rather than by reading; the
+rule written four ways is class 1; the scan is a cost assumed small and not
+measured; the last item is F197's. The third round tested each of its repairs
+with the test written beside it, which is a fixture written against the
+implementation one level up: the repair and its test shared an author and a
+blind spot.
+
+**Repair.** The items above, each against the tree: `tests/test_d063_levels.py`
+gains the order asserted where it happens and the three pins;
+`mavo/store.py` the index; `mavo/report.py`, `mavo/cli.py` and
+`mavo/timeline.py` the horizon passed on only with a live index, and the
+guard. The reader is `mavo level-reading`, in the package and importing
+nothing from it, so the host's own interpreter runs the same file from stdin
+before the release is installed, as it ran `mavo/recorder.py`; it is pinned by
+`tests/test_level_reading.py` against eleven hand mutants, and
+`tests/lint_domain.py` now pairs a module with the hyphenated subcommand of
+its name. The review lists every hand mutant of the level work, twenty-three,
+with the test that kills it. **Reopen condition:** a release whose review
+cites a mutant, a script or a figure that the tree cannot reproduce.
+
+### F198, 0.60.0.0. A presence rule tested on reads that took no time and on a picture read in one instant
+
+Found by the third review of this release, before it was tagged, by asking what
+the rule does on the clocks production writes rather than on the fixtures'.
+Three defects, one class:
+
+- **A read dated by the moment it asked.** `collect-api` stamps a read with
+  `started_at`, taken before the fetch; the adapter stamps the all-clears that
+  read derives with the moment the page arrived. The rule took the read in
+  effect from `started_at`, so at the end of every levelled alarm there was an
+  interval, as long as the fetch, in which the alarm was open and the read in
+  effect no longer listed its level. The week carried `level: null` there,
+  and a reader stepping the slider onto it was told the source lists no level
+  for a red alarm. Every test of the rule put the all-clear on its read's own
+  stamp, which no production row does.
+- **A slow page overtaken.** The first repair let a read speak from its page
+  and kept the two reads before a moment. The agreement test, given pages that
+  took longer than the gap to the next read, found a moment with no read in
+  effect. The read in effect is now the newest asked among those in hand, and
+  the walk back stops at the first read in hand.
+- **Two queries read as one picture.** A report cycle replayed the store and
+  then asked for the newest read. A collector run landing between the two gave
+  a read whose all-clears the replay lacked, and the alarm it ended went out
+  open with no level for a cycle. Every command that replays now takes the
+  newest read before the replay and uses none after it.
+
+**Class.** Fixtures written against the implementation, F196's class, here in
+time: the tests' reads took no time, their all-clears sat on their reads, and
+their replay and query ran in one instant. A fixture with one clock cannot
+show any of the three, and each is the ordinary case on the host.
+
+**Repair.** `mavo/levels.py` (`in_hand`, `Read`, `Horizon`, `read_horizon`),
+`report.publish`, the four commands in `mavo/cli.py` that replay; tests that
+put the clocks where production does (an all-clear 0.8 s after its read asks,
+pages 1.5 s, a slow page overtaken, a collector run inside the replay of each
+command), and attack A18. **Reopen condition:** a week written on the host
+with an interval in which an alarm is open, its `level` is `null`, and it
+ends at that alarm's own all-clear less than the read's `elapsed_s` later;
+T93's acceptance counts them.
+
+### F197, 0.60.0.0. The release's documents carried a placeholder, an unmeasured claim and a rewritten history through a green gate
+
+Found by the second review of this release, before it was tagged. Every item
+below passed `make verify`, because the gate checks a document's figures and
+names and none of these was a figure or a name it holds:
+
+- **A placeholder.** D-063 ended with the word `READING` where the reading's
+  figures belonged, while the changelog, F195 and the review said the reading
+  had been taken. No reading had been.
+- **A claim with nothing under it.** The docstring of a constant said the
+  API's two clocks "agree to the second on the rows read so far". No row had
+  been read for it. Class 3, measurement over assumption, in the sentence
+  that justified a bound.
+- **A figure replaced by pattern.** The coverage pin moved, and a
+  replacement over every document changed the old figure everywhere,
+  including the 0.33.0.2 and 0.51.0.0 changelog entries and the 0.51.0.0
+  review, where the old figure is F140's evidence and not a pin. A control
+  covers a shape, not a subject (F158): the shape was the number, the subject
+  was the current figure. Restored from `git show a59e077:CHANGELOG.md` and
+  `git show a59e077:docs/reviews/0.51.0.0.md`.
+- **Prose figures without their commands.** "Nineteen days", "the fourteenth
+  mutation", "about six hundred rows a day", each written from a sense of the
+  number (ENGINEERING section 4). Each is now counted beside its command or
+  replaced by the figure the record states.
+
+**Repair.** The items above, each against the tree. **Reopen condition:** the
+check F195 asks for in T93's second half, extended to a word that stands for
+missing content, would have caught the first; the others are what a reading
+of the release's own documents against its code is for, and the 0.60.0.0
+review is the record that it was done.
+
+### F196, 0.60.0.0. A level bounded by the alert rows, where the rows cannot say what the source still lists
+
+The first design of D-063 decided which declaration stands beside an open alarm
+from the alert rows: after the newest all-clear on the key, and, after a first
+review, after the alarm's start less two minutes. The second review found three
+roads to a wrong or missing level, each from the row the bound was drawn from:
+
+- **A re-assertion (D-044)** is dated by its observation, so the bound moved
+  past the alarm's own declaration. On the week recorded from the production
+  store, two of four re-assertions published no level, for 8 and 70 minutes,
+  beside rows that carried `api_level: Yellow` `[measured 2026-10-04, the
+  week's level stream rebuilt from the api_level its rows carry]`.
+- **The channel writes rows on the API's key**, because `AIR` is `UNKNOWN` on
+  both paths, so a channel row stamped after the API's start became the row
+  the bound was drawn from.
+- **Two alerts on one key** (AIR and URBAN_FIGHTS both fold to `UNKNOWN`)
+  leave no row when one ends, and the API's current level then falls back to
+  the other alert's record, which the table already holds. The newest
+  declaration since the alarm began stayed the ended alert's.
+
+**Class.** Fixtures written against the implementation, twice over. The tests
+of the first design fed in a second ACTIVE row between two alarms, a row the
+product never writes when an alarm follows another between two polls, and they
+modelled the level stream as declarations that only accumulate, which is what
+the table's identity made it look like and not what the API does. The table
+records a declaration's first sighting; the rule needed its last.
+
+**Repair.** `alert_levels` gains `first_read` and `last_read`, the first and
+the newest read that listed a declaration, written by `collect-api` before the
+read itself is recorded; a declaration stands from its own stamp until a read
+asked after its newest listing has its page in hand (D-063, as F198 left it).
+The tests now generate the level stream the way the
+collector writes it, with declarations that leave and come back and polls that
+are refused, and attacks A16 and A17 play the two roads that end in a wrong
+colour.
+
+**Reopen condition:** a declaration that leaves the listing and returns while
+its alarm stays open, which `last_read` cannot see (D-063); or an alarm the
+source lists a level for that publishes `null`, at a rate T93's reading
+measures.
+
+### F195, 0.60.0.0. A decision's dated reading that never happened, and nothing asked for it
+
+D-050 kept the level off the contract until the store had been read, and set
+the reading's condition on content with an earliest date: 2026-09-12. Nothing
+in the tree records that the reading was taken, and nothing was built to
+notice that it was not. The reading was overdue for nineteen days when this
+release began `[measured: python3 -c "from datetime import date;
+print((date(2026, 10, 1) - date(2026, 9, 12)).days)"]`, the legend's sentence
+that the source has one category for everything that flies stayed in place as
+D-050 said it would, and the stream kept filling.
+
+**Class.** A rule without a gate check is a preference, in its temporal form:
+a decision that defers to a future measurement holds only as long as someone
+remembers the measurement is owed. F156 is the same shape in a document that
+called a closed loss open; this is a decision that called a reading pending
+and had no instrument that could say otherwise.
+
+**Repair.** The reading is the first step of this release's install, before
+anything is tagged, with a read-only script named in D-063 by its digest, and
+the install stops unless the script prints that D-050's condition is met. Its
+figures are recorded with T93's after the install.
+
+**Reopen condition:** the next decision that defers to a reading. The check
+this entry does not ship, a gate line that fails when a decision's "earliest
+reading" date passes without a reading recorded, is T93's second half,
+because a check written against one entry is a check on a shape (the lesson
+F55's reproduction taught).
 
 ### F194, 0.59.0.0. The new key's documents said what its code and the recording did not
 

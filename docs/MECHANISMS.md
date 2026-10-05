@@ -4,7 +4,7 @@ Every mechanism in MAVO: what it is, where it lives, the alternative that was
 rejected, the failure it prevents, and the test that keeps it honest.
 
 ```
-Document:  docs/MECHANISMS.md, version 2.6
+Document:  docs/MECHANISMS.md, version 2.7
 Audience:  a contributor about to change how something works, and anyone asking
            "why is it done this way rather than the obvious way"
 Companion: ARCHITECTURE (what talks to what), DATA-FLOW (what happens to a
@@ -652,10 +652,11 @@ attacks: one whose assertion was satisfied by the failure it was meant to detect
 wrong quote character (F39), and one written the same afternoon that tested the
 governing decision on the one path returning before it (F40).
 
-**One attack of eleven carries no mutation and is printed as unverified on every
-run.** A7 exercises the fixture source, which generates rather than parses, so any
-mutation making it raise is an injected fault rather than a removed control.
-Stating that is cheaper than a mutation that flatters the count.
+**One attack of seventeen carries no mutation and is printed as unverified on
+every run** (`grep -c '^def test_a' tests/harness/test_attacks.py` counts the
+attacks). A7 exercises the fixture source, which generates rather than parses,
+so any mutation making it raise is an injected fault rather than a removed
+control. Stating that is cheaper than a mutation that flatters the count.
 
 **A stale mutation is reported, not skipped.** If the text a mutation substitutes
 no longer exists, the attack is unverified until the mutation is rewritten, and

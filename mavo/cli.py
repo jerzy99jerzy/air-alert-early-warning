@@ -29,6 +29,8 @@ from mavo.backfill import (
 from mavo.errors import SourceUnavailable
 from mavo.evaluate import run_policy, run_rule
 from mavo.latency import main as latency_main
+from mavo.level_reading import main as level_reading_main
+from mavo.levels import Horizon, LevelIndex, StoreLevels, live_index, read_horizon
 from mavo.liveness import PRODUCTION_FEEDS, EventStamps, FeedLiveness
 from mavo.liveness import liveness as measure_liveness
 from mavo.obs import from_environment as sink_from_environment
@@ -577,14 +579,18 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
             print(f"  unknown key: {name} x{count}")
     if store is not None:
         try:
-            store.record_read(
-                API_FEED, API_URL, started, active + cleared,
-                len(source.unresolved) + len(source.declined), fetch_s,
-                # Persisted beside the attempt, not only printed (T83): drift
-                # between sessions is read off the table, and a journal nobody
-                # replays is not where a vocabulary change should first appear.
-                detail=_vocabulary_detail(source),
-            )
+            # D-063 (0.60.0.0). The level stream first, stamped with this
+            # read, then the alert rows, then the read itself, and the order is
+            # the rule: a level is decided by what the newest *recorded* read
+            # listed, so the read must not be on record before what it listed
+            # is. Recorded first, a report cycle landing between the two would
+            # find a read that listed nothing and publish every alarm without
+            # its level for one cycle; a failed append now leaves the read
+            # unrecorded too, so the previous read and its listing still stand.
+            # A declaration recorded for every open alert the poll saw with a
+            # level, and the store keeps only the ones it has not seen; zero
+            # new rows on a quiet cycle is the ordinary reading (D-050).
+            levels_new = store.append_levels(source.levels, read_at=started)
             # Before the append, and the order is the point: a row re-dated
             # after storage would already have lost to the clear it supersedes.
             redated = _redate_against_stored_clears(store, events, started)
@@ -598,13 +604,14 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
                 print(f"  re-asserted {reasserted} alarm(s) dated by observation: "
                       "the API repeated an alert this pipeline had already cleared")
             appended = store.append(redated)
-            # After the alert rows, and independent of them: a declaration is
-            # recorded for every open alert the poll saw with a level, and the
-            # store keeps only the ones it has not seen. Zero new rows on a
-            # quiet cycle is the ordinary reading; a positive count is an
-            # escalation, a de-escalation, or an alert first seen with a
-            # level (D-050, the second half).
-            levels_new = store.append_levels(source.levels)
+            store.record_read(
+                API_FEED, API_URL, started, active + cleared,
+                len(source.unresolved) + len(source.declined), fetch_s,
+                # Persisted beside the attempt, not only printed (T83): drift
+                # between sessions is read off the table, and a journal nobody
+                # replays is not where a vocabulary change should first appear.
+                detail=_vocabulary_detail(source),
+            )
         except Exception as failure:  # noqa: BLE001
             print(f"[STORE-FAILED] {failure}")
             return 7
@@ -1230,11 +1237,11 @@ def _cmd_report(args: argparse.Namespace) -> int:
         table = AreaTable.from_csv()
 
         def timeline_payload(
-            events: Sequence[ThreatEvent], moment: datetime
+            events: Sequence[ThreatEvent], moment: datetime, horizon: Horizon | None
         ) -> dict[str, object] | None:
             try:
                 payload = build_timeline(store, events, moment, table=table,
-                                         feeds=PRODUCTION_FEEDS)
+                                         feeds=PRODUCTION_FEEDS, horizon=horizon)
                 json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8")
                 return payload
             except Exception as failure:  # noqa: BLE001
@@ -1260,6 +1267,10 @@ def _cmd_report(args: argparse.Namespace) -> int:
             timeline_path=Path(args.timeline) if args.timeline else None,
             timeline=timeline_payload if args.timeline else None,
             timeline_every=args.timeline_every,
+            # D-063. Read per cycle, its horizon before the replay and its
+            # declarations after; a failure drops the `alert_levels` key for
+            # that cycle and nothing else.
+            levels=StoreLevels(store),
         )
         print(outcome.line())
         # A loop that ends is not an error: it was told to stop, or the
@@ -1267,8 +1278,18 @@ def _cmd_report(args: argparse.Namespace) -> int:
         # reason that returns non-zero, because it is the only one that
         # leaves the consumer reading a file nobody is refreshing.
         return 7 if outcome.reason.startswith("write failed") else 0
+    # D-063: the horizon before the replay, the declarations after it, and
+    # one replay for the picture and the week (`mavo.levels`).
+    horizon = _level_horizon(store)
+    replayed = list(store.replay())
+    index: LevelIndex | None = None
+    if horizon is not None:
+        try:
+            index = live_index(store, horizon)
+        except Exception as failure:  # noqa: BLE001
+            print(f"[LEVELS-FAILED] {failure}", file=sys.stderr, flush=True)
     report = compose(
-        store.replay(), valid_for_s=args.valid_for, history_days=windows
+        replayed, valid_for_s=args.valid_for, history_days=windows, levels=index,
     )
     print(render_text(report))
     if args.json:
@@ -1296,8 +1317,9 @@ def _cmd_report(args: argparse.Namespace) -> int:
         print(f"history={written_history} v={SCHEMA_VERSION} {coverage}")
     if args.timeline:
         written_timeline = write_timeline(
-            build_timeline(store, list(store.replay()), report.as_of,
-                           table=AreaTable.from_csv(), feeds=PRODUCTION_FEEDS),
+            build_timeline(store, replayed, report.as_of, table=AreaTable.from_csv(),
+                           feeds=PRODUCTION_FEEDS,
+                           horizon=horizon if index is not None else None),
             Path(args.timeline),
         )
         print(f"timeline={written_timeline} days={TIMELINE_DAYS}")
@@ -1307,6 +1329,24 @@ def _cmd_report(args: argparse.Namespace) -> int:
 def _cmd_record_week(args: argparse.Namespace) -> int:
     """Delegates to `mavo.recorder`, which the host can also run from stdin (D-038)."""
     return record_week_main([args.store, args.out, args.end, args.days])
+
+
+def _cmd_level_reading(args: argparse.Namespace) -> int:
+    """Delegates to `mavo.level_reading`, which the host can also run from stdin (D-038)."""
+    return level_reading_main([args.store])
+
+
+def _level_horizon(store: EventStore) -> Horizon | None:
+    """The newest API read on record, taken before a replay (D-063).
+
+    None after saying why on stderr: the level stream is then unread for
+    this run, which every file says as "not read", never as a guess.
+    """
+    try:
+        return read_horizon(store)
+    except Exception as failure:  # noqa: BLE001
+        print(f"[LEVELS-FAILED] {failure}", file=sys.stderr, flush=True)
+        return None
 
 
 def _moment(text: str, flag: str) -> datetime | None:
@@ -1348,8 +1388,10 @@ def _cmd_timeline(args: argparse.Namespace) -> int:
         elif args.store:
             store = EventStore(Path(args.store))
             _announce_migrations(store)
+            horizon = _level_horizon(store)
             picture = picture_from_store(store, list(store.replay()), moment,
-                                         table=AreaTable.from_csv(), feeds=PRODUCTION_FEEDS)
+                                         table=AreaTable.from_csv(), feeds=PRODUCTION_FEEDS,
+                                         horizon=horizon)
         else:
             print("--at needs --store or --file", file=sys.stderr)
             return 2
@@ -1369,11 +1411,12 @@ def _cmd_timeline(args: argparse.Namespace) -> int:
         end = parsed
     store = EventStore(Path(args.store))
     _announce_migrations(store)
+    horizon = _level_horizon(store)
     started = time.perf_counter()
     events = list(store.replay())
     replayed = time.perf_counter()
     payload = build_timeline(store, events, end, table=AreaTable.from_csv(),
-                             feeds=PRODUCTION_FEEDS, days=args.days)
+                             feeds=PRODUCTION_FEEDS, days=args.days, horizon=horizon)
     built = time.perf_counter()
     written = write_timeline(payload, Path(args.out))
     done = time.perf_counter()
@@ -1680,6 +1723,15 @@ def build_parser() -> argparse.ArgumentParser:
     record_week.add_argument("days", nargs="?", default="7",
                              help="the window in days (default %(default)s)")
     record_week.set_defaults(func=_cmd_record_week)
+
+    level_reading = subparsers.add_parser(
+        "level-reading",
+        help="D-050's reading of the level stream: changes inside alarms, the "
+             "vocabulary, the age of standing declarations, and the verdict "
+             "(D-063); read-only on the store",
+    )
+    level_reading.add_argument("store", help="path to the event store")
+    level_reading.set_defaults(func=_cmd_level_reading)
 
     timeline_cmd = subparsers.add_parser(
         "timeline",

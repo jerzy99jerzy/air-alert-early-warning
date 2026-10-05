@@ -6,7 +6,7 @@ the companion document and answers the other question, which components exist
 and what may talk to what.
 
 ```
-Document:  docs/DATA-FLOW.md, version 1.7
+Document:  docs/DATA-FLOW.md, version 1.8
 Audience:  a contributor about to change a transformation, a schema field, or
            anything that decides what is kept and what is dropped
 Companion: ARCHITECTURE (components and boundaries), MECHANISMS (why each
@@ -103,9 +103,16 @@ without turning every escalation into a ghost, and the opening row's
 level is its own stream (D-050, the second half): every open key's current
 declaration is handed over on every poll, keyed on the word and the source's
 stamp, so the store holds one row per declaration and a change is a second
-row without the adapter remembering anything. Nothing reads that table into
-the contract yet; `newest_level_by_area_kind` is the read the release that
-first shows a level will make.
+row without the adapter remembering anything. From 0.60.0.0 every read also
+stamps what it listed: `last_read` on each declaration it handed over, and
+`first_read` the first time, before the read itself is recorded. The report
+loop reads the table every cycle into `mavo.levels`, and an ACTIVE kind wears
+the newest declaration its source stamped whose newest listing is no older
+than the read in effect, in `state.json` and in every interval of
+`timeline.json` (D-063).
+`newest_level_by_area_kind` is not that read: it knows nothing of what the
+source still lists, and a join on the key alone paints a new alarm with its
+predecessor's colour (MT18).
 
 ### The watchman path: the channel page
 
@@ -447,6 +454,8 @@ project exists to attack.**
 | Classifier | Any wording the table lacks | `unparsed` count, kept as text | A stale table would read as a quiet channel (F23) |
 | State layer | The difference between silence and contradiction | `UNKNOWN` against `PARTIAL_CLEAR` | An ambiguous all-clear would read as an all-clear (F26) |
 | Store | Nothing | | |
+| Level stream | Which declarations a read listed, for every read before 0.60.0.0 | `first_read` and `last_read` NULL on every earlier row, the two `[STORE-MIGRATED]` lines, and `recorded_since` beside every published level | A moment before the record would read as an alarm the source left unlevelled (D-063) |
+| Level stream | A declaration listed, then not, then listed again while its alarm stays open | **Not currently measured**: `last_read` keeps the newest listing only, so it reads as listed in between (D-063's reopen condition) | A level the source withdrew for a while would stay on the map through the gap |
 | Attempt log | The page itself: only bounds, counts and latency survive the poll | one row per poll, read by `mavo attempts` | A refusal would be indistinguishable from a quiet timer, and a dead collector from a quiet channel (T66, D-036) |
 | Night grouping | Events across a midnight boundary | **Not currently measured** | This one is a known blind spot, stated rather than closed |
 | Policy | Crossing kinds no regime serves | `COVERAGE GAP`, printed | An unserved kind would leave the denominator (MT6) |

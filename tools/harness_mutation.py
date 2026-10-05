@@ -48,6 +48,30 @@ class Mutation:
 
 MUTATIONS: tuple[Mutation, ...] = (
     Mutation(
+        attack="test_a16_a_new_alarm_never_wears_the_colour_its_predecessor_ended_on",
+        row="MT18",
+        path="mavo/levels.py",
+        old="            if item.level_at <= at and item.last_read >= read:",
+        new="            if item.level_at <= at:",
+        disables="presence: a declaration stands whether or not a later read stopped listing it",
+    ),
+    Mutation(
+        attack="test_a17_a_level_the_source_stopped_listing_leaves_a_running_alarm",
+        row="MT18",
+        path="mavo/levels.py",
+        old="            if item.level_at <= at and item.last_read >= read:",
+        new="            if item.level_at <= at:",
+        disables="presence: a declaration stands whether or not a later read stopped listing it",
+    ),
+    Mutation(
+        attack="test_a18_an_alarm_keeps_its_level_until_the_alarm_itself_ends",
+        row="MT18",
+        path="mavo/levels.py",
+        old="    return started + timedelta(seconds=max(elapsed_s or 0.0, 0.0))",
+        new="    return started",
+        disables="a read speaks from its page in hand, not from the moment it asked",
+    ),
+    Mutation(
         attack="test_a15_a_night_read_as_empty_is_not_a_total_of_zero",
         row="MT17",
         path="mavo/sources/kpszsu.py",

@@ -1,6 +1,6 @@
 # Jaki powinien być polski kanał komunikatów alarmowych czytelny maszynowo
 
-Version: 3.5 / 2026-09-20
+Version: 3.6 / 2026-10-04
 Tę specyfikację piszę jako ktoś, kto próbował zbudować system korzystający z
 polskich komunikatów alarmowych. Najpierw nie znalazłem żadnego kanału danych,
 a później tylko jego część, dostępną po uzyskaniu tokena. Ukraiński odpowiednik
@@ -883,9 +883,8 @@ Jest też część dotycząca odbiorcy, którą projekt stosuje wobec siebie: **
 zagrożenia najpierw się zbiera, a dopiero potem pokazuje.** Zasady tego, co
 zobaczy czytelnik, formułuje się na podstawie zgromadzonych wierszy, a nie
 jednej utrwalonej odpowiedzi, bo reguła oparta na założonej postaci danych to
-dokładnie ta klasa błędów, którą opisuje poprzednia właściwość. Do tego czasu
-strona zapowiada, że poziom wkrótce się pojawi, i wskazuje, kto będzie go
-ustalał.
+dokładnie ta klasa błędów, którą opisuje poprzednia właściwość. Od D-063
+strona wyświetla to oznaczenie dosłownie i tylko dopóki nadawca je podaje.
 
 **Dwudziesta. Odwołanie wskazuje w osobnym polu alarm, którego dotyczy, a data
 ważności rzeczywiście wyznacza koniec.** Ta właściwość wynika z odczytu danych
@@ -1239,11 +1238,11 @@ własną nazwą.
 **Czym indeks nie jest.** Nie zastępuje wiadomości, a kto czyta wyłącznie
 indeks, traci tekst, instrukcję i historię. Nie jest duży: jedna linia na każdy
 obowiązujący alarm i nic poza tym. Nie jest pomysłowy. Jest bliski plikowi,
-który ten projekt ogłasza jako `state.json`, a który niesie moment sporządzenia,
-okno oraz znacznik obcięcia tego okna, nie niesie natomiast poziomu ani
-znacznika czasu dla niego; ten plik utrzymał mapę w zgodzie z rzeczywistością
-przez dwie przerwy po stronie nadawcy, które kanał złożony z samych wiadomości
-zamieniłby w spokój.
+który ten projekt ogłasza jako `state.json`, a który niesie moment
+sporządzenia, okno oraz znacznik obcięcia tego okna, a od D-063 także poziom
+zagrożenia, wraz z chwilą jego ustalenia; ten plik utrzymał mapę w zgodzie z
+rzeczywistością przez dwie przerwy po stronie nadawcy, które kanał złożony z
+samych wiadomości zamieniłby w spokój.
 
 ### 10.3 Co CAP daje, a czego nie, w jednej tabeli
 

@@ -1,6 +1,6 @@
 # What a machine-readable Polish alerting feed would have to be
 
-Version: 3.5 / 2026-09-20
+Version: 3.6 / 2026-10-04
 A specification, written from the position of someone who tried to build
 against one, found nothing at first, and later found part of one, available
 with a token. The Ukrainian equivalent was consumed and measured over a corpus
@@ -831,8 +831,8 @@ And the consumer's half, which this project holds for itself: **a severity is
 captured before it is shown.** The rule for what a reader sees is written
 against stored rows rather than against one captured payload, because a rule
 written from a shape assumed is the class of defect the preceding property
-records. Until then the page says the level is coming, and says whose level
-it will be.
+records. Since D-063 the page draws it, in the source's own word and only
+while it is still listed.
 
 **Twenty. An end says what it ends, in a field, and a field named for the end
 is the end.** Learned by reading the RSO stream on 2026-09-16
@@ -1169,12 +1169,12 @@ name on it.
 
 **What the index is not.** It is not a replacement for the messages, and a
 consumer that reads only the index loses the text, the instruction and the
-history. It is not large: one line per alert in force, and nothing else. It
-is not clever. It is close to the file this project publishes as `state.json`,
-which carries the generation stamp, the window and its truncation flag and
-carries no severity and no stamp for one, and that file has kept a map honest
-through two publisher outages that a messages-only feed would have turned
-into calm.
+history. It is not large: one line per alert in force, and nothing else. It is
+not clever. It is close to the file this project publishes as `state.json`,
+which carries the generation stamp, the window and its truncation flag and,
+since D-063, the severity with the moment it was set, and that file has kept a
+map honest through two publisher outages that a messages-only feed would have
+turned into calm.
 
 ### 10.3 What CAP gives and what it does not, in one table
 

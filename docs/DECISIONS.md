@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.37
+Document:  docs/DECISIONS.md, version 2.38
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2000,7 +2000,7 @@ production; swapping a working detector for an unproven one in one release is
 how a page loses a check it had.
 
 ## D-050. The alert level is captured as the source's word and not yet read
-Date: 2026-09-08, second half 2026-09-09. Status: adopted in part; the reading is open
+Date: 2026-09-08, second half 2026-09-09. Status: adopted; the open half closed by D-063 on 2026-10-01
 
 **Decision, the half taken.** From 0.53.2.0 the adapter carries an alert's
 current level on the ACTIVE row's `raw_fields`, as `api_level` (the API's own
@@ -2056,7 +2056,11 @@ field would be shown yellow over an alarm that went red.
 
 **Still not taken.** Nothing in `state.json`, `feed.json` or `history.json`
 reads the table, and no reader is shown a level. That is the release after
-the week of rows below, and it moves the contract (D-021).
+the week of rows below, and it moves the contract (D-021). **Taken by D-063
+(0.60.0.0):** `state.json` and `timeline.json` read the stream, by what the
+newest API read listed, and a reader is shown the level; `feed.json` and
+`history.json` still read nothing of it, no event carries the level as a
+state and the level joins no identity, so the half above stands as written.
 
 **What settles the open half, restated 2026-09-09.** Not a calendar. A date
 in a condition is a preference: three quiet days yield five escalations and
@@ -2317,6 +2321,177 @@ written.
 **Reopen if:** the table grows faster than the event store it sits in, or the
 scrubber needs a question answered that one indexed read of this table cannot
 answer.
+
+## D-063. The declared level reaches a reader: the source's word beside an open alarm, for as long as the source lists it
+
+Date: 2026-10-01, rewritten 2026-10-04 before release. Status: adopted. D-050's
+open half closes with it, on the reading the install takes first (below).
+
+**Decision.** `state.json` carries the level the Ukrainian source declares for
+an open alarm, and `timeline.json` carries it for every moment of the week.
+Every entry of `areas[].kinds` gains `level`: `{"word", "declared_at"}` or
+`null`. Every entry of `areas[]` gains `level`: the same two fields plus the
+`kind` it was taken from, or `null`. A top-level `alert_levels` block,
+`{"source", "recorded_since"}`, is present when the cycle read the stream and
+absent when it did not. `timeline.json` carries the same fields on every area
+interval, because an interval is an `areas[]` entry, and `areas.levels`
+(`recorded_since`) beside the layer. The operator asked for it on 2026-10-01
+and settled S-25, the consumer's open question, in the same exchange: the map
+fills an alerted raion by the level, and the slider shows the level at past
+moments in the same release.
+
+**The rule.** A kind wears a level only when it is ACTIVE, and then the newest
+declaration on its `(area_id, kind)` key that the source stamped at or before
+the moment and whose newest listing is no older than the read in effect at the
+moment (below): a declaration stands from its own stamp until a read asked
+after its newest listing has its page in hand.
+`mavo/levels.py` holds it; `report.area_picture` hands it ACTIVE kinds and
+nothing else; `compose` asks it for the present and `timeline.area_layer` for
+every instant its answer can change: a declaration's stamp, the moment a read
+asked after its newest listing first had its page, and the opening of the
+record. `tests/test_d063_levels.py` holds the two to one answer at every
+interval edge and a tick either side, over generated alarms from two sources
+and a level stream recorded the way `collect-api` records it, reverts, refused
+polls and slow pages included.
+
+**What the read listed, recorded.** The adapter hands over, on every poll, the
+declaration the API lists as current for every open key: the newest
+`createdAt` among the level records of every alert on it. `alert_levels` keys
+a declaration on its word and its moment (D-050), so the same declaration seen
+on a hundred polls is one row, and until this release that row could not say
+whether the latest poll still listed it. Two columns now say so, `first_read`
+and `last_read`, the first and the newest read that listed the declaration,
+stamped as that read's `feed_attempts.started_at`. Observation, outside the
+identity: the hash is unchanged. Additive under D-036, NULL on every earlier
+row, and announced on the first opening of an older store by the two
+`[STORE-MIGRATED] added alert_levels.…` lines F168 requires.
+
+**Why presence and not bounds drawn from the alert rows.** The first design of
+this release bounded a declaration by the newest all-clear on its key and, after
+a first review, by the alarm's start less two minutes. A second review found
+three roads to a wrong level, each from the row the bound was drawn from, and
+reproduced the first on the week recorded from the production store: an alarm
+re-asserted after a spurious all-clear is dated by its observation (D-044),
+and two of the week's four re-assertions published no level, for 8 and for 70
+minutes, while their own rows carried `api_level: Yellow` `[measured
+2026-10-04 on tests/fixtures/store_week_2026-09-26.sqlite3.xz, whose level
+stream was rebuilt from the api_level the alert rows carry; re-run by the
+session from the reviewer's script]`. The second:
+the channel writes rows on the same key as the API, because `AIR` maps to
+`UNKNOWN` on both paths, so a channel row stamped after the API's start drew
+the bound past the API's own declaration. The third needs no row at all: an
+AIR and an URBAN_FIGHTS alert on one raion fold into one key, and when the
+air alert ends the API lists the older alert's record as current again, a
+record the table already holds, so the newest row on the key stayed the ended
+alert's level for as long as the other alert stood. Presence answers all
+three, and needs no bound at all: a declaration the read stopped listing is
+gone at that read, whatever the rows say. F196 records the design and the
+review.
+
+**Which read is in effect.** A read speaks from the moment its page was in
+hand, `started_at` plus `elapsed_s`, and not from the moment it asked; at a
+moment, the read in effect is the newest by `started_at` among those whose
+page was in hand by then. The all-clear a read derives is stamped when its
+page arrived, between the two, so a read that spoke from its `started_at`
+ended the level of every alarm it ended a second or two before the alarm
+itself, and the week carried an open alarm the source "lists no level" for at
+the end of every levelled alarm. A read asked later says something newer
+whichever page arrives first, so a slow page never takes the place of a
+faster later one. The presence record opens when the first read that
+recorded its listing is in effect, and `recorded_since` is that moment. F198
+records the defect.
+
+**The order the collector writes in.** The level stream first, stamped with
+the read, then the alert rows, then the read itself (`mavo/cli.py`,
+`_cmd_collect_api`). Only a recorded read is ever in effect, so the read must
+not be on record before what it listed is: recorded first, a report cycle
+landing between the two would find a read that listed nothing and publish
+every alarm without its level for a cycle. A failed append now leaves the read
+unrecorded as well, which `newest_read_at` reads as the truth it is: the data
+of that poll did not land.
+
+**One replay, one horizon.** A report cycle replays the store for the alert
+rows and then queries the declarations, and `collect-api` may write in
+between. Every reader of the stream (the report loop, the one-shot report,
+`timeline --out` and `timeline --at`) therefore takes the newest read on
+record *before* its replay, `read_horizon`, and uses no read after it: a read
+is recorded after its rows, so every read up to that one has its rows in the
+replay. The declarations are queried after the replay, so every alarm the
+replay holds finds its own listing. Taken after the replay, the newest read
+could be one whose all-clears the replay lacked, and the alarm it ended was
+published open without its level for a cycle (F198).
+
+**Why only ACTIVE.** UNKNOWN is the source having told us nothing about the
+alarm; the last word it said, shown as the current one, is silence rendered
+as a colour. PARTIAL_CLEAR is the channel's, and the channel carries no level.
+
+**The area's level is the loudest kind, not the headline.** The headline is
+chosen by state and stamp, so an artillery alarm raised after a red air alert
+names the area while carrying no level. `KNOWN_WORDS` orders the two words the
+API has used, `Yellow` below `Red`, in the order of the Ukrainian resolution
+of 2026-09-04 `[reported; the consumer's ROADMAP S7 cites it]`; a word outside
+them ranks above both, so a new word reaches the loudest slot rather than
+hiding behind a known colour, and the consumer renders it as an unrecognised
+level and never as the nearest colour it knows (D-050). Ties go to the later
+declaration, then to the kind's name.
+
+**`null` and absent are two answers, and the record has a start.** `level:
+null` is the source listing no level for this alarm at the read in effect; a
+missing `alert_levels` is this producer not having read the stream that cycle,
+and a failed read of it drops the key for one cycle, prints `[LEVELS-FAILED]`
+and leaves the alerts alone; a week whose read failed is written without
+`areas.levels`. `recorded_since` is the moment the first read that recorded
+what it listed had its page, which is the first API poll after the install
+that listed a level: before it every level is unrecorded, never absent, and
+on a store that has not polled since the install it is `null`.
+
+**Additive against schema 3**, for D-034's reason: an optional field does not
+break a consumer that ignores it, so the version does not move under D-020. A
+minor release under D-021.
+
+**What this rule cannot see, stated.** `last_read` holds the newest listing,
+not every one: a declaration listed, then not listed, then listed again while
+its alarm stayed open reads as listed in between. That needs one declaration
+to leave and return with no newer one listed meanwhile, which a key whose
+alerts only gain records does not do. An alarm that ends and another that
+begins on one key between two polls leaves no alert row, because the key never
+left the list; the first alarm's level stops at the first read that no longer
+lists it and the second's starts at its own stamp, but the area keeps the
+first alarm's `since` (a property of the alert fold, older than this
+release). And a payload that renames or moves `activeAlertLevels` empties
+every listing: every alarm reads `null` while the unknown-key canary prints
+the new name.
+
+**Not taken.** `feed.json` and `history.json` read no level. Nothing
+aggregates levels over a window, so D-050's split-off question, whether a
+colour means the same thing one week as the next, has no claim here to
+answer. Nor does the adapter date its all-clears by the read's `started_at`
+to meet the level's clock: that would move every all-clear by its fetch time
+and change what a row means for the sake of a field beside it. The legend
+sentence D-050 promised to correct in the release that first shows a level
+is the consumer's, and its D-S94 corrects it.
+
+**The reading that closes D-050's open half.** D-050 set its condition on
+content - at least 50 level changes inside open alarms across at least 15
+keys - and named 2026-09-12 as the earliest reading; that reading was never
+recorded (F195). It is the first step of this release's install, before
+anything is tagged: `mavo level-reading`, whose module `mavo/level_reading.py`
+(sha256 `bbc32eb75919e173393fdbafee2cd804e3fd6afdafd1bf29ce59cda9b223e321`)
+imports nothing from this package, so the host's own python3 runs it from
+stdin as the store's owner before the release is installed, read-only (D-038,
+as `mavo/recorder.py`); its count, its thresholds and its verdict are pinned
+by `tests/test_level_reading.py`. The install stops unless it prints
+`D-050 condition: MET`; a reading that is not met leaves the host as it was
+and the release waits for the next one. Its three figures - the changes and
+their keys, the vocabulary, the age of the newest declaration on every key
+the API holds active - are recorded with T93's after the install.
+
+**Reopening condition.** The API renaming or moving `activeAlertLevels`, or
+using a word outside `KNOWN_WORDS` (the unknown-key canary surfaces the first;
+only the map's unrecognised level surfaces the second); a reading in which
+alarms the source lists a level for publish `null` at a measured rate; or a
+declaration that leaves the listing and returns while its alarm stays open,
+which `last_read` cannot see.
 
 ## D-062. Two days of RCB alerts reach a reader per voivodeship: what painted from the week's own walk, why it stopped from the lists
 

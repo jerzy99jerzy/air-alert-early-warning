@@ -229,7 +229,9 @@ def check_a_delegating_subcommand_mirrors_its_module(root: Path | None = None) -
 
     problems: list[str] = []
     for name, module in sorted(_delegating_subcommands(tree_root).items()):
-        sub = subparsers.get(name)
+        # A module name cannot hold the hyphen a subcommand's name may:
+        # `mavo/level_reading.py` is `mavo level-reading` (0.60.0.0).
+        sub = subparsers.get(name) or subparsers.get(name.replace("_", "-"))
         if sub is None:
             problems.append(
                 f"mavo/cli.py imports {module.name}'s main as {name}_main and "

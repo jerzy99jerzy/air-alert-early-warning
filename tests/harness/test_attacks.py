@@ -320,3 +320,91 @@ def test_a15_a_night_read_as_empty_is_not_a_total_of_zero() -> None:
     assert kpszsu.launched_sum(emptied) is None, "an empty launched list was totalled"
     assert strike.tally_json(emptied)["launched_sum"] is None, "the stored reading carries a total"
 
+
+
+def _listed_level_picture(listed: list[tuple[str, float, float]],
+                          rows: list[tuple[str, float]], at: float,
+                          elapsed_s: float = 0.0) -> dict[str, object]:
+    """The contract's area entry for one area at minute `at` of a raid.
+
+    `listed` is `(word, stamped at, newest read that listed it)` and `rows` the
+    alert rows `(state, minute)`, all in minutes from 10:00; the API is read
+    every two minutes and each read has its page `elapsed_s` after asking.
+    Built through the product's own fold and serialiser.
+    """
+    from mavo.levels import LevelIndex, Listed
+    from mavo.report import compose, to_contract
+    from mavo.schema import AreaRole, Provenance, ThreatEvent
+
+    t0 = datetime(2026, 9, 20, 10, 0, tzinfo=UTC)
+    area = "UA68060000000040570"
+
+    def minute(value: float) -> datetime:
+        return t0 + timedelta(minutes=value)
+
+    events = [ThreatEvent(area_id=area, state=AlertState(state), ts_source=minute(m),
+                          ts_ingest=minute(m), source_id="ukrainealarm",
+                          kind=ThreatKind.UNKNOWN, provenance=Provenance.REPORTED,
+                          raw_fields={}, oblast="", role=AreaRole.SUBJECT)
+              for state, m in rows]
+    levels = LevelIndex.build(
+        [Listed(area, ThreatKind.UNKNOWN, word, minute(stamped), minute(last))
+         for word, stamped, last in listed],
+        [(minute(m), elapsed_s) for m in range(-60, 181, 2)],
+        first_listing=minute(-60), recorded_since=minute(-60))
+    report = compose([e for e in events if e.ts_source <= minute(at)], as_of=minute(at),
+                     history_days=(7,), levels=levels)
+    [published] = to_contract(report)["areas"]  # type: ignore[misc]
+    return published  # type: ignore[no-any-return]
+
+
+def test_a16_a_new_alarm_never_wears_the_colour_its_predecessor_ended_on() -> None:
+    """MT18. A level stands only while the source still lists it.
+
+    The level stream keys a declaration on its word and its moment, so the
+    predecessor's Red is still the newest row on the key after it ended: a
+    join on the key paints the next alarm with it. The attack plays a red
+    alarm, its all-clear and a second alarm the API has not levelled, through
+    the product's own fold, and reads the contract a reader is shown.
+    """
+    published = _listed_level_picture([("Red", 20, 58)],
+                                      [("active", 0), ("clear", 60), ("active", 90)], 95)
+    assert published["alert"] == "active"
+    assert published["level"] is None, "the new alarm wears its predecessor's colour"
+
+
+def test_a17_a_level_the_source_stopped_listing_leaves_a_running_alarm() -> None:
+    """MT18. The second road to the same wrong colour, with no all-clear at all.
+
+    Two alerts of one kind on one area fold into one row (`AIR` and
+    `URBAN_FIGHTS` are both UNKNOWN): the chronic one carries a Red, the air
+    alert a Yellow the API lists as current while it runs. When the air alert
+    ends the alarm goes on and the API lists the Red again. A rule that keeps
+    the newest declaration since the alarm began shows the Yellow for ever.
+    """
+    published = _listed_level_picture([("Red", -60, 180), ("Yellow", 0, 40)],
+                                      [("active", -60)], 50)
+    assert published["alert"] == "active"
+    level = published["level"]
+    assert isinstance(level, dict) and level["word"] == "Red", (
+        "a level the source stopped listing stayed on the map")
+
+
+def test_a18_an_alarm_keeps_its_level_until_the_alarm_itself_ends() -> None:
+    """MT18. The other direction: a level withheld from the alarm it belongs to.
+
+    The read that stops listing a Red because its alarm ended asks at 10:32
+    and has its page 1.5 s later; the all-clear it derives is stamped when the
+    page arrived, 0.8 s after asking. A read that speaks from the moment it
+    asked takes the Red away before the alarm ends, and a reader shown that
+    moment is told the source lists no level for a red alarm. Every levelled
+    alarm ends this way, so the week would carry the sliver at each end.
+    """
+    second = 1 / 60
+    published = _listed_level_picture([("Red", 0, 30)],
+                                      [("active", 0), ("clear", 32 + 0.8 * second)],
+                                      32 + 0.5 * second, elapsed_s=1.5)
+    assert published["alert"] == "active"
+    level = published["level"]
+    assert isinstance(level, dict) and level["word"] == "Red", (
+        "the level left before the alarm it belongs to")

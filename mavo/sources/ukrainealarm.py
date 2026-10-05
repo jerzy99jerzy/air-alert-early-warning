@@ -102,8 +102,8 @@ class ApiAlert:
     raw: dict[str, Any]
     #: The newest level record, as the API's own word and its stamp, or None
     #: when the alert carries no readable one. Never mapped: `Red` and
-    #: `Yellow` are the source's vocabulary and D-050 has not decided what a
-    #: reader is shown, so the string is carried and not interpreted.
+    #: `Yellow` are the source's vocabulary, and D-063 publishes the string as
+    #: received, so it is carried and not interpreted.
     level: tuple[str, datetime] | None = None
     #: Keys on the alert record, or on a level record, that this adapter has
     #: no reading for. A name the vocabulary does not know is a change in the

@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Generator, Iterable, Iterator, Sequence
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
@@ -90,6 +90,7 @@ EXPECTED_ATTEMPT_COLUMNS = (
 )
 EXPECTED_LEVEL_COLUMNS = (
     "content_hash", "area_id", "oblast", "kind", "level", "level_at", "ts_ingest", "source_id",
+    "first_read", "last_read",
 )
 EXPECTED_SNAPSHOT_COLUMNS = ("observed_at", "feed", "url", "digest", "members")
 EXPECTED_ZONE_COLUMNS = (
@@ -110,7 +111,13 @@ RECORDED_COLUMN_TYPES: dict[str, dict[str, str]] = {
         "first_id": "INTEGER",
         "last_id": "INTEGER",
     },
-    "alert_levels": {},
+    # D-063 (0.60.0.0). Which read listed a declaration first and last: the
+    # presence the published level is decided by. NULL on every row written
+    # before the columns, which reads as "no read listed it since", exactly.
+    "alert_levels": {
+        "first_read": "TEXT",
+        "last_read": "TEXT",
+    },
     "feed_snapshots": {},
     "airspace_zones": {},
     "airspace_geometries": {},
@@ -206,6 +213,12 @@ CREATE TABLE IF NOT EXISTS communiques (
 -- alert nor a column of the alert row, where it would be frozen at the start
 -- (P2). One row per declaration the source made, keyed on the word and the
 -- moment; a declaration that stands is one row however many polls see it.
+-- D-063 (0.60.0.0). `first_read` and `last_read` are the first and the newest
+-- successful API read that listed the declaration, stamped exactly as that
+-- read's `feed_attempts.started_at`. Observation, outside the identity: the
+-- hash still names the word and the moment. NULL on a row no read has listed
+-- since the columns existed, which on an older store is every row until its
+-- next listing; nothing is backfilled, because nothing observed it.
 CREATE TABLE IF NOT EXISTS alert_levels (
     content_hash TEXT PRIMARY KEY,
     area_id      TEXT NOT NULL,
@@ -214,7 +227,9 @@ CREATE TABLE IF NOT EXISTS alert_levels (
     level        TEXT NOT NULL,
     level_at     TEXT NOT NULL,
     ts_ingest    TEXT NOT NULL,
-    source_id    TEXT NOT NULL
+    source_id    TEXT NOT NULL,
+    first_read   TEXT,
+    last_read    TEXT
 );
 -- D-054 (0.55.0.0). What an endpoint served at a read, as the ordered list of
 -- the digests of the records on it, written only when that list differs from
@@ -314,6 +329,15 @@ CREATE INDEX IF NOT EXISTS idx_attempts_feed_last ON feed_attempts (feed, last_i
 -- 0.53.4.0. The newest declaration per `(area, kind)` is the read every
 -- compose cycle will make once a level is shown; covering, like the one above.
 CREATE INDEX IF NOT EXISTS idx_levels_area_kind ON alert_levels (area_id, kind, level_at);
+-- 0.60.0.0 (D-063). Every compose cycle asks which declarations the newest
+-- read listed: a range over `last_read`. Here and not in `_SCHEMA`, because an
+-- older store gains the column only when `_extend_the_recorded_tables` runs.
+CREATE INDEX IF NOT EXISTS idx_levels_last_read ON alert_levels (last_read);
+-- 0.60.0.0 (D-063). And where the presence record starts, `MIN(first_read)`:
+-- without the index a scan of the whole table every cycle: 38 to 41 ms over
+-- 200,000 declarations, a synthetic year, against under 20 microseconds with it
+-- (measured by the release's review and re-run before it was tagged).
+CREATE INDEX IF NOT EXISTS idx_levels_first_read ON alert_levels (first_read);
 -- 0.55.0.0. The newest snapshot of one address is read on every compose cycle
 -- and again on every poll that decides whether to write one.
 CREATE INDEX IF NOT EXISTS idx_snapshots_feed_url ON feed_snapshots (feed, url, observed_at);
@@ -793,7 +817,8 @@ class EventStore:
                     raw_fields=json.loads(row[7]),
                 )
 
-    def append_levels(self, events: Iterable[LevelEvent]) -> int:
+    def append_levels(self, events: Iterable[LevelEvent], *,
+                      read_at: datetime | None = None) -> int:
         """Persist level declarations. One row per declaration, however often seen.
 
         Idempotent by content hash like the other streams, and here the
@@ -803,6 +828,17 @@ class EventStore:
         The return value is therefore the number of *new* declarations - a
         level change, or an alert first seen with a level - and zero is the
         ordinary reading.
+
+        **`read_at` records presence (D-063, 0.60.0.0).** The read that listed
+        these declarations, stamped as that read's `feed_attempts.started_at`
+        will be: every row handed over gets it as `last_read`, and as
+        `first_read` when it has none. The hash cannot say a declaration is
+        still listed - the same word at the same moment hashes the same on
+        every poll - so without this a declaration the source stopped listing
+        and one it still lists were the same row. `last_read` only moves
+        forward, so a read replayed late cannot pull a newer listing back.
+        Without `read_at` nothing is recorded about presence, which is the
+        state of every row written before 0.60.0.0.
         """
         rows = [
             (
@@ -819,16 +855,104 @@ class EventStore:
         ]
         if not rows:
             return 0
+        read = _stored_form(read_at, "read_at") if read_at is not None else None
         with closing(self._connect()) as conn:
             before = conn.execute("SELECT COUNT(*) FROM alert_levels").fetchone()[0]
             conn.executemany(
                 "INSERT OR IGNORE INTO alert_levels (content_hash, area_id, oblast, kind, "
-                "level, level_at, ts_ingest, source_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                rows,
+                "level, level_at, ts_ingest, source_id, first_read, last_read) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [(*row, read, read) for row in rows],
             )
+            if read is not None:
+                hashes = [(row[0],) for row in rows]
+                conn.executemany(
+                    "UPDATE alert_levels SET last_read = ? WHERE content_hash = ? "
+                    "AND (last_read IS NULL OR last_read < ?)",
+                    [(read, digest, read) for (digest,) in hashes],
+                )
+                conn.executemany(
+                    "UPDATE alert_levels SET first_read = ? WHERE content_hash = ? "
+                    "AND first_read IS NULL",
+                    [(read, digest) for (digest,) in hashes],
+                )
             conn.commit()
             after = conn.execute("SELECT COUNT(*) FROM alert_levels").fetchone()[0]
         return int(after - before)
+
+    def listed_levels(
+        self, read: datetime, until: datetime | None = None
+    ) -> list[tuple[str, ThreatKind, str, datetime, datetime]]:
+        """Declarations some read started at or after `read` listed (D-063).
+
+        `(area_id, kind, word, level_at, last_read)`, declared at or before
+        `until` when it is given. The population a picture at a moment whose
+        read in effect is `read` can be drawn from: a declaration whose newest
+        listing is older than that read was not listed by it.
+        """
+        clauses = ["last_read IS NOT NULL", "last_read >= ?"]
+        values: list[Any] = [_stored_form(read, "read")]
+        if until is not None:
+            clauses.append("level_at <= ?")
+            values.append(_stored_form(until, "until"))
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT area_id, kind, level, level_at, last_read FROM alert_levels "
+                f"WHERE {' AND '.join(clauses)}",
+                values,
+            ).fetchall()
+        return [
+            (str(row[0]), ThreatKind(row[1]), str(row[2]),
+             datetime.fromisoformat(row[3]), datetime.fromisoformat(row[4]))
+            for row in rows
+        ]
+
+    def levels_listed_since(self) -> datetime | None:
+        """The stamp of the first read that recorded which declarations it listed.
+
+        The start of the presence record (D-063): before that read took effect
+        no row says what any read listed, and a level there is unrecorded
+        rather than absent. None while no read has recorded one.
+        """
+        with closing(self._connect()) as conn:
+            found = conn.execute(
+                "SELECT MIN(first_read) FROM alert_levels WHERE first_read IS NOT NULL"
+            ).fetchone()[0]
+        return None if found is None else datetime.fromisoformat(found)
+
+    def iter_reads_back(
+        self, feed: str, at: datetime
+    ) -> Generator[tuple[datetime, float | None], None, None]:
+        """Successful reads started at or before `at`, newest first.
+
+        `(started_at, elapsed_s)`: the stamp that names a read and how long it
+        took to have the page in hand, which together say from when the read
+        speaks (`mavo.levels.Read`). A cursor rather than a list, over
+        `idx_attempts_feed`: the reader stops at the first read it needs.
+        """
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT started_at, elapsed_s FROM feed_attempts "
+                "WHERE feed = ? AND outcome = 'read' AND started_at <= ? "
+                "ORDER BY started_at DESC, rowid DESC",
+                (feed, _stored_form(at, "at")),
+            )
+            for row in rows:
+                yield datetime.fromisoformat(row[0]), row[1]
+
+    def iter_reads_from(
+        self, feed: str, at: datetime
+    ) -> Generator[tuple[datetime, float | None], None, None]:
+        """Successful reads started at or after `at`, oldest first, as above."""
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT started_at, elapsed_s FROM feed_attempts "
+                "WHERE feed = ? AND outcome = 'read' AND started_at >= ? "
+                "ORDER BY started_at ASC, rowid ASC",
+                (feed, _stored_form(at, "at")),
+            )
+            for row in rows:
+                yield datetime.fromisoformat(row[0]), row[1]
 
     def replay_levels(self) -> Iterator[LevelEvent]:
         """Every declaration, oldest declared first, then by first observation."""
@@ -853,10 +977,14 @@ class EventStore:
 
         Newest by `level_at`, the source's stamp, never by observation order:
         two declarations can be observed in one poll and the later-declared
-        one is current whichever the payload listed first (D-050). Nothing
-        here says whether the alert is still open - that is the alert
-        stream's question - so a caller joins this against the open episodes
-        and shows a level only beside an alert that has one.
+        one is current whichever the payload listed first (D-050).
+
+        **Not the level a reader is shown, and not to be joined to one (D-063,
+        MT18).** It knows nothing of which declarations the source still
+        lists: joined on the key alone it paints a new alarm with the colour
+        its predecessor ended on, and keeps a level the source stopped listing
+        beside an alarm that goes on. The published level is `mavo.levels`,
+        decided by `listed_levels` and the API's reads.
         """
         newest: dict[tuple[str, ThreatKind], LevelEvent] = {}
         for event in self.replay_levels():
