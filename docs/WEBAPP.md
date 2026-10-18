@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.19 / 2026-10-04
+Version: 3.20 / 2026-10-18
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -121,7 +121,9 @@ Two files, `state.json` and `feed.json`, schema v3, and from 0.52.1.0 a
 third, `history.json`, that the site does not yet read (D-048). From 0.58.0.0
 a fourth, `timeline.json`, the past week as intervals, which the site's
 seven-day slider reads from its 4.88.0.0 and the report unit writes on every
-tenth cycle from 2026-09-28 (D-058). MAVO writes
+tenth cycle from 2026-09-28 (D-058). From 0.61.0.0 a fifth, `analysis.json`,
+thirteen weeks set against each other for the site's analysis page from its
+4.92.0.0, written once an hour by its own unit (D-064). MAVO writes
 them (`mavo report --json ... --feed ... --history ... --timeline ...`, and
 `--watch` for the loop); the site reads them and imports nothing from this
 package.
@@ -170,6 +172,10 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `timeline.json: areas` | `oldest_observation`, `log_reaches_window_start`, `places` (per `area_id`: `katottg`, `oblast`, `oblast_name`, `border_km_lower`, `border_km_upper`) and `intervals[]` (`area_id`, `alert`, `kind`, `since`, `kinds`, `level`, `from`, `to`); from 0.60.0.0 `levels` (`recorded_since`), present when the week was built over the level stream | **An interval joined to its place is exactly an entry of `areas[]` in `state.json`**, one serialisation, held by `tools/contract_check.py`. The picture of a moment is the entries whose interval holds it, and an area in no interval at that moment was cleared, as in `state.json`. Changes at the source's own stamp, so a row that reached the store after an outage sits where the source put it. A standing older than the window starts at the window's start; when it began is its `since`. **A level change inside one alarm is a new interval** at the declaration's own stamp, and the slider repaints there (D-063). **A moment before `levels.recorded_since` has no recorded level**, whatever its intervals say: a page draws it as not recorded, and absent `levels` is a week built without the stream |
 | `timeline.json: rcb` | `recorded_since` and `intervals[]`, each holding `pl_warnings` and `pl_all_clear` exactly as the contract would have published them, `null` where it would have said `null` | **Before `recorded_since` there is no record, and that is not a stretch without communiques.** `null` inside is polled and unreadable, the hour-old ceiling included (D-053). Changes at read time: a list reaches the file up to one poll after the publisher changed it |
 | `timeline.json: airspace` | `recorded_since`, `unread[]` (the stretches where the contract would have said `null`), `geometries` (an outline per digest) and `intervals[]` (`designator`, `kind`, `geometry`, `properties`, `from`, `to`), one per zone drawn | `properties` is the feature's own object in `pl_airspace`. The text block's `read_at`, `statuses` and `stale_error` are not carried: they change at every read, and a stretch without reads is `coverage`'s to report |
+| `analysis.json` | From 0.61.0.0, written by `mavo analysis --out` once an hour: `v` (its own version, 1), `generated_at`, `zone`, `window` (`start`, `end`, `weeks`, `minutes`), `record`, `definitions`, `band`, `weeks[]`, `days[]`, `blind[]`, `episodes[]`, `waits[]`, `rcb`, `choices`, `groups` and `comparisons[]` (D-064) | **Every figure the analysis page prints, and every choice of weeks it offers, is here**: each pair of one to four recent usable weeks and at least two before them is a `comparisons[]` block naming its two `groups`, so the page selects and computes nothing. A week less than half observed is `usable: false` and its `values` are all `null`, never a rate of zero; a measure a recent week cannot carry is `not_computable`. 422,682 B as written and 46,856 B gzipped for the production export of 2026-10-18 [measured]; the host's figure is T94's |
+| `analysis.json: definitions` | The constants the figures were computed with: the band's 150 km, the 180-minute silence, the usable half week, the hour floor, the rings, the lead window, the fit's reach, the resamples and their seed, the event grid, the merges, the long day, the full day, the read cadences, the wait grid and buckets, the listed gap, the streak | **A page that states a constant in words must refuse a file computed with another**, rather than describe figures in sentences that no longer match them; the consumer pins the ones its sentences state |
+| `analysis.json: comparisons[]` | `n`, `m`, `current`, `baseline`, `channel_weeks`, `metrics` (per measure: `verdict`, `median`, `min`, `max`, `weeks`, `current`, `weeks_values`, `above`, `below`, `last_above`, `last_below`, `last_to_max`), `robust`, `streak`, `coverage`, `raions`, `raions_rising`, `speeds_overlap`, `episodes_rcb`, `rcb_since_unchanged`, `hours` | **A verdict is a position against the range of the background weeks, not a test**: `all_above`, `some_above`, `in_range`, `some_below`, `all_below`, and `thin`, `not_computable`, `not_assessed` for a comparison not made. `weeks_values` is `null` for a recent week that cannot carry the measure, the RCB measure included where the list was read for less than half the week, and a page then says the list was not read rather than counting |
+| `analysis.json: rcb` | `recorded_since`, `unread[]`, `cadence[]`, `alerts[]`, `seen_after`, `oblasts[]`, `oblast_top`, `hours` and `rules` | **Before `recorded_since` there is no record, and `unread` is a hole in every RCB count, never a stretch without alerts.** `seen_after_min` is `null` for an alert whose message gave no time. A rule's firing is counted only where the list was read for every minute of it, and idle only when no alert of the window fell inside it |
 | `timeline.json: coverage` | Per pipe, under the name `feed_attempts` uses: `role`, `silence_is_an_outage_s`, `recorded_since` and `gaps[]` | **A gap is a stretch in which the live `sources` block would not have said `delivering`**, by its own threshold, the edge included. Over a gap the record is incomplete and a page draws that, never a quiet map. `role` says which pipe's gap blinds the Ukrainian picture: the primary's does; the watchman's and the context pipes' do not (D-049) |
 | `border_km_lower` / `_upper` | Interval to the border, may be `null` | A single number here would be false with a decimal point on it |
 | `kind` | `missile`, `drone`, `glide_bomb`, `artillery`, `unknown` | Five values, and the consumer currently labels three. See below |
@@ -203,7 +209,8 @@ line here, and five rows have none there: `sources`, `pl_warnings`,
 They are asserted in `tests/test_poland.py` and `tests/test_strike.py`, so the
 gate does see them; what has no reader is the tie between those rows and a
 check. `strike_tally`, `pl_rcb_recent` and `timeline.json` each have a check of
-their own in that module [measured 2026-09-28]. The first four rows were the
+their own in that module [measured 2026-09-28], and from 0.61.0.0 so does
+`analysis.json`, `check_analysis`. The first four rows were the
 longest in this table when this paragraph was written, which is the usual
 shape: the more a document argues for a field, the later anything checks it. No
 check is proposed here, because the one that would close it duplicates

@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.38
+Document:  docs/DECISIONS.md, version 2.39
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2321,6 +2321,134 @@ written.
 **Reopen if:** the table grows faster than the event store it sits in, or the
 scrubber needs a question answered that one indexed read of this table cannot
 answer.
+
+## D-064. Weeks set against weeks: one file computes every choice the analysis page offers, and a minute the record did not see counts nowhere
+
+Date: 2026-10-18. Status: adopted. The consumer's D-S97 draws it.
+
+**Decision.** A fifth file, `analysis.json`, at its own version (`v: 1`),
+holds thirteen Warsaw calendar weeks of the record: the week running and the
+twelve before it, at most 91 days, the operator's ninety rounded out to whole
+weeks. `mavo analysis --store --out` writes it once per run, atomically
+(`report.write_analysis`); `mavo-analysis.timer` runs it every hour, and the
+push sends it to the site with the other four. The operator asked on
+2026-10-18 for a page that sets the last weeks of the alarm record beside the
+weeks before them, the reader choosing how many of each, and shows what was
+happening in Ukraine whenever RCB raised an air alert in Poland, and approved
+its mockup the same day. The live files cannot answer that: `state.json` is a
+moment, `timeline.json` is a week, and a week has nothing to be compared with.
+
+**Every figure the page prints is computed here**, and so is every choice
+between two sentences that a comparison of figures would decide. Each choice
+the page offers, one to four recent usable weeks (`n`) against at least two
+usable weeks before them (`m`), arrives as its own `comparisons[]` block
+naming two `groups`; the page selects a block, words it and draws it. A choice
+the file does not carry is a choice the page cannot make. The price is a file
+of 422,682 bytes, 46,856 gzipped, written once an hour `[measured on the
+production export of 2026-10-18]`, against a second implementation of a median
+in another repository.
+
+**What is counted.**
+
+* **The band**: the 26 raions of the area table whose nearer edge lies within
+  150 km of the border, five of them touching it, read from the table so that
+  a quiet raion is a raion without an alarm rather than a missing one. A rate
+  summed over raions would measure how finely an oblast is cut (F76), so the
+  band is counted whole: an *episode* starts when the band goes from no raion
+  under alarm to one.
+* **Per observed minute.** A minute the record did not see is in neither the
+  numerator nor the denominator. Unseen is the union of four things: before
+  the window's first change; a pipe's coverage gap by the live rule
+  (`timeline.feed_coverage`); a stretch of 180 minutes or more with no change
+  anywhere in Ukraine, outside gaps, which is a source saying nothing; and a
+  minute in which a raion of the band stood in a state that is not a reading.
+  The longest quiet stretch outside gaps and silences in the record of
+  2026-08-11 to 2026-10-18 is 135 minutes `[measured on the production
+  export]`, so the threshold sits above anything the record produced while it
+  was speaking.
+* **One instrument at a time**: the channel until D-040's switch, the API
+  after it. An onset never straddles the switch, and every week names the
+  instrument that measured most of it, so a background reaching into August
+  says it mixes the two (F155).
+* **Calendar weeks**, Monday to Sunday in Warsaw, the current one cut at the
+  file's last whole minute. A week with less than half of itself observed is
+  not usable and is never compared.
+
+**Six measures, and a verdict that is a position, not a test.** Episodes per
+observed day, band hours under alarm per day, the mean episode, raions under
+alarm at once, border-raion hours per day, and RCB alerts per week of read
+time. Each recent week is placed against the range of the background weeks:
+`all_above`, `some_above`, `in_range`, `some_below`, `all_below`. Three more
+words say a comparison was not made: `thin`, fewer than two background weeks
+carry the measure; `not_computable`, a recent week cannot carry it (no episode
+to average, the list not read); `not_assessed`, weekly RCB counts read at two
+cadences. The episode verdict is recomputed with breaks under 10, 30 and 60
+minutes merged, so a verdict that hangs on how an episode is cut says so.
+Nothing is called significant: thirteen weeks are not a sample a test could
+rest on.
+
+**RCB, from the register's own walk.** An alert is an alert of
+`pl_rcb_recent` (D-062), read over the whole window. How often the list was
+read is measured from the reads themselves: at most 120 s apart is fine, up to
+the pipe's outage threshold coarse, past it a hole, and a run of one cadence
+shorter than six hours is a hiccup inside another. A week with more than an
+hour under coarse reads was read coarsely, and a comparison of weekly counts
+that mixes the two is not assessed, because a short alert slips between reads
+fifteen minutes apart and not between reads a minute apart. "Seen after" is
+measured from the time the communique gives; an alert without one has none,
+never zero. Around every alert the file carries the band from three hours
+before it to two hours after, in five-minute steps, at observed minutes only;
+the oblasts most often under alarm at each voivodeship's alerts, every oblast
+tied at the top named; and simple rules held to the record, at least k raions
+of the band under alarm at once for k from one to ten and an alarm in a border
+raion, each with how often it fires per observed day, how many of its firings
+no alert met, and the share of alerts it preceded.
+
+**Silence is not calm, in each place a count could take it for calm** (the
+release's review, F200). A rule's firing counts where the days are counted:
+begun at an observed minute of the API's era after the RCB record began, with
+the list read for every minute of it, since a firing the list was not read
+through could not have been seen to be idle. Idle is judged against every alert of
+the window, including one the band was not observed at, which is still an
+alert. An episode is "without an RCB alert" only if the list was read for
+every minute of it. A choice's coverage is over its own weeks' days and never
+over a week left out between them. The run of long days closes the recent
+weeks, walked back from their last day, so a Monday's week, not usable yet,
+does not end every run. The window's weeks are the weeks of its last minute,
+so a file written in a Monday's first minute holds thirteen weeks, and an
+alert of a minute the window does not hold waits for the next file.
+
+**What the file refuses to say.** No probability, no projection, no model of
+the war fitted to thirteen weeks. The speed under `rings` is the apparent
+speed at which areas east of the band declared alarms before it, fitted
+through the rings up to 450 km and spread over 300 seeded resamples; it is
+never the speed of anything flying.
+
+**Not taken.** The comparison computed in the browser, or anywhere but here.
+The two instruments pooled into one series. A significance test. The read
+cadence taken from a unit file instead of the reads, which say what happened.
+
+**D-057 is not amended.** It refuses every rate, trend and comparison between
+windows over the Air Force's nightly figures, which are theirs to state and
+ours only to arrange. Every figure here is this record's own: minutes it
+observed and alarms it recorded.
+
+**Held by** `tests/test_analysis.py`, whose expected figures are worked out
+in the test from windows written by hand, one rule to a case. Sixty-six hand
+mutants of the module, the review's sixty adapted to the repaired module and
+six for its repairs: 63 killed, and of the three survivors two cannot change
+the file from consistent inputs and one is reachable only through noisy
+resamples `[measured 2026-10-18; listed in docs/reviews/0.61.0.0.md]`.
+`tools/contract_check.py` (`check_analysis`) holds the shape a reader relies
+on.
+
+**Additive.** A new file at its own version: `state.json` stays at schema 3
+and `timeline.json` at its own. A minor release under D-021, with its review.
+
+**Reopening condition.** A reader's question the comparisons cannot answer
+without a model; a constant the page states changing, which the consumer
+refuses by name; the list read at a third cadence; or the hourly run on the
+host costing more than its hour, which T94 measures at the install.
 
 ## D-063. The declared level reaches a reader: the source's word beside an open alarm, for as long as the source lists it
 

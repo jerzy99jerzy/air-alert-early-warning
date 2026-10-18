@@ -1,6 +1,6 @@
 # Deployment profile
 
-Version: 1.58 / 2026-10-04
+Version: 1.59 / 2026-10-18
 Status: **partly built and running, and the document is behind it.** The
 collector runs unattended on a host from 2026-08-11 and the publishing loop
 writes the contract; the daemon this document plans is still the shape of what
@@ -10,7 +10,7 @@ written after the fact rather than before, and says so.
 
 ## What is installed on the hosts, and how far behind it is
 
-Host state measured: 2026-09-21
+Host state measured: 2026-10-18
 
 **This section is the state. The rest of this document is the shape**, and the
 two diverged silently once already (F102), which is why the line above exists
@@ -24,12 +24,12 @@ rather than trust it: `gcloud compute ssh vm-mavo --tunnel-through-iap`, then
 installed package read through its own interpreter.
 
 **The reading this date stands on is Appendix A**, at the end of this
-document: the whole host, read once on 2026-09-21 between 10:42:24 and
-10:42:34 UTC, read-only, with the source of every figure. The tables in this
-section are the parts of it a deploy acts on. Until that reading the line above
-said 2026-09-10 while the rows under it described the installs of 2026-09-09
-and 2026-09-19 (F184), and the release that moved the date is the release that
-re-read every row it covers.
+document: the whole host, read once on 2026-10-18 from 16:06:14 UTC, read-only,
+with the source of every figure. The tables in this section are the parts of it
+a deploy acts on. The reading before it, of 2026-09-21, is Appendix B, kept as
+read. Until that one the line above said 2026-09-10 while the rows under it
+described the installs of 2026-09-09 and 2026-09-19 (F184), and the release
+that moves the date is the release that re-reads every row it covers.
 
 ### Units, and there are eight services and six timers
 
@@ -39,27 +39,46 @@ table used to list. The heading kept seven and five for three releases after
 the eighth row arrived (F189). One of the eight, `mavo-adsb`, belongs to the
 `mavo-adsb` repository. An earlier revision said four and omitted
 `mavo-collect-api`, the unit that has fed the entire project since D-040
-(F134). Every row is re-read 2026-09-21 (Appendix A): type and user from the
-unit's own properties, cadence from its timer, spacing from forty hours of
-`feed_attempts`, which is the collector's record of when it actually ran. The
-push and report rows add what the reading of 2026-09-28 changed.
+(F134). Every row is re-read 2026-10-18 (Appendix A): type and user from the
+unit's own properties, cadence from its timer and its drop-ins, spacing from
+the last forty hours of `feed_attempts`, which is the collector's record of
+when it actually ran. The analysis row is this release's and is declared.
 
 | Unit | Type | Cadence | What it does |
 | --- | --- | --- | --- |
-| `mavo-collect-api.service` | `oneshot`, `User=mavo` | `mavo-collect-api.timer`, 120 s with no randomised delay; start to start a median of 121 s and a maximum of 121.4 s over 1,193 intervals | **the primary source since D-040**: one API poll into `/var/lib/mavo/events`, snapshot at `/var/lib/mavo/ukrainealarm.snapshot.json`, freshness ceiling 360 s |
-| `mavo-collect.service` | `oneshot`, `User=mavo` | `mavo-collect.timer`, 30 s plus up to 5 s, `AccuracySec=1s`; a median of 33 s and a maximum of 36.5 s over 4,376 | the watchman: one channel poll into the same store, so a returned publisher lands labelled |
-| `mavo-rso.service` | `oneshot`, `User=mavo` | `mavo-rso.timer`, 900 s plus up to 60 s; per address a median of 931 s and a maximum of 960.2 s over 154 | reads the five RSO categories into `communiques` and each address's list into `feed_snapshots` (D-053, D-054) |
-| `mavo-airspace.service` | `oneshot`, `User=mavo` | `mavo-airspace.timer`, 300 s plus up to 30 s; a median of 316 s and a maximum of 330.1 s over 456 | reads PAŻP's updated plan into `airspace_zones` and its list into `feed_snapshots` (D-053, D-054) |
-| `mavo-kpszsu.service` | `oneshot`, `User=mavo` | `mavo-kpszsu.timer`, 300 s plus up to 30 s **declared** for 0.56.0.0 and not yet read from the host | reads the Air Force's summaries from `@kpszsu` into `strike_tallies` (D-056); it replaces the corpus sampler that read the same page at the same cadence from the operator's home directory |
-| `mavo-push.service` | `oneshot`, `User=mavo` | `mavo-push.timer`, 30 s plus up to 15 s, `AccuracySec=1s`; 3,801 runs in the forty hours, one every 38 s on average | pushes `state.json` and `feed.json` to the site, and from 2026-09-28 `timeline.json` after each rewrite of it (the reading of that date, below) |
-| `mavo-report.service` | `simple`, `User=mavo`, one process since its restart of 2026-09-28 06:00:41 UTC, which added `--timeline` | continuous, `--interval 30` with `--feed`, and from 2026-09-28 `--timeline` on every tenth cycle, from the one drop-in | writes the report |
-| `mavo-adsb.service` | `simple`, `User=mavo-adsb`, running since 2026-08-27 | continuous | the sampler, `mavo-adsb` repository |
+| `mavo-collect-api.service` | `oneshot`, `User=mavo` | `mavo-collect-api.timer`, 120 s with no randomised delay; start to start a median of 121.0 s and a maximum of 121.6 s over 1,191 polls, one of them refused | **the primary source since D-040**: one API poll into `/var/lib/mavo/events`, snapshot at `/var/lib/mavo/ukrainealarm.snapshot.json`, freshness ceiling 360 s |
+| `mavo-collect.service` | `oneshot`, `User=mavo` | `mavo-collect.timer`, 30 s plus up to 5 s, `AccuracySec=1s`; a median of 33.0 s and a maximum of 36.4 s over 4,367 | the watchman: one channel poll into the same store, so a returned publisher lands labelled |
+| `mavo-rso.service` | `oneshot`, `User=mavo` | `mavo-rso.timer`, **60 s plus up to 10 s from the host's drop-in of 2026-09-30** over the unit's 900 s plus up to 60 (Appendix A); per address a median of 65.1 s and a maximum of 86.0 s, 10,995 reads at five addresses, 9 refused | reads the five RSO categories into `communiques` and each address's list into `feed_snapshots` (D-053, D-054) |
+| `mavo-airspace.service` | `oneshot`, `User=mavo` | `mavo-airspace.timer`, 300 s plus up to 30 s; a median of 315.4 s and a maximum of 331.0 s over 456 | reads PAŻP's updated plan into `airspace_zones` and its list into `feed_snapshots` (D-053, D-054) |
+| `mavo-kpszsu.service` | `oneshot`, `User=mavo` | `mavo-kpszsu.timer`, 300 s plus up to 30 s; a median of 315.1 s and a maximum of 330.1 s over 456, the first reading of it | reads the Air Force's summaries from `@kpszsu` into `strike_tallies` (D-056); it replaces the corpus sampler that read the same page at the same cadence from the operator's home directory |
+| `mavo-push.service` | `oneshot`, `User=mavo` | `mavo-push.timer`, 30 s plus up to 15 s, `AccuracySec=1s`; 3,801 runs in forty hours at the reading of 2026-09-21, one every 38 s on average; its journal holds no failure since 2026-10-05 | pushes `state.json` and `feed.json` to the site, and from 2026-09-28 `timeline.json` after each rewrite of it (the reading of that date, below); from 0.61.0.0 `analysis.json` the same way, **declared** |
+| `mavo-analysis.service` | `oneshot`, `User=mavo` | `mavo-analysis.timer`, 3,600 s plus up to 60 s, **declared** for 0.61.0.0 and not yet read from the host | writes `/var/lib/mavo/analysis.json` once per run from the store (D-064); the push sends it to the site |
+| `mavo-report.service` | `simple`, `User=mavo`, one process since the install of 0.60.0.0 at 2026-10-05 12:37:17 UTC | continuous, `--interval 30` with `--feed`, and from 2026-09-28 `--timeline` on every tenth cycle, from the one drop-in | writes the report |
+| `mavo-adsb.service` | `simple`, `User=mavo-adsb`, running since 2026-08-27 16:26:52 UTC | continuous | the sampler, `mavo-adsb` repository |
 
 **There is no daemon and the collector is not one.** A timer plus a `oneshot`
 unit is the supervision mechanism this project actually runs on, and it was
 never a decision until D-031 wrote it down.
 
-### The installed package, as read on 2026-09-28
+### The installed package, as read on 2026-10-18
+
+**The whole host, read once** (Appendix A), the first full reading since
+2026-09-21 and the one this release's install starts from.
+
+| | |
+| --- | --- |
+| Installed | `air-alert-early-warning 0.60.0.0` `[measured 2026-10-18, the installed metadata and mavo --version]`, and by content: the sha256 over the 33 installed `mavo/**/*.py` files, each listed as its digest and path, is `b41fc717…3b5851`, the figure `git archive v0.60.0.0` gives, fixed from the tree before the host was read; RECORD's 45 hashes all hold. Installed on 2026-10-05 at 12:37:17 UTC, RECORD's modification time and the second the report unit restarted; its journal holds the two `[STORE-MIGRATED] added alert_levels.…` lines and no other since (T93) |
+| Point of return | `events.pre-0.60.0.0`, 198,045,696 B, written 2026-10-05 12:33:56 UTC, the newest of fourteen copies that hold 647,241,728 B between them, 1.9 times the store (Appendix A). 0.61.0.0 moves no schema and owes none |
+| `main` | 0.61.0.0 |
+| Behind by | **one** release, this one, 0.61.0.0, which adds a fifth file, `analysis.json`, written once an hour by a new unit pair and sent to the site as the push unit's fourth file (D-064, the section on installing 0.61.0.0 below). No table, flag or existing unit moves and no migration line prints, so no point of return is owed; its acceptance is T94. Superseded rows, kept for the record: before this reading this row read **four** against an `Installed` row read on 2026-09-28; at 0.60.0.0 it read **three** against the same row, the three being 0.58.0.1, 0.59.0.0 and that release, which added `level` to `state.json` and `timeline.json` and two columns to `alert_levels` (D-063), with `events.pre-0.60.0.0` and T93; at 0.59.0.0 it read **two**: 0.58.0.1, documents only, and that release, which adds `pl_rcb_recent` to the contract and moves nothing else on the host, no unit, flag, table or migration line (D-062); its reading is T92's; at 0.58.0.1 **one**, the documents-only release itself; at 0.58.0.0 **one**, counted from an `Installed` row naming 0.57.0.0 that was read on 2026-09-27, before 0.58.0.0 was installed; at 0.57.0.0 **three**, counted from an `Installed` row naming 0.55.3.0 while the host ran 0.57.0.0 from 2026-09-24; at 0.56.0.0 **two**; at 0.55.4.0 **one**; at 0.55.3.0 **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
+| The level stream | `alert_levels` holds 23,182 declarations, 8,960 of them with `first_read` and `last_read`; the earliest `first_read` is 2026-10-05 12:39:18 UTC and `state.json`'s `alert_levels.recorded_since` is 2026-10-05T12:39:18Z, the same second; 32 areas of 32 carry a level at the reading. `Red` 8,143 rows and `Yellow` 15,039, and no third word `[measured, Appendix A]` |
+| The push unit | `three-files.conf`, 12 lines, sha256 `323729a2…f27c32`, the rule recorded under the reading of 2026-09-28 below; the file names and the rule only, because the unit carries an internal address and a key path |
+| The week | `timeline.json` 2,429,802 B as written at 16:04:50 UTC, more than twice the 1,097,908 B of 2026-09-28, the level on every interval being the difference expected from T93's measurement `[inference]`; its gzipped size was not read |
+| RSO | read every 60 s plus up to 10 by the host's drop-in of 2026-09-30, quoted in Appendix A, while `mavo/liveness.py` still declares 900 s with an outage threshold of 1,800 s and `sources` publishes that cadence: the repository's unit, its liveness declaration and a decision entry for the change are still owed, and `communiques` grew from 9.1 MB on 2026-09-21 to 151.4 MB, 45% of the store |
+
+### The 0.58.0.0 install, as it was read on 2026-09-28
+
+**Kept as read, and no longer the newest reading.**
 
 **A partial reading, taken around the switch-on it records.** Read-only
 commands on 2026-09-28 between 05:04 and 08:40 UTC: `pip show` and the content
@@ -75,10 +94,8 @@ neither reading re-read every row that date covers (F184).
 
 | | |
 | --- | --- |
-| Installed | `air-alert-early-warning 0.58.0.0` `[measured 2026-09-28, pip show]`, and by content: `timeline_every`, which 0.58.0.0 added, occurs 6 times in the installed `mavo/report.py` and never in `v0.57.0.0`'s. Installed on 2026-09-27 at 19:03:37 UTC over 0.57.0.0 `[measured 2026-09-28, the modification time of its dist-info directory]`, the second at which the report unit's journal records its restart; no `[STORE-MIGRATED]` line followed, which is the release having no schema move |
+| Installed at | `air-alert-early-warning 0.58.0.0` `[measured 2026-09-28, pip show]`, and by content: `timeline_every`, which 0.58.0.0 added, occurs 6 times in the installed `mavo/report.py` and never in `v0.57.0.0`'s. Installed on 2026-09-27 at 19:03:37 UTC over 0.57.0.0 `[measured 2026-09-28, the modification time of its dist-info directory]`, the second at which the report unit's journal records its restart; no `[STORE-MIGRATED]` line followed, which is the release having no schema move |
 | Point of return | none taken for 0.58.0.0, which moves no schema: the newest copy is still `events.pre-0.57.0.0`, 97,021,952 B, written 2026-09-24 21:34:12 UTC `[measured 2026-09-28, the directory listing]`. The store itself, `events`, held 127,365,120 B at 09:14 UTC |
-| `main` | 0.60.0.0 |
-| Behind by | **three** releases against the `Installed` row above, and that row is stale: it was read on 2026-09-28, and the site has shown `pl_rcb_recent` since at least 2026-09-30 `[reported]`, a key only 0.59.0.0 publishes, so the host most likely runs 0.59.0.0 `[inference]`, which no row of this table has read, and is **one** behind, this release (F170's shape). The install's reading of `pip show` and of a content discriminator settles which count holds. The three are 0.58.0.1, documents only; 0.59.0.0; and this one, 0.60.0.0, which adds `level` to every area and kind and `alert_levels` to `state.json`, `level` to every area interval and `areas.levels` to `timeline.json` (D-063), and two nullable columns to `alert_levels`, which the first opening announces in two `[STORE-MIGRATED]` lines. No unit or flag moves. Its point of return is `events.pre-0.60.0.0`, its first step is D-050's reading and its acceptance is T93. Superseded rows, kept for the record: at 0.59.0.0 this row read **two**: 0.58.0.1, documents only, and that release, which adds `pl_rcb_recent` to the contract and moves nothing else on the host, no unit, flag, table or migration line (D-062); its reading is T92's; at 0.58.0.1 this row read **one**, the documents-only release itself; at 0.58.0.0 **one**, counted from an `Installed` row naming 0.57.0.0 that was read on 2026-09-27, before 0.58.0.0 was installed; at 0.57.0.0 **three**, counted from an `Installed` row naming 0.55.3.0 while the host ran 0.57.0.0 from 2026-09-24; at 0.56.0.0 **two**; at 0.55.4.0 **one**; at 0.55.3.0 **six**, counted from an `Installed` row naming 0.55.2.0 while the host had run that version since 2026-09-19; at 0.55.2.5 **five**; at 0.55.2.2 **two**; at 0.55.2.1 **five** and at 0.55.2.0 **four**; at 0.55.1.0 **three**, held on F173 and F174; at 0.55.0.1 **two**, held on F169; at 0.55.0.0 **7**, counted from an `Installed` row naming 0.54.2.0 while the host already ran 0.54.8.0 (F170) |
 | The report unit | the drop-in quoted below, where `--timeline /var/lib/mavo/timeline.json --timeline-every 10` stands before `--watch` and nothing else changed `[measured, the diff against the copy taken before the edit]`. The unit restarted with it at 06:00:41 UTC and wrote its first week six seconds later |
 | The push unit | `two-files.conf` replaced by `three-files.conf`: `state.json` and `feed.json` on every run as before, and `timeline.json` only on a run after the report has rewritten it. A marker beside the week takes its modification time before the send and becomes the record of the last delivery only once the site has accepted it, so a week rewritten during a send goes out again rather than never. The test for a missing marker is written out, because shells disagree there: `dash` answers `-nt` false when the second file does not exist and `bash` answers true `[measured in a container]`. The file names and the rule only, as above: the unit carries an internal address and a key path |
 | The week | 1,097,908 B as written, 109,491 B gzipped: 3,554 area intervals, 26 communique intervals, 187 zone intervals and 7 gaps `[measured 2026-09-28 at 05:09 UTC, mavo timeline --out, as mavo]` |
@@ -137,7 +154,7 @@ the install of 0.55.3.0 on 2026-09-21 and are true of that day.
 | --- | --- |
 | Installed at | `air-alert-early-warning 0.55.3.0`, **installed 2026-09-21 14:27:50 UTC** `[measured at the install]`: the wheel `f5dd8206…4a1e3d3f`, 218,126 B, was transferred with its digest checked on both sides, and the content discriminator `elapsed_s=elapsed` in the installed `mavo/cli.py` read 1 before `pip` and 2 after. No migration line followed, which is the release having no schema move. Every earlier install is in the deploy history below rather than in this row |
 | Verified | **by content, against the tag.** The sha256 over the 26 installed `mavo/*.py` files, sorted by path, is `ee3734cf…d16e61`, the figure `git archive v0.55.2.0` gives, fixed from the tree before the host was read. RECORD's own hashes hold for all 38 files that carry one, and none is missing `[measured]` |
-| Point of return | `events.pre-0.55.2.0`, 49,803,264 B, written 18:35:26 UTC, beside ten older ones (Appendix A). Its `-shm` and `-wal` siblings were written one second later, so the copy was opened by SQLite once after it was taken `[inference]`; the WAL is empty and a restore copies the main file alone |
+| Point of return | `events.pre-0.55.2.0`, 49,803,264 B, written 18:35:26 UTC, beside ten older ones (Appendix B). Its `-shm` and `-wal` siblings were written one second later, so the copy was opened by SQLite once after it was taken `[inference]`; the WAL is empty and a restore copies the main file alone |
 | The schema move | three `[STORE-MIGRATED] created ...` lines, for `feed_snapshots`, `airspace_zones` and `airspace_geometries`, all in the report unit's journal at 18:36:06 UTC and in no other: the install restarted the report one second after RECORD was written, before either collector's timer fired, so it opened the store first. F168's case, read on the host |
 | First cycles under it | channel and API at 18:36:22 UTC; RSO and PAŻP at 18:38:27, each writing `snapshot=changed` on its first read |
 | Who owns the venv | `/opt/mavo/venv` is `root:root` 0755 `[measured 2026-09-21]`; why that matters is recorded under the 0.53.4.0 install below (F144) |
@@ -1255,7 +1272,7 @@ units, `daemon-reload` and `enable --now` on the timer; and last the corpus
 sampler stopped, because it reads the same page at the same cadence and two
 readers would double the requests from this address.
 
-**Both cadences hold** `[measured over forty hours, Appendix A]`. The RSO
+**Both cadences hold** `[measured over forty hours, Appendix B]`. The RSO
 reader started a median of 931 s apart per address, at most 960.2 s, against
 900 s plus up to 60; the PAŻP reader 316 s and at most 330.1 s, against 300
 plus up to 30. No interval reached two cadences and no attempt was refused.
@@ -1276,7 +1293,283 @@ seconds; the outlines travel as `pl_airspace.features` rather than as a fourth
 file for exactly that reason. At the reading they were the largest key in the
 file, 18,983 B of 55,329, with 22 structures drawn.
 
-## Appendix A. `vm-mavo` read in full, 2026-09-21
+## Installing 0.61.0.0: one unit pair, and the push's fourth file
+
+**Written before it runs** `[declared]`; T94 re-reads it after. The release
+adds a command and a file and moves nothing the host already runs: no table,
+no flag, no existing unit, and no migration line, so no point of return is
+owed. The file is new to the site as well, so the order is D-058's for a new
+pushed file: the site first, then the producer.
+
+**The two units.** The service writes the file once; the timer runs it every
+hour. `Nice=10`, because the report loop shares the two cores and is the unit
+a reader waits on, and the confinement the other readers carry.
+
+```
+# /etc/systemd/system/mavo-analysis.service
+[Unit]
+Description=write the weekly analysis.json once (D-064)
+
+[Service]
+Type=oneshot
+User=mavo
+ExecStart=/opt/mavo/venv/bin/mavo analysis --store /var/lib/mavo/events --out /var/lib/mavo/analysis.json
+Nice=10
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/mavo
+
+# /etc/systemd/system/mavo-analysis.timer
+[Unit]
+Description=write the weekly analysis every hour
+
+[Timer]
+OnBootSec=600
+OnUnitActiveSec=3600
+RandomizedDelaySec=60
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
+```
+
+**Order at the install.** The site's 4.92.0.0 first, whose forced command
+takes `analysis` as its fourth target and whose unit serves the file; then
+this package, the report restarted, so every unit runs the release; then the
+two units above, `daemon-reload`, one run of the service by hand to read its
+line, and `enable --now` on the timer; and last the push unit's fourth file,
+because a push of a target the site does not take fails every cycle in a
+journal nobody reads, and a push of a file that does not exist yet fails the
+same way. The drop-in that carries the fourth file follows the week's rule:
+`analysis.json` goes only on a run after the analysis unit has rewritten it,
+and a marker beside the file takes its modification time before the send and
+becomes the record of the last delivery only once the site has accepted it.
+The drop-in itself is not quoted here, as the third one was not: the unit
+carries an internal address and a key path.
+
+**What the first run is read for** is T94's: its one line, the timer's next
+run, and the file's digest on both hosts after the next push.
+
+## Appendix A. `vm-mavo` read in full, 2026-10-18
+
+**What this is.** The whole host, read once from 16:06:14 UTC on 2026-10-18 by
+one read-only script run as root through the venv's own interpreter, its output
+sent straight to the operator's machine: 433 lines ending in a digest of every
+line above it (`ef7964a7…df51bb2`), so that a copy can be checked against
+itself. The `Host state measured` line at the top of this document stands on
+it. Every figure here is `[measured]` at that moment unless it says otherwise.
+
+**How it was taken, so it can be taken again.** The script, sha256
+`590b3f86…44ed7b9cc`, was moved to the host by base64 over the SSH control
+channel with its digest checked on both sides, and run as
+`sudo /opt/mavo/venv/bin/python`. It writes nothing and makes no network
+request; it runs `stat` on the secrets and never opens them; it fingerprints
+the push unit and the ADS-B unit rather than quoting them, and prints the push
+unit's drop-in with every address, host name and key path replaced by a token,
+because the install writes its fourth file from it. It opens the store with
+`mode=ro`. Its address mask also caught dotted version strings, so the copy
+reads `pre-ADDR4` where the host's directory is `pre-4.88.0.0`. It is not in
+this tree, for D-038's reason, as Appendix B's was not (T88).
+
+### A.1 The machine
+
+The same boot as Appendix B: Debian GNU/Linux 12 (bookworm), kernel
+6.1.0-51-cloud-amd64, booted 2026-08-11 17:26:40 UTC. Clock `Etc/UTC`, NTP on
+and synchronised. The venv's interpreter is Python 3.11.2 and its SQLite
+3.40.1. `ens4` holds `10.20.0.2/32` and `2600:1900:4140:3cb::/128`, as on
+2026-09-21. Two CPUs at a load of 0.2. Disk: 10,330,861,568 B, of which
+5,143,580,672 B are used and 4,640,399,360 B free, against 4,083,822,592 B used
+on 2026-09-21.
+
+### A.2 The package
+
+`mavo --version` prints `mavo 0.60.0.0`, and there is one `.dist-info`, whose
+RECORD was written 2026-10-05 12:37:17 UTC. RECORD lists 79 files; the 45 that
+carry a hash all match it and none is missing. The sha256 over the 33 installed
+`mavo/**/*.py` files, each listed as its digest and its path and the list
+sorted, is `b41fc717…3b5851`, and the same computation over
+`git archive v0.60.0.0` gives the same figure, fixed from the tree before the
+host was read: the host runs that tag byte for byte. `last_read` occurs 17
+times in the installed `mavo/store.py`, and there is no `mavo/analysis.py`.
+
+### A.3 Units and timers
+
+Sixteen files named `mavo*` in `/etc/systemd/system`: eight services, six
+timers, and two copies of the ADS-B unit under names systemd does not load
+(`mavo-adsb.service.0.2`, `mavo-adsb.service.pre-0.7.5.0`), left by that
+repository's installs. Six drop-ins: `mavo-collect.timer.d/description.conf`
+and `interval.conf`, `mavo-push.service.d/three-files.conf`,
+`mavo-push.timer.d/interval.conf`, `mavo-report.service.d/interval.conf`, and
+`mavo-rso.timer.d/interval.conf`, which Appendix B did not have. Every timer is
+active and waiting, no service is failed and `NRestarts=0` on all eight; the
+report has run since 2026-10-05 12:37:17 UTC and the ADS-B sampler since
+2026-08-27 16:26:52. One transient unit is failed, `run-u284.service`, an
+ADS-B probe of the `mavo-adsb` repository, outside this one.
+
+**Fingerprinted rather than quoted**: `systemctl cat mavo-push.service`, 22
+lines, sha256 `7ce2e3e6…e7d719`, its drop-in `three-files.conf` alone 12 lines,
+sha256 `323729a2…f27c32` (Appendix B read 13 lines, `14929aed…07d1e`, before
+the third file of 2026-09-28); and `mavo-adsb.service`, 69 lines, sha256
+`e6c972ed…de092a2`, where Appendix B read `29d5325b…9ac0`: the ADS-B unit was
+edited between the two readings, by the other repository's install, and this
+document did not record it.
+
+**The drop-in this document had not recorded**, as `systemctl cat` reads it:
+
+```
+# /etc/systemd/system/mavo-rso.timer.d/interval.conf
+# Read cadence. At the base 900 s the RSO read was the dominant delay
+# between a communique appearing in RSO and the site showing it: over the
+# ten air-alert first appearances of 2026-09-28/30, RSO published a median
+# of about 1 min after valid_from, while ts_ingest trailed created_at by
+# 16 s to 15 min 16 s, median about 7.5 min. mavo-push runs every 30 s and
+# adds little. 60 s plus 10 s jitter bounds the read delay to about 70 s.
+[Timer]
+OnUnitActiveSec=
+OnUnitActiveSec=60
+RandomizedDelaySec=10
+```
+
+The other units read as Appendix B quotes them, with the report's drop-in as
+quoted under the reading of 2026-09-28.
+
+**Timer phases at the reading**, `systemctl list-timers --all`, this project's
+lines:
+
+```
+NEXT                        LEFT          LAST                        PASSED       UNIT                         ACTIVATES
+Sun 2026-10-18 16:06:35 UTC 19s left      Sun 2026-10-18 16:06:01 UTC 14s ago      mavo-collect.timer           mavo-collect.service
+Sun 2026-10-18 16:06:46 UTC 31s left      Sun 2026-10-18 16:06:02 UTC 13s ago      mavo-push.timer              mavo-push.service
+Sun 2026-10-18 16:07:01 UTC 46s left      Sun 2026-10-18 16:06:01 UTC 14s ago      mavo-rso.timer               mavo-rso.service
+Sun 2026-10-18 16:07:22 UTC 1min 7s left  Sun 2026-10-18 16:02:22 UTC 3min 53s ago mavo-kpszsu.timer            mavo-kpszsu.service
+Sun 2026-10-18 16:07:23 UTC 1min 7s left  Sun 2026-10-18 16:05:23 UTC 52s ago      mavo-collect-api.timer       mavo-collect-api.service
+Sun 2026-10-18 16:08:06 UTC 1min 50s left Sun 2026-10-18 16:03:05 UTC 3min 10s ago mavo-airspace.timer          mavo-airspace.service
+```
+
+### A.4 Paths and permissions
+
+**`/var/lib/mavo`** is `mavo:mavo` 0750, 1,032,931,845 B in all.
+
+| Path | Owner, mode | Size | Written (UTC) |
+| --- | --- | --- | --- |
+| `events` | `mavo:mavo` 0644 | 339,075,072 B | 2026-10-18 16:06:02 |
+| `state.json` | `mavo:mavo` 0600 | 73,525 B | 2026-10-18 16:05:59 |
+| `feed.json` | `mavo:mavo` 0600 | 316,971 B | 2026-10-18 16:05:59 |
+| `timeline.json` | `mavo:mavo` 0600 | 2,429,802 B | 2026-10-18 16:04:50 |
+| `timeline.pushed` | `mavo:mavo` 0644 | 0 B, the push unit's marker | 2026-10-18 16:04:50 |
+| `ukrainealarm.snapshot.json` | `mavo:mavo` 0644 | 4,583 B | 2026-10-18 16:05:23 |
+| `run.jsonl` and five rotated files | `mavo:mavo` 0600 | 1,772,070 B, then 8 MiB each | see A.7 |
+| `history.json`, `analysis.json` | absent | | no unit writes either yet |
+
+**Fourteen points of return, 647,241,728 B**, 1.9 times the store they
+protect: `events.pre-` 0.42.0.0, 0.43.0.0, 0.44.0.0, 0.45.0.0, 0.47.0.0,
+0.48.0.0, 0.49.0.0, 0.52.0.0, 0.52.1.0, 0.53.4.0, 0.55.2.0, 0.56.0.0, 0.57.0.0
+and 0.60.0.0, the last 198,045,696 B. The two from 0.47.0.0 and 0.48.0.0 are
+owned by `root` (F144). P6, the retention rule, is still unwritten.
+
+**`/etc/mavo`**: `ukrainealarm.key`, 41 B, `mavo:mavo` 0600, written
+2026-08-30; `rso-cap.secret`, 40 B, `root:root` 0600, written 2026-09-15.
+`/opt/mavo/venv` is `root:root` 0755.
+
+**Staged outside the service's directory**, none of it read by a unit: in
+`/var/tmp` 17 entries, the ADS-B snapshots, the wheels for 0.36.0.1, 0.37.0.3,
+0.55.3.0 and 0.55.4.0, and T39's two probe outputs; in the operator's home
+directory 26, among them the wheels for 0.39.0.0, 0.53.2.0 and 0.58.0.0, the
+`@kpszsu` corpus sampler and its output, Appendix B's script and the copy of
+the push drop-in taken on 2026-09-28; in `/tmp` 70, among them the wheels from
+0.53.1.0 to 0.60.0.0 and this reading's script.
+
+### A.5 The store
+
+339,075,072 B: 82,782 pages of 4,096 B, none free, WAL mode, with no `-wal` or
+`-shm` present when the reading began. `PRAGMA quick_check` returned `ok` in
+28.9 s. Sizes are from `dbstat`.
+
+| Table | Rows | Bytes | Oldest | Newest |
+| --- | --- | --- | --- | --- |
+| `communiques` | 215,158 | 151,392,256 | 2026-09-19 18:38 | 2026-10-18 16:02 |
+| `feed_attempts` | 306,123 | 37,842,944 | 2026-08-29 | 2026-10-18 16:06 |
+| `events` | 64,583 | 34,336,768 | 2026-08-11 | 2026-10-18 16:01 |
+| `feed_snapshots` | 2,489 | 25,874,432 | 2026-09-19 18:38 | 2026-10-18 16:02 |
+| `alert_levels` | 23,182 | 5,685,248 | 2026-09-09 | 2026-10-18 16:01 |
+| `airspace_zones` | 11,402 | 5,619,712 | 2026-09-19 18:38 | 2026-10-18 15:00 |
+| `kind_events` | 1,920 | 1,933,312 | 2026-08-11 | 2026-09-07 06:01 |
+| `strike_tallies` | 137 | 565,248 | 2026-09-22 | 2026-10-18 05:03 |
+| `airspace_geometries` | 499 | 483,328 | 2026-09-19 18:38 | 2026-10-17 06:01 |
+
+The indexes take 75,341,824 B between them.
+
+**The store grew 5.2 times in 27 days**, from 65,323,008 B on 2026-09-21: 10.1
+MB a day, against 9.3 MB a day in the forty hours after the install of
+2026-09-19 and 1.4 MB a day before it. `communiques` is 142.3 MB of the
+difference: the record keeps every revision of every category (F171), and the
+read every minute since 2026-09-30 records about fifteen times as many reads
+`[inference, from the cadences]`. At the mean rate the free disk lasts about
+460 days, less the journal's own growth `[inference]`; the retention decision
+D-054 named is the input this asks for.
+
+**`feed_attempts` over the last forty hours**: the channel 4,367 reads; the
+API 1,190 reads and 1 refusal; RSO 10,986 reads and 9 refusals at five
+addresses, a median read under a tenth of a second; PAŻP 456 reads; `@kpszsu` 456 reads.
+Spacing per pipe is in the units table above.
+
+**The level stream** (T93): 23,182 declarations, 8,960 of them listed by a read
+since the install, with `first_read` and `last_read` set; the earliest
+`first_read` is 2026-10-05 12:39:18 UTC. Words: `Red` 8,143 and `Yellow`
+15,039. **`strike_tallies`**: 132 `ok`, 4 `flagged`, 1 `refused`. **The
+watchman**: the channel's newest `last_id` is still 338380, the post of
+2026-09-07, read every 33 s.
+
+### A.6 The contract
+
+`state.json` was 14 s old: `v` 3, `state` `ok`, `valid_for_s` 600,
+`window_days` 7, `observation_age_s` 312, `clock_skew_s` 0.0. Its largest keys
+are `areas` at 16,476 B, `pl_airspace` at 16,271 B and `strike_history` at
+8,702 B. `sources` names five feeds, all `delivering`: `known` 5, `delivering`
+5, `primary_delivering` 1; its RSO row declares a 900 s cadence while the pipe
+reads every 60 s (A.3). `alert_levels` is `{"source": "api.ukrainealarm.com",
+"recorded_since": "2026-10-05T12:39:18+00:00"}`, the second of the earliest
+`first_read`, and all 32 areas carry a level. `pl_rcb_recent` spans 48 hours,
+names two voivodeships and lists no unread stretch; `pl_warnings` and
+`pl_all_clear` are empty lists. `feed.json` is 316,971 B and `timeline.json`
+2,429,802 B, `v` 1, written 16:04:45 UTC.
+
+### A.7 The run log and the journal
+
+`run.jsonl` is at 1,772,520 B, and its five rotated files, of 8 MiB each, were
+written on 2026-10-17, 10-10, 10-03, 09-26 and 09-19: one rotation a week, so
+the log holds about five weeks.
+
+**The journal is at its ceiling**: 967.9 MiB under an unmodified
+`journald.conf`, whose default is a tenth of the filesystem, about 985 MiB.
+Appendix B put the date it would be reached near 2026-10-03 `[inference]`;
+from now the oldest entries go first.
+
+**Since five minutes before the installed RECORD**, 2026-10-05 12:32:17 UTC:
+no traceback in any unit's journal, no `[LEVELS-FAILED]`, and the report's
+journal holds the two `[STORE-MIGRATED] added alert_levels.first_read` and
+`.last_read` lines and no other migration line. The word "failed" occurs in
+the journals of the API collector 40 times, the channel collector 8, RSO 4,
+PAŻP 2 and `@kpszsu` 2, and in none of the push or the report; what those
+lines are is not established by the count `[unknown]`. The push unit's journal
+holds 3,468 lines naming the week as installed.
+
+### A.8 Processes
+
+The report process, PID 2138417, running since 2026-10-05 12:37:17 UTC with the
+drop-in's arguments, and the ADS-B sampler since 2026-08-27 16:26:52. No
+`@kpszsu` corpus sampler runs: Appendix B found one, and the reader in this
+package has replaced it since 0.56.0.0.
+
+### A.9 What this reading does not establish
+
+The push unit's own text, fingerprinted; what the lines with the word
+"failed" are; the gzipped size of the week; and the cost of one analysis run
+on this host, which is T94's.
+
+## Appendix B. `vm-mavo` read in full, 2026-09-21, kept as read
 
 **What this is.** The whole host, read once, between 10:42:24 and 10:42:34 UTC
 on 2026-09-21, by one read-only script run as root through the venv's own
@@ -1304,7 +1597,7 @@ An instrument that opens the store ships as a `mavo` subcommand, and
 subcommand is T88; until it does, the reading is repeatable from this appendix
 and not from the tree.
 
-### A.1 The machine
+### B.1 The machine
 
 Debian GNU/Linux 12 (bookworm), kernel 6.1.0-51-cloud-amd64, up 40.7 days since
 2026-08-11 17:26:40 UTC. Clock `Etc/UTC`, NTP on and synchronised. The venv's
@@ -1313,7 +1606,7 @@ and `2600:1900:4140:3cb::/128`, the addresses the network section above read on
 2026-09-04. Disk: 10,330,861,568 B, of which 4,083,822,592 B are used and
 5,700,157,440 B free, one filesystem for the system, the store and the journal.
 
-### A.2 The package
+### B.2 The package
 
 `mavo --version` prints `mavo 0.55.2.0`, and there is one `.dist-info`, whose
 RECORD was written 2026-09-19 18:36:05 UTC. RECORD lists 65 files; the 38 that
@@ -1325,7 +1618,7 @@ same figure, and it was fixed from the tree before the host was read, so the
 host runs that tag byte for byte. `/opt/mavo` holds 4,602 files and
 129,598,424 B, all but 2,153,452 B of it the venv.
 
-### A.3 Units and timers
+### B.3 Units and timers
 
 Twelve unit files: seven services and five timers. Every timer is active,
 every service loaded, none in a failed state, and `NRestarts=0` on all seven. The two long-running
@@ -1499,7 +1792,7 @@ records. The report unit's base `ExecStart=` still says `--interval 120` and
 its one drop-in replaces the whole line; the effective command is the
 drop-in's, which the running process's arguments confirm.
 
-### A.4 Paths and permissions
+### B.4 Paths and permissions
 
 **`/var/lib/mavo`** is `mavo:mavo` 0750: 29 files and 384,252,201 B.
 
@@ -1536,7 +1829,7 @@ their tarballs from 2026-08-11, the ADS-B scripts, a `probe` directory of 15
 files, the `@kpszsu` corpus sampler with its output (53,849 B at the reading),
 and the reading script itself. None of it is read by a unit.
 
-### A.5 The store
+### B.5 The store
 
 65,323,008 B: 15,948 pages of 4,096 B, none free, WAL mode, with no `-wal` or
 `-shm` present when the reading began. `PRAGMA quick_check` returned `ok` in
@@ -1592,7 +1885,7 @@ means-of-attack stream, is written by the channel collector alone
 (`_cmd_collect` is the only caller of `append_kinds`) and has had no row for as
 long; `events` holds 17,555 channel rows, the newest from that same minute.
 
-### A.6 The contract
+### B.6 The contract
 
 `state.json` was 23 s old: `v` 3, `state` `ok`, `valid_for_s` 600,
 `window_days` 7, `observation_age_s` 200, `clock_skew_s` 0. Its largest keys
@@ -1618,7 +1911,7 @@ was the plan's own state and not the drawing rule's: `ACTIVATED` is set, on
 this evidence on a Saturday and on a Monday and not on a Sunday. How often in
 general is `[unknown]` after two days of record.
 
-### A.7 The run log and the journal
+### B.7 The run log and the journal
 
 **The run log has reached its ceiling.** `run.jsonl` rotated at intervals of
 6.5, 6.6, 6.7 and 6.7 days, against the 6.6 predicted when rotation was
@@ -1643,13 +1936,13 @@ install replaced and the three migration lines. RSO wrote `snapshot=changed`
 on 111 of 775 address reads and PAŻP on 19 of 457, the same counts
 `feed_snapshots` holds.
 
-### A.8 Processes
+### B.8 Processes
 
 The report process, PID 1470772, running since 2026-09-19 18:36:05 UTC with
 the drop-in's arguments; the ADS-B sampler since 2026-08-27 16:26:52; and the
 `@kpszsu` corpus sampler since 2026-09-21 10:23:28, one instance.
 
-### A.9 What this reading does not establish
+### B.9 What this reading does not establish
 
 The text of the two fingerprinted units. Anything on `vm-site` beyond the
 five-minute sample of its PAŻP reader quoted in A.6. How the host's egress

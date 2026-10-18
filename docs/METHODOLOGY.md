@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.74
+Document:  docs/METHODOLOGY.md, version 2.75
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,79 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F201, 0.61.0.0. Tests that held two of sixty mutants of the module they were written for
+
+Found by the release's review, an agent given the tree before the release was
+tagged, which set sixty hand mutants on `mavo/analysis.py` instead of reading
+it: 58 survived `tests/test_analysis.py` and `tools/contract_check.py`, and 33
+of the 58 changed the file the module writes from the production export of
+2026-10-18 `[reported by the review; its script re-run by the session]`. The
+tests had been written beside the module by its author, as checks that each
+block was present and plausible; what they asserted was the shape, and the
+shape survives almost any arithmetic.
+
+**Class.** Class 2, a check that cannot fail, and F199's one level up: the
+module and its tests shared an author and a blind spot.
+
+**Repair.** Fourteen new cases and two extended, each a small window whose
+every expected figure is worked out in the test, one rule to a case: what is not a reading, the cut of
+an episode and of a wait, the leads, the fitted speed and two speeds that
+part, the merges, the list's cadence and an alert's own time, RCB counts held
+to the weeks that carry one, the rules held to the list, a week of figures by
+hand, a group's hours and days, a choice's coverage, the window's last
+minute, and the run of long days on a Monday. Re-run with the review's
+mutants adapted to the repaired module and six more for its repairs, 63 of 66
+are killed `[measured 2026-10-18]`. The three survivors: the bootstrap's
+filter on negative slopes, reachable only through noisy resamples; the coarse
+minutes held to the minutes read, equivalent while the unread stretches and
+the reads come from one rule; and a group's alerts taken by date, equivalent
+because the alert's stamp is already Warsaw's. **Reopen condition:** a defect
+in the module's figures that a window written by hand could have shown.
+
+### F200, 0.61.0.0. Silence counted as calm in seven places of one new module
+
+Found by the same review, by running windows built to reach each place,
+before the release was tagged:
+
+- **A rule idle while nobody looked.** A firing of "at least k raions at
+  once" in a stretch the RSO list was not read counted as a firing and as
+  idle, while the observed days, its denominator, left that stretch out.
+- **An episode "without an RCB alert" while nobody looked.** An episode was on
+  the RCB record from the record's first day, read or not, so an outage made
+  every episode inside it one without an alert, and the page would have said
+  none of eight had one.
+- **An alert the band was not observed at made its firing idle.** Recall
+  rightly leaves such an alert out; idleness used the same list.
+- **The weakest day of a choice taken from a week not in it**: the coverage
+  ran over the calendar span from the first chosen week to the last, unusable
+  weeks between them included.
+- **No run of long days from Monday to Wednesday.** The walk began at the
+  window's last day, in the week still running, which is not usable then, so
+  its first day ended every run.
+- **Twelve weeks under a window of thirteen**, for a file written in the first
+  minute of a Monday.
+- **An alert in the list and in no week**, for an alert of the minute after
+  the window's last whole one.
+
+None reached the file of 2026-10-18: the repaired module writes byte for byte
+the file the first one wrote from the production export `[measured, sha256
+b032dd4b06edfc90703a34dccb8ccddb2d27773e58f8b4544f612f6703358f1e]`, because
+that export holds no RSO outage, no unusable week between usable ones and no
+Monday morning. Each would have reached a reader on the first day it held
+one.
+
+**Class.** Unknown printed as a reading, the invariant this project started
+from: in each, a count went on where its input stopped, and nothing failed.
+The first three are one defect three times, a denominator that knew the list
+was unread and a numerator that did not.
+
+**Repair.** `mavo/analysis.py`: `_rules`, `_episodes`, `_coverage`,
+`_streak`, `window_start` and the alerts' cut in `_Record._rcb`, with a case
+each in `tests/test_analysis.py`. The consumer's page had the same shape in
+two sentences chosen by a count, its F-S137, repaired in its 4.92.0.0.
+**Reopen condition:** a count of the file over a stretch its own denominator
+leaves out.
 
 ### F199, 0.60.0.0. The third round's repairs, checked by the tests written with them
 

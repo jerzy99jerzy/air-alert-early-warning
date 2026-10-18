@@ -17,6 +17,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from mavo import __version__, strike
+from mavo.analysis import build as build_analysis
 from mavo.areas import AreaTable
 from mavo.attempts import main as attempts_main
 from mavo.backfill import (
@@ -53,6 +54,7 @@ from mavo.report import (
     compose,
     publish,
     render_text,
+    write_analysis,
     write_contract,
     write_feed,
     write_history,
@@ -1431,6 +1433,44 @@ def _cmd_timeline(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_analysis(args: argparse.Namespace) -> int:
+    """Write `analysis.json` once and say what it cost (D-064).
+
+    One run, one file: the unit that calls this is a timer, as the collectors
+    are, so a run that fails leaves the last good file in place and says why on
+    stderr, and the next run starts from the store rather than from anything
+    this run left behind.
+    """
+    end = datetime.now(UTC)
+    if args.as_of is not None:
+        parsed = _moment(args.as_of, "--as-of")
+        if parsed is None:
+            return 2
+        end = parsed
+    store = EventStore(Path(args.store))
+    _announce_migrations(store)
+    started = time.perf_counter()
+    events = list(store.replay())
+    replayed = time.perf_counter()
+    payload = build_analysis(store, events, end, table=AreaTable.from_csv(),
+                             feeds=PRODUCTION_FEEDS)
+    built = time.perf_counter()
+    written = write_analysis(payload, Path(args.out))
+    done = time.perf_counter()
+    body = written.read_bytes()
+    choices = payload["choices"]
+    usable = choices["usable_weeks"] if isinstance(choices, dict) else []
+    comparisons = payload["comparisons"]
+    print(
+        f"analysis={written} bytes={len(body)} gzip_bytes={len(gzip.compress(body))} "
+        f"events={len(events)} replay_s={replayed - started:.2f} "
+        f"build_s={built - replayed:.2f} write_s={done - built:.2f} "
+        f"usable_weeks={len(usable)} "
+        f"comparisons={len(comparisons) if isinstance(comparisons, list) else 0}"
+    )
+    return 0
+
+
 def parse_windows(spec: str) -> tuple[int, ...]:
     """`--windows` as days, ascending, positive, distinct, holding the week.
 
@@ -1763,6 +1803,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="with --out: the window in days (default %(default)s)",
     )
     timeline_cmd.set_defaults(func=_cmd_timeline)
+
+    analysis_cmd = subparsers.add_parser(
+        "analysis",
+        help="the weekly analysis.json: thirteen Warsaw weeks of the band's alarms "
+             "and of RCB's alerts, every reader's choice of weeks compared, written "
+             "once (D-064)",
+    )
+    analysis_cmd.add_argument("--store", required=True, help="path to the event store")
+    analysis_cmd.add_argument(
+        "--out", required=True,
+        help="write analysis.json to this path once and print its size, raw and "
+             "gzipped, and the time each step took",
+    )
+    analysis_cmd.add_argument(
+        "--as-of", help="ISO timestamp with an offset ending the window (default now)"
+    )
+    analysis_cmd.set_defaults(func=_cmd_analysis)
 
     reconcile_cmd = subparsers.add_parser(
         "reconcile",

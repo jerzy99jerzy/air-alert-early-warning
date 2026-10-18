@@ -39,6 +39,7 @@ from mavo.report import (  # noqa: E402
     Report,
     compose,
     to_contract,
+    write_analysis,
     write_contract,
     write_feed,
     write_history,
@@ -842,6 +843,124 @@ def check_timeline() -> list[str]:
     return problems
 
 
+#: D-064. What the site reads of `analysis.json`, per block. The consumer's
+#: `validate_analysis` asks for these and nothing more, so a rename here is a
+#: page that refuses the file rather than one that renders a hole.
+REQUIRED_ANALYSIS_TOP = ("v", "generated_at", "zone", "window", "record", "definitions",
+                         "band", "weeks", "days", "blind", "episodes", "waits", "rcb",
+                         "choices", "groups", "comparisons")
+REQUIRED_ANALYSIS_WEEK = ("first_day", "last_day", "from", "to", "minutes", "partial",
+                          "seen_min", "seen_days", "unseen_h", "api_min", "channel_min",
+                          "source", "usable", "episodes", "rcb_alerts", "rso_cadence",
+                          "values")
+REQUIRED_ANALYSIS_GROUP = ("weeks", "first_day", "last_day", "seen_min", "seen_days",
+                           "episodes", "waits", "rings", "rcb", "hours", "raions_h")
+REQUIRED_ANALYSIS_COMPARISON = ("n", "m", "current", "baseline", "channel_weeks", "metrics",
+                                "robust", "streak", "coverage", "raions", "speeds_overlap")
+REQUIRED_ANALYSIS_METRIC = ("verdict", "median", "min", "max", "weeks", "current",
+                            "weeks_values")
+REQUIRED_ANALYSIS_RCB = ("recorded_since", "unread", "cadence", "alerts", "seen_after",
+                         "oblasts", "rules")
+
+
+def check_analysis() -> list[str]:
+    """D-064. The fifth file carries every choice the page offers, and no zero for an unknown.
+
+    Built without a store, like `check_timeline`: two raions of the band under
+    alarm on a schedule, a far area changing often enough that the source is
+    not silent, an API gap, and an RCB record read every minute. What it holds:
+    the file names its version and every block the site reads; every
+    comparison names two groups the file carries and a verdict from the closed
+    vocabulary for each measure; and the week the gap blinded is not usable and
+    carries no value, rather than a rate of zero. The arithmetic is held by
+    `tests/test_analysis.py`; this is the shape a reader relies on.
+    """
+    from mavo import analysis
+
+    table = AreaTable.from_csv()
+    band = analysis.band_raions(table)
+    end = datetime(2026, 10, 18, 10, 0, tzinfo=UTC)
+    start = analysis.window_start(end)
+    record = datetime(2026, 8, 10, 22, 0, tzinfo=UTC)
+    spans: list[tuple[str, str, datetime, datetime | None]] = []
+    moment = record
+    while moment < end:
+        spans.append(("UA-FAR", "active", moment, moment + timedelta(minutes=10)))
+        moment += timedelta(minutes=50)
+    for day in range(68):
+        alarm = record + timedelta(days=day, hours=8)
+        spans.append((band[0].code, "active", alarm, alarm + timedelta(minutes=40)))
+        spans.append((band[1].code, "active", alarm + timedelta(minutes=5),
+                      alarm + timedelta(minutes=55)))
+    places: dict[str, dict[str, object]] = {
+        raion.code: {"katottg": raion.code, "border_km_lower": raion.km_lower,
+                     "border_km_upper": raion.km_upper} for raion in band}
+    places["UA-FAR"] = {"katottg": "UA-FAR", "border_km_lower": 900.0, "border_km_upper": 950.0}
+    blinded = (datetime(2026, 9, 14, 22, 0, tzinfo=UTC), datetime(2026, 9, 19, 0, 0, tzinfo=UTC))
+    since = datetime(2026, 9, 19, 18, 38, tzinfo=UTC)
+    alert = datetime(2026, 10, 6, 8, 20, tzinfo=UTC)
+    summary = {
+        "recorded_since": since.isoformat(), "unread": [],
+        "voivodeships": [{"slug": "lubelskie", "voivodeship": "lubelskie", "alerts": [{
+            "id": "1", "valid_from": alert.isoformat(),
+            "painted": [{"from": (alert + timedelta(minutes=2)).isoformat(),
+                         "to": (alert + timedelta(minutes=30)).isoformat()}]}]}],
+    }
+    reads = [since + timedelta(minutes=k) for k in range(int((end - since).total_seconds() // 60))]
+    payload = analysis.analyse(analysis.Inputs(
+        start=start, end=end, places=places, spans=spans, band=band,
+        api_since=datetime(2026, 8, 30, 15, 9, tzinfo=UTC), channel_since=None,
+        api_gaps=[blinded], channel_gaps=[], rcb=summary, rso_reads=reads,
+        rso_silence_s=1800.0,
+    ))
+    with tempfile.TemporaryDirectory() as directory:
+        written = write_analysis(payload, Path(directory) / "analysis.json")
+        back = json.loads(written.read_text(encoding="utf-8"))
+    problems = [f"analysis.json is missing {key!r}" for key in REQUIRED_ANALYSIS_TOP
+                if key not in back]
+    if problems:
+        return problems
+    if back["v"] != analysis.ANALYSIS_VERSION:
+        problems.append(f"analysis version {back['v']} != {analysis.ANALYSIS_VERSION}")
+    if len(back["weeks"]) != analysis.WEEKS:
+        problems.append(f"analysis.json carries {len(back['weeks'])} weeks, not {analysis.WEEKS}")
+    for week in back["weeks"]:
+        problems += [f"an analysis week is missing {key!r}"
+                     for key in REQUIRED_ANALYSIS_WEEK if key not in week]
+        if set(week.get("values", {})) != set(analysis.METRICS):
+            problems.append(f"week {week.get('first_day')} values are not the six measures")
+    gap_week = next((w for w in back["weeks"] if w["first_day"] == "2026-09-14"), None)
+    if gap_week is None or gap_week["usable"] or set(gap_week["values"].values()) != {None}:
+        problems.append("a week the gap blinded reads as a week of figures; unknown is "
+                        "never a rate")
+    for key, group in back["groups"].items():
+        problems += [f"analysis group {key} is missing {name!r}"
+                     for name in REQUIRED_ANALYSIS_GROUP if name not in group]
+    usable = back["choices"]["usable_weeks"]
+    expected = {(n, m) for n in range(1, analysis.CURRENT_MAX + 1)
+                for m in range(analysis.BASELINE_MIN, len(usable) - n + 1)}
+    if {(c["n"], c["m"]) for c in back["comparisons"]} != expected:
+        problems.append("the comparisons are not every choice of weeks the page offers")
+    for comparison in back["comparisons"]:
+        problems += [f"a comparison is missing {key!r}"
+                     for key in REQUIRED_ANALYSIS_COMPARISON if key not in comparison]
+        for side in ("current", "baseline"):
+            if comparison.get(side) not in back["groups"]:
+                problems.append(f"comparison {comparison.get('n')}:{comparison.get('m')} names "
+                                f"a {side} group the file does not carry")
+        for metric, block in comparison.get("metrics", {}).items():
+            problems += [f"metric {metric} is missing {key!r}"
+                         for key in REQUIRED_ANALYSIS_METRIC if key not in block]
+            if block.get("verdict") not in analysis.VERDICTS:
+                problems.append(f"metric {metric} carries a verdict outside the vocabulary: "
+                                f"{block.get('verdict')!r}")
+    problems += [f"analysis rcb is missing {key!r}" for key in REQUIRED_ANALYSIS_RCB
+                 if key not in back["rcb"]]
+    if [a.get("slug") for a in back["rcb"].get("alerts", [])] != ["lubelskie"]:
+        problems.append("the one RCB alert of the check is not the one alert of the file")
+    return problems
+
+
 def check_levels() -> list[str]:
     """D-063. The level in both files, from a listing the check writes itself.
 
@@ -936,7 +1055,7 @@ def check_levels() -> list[str]:
 def main() -> int:
     """Run the contract check. Returns a process exit code."""
     problems = (check_contract() + check_every_kind_is_documented() + check_strike_tally()
-                + check_rcb_recent() + check_timeline() + check_levels())
+                + check_rcb_recent() + check_timeline() + check_levels() + check_analysis())
     for problem in problems:
         print(f"contract-check: {problem}", file=sys.stderr)
     if problems:

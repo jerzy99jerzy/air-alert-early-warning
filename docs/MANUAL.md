@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.18
+Document:  docs/MANUAL.md, version 3.19
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -52,6 +52,7 @@ Note:      every constant, exit code and output line here was read out of the
    15. [`mavo timeline`](#415-mavo-timeline---built)
    16. [`mavo record-week`](#416-mavo-record-week---built)
    17. [`mavo level-reading`](#417-mavo-level-reading---built)
+   18. [`mavo analysis`](#418-mavo-analysis---built)
 5. [Interpreting an alarm](#5-interpreting-an-alarm---not-built-sprint-7)
 6. [Operational limits](#6-operational-limits---built-where-noted)
 7. [Troubleshooting](#7-troubleshooting---partial)
@@ -950,6 +951,39 @@ first step of 0.60.0.0's install.
 | Argument | Default | Meaning |
 | --- | --- | --- |
 | `store` | required | The event store, opened read-only |
+
+### 4.18 `mavo analysis` - BUILT
+
+The weekly `analysis.json` (D-064): thirteen Warsaw calendar weeks of the
+band's alarms and of RCB's alerts, every choice of weeks the site's analysis
+page offers compared, written once.
+
+```
+mavo analysis --store /var/lib/mavo/events --out /var/lib/mavo/analysis.json
+mavo analysis --store /var/lib/mavo/events --out /tmp/analysis.json --as-of 2026-10-18T10:00:00+00:00
+```
+
+It replays the store, reads each Ukrainian pipe's coverage by the live rule,
+walks the RCB register over the window and reads the times the RSO list was
+read, then writes the file atomically and prints one line: its path, its size
+raw and gzipped, the events replayed, the seconds the replay, the build and
+the write each took, how many weeks are usable and how many comparisons the
+file holds. A run that fails leaves the last good file in place and says why
+on stderr; the next run starts from the store. Opening the store prints what
+the open changed, as every command that opens one does.
+
+**What it will not print as a figure.** A minute the record did not see is in
+neither the numerator nor the denominator; a week observed less than half is
+not usable; a measure a recent week cannot carry is `not_computable`, never a
+zero; a stretch the RSO list was not read is out of every RCB count. The
+verdicts are positions against the range of the chosen background weeks, not
+tests.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--store` | required | The event store |
+| `--out` | required | Write `analysis.json` to this path once and print what it cost |
+| `--as-of` | now | The end of the window, an ISO timestamp with an offset; a moment without one is refused with exit 2 |
 
 ## 5. Interpreting an alarm - NOT BUILT (sprint 7)
 

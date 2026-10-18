@@ -1674,6 +1674,16 @@ def write_timeline(payload: dict[str, object], path: Path) -> Path:
     return _write_json(payload, path, prefix=".timeline-", compact=True)
 
 
+def write_analysis(payload: dict[str, object], path: Path) -> Path:
+    """Write `analysis.json` atomically (D-064), without indentation.
+
+    Compact for the reason `timeline.json` is: the site's code reads it, and a
+    person who opens it on the host opens the site's export of one block. The
+    guarantees are the other files', and so is the writer.
+    """
+    return _write_json(payload, path, prefix=".analysis-", compact=True)
+
+
 def _write_json(payload: dict[str, object], path: Path, *, prefix: str,
                 compact: bool = False) -> Path:
     """The atomic write every file uses. One implementation, one guarantee."""

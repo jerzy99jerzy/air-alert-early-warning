@@ -6,7 +6,7 @@ the companion document and answers the other question, which components exist
 and what may talk to what.
 
 ```
-Document:  docs/DATA-FLOW.md, version 1.8
+Document:  docs/DATA-FLOW.md, version 1.9
 Audience:  a contributor about to change a transformation, a schema field, or
            anything that decides what is kept and what is dropped
 Companion: ARCHITECTURE (components and boundaries), MECHANISMS (why each
@@ -458,6 +458,7 @@ project exists to attack.**
 | Level stream | A declaration listed, then not, then listed again while its alarm stays open | **Not currently measured**: `last_read` keeps the newest listing only, so it reads as listed in between (D-063's reopen condition) | A level the source withdrew for a while would stay on the map through the gap |
 | Attempt log | The page itself: only bounds, counts and latency survive the poll | one row per poll, read by `mavo attempts` | A refusal would be indistinguishable from a quiet timer, and a dead collector from a quiet channel (T66, D-036) |
 | Night grouping | Events across a midnight boundary | **Not currently measured** | This one is a known blind spot, stated rather than closed |
+| Weekly analysis | Every minute the record did not see: before the window's first change, a pipe's gap, three hours or more with no change anywhere, a band raion in a state that is not a reading, and for RCB every stretch the list was not read | `blind[]` and each week's `seen_min`, `rcb.unread[]`, `usable: false` with `null` values, and `not_computable` (D-064) | A week with an outage would read as a quiet week, and a rule's firing nobody could judge as an idle one (F200) |
 | Policy | Crossing kinds no regime serves | `COVERAGE GAP`, printed | An unserved kind would leave the denominator (MT6) |
 | Gate | Nothing. It reports, it does not filter | | |
 

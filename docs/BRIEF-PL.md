@@ -200,10 +200,10 @@ konstrukcja jest ułożona wokół tego rozróżnienia.
 Przy prywatnym projekcie wiarygodność waży więcej niż technologia, więc zamiast
 zapewnień konkrety. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Rejestr błędów ma 174 wpisy.** Każdy mówi, co się zepsuło, dlaczego nikt tego
+**Rejestr błędów ma 176 wpisów.** Każdy mówi, co się zepsuło, dlaczego nikt tego
 nie zauważył i jakiej klasy był to błąd. Są tam także wpisy przeciw interesowi
 projektu, w tym ten o wyniku 0 na 20 oraz ten, w którym dokumentacja twierdziła,
-że coś jest sprawdzane, a nie było. Osobno zapisano **59 decyzji projektowych**,
+że coś jest sprawdzane, a nie było. Osobno zapisano **60 decyzji projektowych**,
 każdą z warunkiem, który otworzyłby ją z powrotem.
 
 **Część danych zapieczętowano, zanim ktokolwiek je przeczytał.** Odłożono 20,01%
@@ -217,9 +217,9 @@ raportowana, wywnioskowana, założona. Te 57% wyżej to liczba cudza i jest tak
 oznaczona, razem z uwagą, że jej źródło mogło mieć na myśli inny obszar niż ten
 projekt.
 
-**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 1194 testów, w
+**Bramka jest jedna i jest maszynowa.** Jedno polecenie uruchamia 1230 testów, w
 tym 17 scenariuszy ataku na zabezpieczenia samego projektu; pokrycie kodu
-wynosi 96,72% przy progu 95%, którego nigdy się nie obniża. Same ataki także są
+wynosi 96,73% przy progu 95%, którego nigdy się nie obniża. Same ataki także są
 sprawdzane: 16 z 17 zweryfikowano, psując celowo chronioną przez nie kontrolę i
 wymagając, żeby atak to wychwycił. Ten jeden bez takiej weryfikacji jest przy
 każdym uruchomieniu wypisywany jako niezweryfikowany, zamiast przemilczany.

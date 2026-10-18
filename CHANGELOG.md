@@ -16,6 +16,60 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.61.0.0 - 2026-10-18
+
+**The record could say what one moment and one week looked like, and nothing
+about how a week compared with the weeks before it.** The operator asked on
+2026-10-18 for a page that sets the last weeks of the alarm record against
+earlier ones, the reader choosing how many of each, and shows what was
+happening in Ukraine whenever RCB raised an air alert in Poland. D-064 is the
+file it reads; the consumer's 4.92.0.0 draws it (D-S97).
+
+- **`mavo analysis --store --out [--as-of]` writes `analysis.json`**, its own
+  version 1: thirteen Warsaw calendar weeks of the band, the 26 raions within
+  150 km of the border, and of RCB's alerts, with every choice of one to four
+  recent usable weeks against at least two before them computed as its own
+  comparison, so the page selects and computes nothing. Written atomically by
+  `report.write_analysis`, compact, and it prints what it cost.
+- **Per observed minute, one instrument at a time.** A minute the record did
+  not see counts in neither numerator nor denominator: before the first
+  change, a pipe's gap, three hours or more with no change anywhere, a band
+  raion in a state that is not a reading. A week less than half observed is
+  not usable and carries no figure. An onset never straddles the switch from
+  the channel to the API.
+- **Six measures and a verdict against the range of the background weeks**,
+  not a test: `all_above`, `some_above`, `in_range`, `some_below`,
+  `all_below`, and `thin`, `not_computable` and `not_assessed` for a
+  comparison not made. The episode verdict is recomputed with short breaks
+  merged.
+- **RCB from the register's own walk** (D-062): the read cadence measured from
+  the reads, weekly counts read at two cadences not compared, the band around
+  every alert, the oblasts under alarm at each voivodeship's alerts with every
+  tie named, how soon an alert was seen from its own time and never from
+  none, and simple rules held to the record.
+- **Silence is not calm, in seven places the release's review found** (F200):
+  a rule's firing and its idleness only where the RSO list was read through
+  it, idleness against every alert, an episode "without an alert" only if
+  read throughout, a choice's coverage over its own weeks, the run of long
+  days from the recent weeks' last day, thirteen weeks in a Monday's first
+  minute, and an alert cut at the window's last whole minute. None changed the
+  file the production export of 2026-10-18 gives, byte for byte.
+- **Tests that held two of sixty mutants** (F201): `tests/test_analysis.py`
+  now works out every expected figure from windows written by hand, one rule
+  to a case, and kills 63 of 66 hand mutants; the review lists the three that
+  survive and why.
+- **`tools/contract_check.py`** gains `check_analysis`: the file names its
+  version and every block the site reads, every comparison names two groups
+  it carries and a verdict from the vocabulary, and a week a gap blinded has
+  no figure.
+- **Deployment** (`docs/DEPLOYMENT.md`): `mavo-analysis.service` and
+  `mavo-analysis.timer`, hourly, quoted; the push unit's fourth file; the
+  site first. No table, flag or existing unit moves. T94 is the host's
+  reading.
+- **DECISIONS** (2.39): D-064. **METHODOLOGY** (2.75): F200, F201.
+  **MANUAL** (3.19): `mavo analysis`. **WEBAPP** (3.20), **DATA-FLOW** (1.9),
+  **DEPLOYMENT** (1.59). **TODO**: T94. **Review**: `docs/reviews/0.61.0.0.md`.
+
 ## 0.60.0.0 - 2026-10-04
 
 **The level the source declared for every alarm reached the store from
