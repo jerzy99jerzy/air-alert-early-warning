@@ -1,6 +1,6 @@
 # The notification channel: technology choice and MVP
 
-Version: 1.6 / 2026-09-10
+Version: 1.7 / 2026-10-19
 Diagram correction at 1.4: the node named `mavo watch daemon` never shipped.
 Diagram correction at 1.5: the source node caught up with D-040; the channel
 feeds the watchman path, the API feeds the primary one.
@@ -130,6 +130,14 @@ genuinely shared code.
 
 ## Phase M0: the collector daemon
 
+**Status at 0.61.0.1: met, in another shape than the one planned below.** The
+collector is not a daemon: D-031 chose systemd timers starting `oneshot`
+services on `vm-mavo` (T25, done), and `mavo report --watch` was already the
+loop, so `mavo watch` was never built. The 72 hours unattended were met as S9's
+window under D-032 and D-051. What of this phase is still owed belongs to M1:
+the `Notifier` seam and shadow mode. The plan is kept below as written, with
+its two present-tense claims corrected.
+
 Prerequisite, and not mobile at all: nothing can notify without a process that
 polls. `mavo collect` is one-shot by design; the daemon is new.
 
@@ -147,15 +155,16 @@ polls. `mavo collect` is one-shot by design; the daemon is new.
   inference by restating it (F55). Window turnover during a mass alert is
   therefore minutes, and the skip counts the daemon records are the measurement
   that licenses tightening the interval, not the estimate.
-- Runs under supervision on an operator-controlled always-on host. Which host, and therefore which supervision mechanism, is an open decision (T25); the endpoint identity, egress inventory and container question are `docs/DEPLOYMENT.md`. Credentials
+- Runs under supervision on an operator-controlled always-on host. The host and the supervision mechanism are decided: `vm-mavo`, systemd timers (T25, D-031); the endpoint identity, egress inventory and container question are `docs/DEPLOYMENT.md`. Credentials
   (the ntfy token) live outside the tree; the repository stays runnable by
   someone who has neither credentials nor network, as the CLI docstring
   requires.
-- **Shadow mode is the default and the only mode until the sprint-7
-  classifier passes its gate on the holdout.** The shipped classifier scores
-  0/20 on real content (F23); wiring it to a live alarm channel would push
-  nothing, or garbage, and either would burn the channel's credibility before
-  it exists. Shadow mode logs every would-be decision with its timestamp,
+- **Shadow mode is the default and the only mode until a rule passes its
+  gate on the holdout.** Area resolution is no longer the obstacle: the
+  classifier that scored 0/20 on real content (F23) was replaced in sprint 7
+  by the channel's own hashtags. What is missing is a rule licensed for an
+  alarm, and wiring an unlicensed one to a live channel would burn its
+  credibility before it exists. Shadow mode logs every would-be decision with its timestamp,
   which is also the live latency measurement `docs/MVP.md` already owes.
 
 **Acceptance:** 72 hours unattended; every hour of the run is accounted for as
@@ -276,7 +285,8 @@ does not is finding-grade.
 
 ## Threat model additions
 
-To be added as MT rows with tests when M0 lands, drafted here so the plan and
+To be added as MT rows with tests when M1 lands (M0 met without them, being a
+collector rather than a sender), drafted here so the plan and
 the threat model cannot drift apart silently:
 
 - A compromised or cloned client must not be able to publish to any topic
@@ -310,7 +320,7 @@ is a condition, not a preference:
 | Gate | Blocks | Why it cannot be skipped |
 | --- | --- | --- |
 | Area resolution working (S7) | any message naming a place | A report that names the wrong rajon is worse than no report, because it is actionable |
-| Measured correctness and latency (T36, T40) | recipients beyond the operator | Until then the only honest claim is that the machinery works, not that the report is right or fast. **Named as tasks rather than as sprints from 0.54.0.0**: S8 and S9 are both closed, on amended criteria that withdrew exactly these two measurements, so a gate written against the sprints would now read as satisfied by their closure |
+| Measured correctness and latency (T36; T40 done for the channel, the API's latency untaken) | recipients beyond the operator | Until then the only honest claim is that the machinery works, not that the report is right or fast. **Named as tasks rather than as sprints from 0.54.0.0**: S8 and S9 are both closed, on amended criteria that withdrew exactly these two measurements, so a gate written against the sprints would now read as satisfied by their closure |
 | T6, the legal position | any recipient who is not the operator | Sending warnings to strangers is a different undertaking from notifying yourself, and it does not become smaller by being unexamined |
 | T29, disengagement measured | nothing, but shipping without it repeats the assumption D-014 removed | A public tier with no instrument for mute and unsubscribe cannot tell a healthy channel from an abandoned one |
 

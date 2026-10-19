@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.75
+Document:  docs/METHODOLOGY.md, version 2.76
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,40 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F202, 0.61.0.1. Prose about the running system that no reading had re-read, from the README down
+
+Found by a read of every document against the tree at `v0.61.0.0` and the host
+as read on 2026-10-19, asked for by the operator because the documents no
+longer matched the application. Four documents still said `docs/CHANNEL.md`
+section 8a held no latency row: the README, `docs/MVP.md` twice, and the
+section's own heading over the filled table. T40 wrote the row at 0.54.3.0, 24
+releases before this one
+`[measured: the position of 0.54.3.0 among the headings of CHANGELOG.md]`. The README's *Measured claims* printed 670 tests
+and a superseded coverage figure from 0.52.1.0 to 0.61.0.0, 37 releases by the
+same count, while the pinned table above it said 1230; it called the contract
+two files read by a site that reads four; its quick start called a 120-second
+loop the deployed unit, which runs at 30 s and writes the week; it said the
+page makes no third-party request while the site's own privacy page names
+Google's map tiles as the exception; its diagram claimed every edge was drawn
+and omitted the three Polish and Ukrainian context readers; and its layout
+omitted eight modules and five subcommands. `docs/MOBILE.md` called T25 an
+open decision and the classifier 0 of 20, `docs/MVP.md` listed met blockers as
+open and a passed date as pending, and `docs/DEPLOYMENT.md` declared the
+analysis units it had not read and called its own subject a daemon.
+
+**Class.** F118's, a fifth time: good news nobody is prompted to look for. Every
+item is a claim that became false because something was *done*, and no check
+reads prose for a task's closure. The README's test count is F140's shape
+again, a number repeated outside the pin that guards it.
+
+**Repair.** The documents rewritten against the tree and the host reading,
+each sentence either measured, labelled or removed; the README's measured
+claims point at the pinned table rather than repeat it; T94 closed with the
+host's figures. **Reopen condition:** a document that calls a `done` task open
+or a closed measurement empty; the check that would catch it reads `TODO.md`'s
+statuses against the task numbers prose cites in the present tense, and is not
+built.
 
 ### F201, 0.61.0.0. Tests that held two of sixty mutants of the module they were written for
 

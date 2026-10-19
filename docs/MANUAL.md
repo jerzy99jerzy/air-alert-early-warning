@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.19
+Document:  docs/MANUAL.md, version 3.20
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -42,7 +42,7 @@ Note:      every constant, exit code and output line here was read out of the
    5. [`mavo collect`](#45-mavo-collect---built)
    6. [`mavo rso`](#46-mavo-rso---built)
    7. [`mavo collect-api`](#47-mavo-collect-api---built)
-   8. [`mavo watch`](#48-mavo-watch---not-built-sprint-7)
+   8. [`mavo watch`](#48-mavo-watch---not-built-superseded-by-d-031)
    9. [`mavo report`](#49-mavo-report---built)
    10. [`mavo attempts`](#410-mavo-attempts---built)
    11. [`mavo reconcile`](#411-mavo-reconcile---built)
@@ -497,10 +497,14 @@ the source was unreachable, 7 when the store could not be written, 0 otherwise.
 A missing key writes no attempt row: nothing reached the sky, so nothing is
 recorded as having failed to observe it.
 
-### 4.8 `mavo watch` - NOT BUILT (sprint 7)
+### 4.8 `mavo watch` - NOT BUILT (superseded by D-031)
 
-Will run the decision policy continuously and emit to an output channel. Until
-shadow mode has run its full window, this command will refuse to send anything.
+Was planned as a resident collector that would run the decision policy
+continuously and emit to an output channel. **It will not be built in that
+shape.** D-031 chose systemd timers starting one-shot commands for collection,
+and `mavo report --watch` (section 4.9) is the one resident loop. What this
+section planned to send is now M1's in `docs/MOBILE.md`: shadow mode first,
+and nothing sent until a rule clears the gate.
 
 ### 4.9 `mavo report` - BUILT
 

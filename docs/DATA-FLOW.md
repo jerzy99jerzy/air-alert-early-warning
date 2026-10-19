@@ -6,7 +6,7 @@ the companion document and answers the other question, which components exist
 and what may talk to what.
 
 ```
-Document:  docs/DATA-FLOW.md, version 1.9
+Document:  docs/DATA-FLOW.md, version 1.10
 Audience:  a contributor about to change a transformation, a schema field, or
            anything that decides what is kept and what is dropped
 Companion: ARCHITECTURE (components and boundaries), MECHANISMS (why each
@@ -35,13 +35,15 @@ Note:      every stage below names what it can lose. A stage that cannot lose
 
 ## 1. The whole path in one diagram
 
-**Two Polish paths are outside this diagram on purpose (0.55.0.0, D-053).**
-`mavo rso` and `mavo airspace` read a Polish feed each, record what it said in
-tables of their own, and log the attempt in `feed_attempts` beside the two
-paths below; nothing they read becomes a `ThreatEvent`, so nothing of theirs
-enters stage 3 or anything after it. Their only exit is `mavo/poland.py`,
-which composes two keys of `state.json` from the recorded tables on each cycle
-of the publishing loop. Where
+**Three context paths are outside this diagram on purpose (D-053, D-056).**
+`mavo rso` and `mavo airspace` read a Polish feed each, and `mavo kpszsu` the
+Ukrainian Air Force's morning summaries; each records what it read in tables of
+its own and logs the attempt in `feed_attempts` beside the two paths below.
+Nothing they read becomes a `ThreatEvent`, so nothing of theirs enters stage 3
+or anything after it. Their exits are composers: `mavo/poland.py` and
+`mavo/rcb_recent.py` for the Polish keys of `state.json`, `mavo/strike.py` for
+`strike_tally` and `strike_history`, each on every cycle of the publishing
+loop, and the RCB layers of `timeline.json` and `analysis.json`. Where
 information is lost on those paths is D-054's table: a read that saw no change
 writes no snapshot row, and a stretch with no read is not a stretch with no
 change.

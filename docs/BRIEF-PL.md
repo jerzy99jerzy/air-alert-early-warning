@@ -7,11 +7,14 @@ godzinach. Projekt prywatny, w fazie pre-alfa; nikt nie dostaje z niego dziś
 Dla czytelnika, który nie pisze kodu.
 
 ```
-Document:  docs/BRIEF-PL.md, version 2.34
+Document:  docs/BRIEF-PL.md, version 2.35
 Measured:  każdą zmierzoną liczbę z tego pliku bramka zestawia ze
            STATUS.json przy każdym przebiegu, więc ręczy za nią to
            porównanie, a nie data w nagłówku. Wartości, z którymi są
-           zestawiane, pochodzą z 0.55.2.0. Dwa wcześniejsze nagłówki
+           zestawiane, pochodzą z tej wersji projektu, w której znajduje się
+           ten plik; do tego wydania linijka ta wskazywała 0.55.2.0, długo
+           po tym, jak przestało to być prawdą. Dwa
+           wcześniejsze nagłówki
            podawały zamiast tego datę i oba mijały się z prawdą, zanim
            ktokolwiek je przeczytał: wersja 2.4 datowała się na 2026-08-31,
            a cztery liczby w środku pochodziły z 0.32.9.0; wersja 2.23
@@ -200,7 +203,7 @@ konstrukcja jest ułożona wokół tego rozróżnienia.
 Przy prywatnym projekcie wiarygodność waży więcej niż technologia, więc zamiast
 zapewnień konkrety. Każdy z nich da się sprawdzić bez pytania autora o zdanie.
 
-**Rejestr błędów ma 176 wpisów.** Każdy mówi, co się zepsuło, dlaczego nikt tego
+**Rejestr błędów ma 177 wpisów.** Każdy mówi, co się zepsuło, dlaczego nikt tego
 nie zauważył i jakiej klasy był to błąd. Są tam także wpisy przeciw interesowi
 projektu, w tym ten o wyniku 0 na 20 oraz ten, w którym dokumentacja twierdziła,
 że coś jest sprawdzane, a nie było. Osobno zapisano **60 decyzji projektowych**,
@@ -270,6 +273,20 @@ lata. Miejsca poza Ukrainą, w których spadł dron, zaznaczono na podstawie
 opublikowanych zapisów. Żadna z tych trzech warstw nie zmienia tego, czego
 narzędzie odmawia, a każda niesie twierdzenie innego rodzaju niż ukraiński obraz
 alarmów i dlatego każda ma własny przełącznik.
+
+**Później doszło pięć kolejnych elementów i z tego samego powodu trzeba je tu
+wymienić.** Poranny bilans ukraińskich Sił Powietrznych, czyli ile w nocy
+wystrzelono i ile strącono, podany tak, jak go opublikowały, bez przeliczania,
+z nocami ostatniego kwartału zestawionymi obok siebie. Poziom zagrożenia, który
+ukraińskie źródło ogłasza dla każdego alarmu: od niego zależy teraz kolor
+rejonu na mapie, a nazwa poziomu zostaje taka, jaką podało źródło. Suwak, który
+cofa mapę do dowolnej chwili minionego tygodnia. Alarmy RCB z ostatnich dwóch
+dób w każdym województwie, wraz z tym, jak każdy się zakończył. Wreszcie od 18
+października osobna podstrona, która zestawia ostatnie tygodnie alarmów w pasie
+przy granicy z tygodniami wcześniejszymi i liczy wyłącznie minuty, które zapis
+naprawdę widział, żeby tydzień z awarią nie uchodził za spokojny. Żaden z tych
+elementów niczego nie przewiduje; analiza tygodni porównuje i mówi o tym
+wprost.
 
 18 sierpnia, podczas prawdziwego nalotu, alarm objął osiem zachodnich rejonów w
 czterech obwodach, a autor zestawiał wtedy tę stronę z kanałem na bieżąco. To

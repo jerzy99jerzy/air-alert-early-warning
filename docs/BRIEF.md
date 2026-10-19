@@ -6,12 +6,13 @@ project, pre-alpha, and nobody receives a notification from it today.**
 For a reader who does not write code.
 
 ```
-Document:  docs/BRIEF.md, version 2.33
+Document:  docs/BRIEF.md, version 2.34
 Measured:  every pinned figure here is compared against STATUS.json on each
            run of the gate, so what vouches for those figures is that
            comparison and not a date in this header. The pins they are read
-           against are the ones 0.55.2.0 carries. Two earlier headers named a
-           date instead, and both were untrue by the time anybody read them:
+           against are those of the release that carries this file; until
+           this edition the line named 0.55.2.0, long after that stopped
+           being true. Two earlier headers named a date instead, and both were untrue by the time anybody read them:
            version 2.4 dated itself 2026-08-31 while four figures inside it
            came from 0.32.9.0, and version 2.23 kept that line after the pins
            had moved on five releases. Both are set out under "What you do
@@ -203,7 +204,7 @@ With a private project this weighs more than the technology, so specifics
 instead of assurances. Every one of them can be checked without asking the
 author for an opinion.
 
-**The defect log holds 176 entries.** Each states what broke, why nobody
+**The defect log holds 177 entries.** Each states what broke, why nobody
 noticed, and what class of error it was. Entries against the project's own
 interest are in there too, including the 0 of 20 above, and one where the
 documentation claimed something was checked and it was not. Separately, **60
@@ -274,6 +275,19 @@ anything flying. Places outside Ukraine where a drone came down are marked from
 published records. None of the three changes what the tool refuses to say, and
 each carries a different kind of claim from the Ukrainian alert picture, which
 is why each sits behind its own switch.
+
+**Five more have arrived since, and they belong here for the same reason.** The
+Ukrainian Air Force's own morning count of what was launched overnight and what
+was brought down, printed as they published it and never recomputed, with the
+nights of the last quarter set side by side. The level the Ukrainian source
+declares for each alert, which now decides the colour of an alerted district,
+in the source's own word. A slider that takes the map back to any moment of the
+past week. The last two days of RCB air alerts in each province, with how each
+one ended. And since 18 October a page that sets the recent weeks of alerts
+near the border against the weeks before them, counting only the minutes the
+record actually saw, so that a week with an outage is not mistaken for a quiet
+one. None of the five predicts anything; the weekly page compares, and says
+that it does.
 
 On 18 August, during a real raid, an alert covered eight western districts
 across four oblasts and the author read that page against the channel while it

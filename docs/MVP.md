@@ -1,7 +1,7 @@
 # MVP
 
 ```
-Document:  docs/MVP.md, version 3.11 / 2026-09-10
+Document:  docs/MVP.md, version 3.12 / 2026-10-19
 Audience:  anyone asking when this is finished, including the author on a day
            when another sprint feels justified
 Companion: TODO (the backlog), DECISIONS (what was rejected), reviews/ (what
@@ -57,17 +57,18 @@ below.
 
 ## 2. Audience A: the author, personal use
 
-**Done when** the daemon has run unattended for 72 hours against the live
+**Done when** the collector has run unattended for 72 hours against the live
 channel, every cycle is accounted for in the run log as events, a degradation
 event or a logged defect, and the end-to-end latency from channel publication to
 a rendered report is measured and recorded rather than estimated.
 
 | Blocker | Type |
 | --- | --- |
-| Area resolution against real message wording | engineering (S7). The shipped table scored 0 of 20 (F23); the register replacing it is T31 |
-| Distance to the border as a stored column | engineering (S8, T32) |
-| `mavo watch` and the run log | engineering (S9, T23) |
-| Where the daemon lives | **decision** (T25). A laptop that sleeps writes a record whose holes look like quiet nights |
+| Area resolution against real message wording | engineering (S7), **met** on an amended criterion: the channel's own hashtags resolve to register codes. The table that scored 0 of 20 (F23) no longer resolves anything a tag names |
+| Distance to the border as a stored column | engineering (S8, T32), **met** |
+| The publishing loop and the run log | engineering (S9, T23), **met**: `mavo report --watch` is the loop and `mavo watch` was never built |
+| Where the collector lives | **decided** (T25, D-031): `vm-mavo`, timers and `oneshot` services, unattended since 2026-08-11. A laptop that sleeps would have written a record whose holes look like quiet nights |
+| Latency from publication to a rendered report | **open**: measured for the channel (T40, 0.54.3.0), never for the API that has fed the picture since D-040 |
 
 ## 3. Audience B: a small group who asked
 
@@ -133,7 +134,7 @@ who are strangers.
 
 | Blocker | Type |
 | --- | --- |
-| Measured correctness and latency, published | engineering (S8, S9) |
+| Measured correctness and latency, published | withdrawn from S8 and S9 rather than met: correctness waits on T36 (S12, outside the project), and latency is published for the channel only (T40) while the API's is untaken |
 | Availability target and rate limit | engineering (S10) |
 | A route that is not one app in English | engineering, **not yet scoped**. Named now so it is not discovered at the end |
 | Legal position covering strangers | **decision** (T6) |
@@ -186,7 +187,7 @@ than absorbed into the next one.
 | --- | --- | --- | --- |
 | **S7** | closed 9 Aug | Area resolution: the tag parse, the 127-row map, the alias table (T33) and the untagged remainder (T34). Smaller than planned, because the channel tags 99.34% of messages with the area and unit type (`docs/CHANNEL.md`) | Met on an amended criterion, recorded as amended. Every tag resolves or is explicitly unresolved, and tag and prose agree on 38,520 of 38,521 comparable messages. The hand sample is retargeted at the population that check cannot see (T36) |
 | **S8** | closed 17 Aug | The report. Distance to the border precomputed per area (T32), report composition, a command that renders the current picture from the store | **Met on an amended criterion, recorded as amended, the way S7 was.** Shipped and held by regressions: the composition, `mavo report`, the `state.json` contract, the publishing loop. The distance column is verified three ways, worst divergence 0.04 km between simplifications and 1.1 km against an independent geometry and method (`docs/METHODOLOGY.md`). **The hand-checked accuracy sample is withdrawn from this sprint** and moves to S12: it cannot be drawn against the population this product exists for until that population appears in the data, and no engineering week brings that forward. See the note below the table |
-| **S9** | closed 10 Sep | Real time. The run log attached to the publishing loop (T23, T24), interval jitter (T27), the host decision (T25, D-031). `mavo watch` is **not** shipping: `mavo report --watch` was already the loop | **Amended twice, and met on the second amendment.** D-032, 2026-08-17, mid-window: 72 hours of uninterrupted **collection**, every cycle accounted for and every pause named with its cause; **at most two planned restarts of the report loop**; the first end-to-end latency measurement as a distribution rather than a best case. The original clause said only "72 hours unattended", declared before any figure in this plan existed. **D-051, 2026-09-10, closing: the first two clauses are met and measured** - the window closed clean on 2026-08-20 with zero restarts, 7,850 attempts at 33.0 s, continuity measured rather than assumed - **and the third is withdrawn rather than met.** `docs/CHANNEL.md` 8a stays empty; the row it asks for would now measure the watchman rather than the source, and filling it to close a sprint is the act this plan exists to prevent. What the withdrawal costs is stated in D-051 and in the note below the table |
+| **S9** | closed 10 Sep | Real time. The run log attached to the publishing loop (T23, T24), interval jitter (T27), the host decision (T25, D-031). `mavo watch` is **not** shipping: `mavo report --watch` was already the loop | **Amended twice, and met on the second amendment.** D-032, 2026-08-17, mid-window: 72 hours of uninterrupted **collection**, every cycle accounted for and every pause named with its cause; **at most two planned restarts of the report loop**; the first end-to-end latency measurement as a distribution rather than a best case. The original clause said only "72 hours unattended", declared before any figure in this plan existed. **D-051, 2026-09-10, closing: the first two clauses are met and measured** - the window closed clean on 2026-08-20 with zero restarts, 7,850 attempts at 33.0 s, continuity measured rather than assumed - **and the third is withdrawn rather than met.** `docs/CHANNEL.md` 8a stayed empty at the close; the row it asked for would by then measure the watchman rather than the source, and filling it to close a sprint is the act this plan exists to prevent. T40 wrote that row afterwards, at 0.54.3.0, outside the sprint. What the withdrawal costs is stated in D-051 and in the note below the table |
 | **S10** | **N/A** | Delivery. Self-hosted ntfy, the three message classes, blindness reporting, per-recipient topics (M1) | A synthetic report reaches a phone through Do-Not-Disturb within a measured time; killing the feed produces a blindness message within one interval; the delivery ledger and the phone agree over a week |
 | **S11** | **N/A** | Hardening to beta. Threat-model rows for the delivery path with tests, the clean-clone probe (T7), the identifier lint (T22), the disengagement instrument (T29) | `make verify` green from a clean clone on a machine with nothing installed, every new threat row carrying a test, and T6 recorded |
 | **S12** | **cannot be scheduled** | Nothing. **This sprint ships no code.** It is the verification that the instrument works on the case it was built for, performed on real data when that data exists | **The project is not finished until this is met, and this is the only sprint whose window depends on an event outside the project.** Four checks, all against a real alert episode over western Ukraine: (1) a hand-labelled sample drawn from western rows with a stated error rate and its Wilson bound (T36); (2) the whole chain observed once end to end during that episode, source to rendered page, with the latency measured rather than modelled; (3) the distance column checked against the areas that actually declared, not only against geometry; (4) the staleness machine observed crossing on a real host during real load (T54) |
@@ -295,7 +296,8 @@ started with.** The D-032 window opened 2026-08-17 11:02:06 UTC and closed
 permitted, 7,850 attempts at a 33.0 s cadence, continuity measured rather than
 assumed. Two clauses of three, met and measured. **The third - the latency
 distribution written into `docs/CHANNEL.md` 8a - is withdrawn by D-051 rather
-than met**, and section 8a is still empty of a row on purpose.
+than met**. Section 8a held no row until T40 wrote the channel's at 0.54.3.0,
+after the sprint had closed and outside it.
 
 **What the withdrawal costs, stated the way S8's western asterisk is.** Every
 argument in this repository that touches lateness - that thirty seconds is a
@@ -326,7 +328,9 @@ channel is the watchman and `api.ukrainealarm.com` is the source (D-040). A
 distribution over channel rows is a true statement about the channel and no
 longer a statement about how late this instrument's picture is; the equivalent
 figure for the API is a different quantity and has never been taken. T40
-carries the row, off the sprint board, tier 1, and one command away.
+wrote the channel's row at 0.54.3.0; the API's needs a threshold that separates
+an alert detected from one inherited, which is a decision rather than one
+command.
 
 Until 0.50.0.0 the paragraph this replaces read *one hour into seventy-two* and
 *nothing about it can be reported until it does*, eleven days after the window
@@ -335,7 +339,8 @@ be reported. The header carried the current date throughout. Same mechanism as
 F140, and it is recorded here rather than quietly overwritten.
 
 **The one date that stays, and it is not an estimate of effort.** T6, the legal
-position, is due **at the beginning of September**. It is a decision blocker:
+position, was due **at the beginning of September**, and at 0.61.0.1 it is
+still open with no position recorded in `docs/DECISIONS.md`. It is a decision blocker:
 counsel is asked or is not, and no engineering week shortens it. It carries a
 date rather than a condition on purpose. A condition like "before anyone else
 receives a notification" cannot be checked until it has already happened, so it
@@ -343,8 +348,9 @@ is an intention rather than a criterion; a date passes on its own and the
 passing is visible.
 
 **Dependencies, stated so a slip propagates visibly.** S8 needs S7's resolution
-to work at all; S9 needs S8's report to have something to render; S10 needs S9's
-latency measurement to know what it is promising; S11 needs S10's delivery path
+to work at all; S9 needs S8's report to have something to render; S10 needs a latency
+measurement of the source it delivers from to know what it is promising, and
+S9 withdrew that clause while the API's figure is still untaken; S11 needs S10's delivery path
 to have threats to model. Beyond the legal track there is no parallelism to
 exploit, and pretending otherwise is how five sprints becomes eight.
 

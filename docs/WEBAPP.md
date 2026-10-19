@@ -1,6 +1,6 @@
 # The web tier: a page fed by MAVO
 
-Version: 3.20 / 2026-10-18
+Version: 3.21 / 2026-10-19
 Status: **built, deployed, and publicly reachable** at `https://mavo.org.pl/`.
 The consumer carries its own version, its own gate (coverage floor, jsdom
 browser harness, mutation register), its own defect log and its own audit;
@@ -125,7 +125,8 @@ tenth cycle from 2026-09-28 (D-058). From 0.61.0.0 a fifth, `analysis.json`,
 thirteen weeks set against each other for the site's analysis page from its
 4.92.0.0, written once an hour by its own unit (D-064). MAVO writes
 them (`mavo report --json ... --feed ... --history ... --timeline ...`, and
-`--watch` for the loop); the site reads them and imports nothing from this
+`--watch` for the loop; `mavo analysis --out ...` for the fifth, on its own
+timer); the site reads them and imports nothing from this
 package.
 
 **Two files rather than one, and the reason is cost rather than tidiness.**
@@ -140,7 +141,7 @@ through an adapter labelled `[inference]`, which put the schema in the hands of
 the party that could not check it.
 
 ```
-mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --watch --interval 60
+mavo report --store /var/lib/mavo/events --json /var/lib/mavo/state.json --feed /var/lib/mavo/feed.json --timeline /var/lib/mavo/timeline.json --timeline-every 10 --watch --interval 30
 ```
 
 | Field | Meaning | The trap |
@@ -172,7 +173,7 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `timeline.json: areas` | `oldest_observation`, `log_reaches_window_start`, `places` (per `area_id`: `katottg`, `oblast`, `oblast_name`, `border_km_lower`, `border_km_upper`) and `intervals[]` (`area_id`, `alert`, `kind`, `since`, `kinds`, `level`, `from`, `to`); from 0.60.0.0 `levels` (`recorded_since`), present when the week was built over the level stream | **An interval joined to its place is exactly an entry of `areas[]` in `state.json`**, one serialisation, held by `tools/contract_check.py`. The picture of a moment is the entries whose interval holds it, and an area in no interval at that moment was cleared, as in `state.json`. Changes at the source's own stamp, so a row that reached the store after an outage sits where the source put it. A standing older than the window starts at the window's start; when it began is its `since`. **A level change inside one alarm is a new interval** at the declaration's own stamp, and the slider repaints there (D-063). **A moment before `levels.recorded_since` has no recorded level**, whatever its intervals say: a page draws it as not recorded, and absent `levels` is a week built without the stream |
 | `timeline.json: rcb` | `recorded_since` and `intervals[]`, each holding `pl_warnings` and `pl_all_clear` exactly as the contract would have published them, `null` where it would have said `null` | **Before `recorded_since` there is no record, and that is not a stretch without communiques.** `null` inside is polled and unreadable, the hour-old ceiling included (D-053). Changes at read time: a list reaches the file up to one poll after the publisher changed it |
 | `timeline.json: airspace` | `recorded_since`, `unread[]` (the stretches where the contract would have said `null`), `geometries` (an outline per digest) and `intervals[]` (`designator`, `kind`, `geometry`, `properties`, `from`, `to`), one per zone drawn | `properties` is the feature's own object in `pl_airspace`. The text block's `read_at`, `statuses` and `stale_error` are not carried: they change at every read, and a stretch without reads is `coverage`'s to report |
-| `analysis.json` | From 0.61.0.0, written by `mavo analysis --out` once an hour: `v` (its own version, 1), `generated_at`, `zone`, `window` (`start`, `end`, `weeks`, `minutes`), `record`, `definitions`, `band`, `weeks[]`, `days[]`, `blind[]`, `episodes[]`, `waits[]`, `rcb`, `choices`, `groups` and `comparisons[]` (D-064) | **Every figure the analysis page prints, and every choice of weeks it offers, is here**: each pair of one to four recent usable weeks and at least two before them is a `comparisons[]` block naming its two `groups`, so the page selects and computes nothing. A week less than half observed is `usable: false` and its `values` are all `null`, never a rate of zero; a measure a recent week cannot carry is `not_computable`. 422,682 B as written and 46,856 B gzipped for the production export of 2026-10-18 [measured]; the host's figure is T94's |
+| `analysis.json` | From 0.61.0.0, written by `mavo analysis --out` once an hour: `v` (its own version, 1), `generated_at`, `zone`, `window` (`start`, `end`, `weeks`, `minutes`), `record`, `definitions`, `band`, `weeks[]`, `days[]`, `blind[]`, `episodes[]`, `waits[]`, `rcb`, `choices`, `groups` and `comparisons[]` (D-064) | **Every figure the analysis page prints, and every choice of weeks it offers, is here**: each pair of one to four recent usable weeks and at least two before them is a `comparisons[]` block naming its two `groups`, so the page selects and computes nothing. A week less than half observed is `usable: false` and its `values` are all `null`, never a rate of zero; a measure a recent week cannot carry is `not_computable`. 422,682 B as written and 46,856 B gzipped for the production export of 2026-10-18 [measured]; on the host the first run wrote 424,540 B, 47,593 B gzipped, over 64,838 events in about ten seconds of replay and build [measured 2026-10-19, the unit's journal] |
 | `analysis.json: definitions` | The constants the figures were computed with: the band's 150 km, the 180-minute silence, the usable half week, the hour floor, the rings, the lead window, the fit's reach, the resamples and their seed, the event grid, the merges, the long day, the full day, the read cadences, the wait grid and buckets, the listed gap, the streak | **A page that states a constant in words must refuse a file computed with another**, rather than describe figures in sentences that no longer match them; the consumer pins the ones its sentences state |
 | `analysis.json: comparisons[]` | `n`, `m`, `current`, `baseline`, `channel_weeks`, `metrics` (per measure: `verdict`, `median`, `min`, `max`, `weeks`, `current`, `weeks_values`, `above`, `below`, `last_above`, `last_below`, `last_to_max`), `robust`, `streak`, `coverage`, `raions`, `raions_rising`, `speeds_overlap`, `episodes_rcb`, `rcb_since_unchanged`, `hours` | **A verdict is a position against the range of the background weeks, not a test**: `all_above`, `some_above`, `in_range`, `some_below`, `all_below`, and `thin`, `not_computable`, `not_assessed` for a comparison not made. `weeks_values` is `null` for a recent week that cannot carry the measure, the RCB measure included where the list was read for less than half the week, and a page then says the list was not read rather than counting |
 | `analysis.json: rcb` | `recorded_since`, `unread[]`, `cadence[]`, `alerts[]`, `seen_after`, `oblasts[]`, `oblast_top`, `hours` and `rules` | **Before `recorded_since` there is no record, and `unread` is a hole in every RCB count, never a stretch without alerts.** `seen_after_min` is `null` for an alert whose message gave no time. A rule's firing is counted only where the list was read for every minute of it, and idle only when no alert of the window fell inside it |
@@ -188,7 +189,7 @@ mavo report --store /var/lib/mavo/events --json /var/lib/mavo-site/state.json --
 | `items[].west` | Whether the area is in the eight western oblasts | A flag to colour by, not a filter applied here: the stream carries all of Ukraine |
 | `items[].at` | The source's time for the transition | Not ingest time. The difference is the feed latency |
 | `counts_24h` | `west`, `rest`, `total` over the day | The context that keeps a twenty-minute window from being a keyhole: a quiet stream while the east is burning is a different fact from a quiet night |
-| `sources` | Which pipes are delivering, one row per declared feed, from `feed_attempts` and never from events (D-049), or `null` when the producer did not measure | `primary_delivering` is the reader-facing number; `delivering` and `known` are the operator's and count every pipe. **From 0.55.0.0 `known` is 4**: `rso` and `pansa` join with role `context`, which enters neither primary count, because neither is a delivery path of the Ukrainian system (D-053). Each reads `unknown` until its timer's first run. The role vocabulary is open |
+| `sources` | Which pipes are delivering, one row per declared feed, from `feed_attempts` and never from events (D-049), or `null` when the producer did not measure | `primary_delivering` is the reader-facing number; `delivering` and `known` are the operator's and count every pipe. **From 0.55.0.0 `known` is 4 and from 0.56.0.0 it is 5**: `rso` and `pansa` join with role `context`, and `kpszsu` after them with the same role (D-056), which enters neither primary count, because none of the three is a delivery path of the Ukrainian system (D-053). Each reads `unknown` until its timer's first run. The role vocabulary is open |
 | `pl_warnings` | From 0.55.0.0, when this producer has polled RSO: one row per voivodeship named by an unexpired, **uncleared** threat about the air, in order of first appearance, each with `communiques[]` carrying `id`, `title`, `valid_from`, `valid_to`, `text` and `air_term` (D-053). From 0.55.1.0 each row also carries `slug`, the publisher's slug (`warminsko-mazurskie`): join and pair on `slug`, show `voivodeship`, the feed's name lowercased (`warmińsko-mazurskie`); and a threat leaves this list the moment a later all-clear names its voivodeship (D-055) | **Four states, told apart by the key, and each is a different claim.** Absent: this producer has never polled the feed, and the consumer's own reading still stands. `null`: polled, and cannot say - including a reading of the map's scope older than an hour, which this payload has no field to show as old. `[]`: read, nothing to show. Rows: something to show. `air_term` names the word that classified the communique, so a false paint names its cause. A stamp inside an hour the clock change doubles or skips arrives as the feed's own text, not as ISO. From 0.55.2.0 a document from the feed that is not its list is a failed read, so the key goes `null` an hour later rather than `[]` (F173) |
 | `pl_all_clear` | From 0.55.1.0, published whenever `pl_warnings` is and `null` whenever it is: one row per voivodeship named by an unexpired all-clear, the same row shape with `slug`, each item plus `ended`, the ids of the threats it ended on that voivodeship (D-055) | **The clearance the publisher sent, kept apart from the list a consumer paints.** RCB ends an alert with a second communique and leaves `valid_to` at the end of the day, so a reader of the air terms alone painted the sixteenth until midnight. A row with `ended: []` is a clearance for something this store never held, still shown. `air_term` here is the all-clear term |
 | `pl_rcb_recent` | From 0.59.0.0, when this producer has polled RSO: the trailing forty-eight hours of RCB air alerts as `hours`, `start`, `end`, `recorded_since`, `unread[]` (`from`, `to`, `to: null` open at `end`) and `voivodeships[]`, one row per voivodeship with an alert that painted or an all-clear announced in the window, each with `slug`, `voivodeship`, `alerts[]` and `all_clears[]` (D-062) | **What painted is `pl_warnings`'s own walk**, so an alert this key calls painted at a moment is one `pl_warnings` painted then; why it stopped is read off the lists the store recorded. Absent when `pl_warnings` is; `null` only when composing it failed, under its own guard, with the live list left standing. It reads the store apart from `pl_warnings`, so a poll written between the two reads can make them disagree for one cycle. **`unread` bounds what a page may say about the voivodeships not listed, and even empty it speaks of the reads, not of RCB.** It joins the stretches between two reads of the list further apart than the RSO pipe's outage threshold, 1,800 s, each from the last read before it to the next and clipped to the window; the stretches in which `pl_warnings` was `null`; and, when the record starts inside the window, the stretch before it. Empty: the reads found no alert elsewhere, and an alert raised and taken off the list between two reads could still have gone unseen. Not empty: a page names the gaps. Painting starts at the later of `start` and `recorded_since`. Order: the voivodeship with the latest moment of anything first (an alert's last `to`, the window's end while it paints, an all-clear's `announced` or else `appeared`), then `slug`. No text and no count: the live key carries the text for what stands, and the lists are the counts |
@@ -482,17 +483,26 @@ flowchart LR
   collector --> store[(event store)]
   rso[RSO communiques, context since D-053] --> store
   pansa[PANSA airspace plan, context since D-053] --> store
+  kpszsu[Air Force summaries, context since D-056] --> store
   store --> report[mavo report --watch]
-  report -->|writes every cycle| state[/state.json + feed.json/]
+  store --> analysis[mavo analysis, hourly timer]
+  report -->|every cycle| state[/state.json + feed.json/]
+  report -->|every tenth cycle| week[/timeline.json/]
+  analysis -->|once an hour| weeks[/analysis.json/]
   state -->|pushed every 30 s, F116| site[mavo-site, separate host]
+  week -->|pushed after each rewrite| site
+  weeks -->|pushed after each rewrite| site
   site --> reader([reader])
 ```
 
-The arrow into `state.json` is the only coupling. Everything to its left is
-this repository; everything to its right imports nothing from it.
+The arrows into the four files are the only coupling. Everything to their left
+is this repository; everything to their right imports nothing from it.
+`history.json` is written only when `--history` is given, which the deployed
+report unit does not pass, so the site never receives it; it does not read it
+either (D-048).
 
 The site never reads the store, never imports `mavo`, and needs no credentials.
-Its only input is a file. That is also what makes the failure mode benign: if
+Its only input is files. That is also what makes the failure mode benign: if
 the exporter dies, the file stops moving, and the page says `blind` on the
 browser's clock without anyone noticing anything.
 
@@ -536,7 +546,10 @@ notice the drift finds a proposal rather than a complaint.
 ## Open questions
 
 - **Does the page need Ukrainian?** English shipped: the routes `/en` and
-  `/en/areas` are named in the crawling policy of 4.66.0.0 `[reported]`, so half
+  `/en/areas` are named in the crawling policy of 4.66.0.0 `[reported]`, and
+  the analysis page drawn from `analysis.json` answers at `/pl/analysis` and
+  `/en/analysis` from 4.92.0.0 `[measured 2026-10-19]`: the site's footer
+  reads 4.92.0.0 and `/en/analysis` answers 200, so half
   of this question answered itself and this file went on asking it. The audience
   argued for in `docs/BRIEF.md` is Polish readers near the border, which is an
   argument about Polish rather than against Ukrainian.

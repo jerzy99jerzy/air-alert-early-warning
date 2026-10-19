@@ -16,6 +16,48 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.61.0.1 - 2026-10-19
+
+**The documents described a system several releases old, and the README most
+of all.** Read against the tree at `v0.61.0.0` and against the host the
+morning after its install, the prose said the channel's latency had never been
+measured, that the site reads two files, that the deployed report runs every
+120 s, that the page makes no third-party request, that the API has no
+adapter, that nothing is resident and that `mavo watch` is coming. Each was
+true once and was made false by work that was done, which nothing prompts
+anybody to write down (F202, F118's class a fifth time). Documents only;
+nothing under `mavo/` moves but the version string.
+
+- **README.** The latency paragraph quotes T40's row and says the API has
+  none; the contract is four files, the diagram draws the three context
+  readers and the analysis, and the quick start runs what the host runs;
+  `@kpszsu` joins the source table; the map's Google tiles are named as the
+  page's one third-party request, as the site's privacy page already does;
+  the layout carries the eight modules and five subcommands it lacked; the
+  gate's cost is re-measured; T55 and T69 are written as closed; the
+  *Measured claims* list points at the pinned figures instead of repeating
+  stale ones, and the precision ceiling falls 21 to 18 with it.
+- **`docs/DEPLOYMENT.md` 1.60.** The 0.61.0.0 install read on 2026-10-19:
+  installed 2026-10-18 20:19:55 UTC, byte for byte the tag by its content
+  digest, nine services and seven timers, the push's fourth file, and the
+  analysis file identical on both hosts. The deploy history reaches 0.61.0.0;
+  the RSO egress row says 60 s and names the repository debt it still
+  carries. **T94 closes** with the host's figures.
+- **`docs/ARCHITECTURE.md` 2.9.** The component map and the block index carry
+  the report, the week, the analysis, the RCB register, the strike tally and
+  the declared level; two process shapes rather than one; module line counts
+  re-read and no longer called regenerated.
+- **`docs/WEBAPP.md` 3.21, `docs/OBSERVABILITY.md` 1.2, `docs/MANUAL.md` 3.20,
+  `docs/MOBILE.md` 1.7, `docs/MVP.md` 3.12, `docs/CHANNEL.md` 1.13,
+  `docs/MECHANISMS.md` 2.8.** The four pushed files and `known` at 5; the
+  run log running on the host and an example that called a flag the reader
+  does not have; `mavo watch` superseded by D-031; T25 decided and the
+  classifier no longer 0 of 20; section 8a no longer called empty; T6 named
+  as overdue.
+- **The briefs** (2.34, 2.35) name the five things the page gained after the
+  three layers they listed, and stop naming 0.55.2.0 as the pins' release.
+- **METHODOLOGY** (2.76): F202. **TODO**: T94 done.
+
 ## 0.61.0.0 - 2026-10-18
 
 **The record could say what one moment and one week looked like, and nothing

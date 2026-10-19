@@ -6,7 +6,7 @@
 [![tests 1230](https://img.shields.io/badge/tests-1230-brightgreen)](tests/)
 [![coverage 96.73%](https://img.shields.io/badge/coverage-96.73%25-brightgreen)](Makefile)
 [![harness 17 attacks, 16 mutation-verified](https://img.shields.io/badge/harness-17%20attacks%2C%2016%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 176](https://img.shields.io/badge/defects%20logged-176-informational)](docs/METHODOLOGY.md)
+[![defects logged 177](https://img.shields.io/badge/defects%20logged-177-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -39,11 +39,11 @@ Status: pre-alpha, **two sprints from beta** (S10, S11) on the plan in [`docs/MV
 
 That is the cheaper half of beta: the instrument is live. The other half has been done once and recorded nowhere: during the 2026-08-18 raid the operator read the page against the channel while eight western raions were under alert - the check this product exists for, performed on the population it exists for, living as testimony because the verdicts were never written down. **No recorded hand-checked correctness rate exists for western areas**, and the instrumented sample with a stated error rate waits on that population reaching sample size (T36). This repository counts as done what it can show.
 
-**Latency is now measured end to end**, which it was not for the first thirty-two releases. Over a week of store and five thousand messages, half arrive within about twenty seconds of the timestamp the channel put on them - inside a single poll, so at the median most of the wait is ours to shorten. The tail is another matter: the slowest tenth takes on the order of two minutes, the slowest hundredth several, and for a warning instrument the tail is the part that counts. How much of that belongs to the source and how much to our own failed polls is not yet separated, so T40 stays open, with a measurement in it now rather than a blank; the exact figures live there, beside the caveats they need.
+**The channel's latency is measured end to end; the primary source's is not.** Over twenty-six and a half days of store and 19,475 messages, from 2026-08-11 to the channel's silence of 2026-09-07, half arrived within 18.7 s of the timestamp the channel put on them, nine in ten within 34.7 s, and ninety-nine in a hundred within about three minutes `[measured]` - inside a single poll at the median, so most of that wait is ours. T40 closed at 0.54.3.0 with that row, which `docs/CHANNEL.md` section 8a carries beside the caveats it needs. It is a fact about the watchman. **The API, which has fed the picture since 2026-08-30 (D-040), has no latency figure at all**: its source timestamp is the moment an alert was declared, so an alarm standing since April reads as a four-month lag, and nothing in the store separates detection from inheritance. How late the picture a reader sees is therefore remains unmeasured.
 
 Running is not the same as measured, and this repository's defect log is largely a record of what happens when the two are read as one thing.
 
-**Fourteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `sprint_test_files` in `STATUS.json` lists ten of them, S0 through S9; the four that are missing are missing deliberately, because adding them would read as an assertion that S10 through S13 met their exit criteria, which is a larger claim than a test file can carry. The field was renamed to what it counts after F93, and the gap it now leaves is visible rather than averaged away. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S9, and all three of S7, S8 and S9 closed on amended criteria that are recorded as amended.** S8's distance column is verified three ways and its hand-checked sample is twenty eastern messages from one afternoon, withdrawn to S12 rather than counted. S9 closed at 0.54.0.0 under D-051 with two of three clauses met and measured - the seventy-two-hour window closed on 2026-08-20 with zero restarts and every cycle accounted for - and **the third withdrawn rather than met**: `docs/CHANNEL.md` section 8a is still empty of a latency row, so every claim here that touches how late the picture is remains an unmeasured assumption. "Unattended" turned out to need a definition of its own - the store has three stretches of an hour or more with nothing recorded in it, and only one is provably an outage rather than a quiet channel. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
+**Fourteen sprints have landed with their regression files**, which is what "shipped" means here and all it means. `sprint_test_files` in `STATUS.json` lists ten of them, S0 through S9; the four that are missing are missing deliberately, because adding them would read as an assertion that S10 through S13 met their exit criteria, which is a larger claim than a test file can carry. The field was renamed to what it counts after F93, and the gap it now leaves is visible rather than averaged away. **Sprints completed, in the sense of meeting the exit criterion in `docs/MVP.md`, run to S9, and all three of S7, S8 and S9 closed on amended criteria that are recorded as amended.** S8's distance column is verified three ways and its hand-checked sample is twenty eastern messages from one afternoon, withdrawn to S12 rather than counted. S9 closed at 0.54.0.0 under D-051 with two of three clauses met and measured - the seventy-two-hour window closed on 2026-08-20 with zero restarts and every cycle accounted for - and **the third withdrawn rather than met**: the latency row, which T40 has since written for the channel while the API, the source by then, still has none, so every claim here that touches how late the picture is rests on an unmeasured term. "Unattended" turned out to need a definition of its own - the store has three stretches of an hour or more with nothing recorded in it, and only one is provably an outage rather than a quiet channel. The two counts of "shipped" were read as one number until 0.22.0.0 (F93). The corpus is collected rather than awaited: **61,041 messages** over 118 nights, contiguous, digest recorded, held outside the tree.
 
 Area resolution works against real channel content and the number that used to
 sit here was wrong. **20 of 20 real messages resolve their area to a unique code
@@ -124,8 +124,10 @@ read?* below.
 
 From 0.55.0.0 it also records two Polish public feeds, the civil-protection
 communiques and the airspace use plan, and hands them to the site as context
-beside the Ukrainian picture (D-053). Neither is a warning channel; the source
-table below says what each is.
+beside the Ukrainian picture (D-053). From 0.56.0.0 it reads the Ukrainian Air
+Force's morning summaries as well, and publishes the night's figures exactly as
+the Air Force gave them (D-056). None of the three is a warning channel; the
+source table below says what each is.
 
 That is the whole of it. It is a **reporting instrument**: it tells you what has
 been announced, in a form a person near the border can act on. It does not
@@ -155,7 +157,7 @@ established is printed as *unknown*. It is not printed as quiet, not left blank,
 and not quietly dropped from the list.
 
 There is a public page that renders all of this on a map. It is a separate
-program in a separate repository, and it reads one file this one writes. It
+program in a separate repository, and it reads the files this one writes. It
 imports no code from here and needs no access to anything: if it were breached
 tomorrow, it would have nothing to give away.
 
@@ -191,13 +193,16 @@ precomputed distance from its nearest edge to the Polish border. Nearest edge,
 not centre: a region can be four hundred kilometres across, and the centre of a
 large oblast would be a comforting number rather than a true one.
 
-**5. It writes down what is true right now.** Two files. One is the current
-picture: which areas are under alert, how far each is, and when the reading was
-taken. The other is a rolling day of history: what started, what ended, what
-became unknown, and at what time.
+**5. It writes down what is true right now.** Two files every thirty seconds.
+One is the current picture: which areas are under alert, how far each is, and
+when the reading was taken. The other is a rolling day of history: what
+started, what ended, what became unknown, and at what time. Two more follow on
+slower cycles: the past week as intervals, for the map's slider, rewritten
+every tenth cycle (D-058), and thirteen weeks set against each other, written
+once an hour for the analysis page (D-064).
 
-**6. The page draws it.** The public site reads those two files and nothing
-else. It puts a marker in the middle of each area that has declared an alert,
+**6. The page draws it.** The public site reads those files and nothing else
+from this program. It puts a marker in the middle of each area that has declared an alert,
 draws a ring showing how large that area is, and prints the distance. The ring
 is there to stop you reading the marker as an object: the icon is not a missile
 and not a position, it is a district that made an announcement.
@@ -215,19 +220,22 @@ flowchart LR
     API["api.ukrainealarm.com<br/>full-state snapshot, keyed<br/>PRIMARY since D-040"]
     CH["Public Telegram channel<br/>intermittent: silent from 2026-08-29, again from 2026-09-07<br/>read as the watchman, health per pipe (D-049)"]
     KAT[("KATOTTG register<br/>vendored, CC BY 4.0")]
+    CTX["RSO communiques, PAŻP airspace plan,<br/>the Air Force's morning summaries<br/>context, never a warning channel"]
 
     subgraph PROD["air-alert-early-warning (this repository)"]
         CAPI["collect-api, about every 2 min<br/>diff against the previous snapshot<br/>an ended alert is synthesised, dated by observation"]
         COLL["collect, every 30 s<br/>a returned publisher lands labelled"]
+        PLR["rso, airspace, kpszsu<br/>each on its own timer"]
         STORE[("event store<br/>SQLite, append only<br/>one row per area, kind, moment")]
         REC["reconcile<br/>licensed only by a fresh snapshot"]
-        REPORT["report<br/>fold per area and kind<br/>any kind not clear keeps the area"]
+        REPORT["report, every 30 s<br/>fold per area and kind<br/>any kind not clear keeps the area"]
+        ANALYSIS["analysis, hourly<br/>thirteen weeks, per observed minute"]
     end
 
-    STATE[("state.json + feed.json<br/>the contract, pushed every 30 s")]
+    STATE[("state.json + feed.json every 30 s<br/>timeline.json every tenth cycle<br/>analysis.json hourly<br/>the contract, pushed to the site")]
 
     subgraph SITE["mavo-site (separate repository)"]
-        SERVE["render<br/>one file read, no imports"]
+        SERVE["render<br/>files read, no imports"]
         PAGE["public page"]
     end
 
@@ -237,13 +245,17 @@ flowchart LR
 
     API --> CAPI
     CH -.-> COLL
+    CTX --> PLR
     KAT --> CAPI
     KAT -.-> COLL
     CAPI --> STORE
     COLL -.-> STORE
+    PLR --> STORE
     STORE --> REPORT
+    STORE --> ANALYSIS
     REC -.-> STORE
     REPORT --> STATE
+    ANALYSIS --> STATE
     STATE --> SERVE
     SERVE --> PAGE
     PAGE --> READER
@@ -252,9 +264,10 @@ flowchart LR
 
 Two properties the diagram is meant to make obvious. **The store is append
 only and the fold is one-way**: nothing downstream writes back, so a rendering
-mistake cannot corrupt the record. And **the consumer reads a file, not this
-program**: `state.json` is the entire interface, which is why the specification
-for it is a document rather than an import.
+mistake cannot corrupt the record. And **the consumer reads files, not this
+program**: the four files are the entire interface, which is why their
+specification is a document rather than an import (`docs/WEBAPP.md`, *The
+contract, and who owns it*).
 
 What is *not* in this chain: any inference about direction, speed, target or
 crossing. Nothing in the source data supports such an inference, so nothing in
@@ -362,9 +375,14 @@ the deployment has moved rather than the project having stopped; the
 repository is the durable artefact and the deployment is not.
 
 **Does it track me?** The public page keeps no logs of addresses, sets no
-cookies, and makes no third-party requests. Visits are counted as two numbers a
-day, from an address hashed with a key that is regenerated daily and never
-written down. Your theme and map-layer choices stay in your own browser.
+cookies and runs no analytics. **The map is the exception**: its default layer
+is Google's, and each pan or zoom is a request from your browser straight to
+Google, carrying your address, which this project can neither see nor limit.
+The page's own drawing of the map, shown when those tiles fail, contacts
+nobody but the page's server. Visits are counted as two numbers a day, from an
+address hashed with a key that is regenerated daily and never written down.
+Your theme and map-layer choices stay in your own browser. The site's privacy
+page says the same at more length.
 
 **Why the official API, and why is the channel still read?** The channel was
 this project's source for as long as it published: public, no account, no key.
@@ -387,11 +405,13 @@ sources confirm", and the one input that could genuinely observe independently
 **Who is behind it?** One person, in Warsaw, under HBCC. The code is open, the
 method is documented, and the defect log is public and unflattering on purpose.
 
-**Can I use the data?** Yes. Two files are served as a stable contract, and
-their schema and change policy are documented in `docs/FEED-SPEC.md`. If you
-build on them, read the part about how the files behave when the source stops:
-handling that case is the difference between a useful tool and one that lies
-quietly.
+**Can I use the data?** Yes. `state.json` is served at
+[mavo.org.pl/state.json](https://mavo.org.pl/state.json) as a stable contract,
+schema v3, and every file the site reads, the week and the analysis among
+them, is described field by field in `docs/WEBAPP.md`, *The contract, and who
+owns it*. If you build on them, read the part about how the files behave when
+the source stops: handling that case is the difference between a useful tool
+and one that lies quietly.
 
 ---
 
@@ -456,6 +476,7 @@ look.
 | **OpenSky Network** (ADS-B) | A second, physically different kind of observation: aircraft that broadcast their own position | Registered 2026-08-10, 4,000 credits a day, one credit per call over the western box [measured] | **Not a drone-tier source, and the premise that it was is recorded as false.** Transponders are carried by aircraft that choose to be seen; Shahed-type munitions and missiles carry none. What it can measure is **the operating intensity of the Rzeszow-Jasionka hub**, which has potential diagnostic value during a war and is reported rather than scored (D-019, T42) |
 | **komunikaty.tvp.pl**, the RSO stream, run for MSWiA by TVP | Civil-protection communiques by voivodeship: weather, water, road and general notices, and air threats, published into it by RCB among others | Public XML, no token. A CAP resource beside it needs one; this project's credentials for it are bound to the producer's host, and the resource has not been read | **Context, never a warning channel** (D-053). Composed into `pl_warnings` from the words of each communique, because no record carries a category (FEED-SPEC property fifteen). An all-clear is a communique too: at 0.55.0.0 it painted (F169), and from 0.55.1.0 it ends the alert it names and is published apart, in `pl_all_clear` (D-055). From 0.59.0.0 the last forty-eight hours of its air alerts, per voivodeship and with how each ended, are one more key, `pl_rcb_recent` (D-062) |
 | **airspace.pansa.pl**, PAŻP's updated airspace use plan | Reserved airspace structures over Poland, with their windows, limits and outlines | Public, no token | **Context** (D-053). `pl_airspace` draws only structures the plan marks `ACTIVATED`; the structures and their windows are recorded whether drawn or not |
+| **t.me/s/kpszsu**, the public web preview of the Ukrainian Air Force's channel | The morning summary of each night: what was launched and what was brought down, by type, as the Air Force counts it | Public page, no token, read every five minutes | **Context** (D-056). `strike_tally` publishes the latest night and `strike_history` the nights over 7, 30 and 90 days, one column per night (D-057). Their figures and nothing else: a count they do not state stays unknown, a night whose own arithmetic does not close is flagged, and no rate, average or trend is computed from them |
 
 **What follows from that table.** Everything this tool says about Ukraine is
 `reported` or weaker: it is what the operator's system claims, not what the
@@ -629,9 +650,19 @@ mavo collect-api --store /var/lib/mavo/events \
 mavo report --store /var/lib/mavo/events \
     --json state.json --feed feed.json
 
-# the same, continuously, which is what the deployed unit runs
+# the same, continuously, with the week for the map's slider written on
+# every tenth cycle: what the deployed unit runs
 mavo report --store /var/lib/mavo/events \
-    --json state.json --feed feed.json --watch --interval 120
+    --json state.json --feed feed.json \
+    --timeline timeline.json --timeline-every 10 --watch --interval 30
+
+# thirteen weeks set against each other, once; the host runs it hourly
+mavo analysis --store /var/lib/mavo/events --out analysis.json
+
+# the Polish context and the Air Force's summaries, one read each
+mavo rso --store /var/lib/mavo/events
+mavo airspace --store /var/lib/mavo/events
+mavo kpszsu --store /var/lib/mavo/events
 ```
 
 Expect `mavo collect` to report roughly twenty messages and **parse most of
@@ -699,8 +730,9 @@ threshold, not eight.
 **A refusal that does not say how long it waited answers no question.**
 `[UNREACHABLE]` carries no elapsed time, so a stall at the ten-second ceiling
 and a rejection that bounced in twenty milliseconds are indistinguishable in
-the journal. Eleven refusals were logged before anyone noticed. That is F44 in
-the diagnostics rather than in the schedule, and it is T55.
+the journal. Eleven refusals were logged before anyone noticed. That was F44 in
+the diagnostics rather than in the schedule, and T55 closed it at 0.26.0.0:
+every refusal now carries how long it waited and the exception that ended it.
 
 **The paragraph that stood here until 0.37.0.0 said the post-F98 failure rate
 was 0.076% and that the pinned figure stands. Both halves were wrong**, and
@@ -714,8 +746,11 @@ numerator from one window by a denominator from another. The repair - a two-
 second connect budget and one retry, made only when the connection was never
 established - reached the host as 0.36.0.1 on 2026-08-21, after its first
 version spent fourteen hours crashing on the failures instead of refusing
-them (F110). **The retry has not yet been observed doing its job**, and T69
-holds the measurement that would show it. A reader who takes one thing from
+them (F110). **The retry was then observed doing its job, and doing less of it
+than its estimate promised**: over 24 hours from 2026-08-21 it rescued 23 of
+47 first-attempt refusals and took the refusal rate from 1.8% to 0.9%
+`[measured]`, half rather than nearly all, because an endpoint that refused is
+inclined to refuse again a second later (T69, closed). A reader who takes one thing from
 this section should take the shape of the error rather than the number:
 internal consistency is not accuracy, and a repository whose gate enforces
 the first arrived at a wrong figure by agreeing with itself.
@@ -771,6 +806,13 @@ mavo/
   latency.py       how late the channel is: post time against the moment of receipt
   obs.py           the run log: one writer, one schema, no message text
   poland.py        the Polish keys of the contract, composed from the recorded tables
+  rcb_recent.py    the last forty-eight hours of RCB air alerts, per voivodeship
+  levels.py        which declared level stands beside an open alarm, at a moment
+  level_reading.py the level stream read off the store: the vocabulary and the verdict
+  strike.py        the Air Force's nightly figures as stored rows and contract keys
+  timeline.py      the past week as intervals: what timeline.json carries
+  analysis.py      weeks set against weeks: what analysis.json carries
+  recorder.py      one week of the store recorded as a fixture
   sources/
     fixture.py     synthetic scenarios, shipped as a CLI command
     ukrainealarm_source.py  the primary adapter; snapshot diffing, clears synthesised
@@ -778,8 +820,10 @@ mavo/
     telegram.py    the channel adapter, now the watchman; its pattern table is under redesign
     rso.py         the Polish civil-warning stream, read as a record and not as an alarm
     pansa.py       the Polish airspace use plan, read as structures and their windows
+    kpszsu.py      the Air Force's morning summaries, read into figures and never estimated
   cli.py           fixture / gate / policy / backfill / collect / collect-api / rso /
-                   airspace / attempts / latency / report / reconcile
+                   airspace / kpszsu / attempts / latency / report / record-week /
+                   level-reading / timeline / analysis / reconcile
 tests/
   test_<domain>.py behaviour
   test_sprint<N>.py regression, one file per sprint, verified red before it is fixed
@@ -831,10 +875,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 | --- | --- | --- |
 | Package `mavo/` | 34 | 17,551 |
 | Tests | 82 | 21,529 |
-| Tools | 28 | 8,513 |
-| Documentation | 81 | 39,129 |
+| Tools | 28 | 8,519 |
+| Documentation | 81 | 39,468 |
 
-**Documentation outweighs the package by nearly three to one**, and that ratio is
+**Documentation outweighs the package by more than two to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
 and a measurement whose method is not written down is an opinion with a
 confidence interval attached.
@@ -847,9 +891,9 @@ confidence interval attached.
 | Coverage | 96.73% against a floor of 95, a ratchet that is never lowered |
 | Mutation-verified controls | 16 of 17 attacks; the one without a mutation is printed as unverified on every run |
 | Threat-model rows | 18, each with a control or a named acceptance |
-| Defects logged with their class | 176, the count pinned against the log itself |
+| Defects logged with their class | 177, the count pinned against the log itself |
 | Decisions recorded with reopen conditions | 60, counted from the log itself |
-| Releases | 167 in the changelog; tags are fewer and some are cumulative (A11) |
+| Releases | 168 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation
@@ -866,15 +910,15 @@ confidence interval attached.
 | [`docs/MECHANISMS.md`](docs/MECHANISMS.md) | Every mechanism with its rejected alternative |
 | [`docs/COMPUTATION.md`](docs/COMPUTATION.md) | The statistical machinery the thesis stands on, with its stated weaknesses |
 | [`docs/MOBILE.md`](docs/MOBILE.md) | The notification channel: technology choice, phases, and what gates distribution |
-| [`docs/WEBAPP.md`](docs/WEBAPP.md) | The web tier: the `state.json` contract and who owns it, three feed states that must read differently, the palette and the theme-inversion failure behind it, and mockups of every state |
+| [`docs/WEBAPP.md`](docs/WEBAPP.md) | The web tier: the contract files, field by field, and who owns them, three feed states that must read differently, the palette and the theme-inversion failure behind it, and mockups of every state |
 | [`docs/FEED-SPEC.md`](docs/FEED-SPEC.md) | What a machine-readable Polish alerting feed would have to be, written from consuming the Ukrainian one |
 | [`docs/FEED-SPEC-PL.md`](docs/FEED-SPEC-PL.md) | The same document in Polish, held to the English edition by `feed-spec-check` |
 | [`docs/CHANNEL.md`](docs/CHANNEL.md) | What the source actually emits, measured, and the join to the state register |
 | [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) | The durable run log and how a cycle is watched. **Partly built**: `mavo/obs.py` is the sink, the publishing loop constructs it and announces `run-log=<path>` on stdout (T23), and the host has been writing `run.jsonl` since 0.32.7.0. The notifier is the part that is still a plan. This row said "Plan, not built" until 0.54.8.0, two steps behind the document it indexes (F166) |
-| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Egress inventory, endpoint identity, containers, and where the daemon lives. Plan and open decisions |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | What runs on the host, read from it: units and timers, egress per source, the deploy history, and how far the host stands behind this tree |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The infrastructure architecture: components, boundaries, dependency rules, process shape |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | What was rejected, and what would reopen it |
-| [`docs/MVP.md`](docs/MVP.md) | Release criteria per audience, and five dated sprints to beta |
+| [`docs/MVP.md`](docs/MVP.md) | Release criteria per audience, and five sprints to beta, undated on purpose |
 | [`docs/reviews/`](docs/reviews/) | One review per major release, every finding dispositioned. Twelve early majors have none and are named in `docs/reviews/README.md` rather than left to be counted |
 | [`tests/harness/CATALOGUE.md`](tests/harness/CATALOGUE.md) | The attack catalogue, one row per threat |
 | [`STATUS.json`](STATUS.json) | Machine-readable pins, enforced by `tools/docs_audit.py` |
@@ -886,31 +930,32 @@ make verify
 ```
 
 That is the only gate. CI calls it rather than restating its steps. It runs the
-test suite with a coverage floor, ruff, mypy strict, four repository lints, two
-audits that fail when documentation drifts from the code, and a mutation run that
-disables each guarded control in a scratch tree and fails if the attack guarding
-it stays green. The mutation run costs roughly seven seconds of the gate's
-eleven, which is stated because a check nobody can afford is a check that gets
-moved out of the gate and then stops running.
+test suite with a coverage floor, ruff, mypy strict, four repository lints, the
+audits that fail when documentation drifts from the code (the pins, the manual,
+the contract reader, the backlog index, the two briefs, the two editions of
+FEED-SPEC, the derived figures and the precision ceiling), and a mutation run
+that disables each guarded control in a scratch tree and fails if the attack
+guarding it stays green. **The gate takes about four minutes, and the test
+suite is nearly all of it**; the mutation run takes about twelve seconds
+`[measured 2026-10-19, a two-core container]`. Stated because a check nobody
+can afford is a check that gets moved out of the gate and then stops running.
+Until 0.61.0.1 this paragraph said seven seconds of eleven, a reading taken
+when the suite was a fraction of its present size and not retaken since.
 
 ## Measured claims
 
 A number appears in this documentation only when the code produced it.
 
-- `make verify` green: **670 tests passing, of which 13 are harness attacks.
-  Coverage 95.37%** against a floor of 95. These three numbers read 170, 12 and
-  96.90% until 0.33.0.2, while the badges at the head of this file and the
-  table in *The repository in numbers* carried the current ones. `docs_audit`
-  checked the badges and the table and **did not check this list**, so the
-  correction at 0.33.0.2 and the update at 0.34.0.0 were both done by hand and
-  the sentence above said the next one could be missed the same way. It was:
-  this list stood at 471 and 96.84% for sixteen releases, under a paragraph
-  headed *a number appears in this documentation only when the code produced
-  it*. F140. A prediction written down and left unguarded is not a mitigation,
-  which is the same finding as F72 and F139 arriving a third time. The floor
-  stays a ratchet under T9:
-  the rise is below the five-point threshold that moves it. The old caveat
-  stands in kind:
+- `make verify` green: the test count, the harness attacks among them and the
+  coverage are the figures in *The repository in numbers* above, which
+  `docs_audit` reads against the gate's own run. **This bullet no longer
+  repeats them, because it went stale every time it did**: it read 471 tests
+  for sixteen releases under a paragraph headed *a number appears in this
+  documentation only when the code produced it* (F140), and after that repair
+  it read 670 tests and a stale coverage figure until 0.61.0.1, while the
+  table above it said 1230. Unchecked prose went stale for the same reason
+  twice; a pointer to the checked figure cannot. The floor stays a ratchet
+  under T9. The old caveat stands in kind:
   `transport.py` carries the one genuinely network-bound function, and it drags
   the total toward the floor. Whether to exclude it from the measurement is an
   open decision recorded in the 0.3.2.0 review, not something to resolve by
@@ -930,8 +975,11 @@ A number appears in this documentation only when the code produced it.
   Controls are disabled one at a time and the guarding attack must go red.
   **The first run killed 7 of 10**, and the three survivors were defects in the
   attacks themselves (F38 to F40), one of them written the same afternoon. The
-  current run kills **12 of 12**. One attack of **thirteen** carries no
-  mutation and is printed as unverified on every run rather than assumed.
+  current run kills every registered mutation, and the one attack that
+  carries none is printed as unverified on every run rather than assumed; the
+  counts are the harness badge at the head of this file, which `docs_audit`
+  holds to `STATUS.json`. This bullet said 12 of 12 and thirteen attacks
+  until 0.61.0.1, four attacks behind the badge.
 - Every number above except the classifier hit rate was produced against a
   synthetic history. None of them is a claim about the world.
 

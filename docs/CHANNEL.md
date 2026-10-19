@@ -1,6 +1,6 @@
 # The channel, as it actually is
 
-Version: 1.12 / 2026-09-09
+Version: 1.13 / 2026-10-19
 What the source emits, measured on 48,540 real messages, and what that changes.
 
 **Status, 2026-08-31.** The channel stopped publishing on 2026-08-29 at 04:55
@@ -308,11 +308,13 @@ unresolved**, and a hand-labelled sample of messages agrees with the resolved
 area. Presence is already measured at 99.34%; what remains to be checked is
 correctness on the message the tag sits in, which no automated probe can assert.
 
-## 8a. How late the channel is: the instrument, and the empty table
+## 8a. How late the channel is: the instrument, and its one row
 
-T40 asks for the median, p90 and maximum of post timestamp to receipt, over at
+T40 asked for the median, p90 and maximum of post timestamp to receipt, over at
 least a week, with the collection dates and the poll interval used. **The
-instrument shipped at 0.30.0.0 and the table below is empty on purpose.**
+instrument shipped at 0.30.0.0, the table below stayed empty until 0.54.3.0,
+and T40 wrote its one row then**, from a reading on the host.
+There is no row for the API, and the end of this section says why.
 
 `mavo latency --store <store>` reads `ts_source` and `ts_ingest` from both
 the `events` and the `kinds` tables and reports the distribution. Three
@@ -320,16 +322,18 @@ properties are worth stating here rather than only in its docstring, because
 they decide what the eventual number means.
 
 **It is `mavo latency` from 0.54.0.0 and was `tools/latency.py` before, and
-that is one of the reasons this table is empty.** The instrument shipped at
+that is one of the reasons this table stayed empty so long.** The instrument shipped at
 0.30.0.0 in a directory the wheel does not install, so it could not be run on
 the host that holds a store; the blocker recorded against it was a different
 one, discharged nine releases earlier, and nobody re-read the sentence it was
-blocking. D-038 and T84 carry that repair. **The README gives a different
-reason** - that a distribution was taken and withheld because one term in the
-tail was unattributed - and no median, p90, p99 or maximum appears anywhere in
-this tree `[measured 2026-09-10, grep over docs, changelog and STATUS.json]`.
-Which account is right is `[nieustalone]`, and the first draft of this
-paragraph asserted this one as the whole story.
+blocking. D-038 and T84 carry that repair. **The README gave a different
+reason** until 0.61.0.1 - that a distribution was taken and withheld because
+one term in the tail was unattributed - while no median, p90, p99 or maximum
+appeared anywhere in this tree
+`[measured 2026-09-10, grep over docs, changelog and STATUS.json]`. Which
+account was right stays `[nieustalone]`; the README now quotes the row below,
+and the first draft of this paragraph asserted this account as the whole
+story.
 
 **It refuses a window shorter than seven days.** A distribution over one
 afternoon is an anecdote with percentiles on it, and this repository already

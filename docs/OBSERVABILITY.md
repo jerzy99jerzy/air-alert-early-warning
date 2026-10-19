@@ -1,14 +1,19 @@
 # Watching a run
 
-Version: 1.1 / 2026-08-11
-Status: **partly built.** `mavo/obs.py` is the sink and `tools/progress.py` is
-the reader, both shipped at 0.23.0.0 against the acceptance in section 9, five
-of whose seven criteria are met. What is still a plan: `mavo watch` itself,
-which waits on T25, and everything downstream of a notifier, which is S10.
+Version: 1.2 / 2026-10-19
+Status: **partly built, and running on the host.** `mavo/obs.py` is the sink and
+`tools/progress.py` is the reader, both shipped at 0.23.0.0 against the
+acceptance in section 9, five of whose seven criteria are met. The publishing
+loop, `mavo report --watch`, constructs the sink when `MAVO_LOG_FILE` names one
+and announces `run-log=<path>` (T23, F103), and the host's report unit has
+written `/var/lib/mavo/run.jsonl` since 0.32.7.0 (`docs/DEPLOYMENT.md`).
+`mavo watch`, the collector loop this document was written for, was never built:
+D-031 chose timers and `oneshot` services instead. What is still a plan is
+everything downstream of a notifier, which is S10.
 Sections describing those still describe what is designed rather than what
 runs, and the acceptance criteria stay as written, because criteria adjusted to
 what the code turned out to do are not criteria.
-Companion: `docs/MOBILE.md` (phase M0, the daemon this observes),
+Companion: `docs/MOBILE.md` (the delivery phases this would observe),
 `docs/MECHANISMS.md` (the counters), `docs/METHODOLOGY.md` (why unknown is
 never zero).
 
@@ -54,9 +59,12 @@ DEBUG regardless of console flags. The console keeps its own level and its own
 shape; the sink is always one JSON object per line.
 
 ```
-MAVO_LOG_FILE=./state/run.jsonl mavo watch -q &
-python -m tools.progress --follow
+MAVO_LOG_FILE=./state/run.jsonl mavo report --store ./state/events --json ./state/state.json --watch &
+python -m tools.progress --in ./state/run.jsonl
 ```
+
+`tools/progress.py` reads a file and has no `--follow`; this example carried
+one until 0.61.0.1, beside a command that was never built.
 
 Two constraints inherited from defects this repository already paid for.
 
@@ -139,15 +147,17 @@ notify   : shadow      0ms   would_send=0
   parsed_ratio=0.00 (F23 open, sprint 7)
 ```
 
-The recap line every operator will actually read is `parsed=0 unparsed=20`. That
-is the shipped classifier defect printing itself once a minute for weeks, which
-is the correct behaviour: a known defect that stops being visible stops being
-known. When sprint 7 lands, the same line is how the fix is observed rather than
-asserted.
+The recap line every operator will actually read was, as designed,
+`parsed=0 unparsed=20`: the classifier defect of that time printing itself once
+a minute for weeks, which is the correct behaviour, because a known defect that
+stops being visible stops being known. Sprint 7 replaced the classifier with
+the channel's own tags, and since D-040 the channel is the watchman rather
+than the source, so the line now reads what the watchman sees.
 
-`--follow` on a live file and the same command on a finished file are one code
-path, so a post-mortem and a live view cannot drift apart. There is no separate
-history mode to keep in step.
+A live view and a post-mortem are meant to be one code path, so they cannot
+drift apart. As built, the reader reads a finished file (`--in`), and the live
+`--follow` this paragraph described is not built; there is no separate history
+mode to keep in step either.
 
 ## 5. Degradation is a rendering, not a footnote
 
@@ -247,10 +257,11 @@ rather than the sprint being rounded up:
   notifier, which is S10. The publishing loop's blindness accounting exists and
   is held by `tests/test_sprint10.py`; the notification does not exist.
 - *`tools/progress.py` replaying a finished file produces the same recap the
-  live view produced* needs a live view, and there is no channel-polling loop
-  yet: `mavo watch` waits on T25, which is a decision rather than an
-  implementation. The reader is tested against files, which is a weaker claim
-  and is recorded as one.
+  live view produced* needs a live view of a collector, and the collector is
+  not a loop: T25 was decided as timers and `oneshot` services (D-031), so
+  `mavo watch` will not be built and the live view this criterion meant has
+  nothing to watch but the publishing loop. The reader is tested against
+  files, which is a weaker claim and is recorded as one.
 
 - Console verbosity flags do not change the sink. Two runs over identical
   injected input, one with `-q` and one with `-vv`, produce byte-identical JSONL

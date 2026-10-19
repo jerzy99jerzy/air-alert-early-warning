@@ -177,7 +177,13 @@ CEILINGS: dict[str, int] = {
     # exclude pin-quoted figures from this count rather than chase them - and
     # this is the third recurrence since. T77's class, filed rather than
     # absorbed again.
-    "README.md": 21,
+    # 21 -> 18 at 0.61.0.1. The *Measured claims* list stopped quoting the
+    # test count and the coverage pin, and points at the table that
+    # `docs_audit` checks instead (F202): the three figures that left were the
+    # stale ``95.37`` and the two historical values beside it. The fourth
+    # recurrence of this ceiling tracking quotations of a pin, and the first
+    # removed at the quotation rather than at the count.
+    "README.md": 18,
     # Raised at 0.39.1.0, 28 to 35, and the shape of the raise is the argument
     # for T77. **One of the seven is a measurement:** T9's closure quotes ``96.43``,
     # which is

@@ -4,7 +4,7 @@ Every mechanism in MAVO: what it is, where it lives, the alternative that was
 rejected, the failure it prevents, and the test that keeps it honest.
 
 ```
-Document:  docs/MECHANISMS.md, version 2.7
+Document:  docs/MECHANISMS.md, version 2.8
 Audience:  a contributor about to change how something works, and anyone asking
            "why is it done this way rather than the obvious way"
 Companion: ARCHITECTURE (what talks to what), DATA-FLOW (what happens to a
@@ -384,8 +384,14 @@ feed publishing three minutes late halves the product. A system storing one
 timestamp could not tell a slow feed from a slow adversary, and could not report
 that its own product had shrunk.
 
-**Not yet measured on real data.** The first live latency measurement is owned by
-sprint 6 and has not been taken.
+**Measured for the channel, not for the source.** T40 read the two timestamps
+over the channel's store at 0.54.3.0: a median lag of 18.7 s and a p90 of
+34.7 s over 19,475 messages `[measured]`, with the caveats in `docs/CHANNEL.md`
+section 8a. The API, the source since D-040, has no figure: its source stamp is
+the moment an alert was declared, so an alarm standing for months reads as a
+lag of months, and separating detection from inheritance needs a threshold
+nobody has decided. Until 0.61.0.1 this paragraph said no measurement had been
+taken and gave it to sprint 6.
 
 ---
 
