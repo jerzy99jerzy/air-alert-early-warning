@@ -9,7 +9,9 @@ import pytest
 
 from mavo.cli import main
 from mavo.errors import SourceUnavailable
+from mavo.poland import AIR_URL, WARNINGS_URL
 from mavo.schema import AlertState, ThreatEvent
+from mavo.sources.rso import ALL_SCOPE_URL as RSO_ALL_SCOPE_URL
 from mavo.store import EventStore
 from mavo.transport import FailingTransport
 
@@ -200,17 +202,22 @@ def test_rso_walks_every_category_rather_than_trusting_wszystkie(
     fixture = Path("tests/fixtures/rso_page.xml").read_text(encoding="utf-8")
     stub = tmp_path / "page.xml"
     stub.write_text(fixture, encoding="utf-8")
-    code = main(["rso", "--stub", str(stub), "--store", str(tmp_path / "s.sqlite3")])
+    store_path = tmp_path / "s.sqlite3"
+    code = main(["rso", "--stub", str(stub), "--store", str(store_path)])
     out = capsys.readouterr().out
     assert code == 0
     for name in ("ogolne", "meteorologiczne", "hydrologiczne",
-                 "informacje-drogowe", "stany-wod"):
+                 "informacje-drogowe", "stany-wod", "atak-z-powietrza"):
         assert f"/{name}/" in out, f"{name} was not read"
-    assert "/wszystkie/wszystkie/" not in out, "the partial scope must not be used"
+    # D-065. The partial scope is read, as a canary, and is never a list.
+    [scope_line] = [line for line in out.splitlines() if "/wszystkie/wszystkie/" in line]
+    assert " canary " in scope_line
+    assert EventStore(store_path).newest_snapshot("rso", RSO_ALL_SCOPE_URL) is None, (
+        "the partial scope must never be recorded as a list")
 
 
 def test_rso_stores_each_communique_once_across_the_walk(tmp_path: Path) -> None:
-    """Five reads of one page are two rows, and the count says which is which."""
+    """Seven reads of one page are two rows, and the count says which is which."""
     fixture = Path("tests/fixtures/rso_page.xml").read_text(encoding="utf-8")
     stub = tmp_path / "page.xml"
     stub.write_text(fixture, encoding="utf-8")
@@ -218,7 +225,7 @@ def test_rso_stores_each_communique_once_across_the_walk(tmp_path: Path) -> None
     assert main(["rso", "--stub", str(stub), "--store", str(store_path)]) == 0
     store = EventStore(store_path)
     assert store.count_communiques("rso") == 2
-    assert len(store.attempts("rso")) == 5, "one logged attempt per category"
+    assert len(store.attempts("rso")) == 7, "one logged attempt per category and the canary"
 
 
 def test_rso_refuses_a_category_outside_the_published_vocabulary(
@@ -246,14 +253,157 @@ def test_rso_exits_three_when_any_category_refused(
     assert code == 3, "a partial reading is not a successful one"
     out = capsys.readouterr().out
     assert "[UNREACHABLE]" in out
-    assert "refused=5/5" in out
+    assert "refused=7/7" in out
 
     # Every refusal left a row, and each row says we did not find out rather
     # than that the publisher had nothing.
     attempts = EventStore(store_path).attempts("rso")
-    assert len(attempts) == 5
+    assert len(attempts) == 7
     assert all(a["outcome"] == "refused" for a in attempts)
     assert all(a["items"] is None for a in attempts)
+
+
+def _rso_body(*ids: str) -> str:
+    """A list holding one bare communique per id, the shape the feed serves."""
+    items = "".join(
+        f"<news><id>{one}</id><title>t{one}</title>"
+        "<provinces><province slug=\"lubelskie\">Lubelskie</province></provinces></news>"
+        for one in ids)
+    return (f"<newses><pagination_info totalItems=\"{len(ids)}\" itemsPerPage=\"20\"/>"
+            f"{items}</newses>")
+
+
+def _rso_feed(monkeypatch: pytest.MonkeyPatch, bodies: dict[str, str | None]) -> None:
+    """The live transport, answering each address with its own body; None refuses."""
+    from mavo.sources.rso import page_url
+
+    by_url = {(RSO_ALL_SCOPE_URL if name == "*" else page_url(name, 0)): body
+              for name, body in bodies.items()}
+
+    class Feed:
+        def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
+            body = by_url.get(url, _rso_body())
+            if body is None:
+                raise SourceUnavailable("refused in the test")
+            return body
+
+    monkeypatch.setattr("mavo.cli.UrllibTransport", Feed)
+
+
+def test_rso_a_communique_in_no_known_category_vouches_for_no_list(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """F203, D-065. The two days of 2026-10-21 replayed against the canary.
+
+    The publisher lists 23441746 in a category the walk does not read. Every
+    address answers, so until 0.62.0.0 every read was recorded and the page
+    said RCB had been quiet. The run now names the communique, exits 3, and
+    leaves no read row for any address, so no list of it can be shown as
+    current; the lists and the rows are still kept.
+    """
+    _rso_feed(monkeypatch, {"*": _rso_body("1", "23441746"), "ogolne": _rso_body("1"),
+                            "atak-z-powietrza": _rso_body()})
+    store_path = tmp_path / "s.sqlite3"
+    code = main(["rso", "--store", str(store_path)])
+    out = capsys.readouterr().out
+    assert code == 3, "a walk the canary cannot vouch for is a partial reading"
+    assert "[UNKNOWN-CATEGORY] 1 communique(s)" in out and "23441746" in out
+    store = EventStore(store_path)
+    attempts = store.attempts("rso")
+    assert len(attempts) == 7
+    assert all(a["outcome"] == "refused" for a in attempts), "a list was vouched for"
+    assert all("[UNKNOWN-CATEGORY]" in str(a["detail"]) for a in attempts)
+    assert store.newest_snapshot("rso", WARNINGS_URL) is not None, "the list itself is kept"
+    assert store.count_communiques("rso") == 2, "the canary's rows are kept as evidence"
+
+
+@pytest.mark.parametrize(("bodies", "said"), [
+    ({"*": None}, "the all-categories scope was not read"),
+    ({"*": _rso_body("1"), "ogolne": _rso_body("1"), "stany-wod": None}, "1 address(es) refused"),
+])
+def test_rso_a_comparison_that_could_not_be_made_vouches_for_no_list(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch,
+    bodies: dict[str, str | None], said: str,
+) -> None:
+    """D-065. Not compared is not compared clean, and it is worded apart from a find."""
+    _rso_feed(monkeypatch, bodies)
+    store_path = tmp_path / "s.sqlite3"
+    assert main(["rso", "--store", str(store_path)]) == 3
+    out = capsys.readouterr().out
+    assert f"[UNVOUCHED] {said}" in out
+    assert "[UNKNOWN-CATEGORY]" not in out
+    assert all(a["outcome"] == "refused" for a in EventStore(store_path).attempts("rso"))
+
+
+def test_rso_a_walk_the_canary_agrees_with_reads_every_list(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-065, the other side. Every communique the scope lists was walked, so
+    every address gets its read and the run exits 0; the scope's own read is
+    recorded too, and it never becomes a list."""
+    _rso_feed(monkeypatch, {"*": _rso_body("1", "2"), "ogolne": _rso_body("1"),
+                            "atak-z-powietrza": _rso_body("2")})
+    store_path = tmp_path / "s.sqlite3"
+    assert main(["rso", "--store", str(store_path)]) == 0
+    out = capsys.readouterr().out
+    assert "[UNVOUCHED]" not in out and "[UNKNOWN-CATEGORY]" not in out
+    store = EventStore(store_path)
+    assert [a["outcome"] for a in store.attempts("rso")] == ["read"] * 7
+    assert store.newest_read("rso", AIR_URL) is not None
+    assert store.newest_snapshot("rso", RSO_ALL_SCOPE_URL) is None
+
+
+def test_rso_a_later_page_is_not_set_beside_the_unpaged_canary(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The review's D3. Page 2 of every category is empty past the end; set
+    beside the unpaged canary it read as a walk short of everything."""
+    from mavo.sources.rso import page_url
+
+    body = _rso_body("1")
+
+    class Feed:
+        def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
+            return body if url in (RSO_ALL_SCOPE_URL, page_url("ogolne", 0)) else _rso_body()
+
+    monkeypatch.setattr("mavo.cli.UrllibTransport", Feed)
+    store_path = tmp_path / "s.sqlite3"
+    assert main(["rso", "--page", "2", "--store", str(store_path)]) == 0
+    out = capsys.readouterr().out
+    assert "canary" not in out and "[UNKNOWN-CATEGORY]" not in out
+    assert [a["outcome"] for a in EventStore(store_path).attempts("rso")] == ["read"] * 6
+
+
+def test_rso_a_rejected_walk_leaves_the_last_vouched_list_on_the_map(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The review's D1 through the command: a vouched walk with an alert in the
+    air category, then a walk whose canary finds it moved again. The map keeps
+    the vouched list, not the rejected walk's empty one, until its hour ends."""
+    from mavo.poland import warnings_blocks
+
+    alert = _rso_body("23441700").replace("<title>t23441700</title>",
+                                          "<title>Zagrożenie z powietrza</title>")
+    _rso_feed(monkeypatch, {"*": alert, "atak-z-powietrza": alert})
+    store_path = tmp_path / "s.sqlite3"
+    assert main(["rso", "--store", str(store_path)]) == 0
+    _rso_feed(monkeypatch, {"*": alert})
+    assert main(["rso", "--store", str(store_path)]) == 3
+    capsys.readouterr()
+    now = datetime.now(UTC)
+    shown, _cleared = warnings_blocks(EventStore(store_path), now)
+    assert shown.published and shown.value, "a rejected walk's empty list was shown"
+    assert [item["id"] for row in shown.value for item in row["communiques"]] == ["23441700"]
+
+
+def test_rso_one_address_on_request_makes_no_claim_about_the_feed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`--category` skips the canary: one address asked for is read and recorded."""
+    _rso_feed(monkeypatch, {"*": _rso_body("9"), "ogolne": _rso_body("1")})
+    store_path = tmp_path / "s.sqlite3"
+    assert main(["rso", "--category", "ogolne", "--store", str(store_path)]) == 0
+    assert [a["outcome"] for a in EventStore(store_path).attempts("rso")] == ["read"]
 
 
 def test_rso_times_every_attempt_it_logs(tmp_path: Path) -> None:
@@ -713,3 +863,15 @@ def test_collect_api_records_the_declarations_it_saw_and_counts_only_new_ones(
     assert main(["collect-api", "--store", str(store)]) == 0
     assert "levels=0 new declaration(s) (observed=1;" in capsys.readouterr().out
     assert EventStore(store).count_levels() == 1
+
+
+def test_rso_a_long_find_is_named_in_part_and_counted_in_full() -> None:
+    """Ten identifiers and the count of the rest, so one journal line stays a line."""
+    from mavo.cli import _rso_unvouched
+    from mavo.sources.rso import parse_page
+
+    scope = parse_page(_rso_body(*(str(n) for n in range(12))).encode("utf-8"))
+    line = _rso_unvouched(scope, set(), 0)
+    assert line is not None
+    assert line.startswith("[UNKNOWN-CATEGORY] 12 communique(s)")
+    assert line.endswith("0, 1, 2, 3, 4, 5, 6, 7, 8, 9 and 2 more")

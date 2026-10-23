@@ -408,3 +408,63 @@ def test_a18_an_alarm_keeps_its_level_until_the_alarm_itself_ends() -> None:
     level = published["level"]
     assert isinstance(level, dict) and level["word"] == "Red", (
         "the level left before the alarm it belongs to")
+
+
+def _rso_feed(by_url: dict[str, str]) -> object:
+    """A transport answering each RSO address with its own body, an empty list otherwise."""
+    empty = '<newses><pagination_info totalItems="0" itemsPerPage="20"/></newses>'
+
+    class Feed:
+        def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
+            return by_url.get(url, empty)
+
+    return Feed()
+
+
+def test_a19_a_category_the_walk_does_not_know_is_not_a_quiet_country(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """MT19. The two days of 2026-10-21, with one category more than the walk knows.
+
+    The publisher lists an RCB air alert in a category no address of the walk
+    returns, and every address answers. A walk that records a read for each
+    vouches for an empty `ogolne` and an empty air list, and the page says
+    RCB raised nothing. The attack runs the product's own command and reads
+    the block the page is given.
+    """
+    from mavo import poland
+    from mavo.cli import main
+    from mavo.sources import rso
+
+    alert = ('<newses><pagination_info totalItems="1" itemsPerPage="20"/><news>'
+             '<id>23441700</id><title>ALERT RCB</title><shortcut>UWAGA! Rosyjski atak '
+             'powietrzny na terenie Ukrainy.</shortcut><valid_to>2099-01-01 00:00:00</valid_to>'
+             '<provinces><province slug="lubelskie">Lubelskie</province></provinces>'
+             '</news></newses>')
+    monkeypatch.setattr("mavo.cli.UrllibTransport", lambda: _rso_feed({rso.ALL_SCOPE_URL: alert}))
+    path = tmp_path / "events"
+    main(["rso", "--store", str(path)])
+    warnings, _cleared = poland.warnings_blocks(EventStore(path), datetime.now(UTC))
+    assert warnings.published
+    assert warnings.value is None, "a feed with an alert in it read as a quiet country"
+
+
+def test_a20_a_scope_with_an_address_nobody_read_is_not_read_as_quiet(
+        tmp_path: Path) -> None:
+    """MT19. The same failure one layer down, in the composer.
+
+    From `AIR_URL_SINCE` the communiques that may paint are in two addresses.
+    `ogolne` read fresh and empty with the air category never read is half a
+    list, and half a list of nothing renders as a whole one.
+    """
+    from mavo import poland
+    from mavo.sources import rso
+
+    store = EventStore(tmp_path / "events")
+    moment = poland.AIR_URL_SINCE + timedelta(days=2)
+    for minutes in (25, 15, 5):
+        at = moment - timedelta(minutes=minutes)
+        store.record_snapshot(rso.FEED, poland.WARNINGS_URL, at, [])
+        store.record_read(rso.FEED, poland.WARNINGS_URL, at, 0, 0)
+    warnings, _cleared = poland.warnings_blocks(store, moment)
+    assert warnings.published
+    assert warnings.value is None, "half a list of nothing read as a whole one"

@@ -21,7 +21,9 @@ a consumer's cache that forgets on every refresh.
 rule below is `mavosite/rso.py` or `mavosite/airspace.py` at 4.76.0.0, with the
 consumer's tests ported beside them as the proof. What differs:
 
-1. **The communique scope is the `ogolne` reading at page 0, not page 1.**
+1. **The communique scope is the `ogolne` reading at page 0, not page 1,**
+   joined since 0.62.0.0 by the `atak-z-powietrza` reading for every moment
+   from `AIR_URL_SINCE` (F203, D-065).
    The consumer read page one and said so as a cost: a communique still valid
    on page two was never painted. `mavo rso` asks for page 0, which the
    publisher's integration page describes as the reading with pagination
@@ -69,6 +71,73 @@ ZONE = "Europe/Warsaw"
 #: be read on a map of air alerts as something it is not (consumer D-S80). They
 #: are still read and recorded; this constant decides what is *shown*.
 WARNINGS_URL = rso.page_url("ogolne", 0)
+
+#: **The second address that may paint, and the one RCB's air alerts are in
+#: now (F203, D-065).** The publisher's build of 2026-10-21 gave air-attack
+#: communiques a category of their own, `atak-z-powietrza`, and they left
+#: `ogolne` with it. For two days the map, the register and the slider read
+#: `ogolne` alone, every read of it succeeded, and RCB's alerts of 2026-10-21
+#: and 2026-10-23 reached none of them `[reported: press; measured: no air
+#: communique entered the store after 2026-10-21 02:46:21 UTC]`.
+AIR_URL = rso.page_url("atak-z-powietrza", 0)
+
+#: From when a list that may paint the map is the two addresses together.
+#: **The earliest instant the record cannot rule out, and not the publisher's
+#: build stamp.** The last air communique `ogolne` gave this store entered it
+#: at 2026-10-21 02:46:21.534 UTC; the portal's footer dates its build to
+#: 13:01 Warsaw time that day, 11:01 UTC, and the first alert the store missed
+#: went out about 19:00 UTC `[reported]`. Somewhere between the first and the
+#: third the category opened, and which one is `[nieustalone]`. Every moment
+#: from the first is therefore read as needing both, and a stretch without a
+#: read of the new address is published as unread rather than as a quiet
+#: `ogolne`: a reader is told the record cannot say, for up to eight hours
+#: too long, instead of being told RCB was silent for some of them.
+AIR_URL_SINCE = datetime(2026, 10, 21, 2, 46, 22, tzinfo=UTC)
+
+#: Every address whose lists may paint, in the order they are joined.
+WARNINGS_URLS: tuple[str, ...] = (WARNINGS_URL, AIR_URL)
+
+
+def warnings_urls(moment: datetime) -> tuple[str, ...]:
+    """The addresses a list that may paint at `moment` is made of (D-065)."""
+    return WARNINGS_URLS if moment >= AIR_URL_SINCE else (WARNINGS_URL,)
+
+
+def joined_read(newest: Mapping[str, datetime | None], moment: datetime) -> datetime | None:
+    """When the list that may paint at `moment` was read, or None where it was not.
+
+    The oldest of its addresses' newest reads: a list is as current as its
+    stalest part. None when an address the moment needs has no read at all,
+    which is every moment between `AIR_URL_SINCE` and the first read of
+    `AIR_URL`, and every moment after a walk the canary could not vouch for
+    once the reads before it have aged out (D-065).
+    """
+    stamps = [newest.get(url) for url in warnings_urls(moment)]
+    present = [stamp for stamp in stamps if stamp is not None]
+    if len(present) < len(stamps):
+        return None
+    return min(present)
+
+
+def joined_members(newest: Mapping[str, Sequence[str] | None],
+                   moment: datetime) -> list[str] | None:
+    """The list that may paint at `moment`: its addresses' newest lists, joined.
+
+    None when an address the moment needs has no list, for the reason
+    `joined_read` gives. The categories are disjoint `[measured 2026-08-22]`;
+    a digest listed by both is kept once all the same, in first place.
+    """
+    joined: list[str] = []
+    seen: set[str] = set()
+    for url in warnings_urls(moment):
+        members = newest.get(url)
+        if members is None:
+            return None
+        for member in members:
+            if member not in seen:
+                seen.add(member)
+                joined.append(member)
+    return joined
 
 #: Past this, a communique list is not published as current (difference 3
 #: above). The consumer's own `VALID_FOR_S` for the same feed, carried over:
@@ -465,7 +534,9 @@ def warnings_verdict(
     the live cycle and the timeline are one rule over two ways of fetching the
     same rows. `attempted`: a poll of the feed started at or before `as_of`.
     `read_at`: when the newest read of the map scope at or before `as_of`
-    started. `members`: the newest list of that address at or before `as_of`.
+    started, the oldest of its addresses' since 0.62.0.0 (`joined_read`).
+    `members`: the newest list of that scope at or before `as_of`, its
+    addresses' lists joined (`joined_members`).
     """
     if not attempted:
         return UNPUBLISHED, UNPUBLISHED
@@ -498,14 +569,24 @@ def warnings_blocks(store: EventStore, as_of: datetime) -> tuple[Block, Block]:
     moment was drawn with a later list.
     """
     attempted = store.newest_attempt_at(rso.FEED, at=as_of) is not None
-    read = store.newest_read(rso.FEED, WARNINGS_URL, at=as_of) if attempted else None
-    read_at = _parse_stored(str(read["started_at"])) if read is not None else None
+    urls = warnings_urls(as_of)
+    reads: dict[str, datetime | None] = {}
+    for url in urls if attempted else ():
+        read = store.newest_read(rso.FEED, url, at=as_of)
+        reads[url] = _parse_stored(str(read["started_at"])) if read is not None else None
+    read_at = joined_read(reads, as_of) if attempted else None
     fresh = (read_at is not None
              and (as_of - read_at).total_seconds() <= WARNINGS_VALID_FOR_S)
-    snapshot = store.newest_snapshot(rso.FEED, WARNINGS_URL, at=as_of) if fresh else None
-    members = (
-        [str(member) for member in snapshot["members"]] if snapshot is not None else None
-    )
+    lists: dict[str, list[str] | None] = {}
+    for url in urls if fresh else ():
+        # **The list its own read vouched for, never a newer one** (D-065).
+        # A walk the canary rejects still writes its lists, as evidence; taken
+        # at `as_of` they were painted under the previous run's read, so the
+        # one walk built to say "cannot vouch" published what it could not.
+        snapshot = store.newest_snapshot(rso.FEED, url, at=reads[url])
+        lists[url] = ([str(member) for member in snapshot["members"]]
+                      if snapshot is not None else None)
+    members = joined_members(lists, as_of) if fresh else None
     held = store.communiques_by_digest(members) if members is not None else {}
     return warnings_verdict(attempted, read_at, members, held, as_of)
 

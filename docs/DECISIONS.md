@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.39
+Document:  docs/DECISIONS.md, version 2.40
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2321,6 +2321,91 @@ written.
 **Reopen if:** the table grows faster than the event store it sits in, or the
 scrubber needs a question answered that one indexed read of this table cannot
 answer.
+
+## D-065. RCB's air alerts are read where the publisher now puts them, and a walk that cannot vouch it read the whole feed vouches for no list
+
+Date: 2026-10-23. Status: adopted. Amends D-053 (the map scope) and D-054
+(what a read row vouches for). Defect: F203.
+
+**What happened.** RSO's portal build of 2026-10-21 opened a sixth category,
+`atak-z-powietrza`, and RCB's air-attack communiques left `ogolne` for it. The
+walk of five known addresses read every one of them without a failure for two
+days; the store recorded no air communique after 2026-10-21 02:46:21 UTC
+`[measured on vm-mavo, 2026-10-23]`, while RCB raised and called off alerts in
+lubelskie and podkarpackie on the evening of 2026-10-21 and the night of
+2026-10-23 `[reported: press]`. The map painted nothing, and the
+forty-eight-hour register told its readers RCB had raised no alert. The
+operator noticed it by eye. The new address answered 200 with communique
+23441746, an RCB all-clear for podkarpackie no other category held
+`[measured 2026-10-23]`.
+
+**Decision.**
+
+1. **The walk reads six categories** (`rso.CATEGORIES`).
+2. **The communiques that may paint are two lists joined**:
+   `poland.WARNINGS_URLS`, `ogolne` and `atak-z-powietrza`, from
+   `poland.AIR_URL_SINCE` and `ogolne` alone before it. The joined list is as
+   current as its stalest address (`joined_read`) and does not exist while an
+   address the moment needs has no list (`joined_members`), so such a moment
+   is `null` live and unread on the slider and in the register. The live
+   cycle, the slider, the register and the recorder read the scope through
+   these two functions, so the four cannot disagree. Both lists rather than
+   the new one alone, because nothing measured says every air communique
+   moved; an exercise notice still arrived in `ogolne` on 2026-10-23.
+3. **`AIR_URL_SINCE` is 2026-10-21 02:46:22 UTC, the earliest instant the
+   record cannot rule out**: the moment after the last air communique
+   `ogolne` gave the store. The portal's footer dates its build to 11:01 UTC
+   and the first missed alert went out about 19:00 UTC. Which of these the
+   category opened at is `[nieustalone]`, so the stretch from the first to
+   the install reads as unread: too long by up to eight hours, never quiet for
+   any of them. No reading can recover what was not recorded; the register
+   says so instead of saying nothing happened.
+4. **Every walk is checked against the publisher's partial scope.**
+   `wszystkie/wszystkie` is read first as a canary, never as a list, and
+   `rso.unwalked` names every communique it lists that no category returned.
+   When it names any, or the comparison cannot be made because the canary or
+   a category was refused, no address of the run gets a read row; each gets
+   a refusal carrying `[UNKNOWN-CATEGORY]` or `[UNVOUCHED]`, the lists and
+   rows are still written, and the run exits 3. A read row is what vouches a
+   list current (D-054, F176), and this run cannot vouch its lists are the
+   feed. `--url` and `--category` read one address on request and skip it,
+   and so does a walk of a later page.
+5. **A list is shown under the read that vouched for it and no other.** Each
+   address's list is the newest at or before that address's own newest read,
+   in `warnings_blocks` and in `timeline.WarningsRecord`. Taken at the moment,
+   as one address's list was before, a rejected walk's lists were painted
+   under the previous walk's read, and the walk that says "cannot vouch"
+   published what it could not `[measured by the release's review, its D1]`.
+
+**What it costs.** One request more per run, 1440 a day at the host's 60 s.
+A refusal of any one address now withholds every read of its run, where
+before it withheld its own: one run's lists go unvouched, which ages nothing
+past the hour ceiling or the register's 30-minute threshold unless it
+repeats. A communique edited out of the feed between the canary's read and
+its category's lands in `unwalked` and costs one run the same way; that error
+is in the safe direction. **The live map goes `null` an hour after a drift
+starts, not at once**: it keeps the last vouched list, the read rows stop and
+the hour ceiling does the rest, as for a dead feed, while the register marks
+the stretch after 30 minutes. The slider costs about twice what it did, 0.3 to
+0.5 s for a week `[measured on the review's synthetic stores]`.
+
+**Rejected.** *Adding the category and nothing else*: the next category is
+the same two days. *Reading `/kategorie` every run*: it names categories, not
+contents, and answered this project with a client error on 2026-10-23
+`[measured once, from outside the host]`. *Painting from the new category
+alone*: see 2. *A gap window entered by hand*: the unread stretch follows from
+the reads the store holds, so nothing is pinned that a later reading could
+contradict.
+
+**Residual.** `wszystkie` leaves out `stany-wod`, and a category it also
+left out would pass the canary unseen. Nothing measured says one exists.
+
+**Reopen if:** the publisher's partial scope stops listing a category the
+walk reads, which turns every walk into `[UNKNOWN-CATEGORY]` or hides one; a
+category opens that `wszystkie` does not list; or the CAP feed MSWiA issued
+credentials for (thread DOLiZK-ZK.052.49.2026(2)) replaces this reading,
+which makes the category question the publisher's schema rather than a page
+walk.
 
 ## D-064. Weeks set against weeks: one file computes every choice the analysis page offers, and a minute the record did not see counts nowhere
 

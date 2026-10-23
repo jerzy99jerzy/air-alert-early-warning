@@ -4,13 +4,13 @@
 
 ### Where the backlog stands
 
-**45 of 91 closed, 46 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
+**45 of 93 closed, 48 open.** Counted from the entries below by `tools/todo_index.py`, which the gate re-runs, so this table cannot drift from the list it summarises.
 
 | State | Count | What it means |
 | --- | --- | --- |
 | `done` | 40 | Finished, with the release that closed it named in the entry |
 | `moved` | 5 | Owned by another repository; the entry here is a pointer, not a copy |
-| `ready` | 34 | Nothing external blocks it; it needs a session |
+| `ready` | 36 | Nothing external blocks it; it needs a session |
 | `decision` | 7 | Waiting on a judgement rather than on work |
 | `blocked-external` | 3 | Waiting on somebody outside this project |
 | `deferred` | 2 | Deliberately parked, with the decision that parked it named |
@@ -25,9 +25,9 @@ Tiers are a claim about *order*, not about importance, and they move as the proj
 | **2** | Real work that nothing is waiting on today |
 | **3** | Worth doing, worth dropping if the project turns |
 
-**Tier 1, 15 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows), [T89](#t89-the-strike-tally-on-the-host-read-rather-than-declared), [T92](#t92-the-two-days-of-rcb-alerts-on-the-host-read-rather-than-declared), [T93](#t93-the-level-on-the-host-read-rather-than-declared-and-the-reading-a-decision-defers-to)
+**Tier 1, 16 open:** [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T11](#t11-ask-whether-anyone-actually-wants-this), [T34](#t34-what-is-in-the-066-of-messages-without-a-tag), [T36](#t36-the-hand-labelled-sample-retargeted), [T46](#t46-declarations-phrased-without-a-declaration-word), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows), [T89](#t89-the-strike-tally-on-the-host-read-rather-than-declared), [T92](#t92-the-two-days-of-rcb-alerts-on-the-host-read-rather-than-declared), [T93](#t93-the-level-on-the-host-read-rather-than-declared-and-the-reading-a-decision-defers-to), [T95](#t95-the-sixth-rso-category-and-the-canary-on-the-host-read-rather-than-declared)
 
-**Tier 2, 18 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T87](#t87-the-primary-collector-and-the-delivery-unit-run-unconfined)
+**Tier 2, 19 open:** [T7](#t7-onboarding-probe-from-a-clean-clone), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T29](#t29-measure-disengagement-instead-of-assuming-it), [T31](#t31-katottg-as-a-versioned-file), [T33](#t33-alias-table-between-the-channel-and-the-register), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T61](#t61-s7-against-t31-t33-and-t34-decide-then-record), [T43](#t43-raion-centroids-in-the-contract), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T87](#t87-the-primary-collector-and-the-delivery-unit-run-unconfined), [T96](#t96-feed-spec-on-the-publishers-sixth-category)
 
 **Tier 3, 13 open:** [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T14](#t14-second-signal-type-for-the-drone-regime), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T70](#t70-which-side-drops-the-packets), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T88](#t88-the-host-reading-as-a-mavo-subcommand)
 
@@ -41,7 +41,7 @@ Sprint numbering follows `docs/MVP.md`. Tasks with no sprint are either outside 
 | **S10** | [T11](#t11-ask-whether-anyone-actually-wants-this) |
 | **S11** | [T7](#t7-onboarding-probe-from-a-clean-clone), [T29](#t29-measure-disengagement-instead-of-assuming-it) |
 | **S12** | [T36](#t36-the-hand-labelled-sample-retargeted) |
-| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows), [T87](#t87-the-primary-collector-and-the-delivery-unit-run-unconfined), [T88](#t88-the-host-reading-as-a-mavo-subcommand), [T89](#t89-the-strike-tally-on-the-host-read-rather-than-declared), [T92](#t92-the-two-days-of-rcb-alerts-on-the-host-read-rather-than-declared), [T93](#t93-the-level-on-the-host-read-rather-than-declared-and-the-reading-a-decision-defers-to) |
+| **unassigned** | [T1](#t1-request-the-alertsinua-api-token), [T3](#t3-resolve-r2-which-currently-adds-nothing), [T5](#t5-rolling-feed-latency-drift-detection), [T6](#t6-legal-position-on-distributing-warnings-to-people-other-than-the-operator), [T39](#t39-tolerated-poll-rate-under-continuous-operation), [T41](#t41-prototype-the-push-interface-and-compare-it-against-polling), [T8a](#t8a-is-there-any-ingestible-polish-source-measured-against-feed-spec), [T8b](#t8b-does-poland-enter-the-products-scope), [T10](#t10-find-a-history-source-deep-enough-to-calibrate-on), [T12](#t12-detect-changes-to-the-ukrainealarm-offer-contract), [T14](#t14-second-signal-type-for-the-drone-regime), [T28](#t28-the-crossing-event-list-dated-and-sourced), [T35](#t35-turn-the-negative-result-into-a-measurement), [T59](#t59-tags-the-channel-emits-that-the-register-map-does-not-hold), [T43](#t43-raion-centroids-in-the-contract), [T46](#t46-declarations-phrased-without-a-declaration-word), [T48](#t48-apple-critical-alerts-entitlement), [T49](#t49-two-denominators-for-the-western-share-and-one-number-quoted-for-both), [T54](#t54-observe-the-staleness-machine-crossing-once-on-a-real-host), [T56](#t56-is-there-an-alert-feed-for-the-romanian-border-and-the-baltics), [T57](#t57-a-week-of-the-picture-statistics-a-reader-can-open), [T58](#t58-traffic-and-road-conditions-near-the-border-refused-as-posed), [T67](#t67-the-rso-reader-and-what-it-is-a-reader-of), [T70](#t70-which-side-drops-the-packets), [T71](#t71-the-collect-path-writes-to-journald-only-and-journald-is-not-a-sink), [T73](#t73-the-delivery-cadence-has-no-record-in-this-projects-own-sink), [T74](#t74-the-delivery-timer-describes-a-cadence-it-stopped-running), [T78](#t78-the-corpus-measurements-were-taken-against-the-wrong-text), [T79](#t79-one-page-walking-loop-or-six-that-can-disagree), [T81](#t81-an-alert-episode-has-no-expiry-and-a-kind-declaration-does), [T82](#t82-the-channels-silence-measured-as-a-distribution), [T85](#t85-the-polish-pipes-on-the-host-read-rather-than-declared), [T86](#t86-how-rcb-ends-an-alert-measured-over-a-week-of-recorded-rows), [T87](#t87-the-primary-collector-and-the-delivery-unit-run-unconfined), [T88](#t88-the-host-reading-as-a-mavo-subcommand), [T89](#t89-the-strike-tally-on-the-host-read-rather-than-declared), [T92](#t92-the-two-days-of-rcb-alerts-on-the-host-read-rather-than-declared), [T93](#t93-the-level-on-the-host-read-rather-than-declared-and-the-reading-a-decision-defers-to), [T95](#t95-the-sixth-rso-category-and-the-canary-on-the-host-read-rather-than-declared), [T96](#t96-feed-spec-on-the-publishers-sixth-category) |
 
 <!-- index:end -->
 
@@ -2986,3 +2986,40 @@ and write seconds, usable weeks and comparisons, written into
 `/var/lib/mavo/analysis.json` equal to the sha256 of the site's
 `/analysis.json` after the next push. A run over ten minutes is a finding for
 D-064's last reopen condition, not a failure of the install.
+
+## T95. The sixth RSO category and the canary on the host, read rather than declared
+Status: `ready` [tier 1]
+
+0.62.0.0 walks `atak-z-powietrza` and reads the partial scope as a canary
+before every walk (D-065, F203). It declares what no reading supports yet:
+that the host's walk prints `canary` and `refused=0/7` with no
+`[UNKNOWN-CATEGORY]` line, that the canary's comparison holds against the live
+feed rather than against the session's stubs, and that the next RCB air
+communique reaches `communiques` from the new address within a cadence.
+
+**Acceptance.** On `vm-mavo`, after the install: one `mavo-rso` run's journal
+lines, with the canary's row count and `refused=0/7`; the attempt rows of that
+run, seven reads; the first air communique read from `atak-z-powietrza`, its
+`ts_ingest` against its `created_at` (which closes the 70-second check owed
+since 2026-09-30, `docs/DEPLOYMENT.md`); and `pl_rcb_recent.unread` in
+`state.json` carrying a stretch that opens at or before 2026-10-21 02:46:22
+UTC and closes at the install's first vouched walk. Whether the site renders
+that stretch as unread rather than as a quiet two days is `mavo-site`'s to
+read, and is read on the page as part of this acceptance. An
+`[UNKNOWN-CATEGORY]` line on a healthy feed is a finding for D-065's reopen
+conditions, not a failure of the install.
+
+## T96. FEED-SPEC on the publisher's sixth category
+Status: `ready` [tier 2]
+
+Both editions of `docs/FEED-SPEC.md` describe RSO as five categories, with
+the air alert of 2026-09-16 arriving in `ogolne`, the general category, among
+notices for residents. The publisher's build of 2026-10-21 gave air attacks a
+category of their own (F203), which answers part of what the document asks
+of the feed and makes its count false. Not edited in 0.62.0.0 on purpose: the
+document is written for the ministry, under the editorial framework the
+operator set for it, and a production fix should not wait on that prose.
+
+**Acceptance.** Both editions state the sixth category, its date and what it
+holds `[measured]`, re-read which properties it changes, and pass
+`make feed-spec-check`.

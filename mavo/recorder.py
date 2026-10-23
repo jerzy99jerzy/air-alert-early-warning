@@ -49,11 +49,14 @@ COMMUNIQUE_FEED = "rso"
 ZONE_FEED = "pansa"
 
 #: The addresses whose lists the timeline reads: the communique scope that may
-#: paint the map (`poland.WARNINGS_URL`) and the updated plan
-#: (`pansa.SOURCE_URL`). Written out because this module imports nothing from
-#: the package; `tests/test_timeline.py` holds them equal to the originals.
+#: paint the map (`poland.WARNINGS_URLS`, two addresses since 0.62.0.0, D-065)
+#: and the updated plan (`pansa.SOURCE_URL`). Written out because this module
+#: imports nothing from the package; `tests/test_timeline.py` holds them equal
+#: to the originals.
 MAP_LISTS: tuple[tuple[str, str], ...] = (
     (COMMUNIQUE_FEED, "https://komunikaty.tvp.pl/komunikatyxml/wszystkie/ogolne/0?_format=xml"),
+    (COMMUNIQUE_FEED,
+     "https://komunikaty.tvp.pl/komunikatyxml/wszystkie/atak-z-powietrza/0?_format=xml"),
     (ZONE_FEED, "https://airspace.pansa.pl/map-configuration/uup"),
 )
 

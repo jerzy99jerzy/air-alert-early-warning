@@ -75,10 +75,13 @@ from mavo.sources.pansa import FEED as PANSA_FEED
 from mavo.sources.pansa import SOURCE_URL as PANSA_URL
 from mavo.sources.pansa import TIMEOUT_S as PANSA_TIMEOUT_S
 from mavo.sources.pansa import poll_once as pansa_poll_once
+from mavo.sources.rso import ALL_SCOPE_URL as RSO_ALL_SCOPE_URL
 from mavo.sources.rso import CATEGORIES as RSO_CATEGORIES
 from mavo.sources.rso import FEED as RSO_FEED
+from mavo.sources.rso import Page as RsoPage
 from mavo.sources.rso import page_url as rso_page_url
 from mavo.sources.rso import poll_once as rso_poll_once
+from mavo.sources.rso import unwalked as rso_unwalked
 from mavo.sources.telegram import CHANNEL_URL, poll_once
 from mavo.sources.telegram import FEED as CHANNEL_FEED
 from mavo.sources.ukrainealarm import API_BASE, read_key
@@ -810,8 +813,26 @@ def _cmd_rso(args: argparse.Namespace) -> int:
     unrecoverable afterwards at any cost, because the information was never
     written (FEED-SPEC nine).
 
+    **A walk of every known category is not a reading of the feed (F203,
+    D-065).** The publisher added `atak-z-powietrza` on 2026-10-21 and moved
+    RCB's air-attack communiques into it, and for two days this command read
+    five addresses without a failure and recorded none of them. So the walk
+    starts by reading the partial scope as a canary, and when the scope lists
+    a communique no category returned, or the comparison cannot be made
+    because the scope or a category was refused, no address of the run gets a
+    read row: each gets a refusal naming why. A read row is what tells
+    `mavo/poland.py` a list is current, and this run cannot vouch that its
+    lists are the whole feed. The lists and rows are still written, so what
+    was there is kept; nothing is shown from it, because the composer takes
+    each address's list at that address's own newest read. `--url` and `--category`
+    read one address on request and make no claim about the feed, so they
+    skip the canary, and so does a walk of a later page, which the unpaged
+    canary cannot be set beside.
+
     Exit codes match `collect`: unreachable is 3 and a failed store is 7, so a
     wrapper reading only stdout cannot mistake either for an empty country.
+    A walk the canary could not vouch for exits 3 as well: it is a partial
+    reading, whatever each read said.
     """
     transport: Transport = StubTransport(Path(args.stub).read_text(encoding="utf-8")) \
         if args.stub else UrllibTransport()
@@ -834,9 +855,42 @@ def _cmd_rso(args: argparse.Namespace) -> int:
         targets = [rso_page_url(args.category, args.page)]
     else:
         targets = [rso_page_url(name, args.page) for name in RSO_CATEGORIES]
+    # A later page is compared with nothing: the canary is the unpaged scope,
+    # and a page of the walk set beside it reads as a short walk (review D3).
+    canary = not args.url and not args.category and args.page == 0
 
     seen = appended = unreadable = 0
     refused = 0
+    #: D-065. Reads of a walk wait for the canary's verdict before any is
+    #: written; a run that cannot vouch for its lists records none of them.
+    held_reads: list[tuple[str, datetime, int, int, float]] = []
+    walked: set[str] = set()
+    scope: RsoPage | None = None
+    if canary:
+        started = datetime.now(UTC)
+        try:
+            scope, elapsed = rso_poll_once(transport, RSO_ALL_SCOPE_URL)
+        except SourceUnavailable as unreachable_now:
+            waited = (datetime.now(UTC) - started).total_seconds()
+            if store is not None:
+                store.record_refusal(RSO_FEED, RSO_ALL_SCOPE_URL, started,
+                                     str(unreachable_now), waited)
+            print(f"[UNREACHABLE] {unreachable_now} (attempt {waited:.2f}s)")
+            refused += 1
+        else:
+            if store is not None:
+                try:
+                    # Kept as evidence of what the publisher listed; never a
+                    # list, so nothing the canary read can paint (D-065).
+                    appended += store.append_communiques(RSO_FEED, scope.communiques)
+                except Exception as failure:  # noqa: BLE001
+                    print(f"[STORE-FAILED] {failure}")
+                    return 7
+            held_reads.append((RSO_ALL_SCOPE_URL, started, len(scope.communiques),
+                               scope.unreadable, elapsed))
+            print(f"read={len(scope.communiques)} unreadable={scope.unreadable} "
+                  f"items_on_page={scope.items_on_page} items_per_page={scope.items_per_page} "
+                  f"canary latency={elapsed:.3f}s {RSO_ALL_SCOPE_URL}")
     for url in targets:
         started = datetime.now(UTC)
         try:
@@ -869,28 +923,78 @@ def _cmd_rso(args: argparse.Namespace) -> int:
                 # written first it vouched for the previous list whenever a
                 # write above failed, and every failing run refreshed it
                 # (F176). A run whose writes failed leaves no
-                # read row, and the pipe's liveness says so.
-                store.record_read(RSO_FEED, url, started, len(page.communiques),
-                                  page.unreadable, elapsed_s=elapsed)
+                # read row, and the pipe's liveness says so. A walk's rows
+                # wait for the canary below (D-065).
+                if canary:
+                    held_reads.append((url, started, len(page.communiques),
+                                       page.unreadable, elapsed))
+                else:
+                    store.record_read(RSO_FEED, url, started, len(page.communiques),
+                                      page.unreadable, elapsed_s=elapsed)
             except Exception as failure:  # noqa: BLE001
                 print(f"[STORE-FAILED] {failure}")
                 return 7
+        walked.update(item.id for item in page.communiques)
         seen += len(page.communiques)
         unreadable += page.unreadable
         print(f"read={len(page.communiques)} unreadable={page.unreadable} "
               f"items_on_page={page.items_on_page} items_per_page={page.items_per_page} "
               f"snapshot={changed} latency={elapsed:.3f}s {url}")
 
-    print(f"seen={seen} unreadable={unreadable} refused={refused}/{len(targets)} "
+    vouched = True
+    if canary:
+        reason = _rso_unvouched(scope, walked, refused)
+        vouched = reason is None
+        if store is not None:
+            try:
+                for url, started, count, unread_rows, elapsed in held_reads:
+                    if reason is None:
+                        store.record_read(RSO_FEED, url, started, count, unread_rows,
+                                          elapsed_s=elapsed)
+                    else:
+                        # The fetch's own duration: it was measured, and a
+                        # refusal row's zero would read as a measured instant.
+                        store.record_refusal(RSO_FEED, url, started, reason, elapsed)
+            except Exception as failure:  # noqa: BLE001
+                print(f"[STORE-FAILED] {failure}")
+                return 7
+        if reason is not None:
+            print(reason)
+    total = len(targets) + (1 if canary else 0)
+    print(f"seen={seen} unreadable={unreadable} refused={refused}/{total} "
           f"stored={appended} (seen minus stored is idempotence, not loss)")
     if unreadable:
         print("NOTE: rows without an identifier are counted, never dropped. A page that "
               "lost half its rows must not read as a short page.")
-    if refused:
+    if refused or not vouched:
         # Any refusal makes the reading partial, and a partial reading that
         # exits 0 is the shape this project refuses everywhere else.
         return 3
     return 0
+
+
+def _rso_unvouched(scope: RsoPage | None, walked: set[str], refused: int) -> str | None:
+    """Why a walk cannot vouch that its lists are the whole feed, or None when it can.
+
+    Three ways (D-065): the canary was not read; an address was refused, so a
+    communique missing from the walk may sit in the refused category rather
+    than an unknown one and the two cannot be told apart; or the canary lists
+    communiques no category returned. The first two say the comparison was
+    not made, and only the third names a category nobody here knows of, so
+    the three are worded apart.
+    """
+    if scope is None:
+        return "[UNVOUCHED] the all-categories scope was not read, so the walk cannot be compared"
+    if refused:
+        return (f"[UNVOUCHED] {refused} address(es) refused, so a communique the walk lacks "
+                "cannot be placed")
+    missing = rso_unwalked(scope, walked)
+    if not missing:
+        return None
+    named = ", ".join(item or "(no id)" for item in missing[:10])
+    more = f" and {len(missing) - 10} more" if len(missing) > 10 else ""
+    return (f"[UNKNOWN-CATEGORY] {len(missing)} communique(s) listed by the publisher "
+            f"in no category this walk reads: {named}{more}")
 
 
 def _cmd_airspace(args: argparse.Namespace) -> int:
@@ -1577,10 +1681,12 @@ def build_parser() -> argparse.ArgumentParser:
     rso.add_argument(
         "--category",
         choices=RSO_CATEGORIES,
-        help="one published category. Omit to walk all five, which is the "
-             "only way to read the whole feed: the endpoint's own "
-             "`wszystkie` returns 156 of 461 communiques and says nothing "
-             "about the 305 it drops (T67)",
+        help="one published category. Omit to walk them all behind the "
+             "all-categories canary, which is the only way to read the whole "
+             "feed: the endpoint's own `wszystkie` returns 156 of 461 "
+             "communiques and says nothing about the 305 it drops (T67), and "
+             "a category nobody here knows of is found only by comparing the "
+             "two (D-065)",
     )
     rso.add_argument(
         "--page", type=int, default=0,

@@ -282,6 +282,121 @@ def lists_over(store: EventStore, feed: str, url: str, start: datetime,
     return lists
 
 
+@dataclass(frozen=True, slots=True)
+class WarningsRecord:
+    """The reads and lists of every address that may paint, over one window (D-065).
+
+    One list until 0.62.0.0, two since: `ogolne` and, from
+    `poland.AIR_URL_SINCE`, `atak-z-powietrza`. Kept per address, because a
+    category is a property of the query and the store records it so, and
+    joined at each moment by the composer's own `joined_read` and
+    `joined_members`, so the slider and the register read the scope exactly as
+    the live cycle does.
+    """
+
+    reads: Mapping[str, list[datetime]]
+    lists: Mapping[str, list[tuple[datetime, list[str]]]]
+    #: Each address's list stamps, taken once: rebuilt on every call they made
+    #: a week of per-walk lists quadratic, 8.6 s where 0.2 s had been
+    #: `[measured by the 0.62.0.0 review]`.
+    list_stamps: Mapping[str, list[datetime]]
+
+    def _newest_read(self, url: str, moment: datetime) -> datetime | None:
+        stamps = self.reads.get(url, [])
+        index = _newest_at(stamps, moment)
+        return stamps[index] if index is not None else None
+
+    def read_at(self, moment: datetime) -> datetime | None:
+        """`poland.joined_read` at `moment`, from the recorded reads."""
+        return poland.joined_read({url: self._newest_read(url, moment)
+                                   for url in poland.warnings_urls(moment)}, moment)
+
+    def members_at(self, moment: datetime) -> list[str] | None:
+        """`poland.joined_members` at `moment`, from the recorded lists.
+
+        Each address's list is the newest at or before that address's own
+        newest read, as `warnings_blocks` takes it: a list written by a walk
+        the canary rejected has no read of its own and is never the one
+        shown (D-065).
+        """
+        newest: dict[str, list[str] | None] = {}
+        for url in poland.warnings_urls(moment):
+            read = self._newest_read(url, moment)
+            lists = self.lists.get(url, [])
+            index = (_newest_at(self.list_stamps.get(url, []), read)
+                     if read is not None else None)
+            newest[url] = lists[index][1] if index is not None else None
+        return poland.joined_members(newest, moment)
+
+    def steps(self) -> list[tuple[datetime, datetime | None]]:
+        """Every moment the joined read changes, with what it changes to, oldest first.
+
+        A read of any address is a candidate, and so is `AIR_URL_SINCE`, where
+        the scope widens and the joined read goes to None until the new
+        address has been read.
+        """
+        candidates = sorted({read for reads in self.reads.values() for read in reads}
+                            | {poland.AIR_URL_SINCE})
+        out: list[tuple[datetime, datetime | None]] = []
+        for moment in candidates:
+            value = self.read_at(moment)
+            if not out or out[-1][1] != value:
+                out.append((moment, value))
+        return out
+
+    def joined_reads(self) -> list[datetime]:
+        """The joined read's values in order, each once: the reads of the scope."""
+        values: list[datetime] = []
+        for _moment, value in self.steps():
+            if value is not None and (not values or value > values[-1]):
+                values.append(value)
+        return values
+
+    def joined_lists(self) -> list[tuple[datetime, list[str] | None]]:
+        """The joined list at every moment it changes, oldest first.
+
+        It can change at a list's stamp, at a read that brings a list into
+        view (`members_at` takes each address's list at its own read), and at
+        `AIR_URL_SINCE`; each is a candidate, and a moment that repeats the
+        list before it is dropped.
+        """
+        stamps = {stamp for lists in self.lists.values() for stamp, _members in lists}
+        if not stamps:
+            return []
+        earliest = min(stamps)
+        candidates = stamps | {poland.AIR_URL_SINCE}
+        candidates.update(read for reads in self.reads.values() for read in reads)
+        out: list[tuple[datetime, list[str] | None]] = []
+        for moment in sorted(candidates):
+            if moment < earliest:
+                continue
+            members = self.members_at(moment)
+            if not out or out[-1][1] != members:
+                out.append((moment, members))
+        return out
+
+    def digests(self) -> list[str]:
+        """Every digest any address listed in the window, once, sorted."""
+        return sorted({member for lists in self.lists.values()
+                       for _stamp, members in lists for member in members})
+
+
+def warnings_record(store: EventStore, start: datetime, end: datetime) -> WarningsRecord:
+    """The map scope's reads and lists over `[start, end]`, per address (D-065)."""
+    reads = {url: reads_over(store, rso.FEED, url, start, end) for url in poland.WARNINGS_URLS}
+    # From the read in effect at `start`, not from `start`: the list that read
+    # vouched for can be older than a list a rejected walk wrote before the
+    # window opened, and the newest list at `start` would be that one.
+    lists = {url: lists_over(store, rso.FEED, url,
+                             min(start, reads[url][0]) if reads[url] else start, end)
+             for url in poland.WARNINGS_URLS}
+    return WarningsRecord(
+        reads=reads,
+        lists=lists,
+        list_stamps={url: [stamp for stamp, _members in rows] for url, rows in lists.items()},
+    )
+
+
 def _inside(moment: datetime | None, start: datetime, end: datetime) -> bool:
     return moment is not None and start < moment <= end
 
@@ -305,32 +420,49 @@ class RcbLayer:
 def rcb_layer(store: EventStore, start: datetime, end: datetime) -> RcbLayer:
     """`pl_warnings` and `pl_all_clear` over `[start, end]`, as `warnings_blocks` would say.
 
-    The verdict can change at four kinds of instant and nowhere else: the first
-    poll (absent to published), a list recorded (the members), a read that ends
-    or a tick that starts a stretch older than `WARNINGS_VALID_FOR_S` (the age
-    ceiling), and a communique's end passing (`is_expired`). The issue times
-    the all-clear pairing compares are fixed by the rows and never by the
-    moment, so they change nothing on their own.
+    The verdict can change at five kinds of instant and nowhere else: the first
+    poll (absent to published), a list recorded (the members), a change of the
+    joined read that starts or ends a stretch without one or a stretch older
+    than `WARNINGS_VALID_FOR_S` (the age ceiling), the scope widening at
+    `AIR_URL_SINCE` (D-065), and a communique's end passing (`is_expired`).
+    The issue times the all-clear pairing compares are fixed by the rows and
+    never by the moment, so they change nothing on their own.
     """
     first = _optional_stamp(store.oldest_attempt_at(rso.FEED))
     if first is None or first > end:
         return RcbLayer(recorded_since=first, spans=())
-    reads = reads_over(store, rso.FEED, poland.WARNINGS_URL, start, end)
-    lists = lists_over(store, rso.FEED, poland.WARNINGS_URL, start, end)
-    list_stamps = [stamp for stamp, _members in lists]
-    wanted = sorted({member for _stamp_, members in lists for member in members})
+    record = warnings_record(store, start, end)
+    wanted = record.digests()
     held = store.communiques_by_digest(wanted)
 
     ceiling = timedelta(seconds=poland.WARNINGS_VALID_FOR_S)
-    instants: set[datetime] = {max(start, first)}
-    for index, read in enumerate(reads):
-        before = reads[index - 1] if index else None
-        if before is None or read - before > ceiling:
-            instants.add(read)
-        after = reads[index + 1] if index + 1 < len(reads) else None
+    # The widening at `AIR_URL_SINCE` is an instant of its own: a step of the
+    # joined read only when no address was read before it, and a walk that
+    # read both before it changes the members there and nothing else (the
+    # 0.62.0.0 review, its D2).
+    instants: set[datetime] = {max(start, first), poland.AIR_URL_SINCE}
+    steps = record.steps()
+    before: datetime | None = None
+    for index, (moment, read) in enumerate(steps):
+        if read is None:
+            instants.add(moment)
+            before = None
+            continue
+        if before is None or moment > before + ceiling:
+            instants.add(moment)
+        after = steps[index + 1][0] if index + 1 < len(steps) else None
         if after is None or after > read + ceiling + TICK:
             instants.add(read + ceiling + TICK)
-    instants.update(list_stamps)
+        before = read
+    for url, stamps in record.list_stamps.items():
+        # A list shows from the first read of its address at or after it,
+        # which is its own stamp for every walk the canary vouched for and a
+        # later read for a list a rejected walk wrote (D-065).
+        reads = record.reads.get(url, [])
+        for stamp in stamps:
+            index = bisect.bisect_left(reads, stamp)
+            if index < len(reads):
+                instants.add(reads[index])
     for member in wanted:
         row = held.get(member)
         if row is None:
@@ -344,12 +476,10 @@ def rcb_layer(store: EventStore, start: datetime, end: datetime) -> RcbLayer:
 
     spans: list[RcbSpan] = []
     for moment in moments:
-        read_index = _newest_at(reads, moment)
-        list_index = _newest_at(list_stamps, moment)
         warnings, cleared = poland.warnings_verdict(
             attempted=first <= moment,
-            read_at=reads[read_index] if read_index is not None else None,
-            members=lists[list_index][1] if list_index is not None else None,
+            read_at=record.read_at(moment),
+            members=record.members_at(moment),
             held=held,
             as_of=moment,
         )

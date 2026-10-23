@@ -25,6 +25,8 @@ difference stated below.
 | A16 | MT18 | A red alarm, its all-clear and a second alarm on the same area and kind that the source lists no level for, through `compose` | The second alarm publishes `level: null`; the first alarm's `Red` fails |
 | A17 | MT18 | Two alerts folded onto one key: a chronic one listing a `Red`, an air alert listing a `Yellow` while it runs; the air alert ends and the alarm goes on | The alarm publishes the `Red` the source lists again; the ended alert's `Yellow` fails |
 | A18 | MT18 | A red alarm ended by a read that has its page 1.5 s after asking, its all-clear stamped 0.8 s after asking, read 0.5 s after asking | The alarm, still open, publishes its `Red`; `level: null` beside an open red alarm fails |
+| A19 | MT19 | `mavo rso` against a feed whose partial scope lists an RCB alert in a category no address of the walk returns; every address answers | `pl_warnings` is `null` after the run; an empty list, read as no alert, fails |
+| A20 | MT19 | `ogolne` read fresh and empty after `AIR_URL_SINCE`, the air category never read | `pl_warnings` is `null`; the empty list `ogolne` alone gives fails |
 | A12 | MT13 | Two messages in the live footer-time order, exact timestamps asserted | Each event carries its own footer's timestamp; a one-message shift in either direction fails |
 
 ## The honest difference from `pirx`

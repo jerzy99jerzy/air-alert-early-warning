@@ -41,10 +41,20 @@ number the decision log issued to a different decision (F171).
 would drop a communique of a category nobody anticipated, which is this
 project's founding failure reached by a different route: the reader is told
 about a quiet country because our own vocabulary was short. Classification
-orders what is shown; it never decides what exists, and `mavo rso` walks all
-five categories for that reason. The rule has no entry in
+orders what is shown; it never decides what exists, and `mavo rso` walks
+every category for that reason. The rule has no entry in
 `docs/DECISIONS.md`; the D-034 this paragraph cited until 0.55.0.1 is a
 different decision (F171).
+
+**The walk itself was that allowlist, and it failed exactly so (F203).** The
+publisher added a sixth category on 2026-10-21 and moved RCB's air-attack
+communiques into it; a walk of five addresses read every one of them
+successfully for two days and recorded no air communique, and the page told
+its readers that RCB had raised no alert in forty-eight hours in which it had
+raised several. Reading every known category is not reading everything.
+Since 0.62.0.0 each walk first reads the partial scope as a canary
+(`ALL_SCOPE_URL`, `unwalked`), and a walk the canary cannot vouch for records
+no read of any of its lists (D-065).
 
 **What the feed does that this project is built to refuse.** Elements arrive
 present and empty rather than absent: `<latitude></latitude>` is a field that
@@ -72,6 +82,7 @@ import hashlib
 import json
 import re
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from xml.etree import ElementTree
@@ -346,7 +357,15 @@ def to_utc(local: str, zone: str) -> datetime:
 FEED = "rso"
 
 
-#: The five categories, from `/kategorie?_format=xml` (fetched 2026-08-22).
+#: The categories this walk reads. Five from `/kategorie?_format=xml`
+#: (fetched 2026-08-22); the sixth, `atak-z-powietrza`, appeared with the
+#: publisher's portal build of 2026-10-21 and took RCB's air-attack
+#: communiques out of `ogolne` with it `[measured 2026-10-23: the portal's
+#: category menu names it; its XML address answered 200 with communique
+#: 23441746, an RCB all-clear for podkarpackie that no other category held]`.
+#: For two days this tuple held five and the store held no air communique at
+#: all while RCB issued at least two in each border voivodeship `[reported:
+#: press of 2026-10-21 and 2026-10-23]` (F203).
 #: **A category is a property of the query and not of the record**: no
 #: communique carries one, measured over 156 messages, so the only way a
 #: consumer knows what a row is, is to remember which address returned it.
@@ -356,6 +375,7 @@ CATEGORIES = (
     "hydrologiczne",
     "informacje-drogowe",
     "stany-wod",
+    "atak-z-powietrza",
 )
 
 #: **`wszystkie` does not mean all, and there is no address that does.**
@@ -370,6 +390,16 @@ CATEGORIES = (
 #: nobody reintroduces one.
 PAGE_URL = "https://komunikaty.tvp.pl/komunikatyxml/wszystkie/{category}/{page}?_format=xml"
 
+#: **The partial scope, read as a canary and never as a source (F203).** The
+#: paragraph above is why no list is taken from it. What it is still good for
+#: is the one question the walk cannot ask itself: whether the publisher holds
+#: a communique in a category this tuple does not name. `wszystkie` leaves out
+#: `stany-wod` and nothing else that has been measured, so any communique it
+#: lists that no category of the walk returned sits in a category nobody here
+#: knows of. That is how `atak-z-powietrza` went unread for two days with every
+#: read succeeding: the walk could only fail on an address it asked for.
+ALL_SCOPE_URL = "https://komunikaty.tvp.pl/komunikatyxml/wszystkie/wszystkie/0?_format=xml"
+
 #: The slug vocabularies, each its own document.
 PROVINCES_URL = "https://komunikaty.tvp.pl/wojewodztwa?_format=xml"
 CATEGORIES_URL = "https://komunikaty.tvp.pl/kategorie?_format=xml"
@@ -379,9 +409,11 @@ def page_url(category: str, page: int = 1) -> str:
     """One page of one category. Pages are 1-based; page 0 suppresses paging.
 
     Refuses a category outside the published vocabulary rather than building
-    an address the endpoint will answer with something unexpected. The five
-    slugs are a measured list, not a guess, and a sixth appearing is a change
-    in the feed that a caller should hear about rather than absorb.
+    an address the endpoint will answer with something unexpected. The slugs
+    are a measured list, not a guess. This refusal guards this tree's own
+    callers and nothing else: it cannot notice the publisher adding a
+    category, which happened on 2026-10-21 and was noticed by a reader two
+    days later. `unwalked` is what notices that (F203).
     """
     if category not in CATEGORIES:
         raise SourceUnavailable(
@@ -389,6 +421,28 @@ def page_url(category: str, page: int = 1) -> str:
             f"({', '.join(CATEGORIES)}); read {CATEGORIES_URL} before adding one"
         )
     return PAGE_URL.format(category=category, page=page)
+
+
+def unwalked(scope: Page, walked: Iterable[str]) -> tuple[str, ...]:
+    """The communiques the partial scope lists that no category of the walk returned.
+
+    Compared on the publisher's identifier and not on the digest: the same
+    communique read through two addresses is the same `id`, and a digest would
+    also differ for a row edited between the two reads, which is a race and
+    not a category. Rows of the scope without an identifier cannot be placed,
+    so they are returned as the empty string, once per row: a canary that
+    cannot read part of what it is looking at has not seen nothing there.
+    Ordered as the scope lists them.
+
+    Empty is the only answer a caller may treat as "the walk is complete".
+    The converse does not hold: one row edited out of the feed between the
+    scope's read and the category's lands here too, which the caller reads as
+    an incomplete walk for one run. That error is in the safe direction.
+    """
+    known = set(walked)
+    missing = [item.id for item in scope.communiques if item.id not in known]
+    missing.extend("" for _ in range(scope.unreadable))
+    return tuple(missing)
 
 
 def poll_once(transport: Transport, url: str) -> tuple[Page, float]:

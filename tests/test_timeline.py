@@ -216,15 +216,23 @@ def test_a_full_tie_names_the_area_by_the_kind_and_not_by_the_order() -> None:
 # ---- the communiques: the recording of 2026-09-16 against `warnings_blocks`
 
 
-def serve(store: EventStore, at: datetime, communiques: list[Any] | None) -> None:
-    """One poll of the map scope as `mavo rso` writes it; None is a refusal."""
+def serve(store: EventStore, at: datetime, communiques: list[Any] | None,
+          air: list[Any] | None = None) -> None:
+    """One poll of the map scope as `mavo rso` writes it; None is a refusal.
+
+    From `poland.AIR_URL_SINCE` the scope is two addresses (D-065), and a poll
+    reads both: `communiques` is the `ogolne` list and `air` the
+    `atak-z-powietrza` one, empty unless given. A refusal refuses both.
+    """
+    urls = poland.warnings_urls(at)
     if communiques is None:
-        store.record_refusal(rso.FEED, poland.WARNINGS_URL, at, "HTTP Error 503")
+        for url in urls:
+            store.record_refusal(rso.FEED, url, at, "HTTP Error 503")
         return
-    store.append_communiques(rso.FEED, communiques)
-    store.record_snapshot(rso.FEED, poland.WARNINGS_URL, at,
-                          [item.digest() for item in communiques])
-    store.record_read(rso.FEED, poland.WARNINGS_URL, at, len(communiques), 0)
+    for url, items in zip(urls, (communiques, air or []), strict=False):
+        store.append_communiques(rso.FEED, items)
+        store.record_snapshot(rso.FEED, url, at, [item.digest() for item in items])
+        store.record_read(rso.FEED, url, at, len(items), 0)
 
 
 def communique_store(path: Path) -> tuple[EventStore, datetime]:
@@ -674,9 +682,10 @@ def test_the_subcommand_records_and_refuses_what_it_cannot_do(
 
 
 def test_the_recorder_names_the_lists_the_timeline_reads() -> None:
-    """The recorder imports nothing from the package, so it writes the two
-    addresses out; if either drifts, a recorded week holds the wrong lists."""
+    """The recorder imports nothing from the package, so it writes the
+    addresses out; if any drifts, a recorded week holds the wrong lists. Three
+    since 0.62.0.0: the map scope is two addresses (D-065)."""
     from mavo.recorder import MAP_LISTS
 
-    assert set(MAP_LISTS) == {(rso.FEED, poland.WARNINGS_URL),
-                              (pansa.FEED, pansa.SOURCE_URL)}
+    assert set(MAP_LISTS) == {(rso.FEED, url) for url in poland.WARNINGS_URLS} | {
+        (pansa.FEED, pansa.SOURCE_URL)}

@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.20
+Document:  docs/MANUAL.md, version 3.21
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -362,7 +362,7 @@ Without `--stub` it fetches the list endpoint TVP's integration page publishes.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `--category` | all five | One published category. Omitted, the command walks all five, which is the only way to read the whole feed: the endpoint's own `wszystkie` scope returned 156 of 461 communiques and said nothing about the 305 it dropped `[measured 2026-08-22]` |
+| `--category` | all six | One published category, read on request: no canary, and its read is recorded as made. Omitted, the command walks all six behind the canary below, which is the only way to read the whole feed: the endpoint's own `wszystkie` scope returned 156 of 461 communiques and said nothing about the 305 it dropped `[measured 2026-08-22]`. The sixth, `atak-z-powietrza`, is the publisher's of 2026-10-21 and holds RCB's air alerts (F203) |
 | `--page` | 0 | Page number, or 0 for the unpaged reading. Pages are 1-based and the stop condition is an empty page, never a count derived from the feed's own `totalItems`, which reports the page rather than the total |
 | `--url` | none | Read this exact address instead, bypassing category selection |
 | `--stub` | none | Read a saved page from disk instead of the network |
@@ -380,6 +380,33 @@ road disruption and, on the publisher's own account, air threats. An allowlist
 of categories this project recognises would drop a communique of a category
 nobody anticipated, and the reader would be told about a quiet country because
 our vocabulary was short.
+
+**The walk's own list of categories is that allowlist, so every walk checks
+it against the publisher** (F203, D-065). For two days from 2026-10-21 the
+walk read five addresses without a failure while RCB's air alerts sat in a
+sixth, and the page reported none. A walk now reads the endpoint's partial
+`wszystkie` scope first, as a canary it never takes a list from, and compares
+it with what the categories returned:
+
+| Line | Meaning |
+| --- | --- |
+| `read=... canary latency=...s <address>` | the partial scope was read; its rows are stored as evidence and never become a list |
+| `[UNKNOWN-CATEGORY] N communique(s) listed by the publisher in no category this walk reads: <ids>` | the publisher holds communiques this walk cannot reach. Read the publisher's category menu, add the category to `rso.CATEGORIES`, and if it can hold air communiques to `poland.WARNINGS_URLS` |
+| `[UNVOUCHED] the all-categories scope was not read, so the walk cannot be compared` | the canary was refused; nothing was compared |
+| `[UNVOUCHED] N address(es) refused, so a communique the walk lacks cannot be placed` | a category was refused, so a missing communique may be in it rather than in an unknown one |
+
+On any of the last three no address of the run gets a read row: each gets a
+refusal carrying the line and the fetch's own duration, the lists and rows are
+still written, and the run exits 3. The composer takes each address's list at
+that address's own read, so a list written by such a run is never shown; the
+page keeps the last vouched list, reads `null` once its read passes the hour,
+and the forty-eight-hour register calls the stretch unread after two
+cadences.
+`refused=` counts the canary among the addresses. A clean walk prints
+`refused=0/7`, none of the three lines above, and exits 0: `refused=0/7` alone
+is not clean, since a walk with an unknown category refuses nothing. A walk of
+a later page (`--page` other than 0) skips the canary, which reads the
+unpaged scope and cannot be set beside one page.
 
 **A document that is not the feed's list is refused, however empty it
 looks** (F173). The list's root is `newses`; an error document or a

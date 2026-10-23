@@ -16,6 +16,54 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.62.0.0 - 2026-10-23
+
+**RCB's air alerts moved to a category the walk did not read, and for two days
+the page said RCB had raised none.** RSO's portal build of 2026-10-21 opened
+`atak-z-powietrza` and the air-attack communiques left `ogolne` for it. The
+walk read its five known addresses every minute without a failure, the store
+took no air communique after 2026-10-21 02:46:21 UTC, and the map, the slider
+and the forty-eight-hour register published a quiet country through RCB's
+alerts of the evening of 2026-10-21 and the night of 2026-10-23 (F203). The
+operator saw it by eye; no control was keyed on anything but failure, and
+nothing failed.
+
+- **The sixth category is walked** (`rso.CATEGORIES`), and the RCB scope is
+  `ogolne` and `atak-z-powietrza` joined from `poland.AIR_URL_SINCE`,
+  2026-10-21 02:46:22 UTC, the earliest instant the record cannot rule out
+  (D-065). One rule, `joined_read` and `joined_members`, serves the live
+  cycle, the slider, the register and the recorder: a list is as current as
+  its stalest address, and a moment that needs an address nobody read is
+  `null` live and unread in the record, never quiet.
+- **The two days are published as unread, not recovered.** The register's
+  `unread` opens at `AIR_URL_SINCE` and closes at the first walk the canary
+  vouches for, computed from the reads the store holds; nothing is entered by
+  hand, and nothing the publisher no longer lists comes back.
+- **Every walk is checked against the publisher.** `mavo rso` reads the
+  partial `wszystkie` scope first, as a canary it never takes a list from;
+  `rso.unwalked` names what it lists that no category returned. On a find, or
+  when the canary or a category was refused, no address of the run gets a
+  read row, each gets a refusal carrying `[UNKNOWN-CATEGORY]` or
+  `[UNVOUCHED]`, and the run exits 3. Seven requests a run where there were
+  five; a clean walk prints `refused=0/7`, no `[UNKNOWN-CATEGORY]` or
+  `[UNVOUCHED]` line, and exits 0. A walk of a later page skips the canary.
+- **A list is shown only under the read that vouched for it.** Each address's
+  list is the newest at or before that address's own read, in the live cycle,
+  the slider and the register alike, so the lists a rejected walk still
+  writes, as evidence, are never painted under the walk before it. Found by
+  the release's review (`docs/reviews/0.62.0.0.md`), with three more repairs
+  made before the tag.
+- **Threat row MT19**, with harness attacks A19 (the command against a feed
+  with an alert in an unknown category) and A20 (the composer with the air
+  address unread), each killed by its mutant: 18 of 18. A seeded test sets the slider
+  against the live cycle over random two-address histories.
+- **Documents.** `docs/DECISIONS.md` 2.40 (D-065), `docs/METHODOLOGY.md` 2.77
+  (F203), `docs/THREAT-MODEL.md` 2.9, `docs/MANUAL.md` 3.21 (the walk's new
+  lines), `docs/MECHANISMS.md` 2.9, `docs/DEPLOYMENT.md` 1.61 (two releases
+  behind; what the install must read). **TODO**: T95, the host reading; T96,
+  FEED-SPEC's five categories, left for its own release on purpose because
+  the document is written for the ministry under its own editorial rules.
+
 ## 0.61.0.1 - 2026-10-19
 
 **The documents described a system several releases old, and the README most

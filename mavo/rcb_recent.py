@@ -86,7 +86,7 @@ from mavo.liveness import PRODUCTION_FEEDS
 from mavo.poland import Block
 from mavo.sources import rso
 from mavo.store import EventStore
-from mavo.timeline import RcbLayer, lists_over, rcb_layer, reads_over
+from mavo.timeline import RcbLayer, rcb_layer, warnings_record
 
 #: The window, in hours: the operator's figure of 2026-09-28.
 RECENT_HOURS = 48
@@ -138,10 +138,14 @@ class Record:
 
     layer: RcbLayer
     #: The newest list at or before the window's start, then every list
-    #: recorded in it, as `(observed_at, digests)`, oldest first.
-    lists: tuple[tuple[datetime, tuple[str, ...]], ...]
+    #: recorded in it, as `(observed_at, digests)`, oldest first. The list of
+    #: the whole scope, its addresses joined (D-065); None where an address
+    #: the moment needs had none, which is unread like a missing row.
+    lists: tuple[tuple[datetime, tuple[str, ...] | None], ...]
     held: Mapping[str, Row]
-    #: Every read of the list in the window, the newest before it first.
+    #: Every read of the scope in the window, the newest before it first: the
+    #: joined read's values, so a stretch in which any needed address went
+    #: unread is a stretch between two of these (D-065).
     reads: tuple[datetime, ...]
 
     def rows_at(self, moment: datetime) -> tuple[Row, ...] | None:
@@ -151,20 +155,20 @@ class Record:
         if index < 0:
             return None
         members = self.lists[index][1]
-        if any(member not in self.held for member in members):
+        if members is None or any(member not in self.held for member in members):
             return None
         return tuple(self.held[member] for member in members)
 
 
 def record(store: EventStore, start: datetime, end: datetime) -> Record:
     """The layer, the lists, their rows and the reads over `[start, end]`."""
-    lists = lists_over(store, rso.FEED, poland.WARNINGS_URL, start, end)
-    wanted = sorted({member for _stamp, members in lists for member in members})
+    scope = warnings_record(store, start, end)
     return Record(
         layer=rcb_layer(store, start, end),
-        lists=tuple((stamp, tuple(members)) for stamp, members in lists),
-        held=store.communiques_by_digest(wanted),
-        reads=tuple(reads_over(store, rso.FEED, poland.WARNINGS_URL, start, end)),
+        lists=tuple((stamp, None if members is None else tuple(members))
+                    for stamp, members in scope.joined_lists()),
+        held=store.communiques_by_digest(scope.digests()),
+        reads=tuple(scope.joined_reads()),
     )
 
 
@@ -314,7 +318,7 @@ def _clears(rec: Record, names: dict[str, str], known: Verdicts) -> dict[Key, _C
     """Every all-clear the window's lists hold, per voivodeship, at its first sighting."""
     found: dict[Key, _Clear] = {}
     for stamp, members in rec.lists:
-        for member in members:
+        for member in members or ():
             row = rec.held.get(member)
             verdict = known.get(member)
             if row is None or verdict is None or verdict[0] != "all_clear":

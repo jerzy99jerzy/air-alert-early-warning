@@ -198,6 +198,25 @@ MUTATIONS: tuple[Mutation, ...] = (
     ),
 )
 
+MUTATIONS += (
+    Mutation(
+        attack="test_a19_a_category_the_walk_does_not_know_is_not_a_quiet_country",
+        row="MT19",
+        path="mavo/cli.py",
+        old="    missing = rso_unwalked(scope, walked)\n",
+        new="    missing: tuple[str, ...] = ()\n",
+        disables="the canary that compares the walk with the partial scope",
+    ),
+    Mutation(
+        attack="test_a20_a_scope_with_an_address_nobody_read_is_not_read_as_quiet",
+        row="MT19",
+        path="mavo/poland.py",
+        old="    return WARNINGS_URLS if moment >= AIR_URL_SINCE else (WARNINGS_URL,)\n",
+        new="    return (WARNINGS_URL,)\n",
+        disables="the air category as part of the map scope",
+    ),
+)
+
 # A7 has no mutation. It asserts that the fixture source does not raise on any
 # scenario, and the fixture generates rather than parses, so there is no control
 # to disable: any mutation that makes it raise is an injected fault rather than a

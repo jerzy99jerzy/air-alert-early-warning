@@ -240,8 +240,10 @@ def test_a_category_outside_the_published_vocabulary_is_refused() -> None:
 
 
 def test_every_published_category_builds_an_address() -> None:
-    """Five slugs, measured from /kategorie, and each one resolves."""
-    assert len(CATEGORIES) == 5, CATEGORIES
+    """Six slugs, five measured from /kategorie and the sixth from the portal
+    and its XML address (F203), and each one resolves."""
+    assert len(CATEGORIES) == 6, CATEGORIES
+    assert "atak-z-powietrza" in CATEGORIES
     for name in CATEGORIES:
         assert page_url(name, 3).endswith(f"/{name}/3?_format=xml"), name
 

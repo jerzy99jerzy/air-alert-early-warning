@@ -4,7 +4,7 @@ Every mechanism in MAVO: what it is, where it lives, the alternative that was
 rejected, the failure it prevents, and the test that keeps it honest.
 
 ```
-Document:  docs/MECHANISMS.md, version 2.8
+Document:  docs/MECHANISMS.md, version 2.9
 Audience:  a contributor about to change how something works, and anyone asking
            "why is it done this way rather than the obvious way"
 Companion: ARCHITECTURE (what talks to what), DATA-FLOW (what happens to a
@@ -846,8 +846,29 @@ substrings: ten terms make it about the air, and twelve keep it off even when
 one of the ten matches, because a siren test writes *alarm powietrzny* in its
 body. The matching term is published as `air_term`, so a false paint names the
 word that caused it. Only the `ogolne` list read unpaged may paint
-(`WARNINGS_URL`); the other four categories are read, recorded and never
-shown.
+(`WARNINGS_URL`), joined from `AIR_URL_SINCE` by the `atak-z-powietrza` list
+(`WARNINGS_URLS`, D-065); the other four categories are read, recorded and
+never shown. A moment that needs an address nobody read is `null`: half a
+list of nothing is not a quiet country (F203).
+
+**Each walk is checked against the publisher's own scope (D-065).** The
+publisher opened `atak-z-powietrza` on 2026-10-21 and RCB's air alerts left
+`ogolne` for it; the walk of five known addresses read every one without a
+failure for two days and recorded none of them. A control keyed on a failed
+read cannot see a category nobody asks for, so every walk first reads the
+partial `wszystkie` scope as a canary (`rso.unwalked`). A communique it lists
+that no category returned, or a comparison the run could not make, leaves the
+run's reads unrecorded, each address a refusal saying why, and each
+address's list is taken at its own read, so the lists such a run writes are
+never shown. **Rejected
+alternative: reading the category list `/kategorie` on every run.** It names
+the categories and not their contents, and it answered this project's
+session with a client error on 2026-10-23 `[measured once, from outside the
+host]`; the canary asks the question that matters, whether anything is listed
+that the walk did not return, of an address the publisher has answered since this project first measured it,
+on 2026-08-22.
+**Residual:** a category that `wszystkie` also leaves out passes unseen, as
+`stany-wod` would. Harness A19 and A20.
 
 **Rejected alternative: painting by category.** The categories are in the
 request address and not in the record, and the four specific ones carry

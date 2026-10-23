@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.76
+Document:  docs/METHODOLOGY.md, version 2.77
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,40 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F203, 0.62.0.0. RCB's air alerts moved to a category the walk did not know, and every read of the rest succeeded
+
+Found by the operator, on 2026-10-23 at 10:04 Warsaw time, as "RCB has stopped
+showing on mavo". The page's forty-eight-hour register said RCB had raised no
+air alert in any voivodeship; the press had reported alerts and all-clears in
+lubelskie and podkarpackie on the evening of 2026-10-21 and the night of
+2026-10-23 `[reported]`. The reader on `vm-mavo` ran every 62 s with
+`refused=0/5` `[measured: journal, 2026-10-23 08:03-08:07 UTC]`, and the store
+held no air communique after 2026-10-21 02:46:21 UTC `[measured]`. RSO's
+portal had opened `atak-z-powietrza` with its build of 2026-10-21, and RCB's
+alerts were there `[measured: the portal's menu; the address answered 200
+with 23441746]`.
+
+**Class.** Source-dimension blindness (the 0.53.0.0 lesson), a third
+dimension: after time and source, the category. A pool with no dimension for
+what was not asked cannot notice it is short. And a rule without a gate
+check: `rso.page_url`'s docstring said a sixth category "is a change in the
+feed that a caller should hear about rather than absorb", and nothing could
+hear it; the refusal it carried guarded this tree's callers, not the
+publisher. The module's own paragraph, *Nothing is filtered by category*,
+described the walk's five-slug tuple as the allowlist it refused. Every
+control the pipe had was keyed on a failure, and nothing failed.
+
+**Repair.** D-065: the sixth category walked; the map scope two addresses
+joined from `AIR_URL_SINCE`, read by one rule in the live cycle, the slider,
+the register and the recorder; a canary that compares every walk with the
+publisher's partial scope and withholds the run's reads when it cannot
+vouch; threat row MT19 with attacks A19 and A20, each killed by its mutant.
+The stretch the store did not see is published as unread, from the reads it
+holds and from no hand-entered window. **Not repaired, and cannot be:** the
+alerts of 2026-10-21 and 2026-10-23 were not recorded, and the publisher's
+list no longer holds them. **Reopen condition:** a communique reaching the
+press and RSO's portal but not `communiques` while every walk exits 0.
 
 ### F202, 0.61.0.1. Prose about the running system that no reading had re-read, from the README down
 
