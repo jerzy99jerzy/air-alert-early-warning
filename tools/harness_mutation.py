@@ -16,9 +16,8 @@ substitution, the attack is listed as unverified rather than given a mutation
 that flatters it, and the count is printed. Unknown is not the safe state here
 either.
 
-Not part of `make verify`: it copies the tree and runs pytest once per mutation,
-which is seconds rather than milliseconds. Run it with `make harness-mutation`
-when a control changes, and at every release.
+Part of `make verify` since it was cheap enough to be: it copies the tree and
+runs pytest once per mutation, seconds rather than milliseconds.
 """
 
 from __future__ import annotations
@@ -214,6 +213,84 @@ MUTATIONS += (
         old="    return WARNINGS_URLS if moment >= AIR_URL_SINCE else (WARNINGS_URL,)\n",
         new="    return (WARNINGS_URL,)\n",
         disables="the air category as part of the map scope",
+    ),
+)
+
+MUTATIONS += (
+    Mutation(
+        attack="test_a21_an_alarm_that_ended_inside_a_gap_does_not_stand_for_ever",
+        row="MT20",
+        path="mavo/cli.py",
+        old="                if source.snapshot_state in GAP_STATES else ()\n",
+        new="                if False else ()\n",
+        disables="closing, against the read after a gap, what the store holds open (D-066)",
+    ),
+    Mutation(
+        attack="test_a22_a_body_that_is_not_the_list_is_not_a_quiet_sky",
+        row="MT11",
+        path="mavo/sources/ukrainealarm_source.py",
+        old="        problem = _shape_problem(payload)\n",
+        new="        problem = None\n",
+        disables="refusing a body that is not the alerts list (F204)",
+    ),
+    Mutation(
+        attack="test_a23_a_feed_renamed_one_tag_is_not_a_quiet_country",
+        row="MT19",
+        path="mavo/sources/rso.py",
+        old=('        if child.tag not in ("news", "pagination_info")'
+             ' and child.find("id") is not None\n'),
+        new="        if False\n",
+        disables="counting a renamed record as unreadable rather than absent (F204)",
+    ),
+    Mutation(
+        attack="test_a24_a_canary_blind_to_the_walk_does_not_vouch_for_it",
+        row="MT19",
+        path="mavo/cli.py",
+        old="    blind = rso_unseen_by_scope(scope, walked_in_scope or ())\n",
+        new="    blind: tuple[str, ...] = ()\n",
+        disables="the canary's second side: it must list what the walk read (F204)",
+    ),
+    Mutation(
+        attack="test_a25_a_reassurance_inside_an_alert_is_not_its_all_clear",
+        row="MT2",
+        path="mavo/poland.py",
+        old='ALL_CLEAR_BODY_TERMS: tuple[str, ...] = ("zako\u0144czy\u0142 si\u0119 atak",)\n',
+        new='ALL_CLEAR_BODY_TERMS: tuple[str, ...] = ("zako\u0144czy\u0142 si\u0119 atak", '
+            '"zako\u0144czono")\n',
+        disables="an all-clear term narrower than a bare verb (D-067)",
+    ),
+    Mutation(
+        attack="test_a26_a_blind_cycle_does_not_publish_a_counted_zero",
+        row="MT2",
+        path="mavo/report.py",
+        old="            if report.feed_state is FeedState.BLIND\n",
+        new="            if False\n",
+        disables="null counts under blind (X-1, D-S95)",
+    ),
+    Mutation(
+        attack="test_a27_an_unobserved_week_is_not_a_quiet_week",
+        row="MT6",
+        path="mavo/analysis.py",
+        old="        self.seen: Mask = self.full & ~_bits(blind)\n",
+        new="        self.seen: Mask = self.full\n",
+        disables="the analysis's unseen minutes (D-064)",
+    ),
+    Mutation(
+        attack="test_a28_an_unread_rso_list_is_not_a_week_without_alerts",
+        row="MT2",
+        path="mavo/analysis.py",
+        old=("        self.rcb_seen = self.full & ~((1 << self.rcb_first) - 1)"
+             " & ~_bits(self.rcb_unread)\n"),
+        new="        self.rcb_seen = self.full & ~((1 << self.rcb_first) - 1)\n",
+        disables="the RSO list's unread stretches in the analysis (D-064)",
+    ),
+    Mutation(
+        attack="test_a29_a_rejected_walk_is_never_painted_on_the_slider",
+        row="MT19",
+        path="mavo/timeline.py",
+        old="            index = (_newest_at(self.list_stamps.get(url, []), read)\n",
+        new="            index = (_newest_at(self.list_stamps.get(url, []), moment)\n",
+        disables="the slider taking each address's list at its own read (D-065)",
     ),
 )
 

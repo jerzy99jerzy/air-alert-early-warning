@@ -6,7 +6,7 @@
 > This document is the part of that work you can run.
 
 ```
-Document:  docs/MANUAL.md, version 3.21
+Document:  docs/MANUAL.md, version 3.22
 Audience:  the operator - the person who runs MAVO, reads what it prints, and
            is asked afterwards what it knew and when. Assumes competence, not
            familiarity
@@ -394,8 +394,9 @@ it with what the categories returned:
 | `[UNKNOWN-CATEGORY] N communique(s) listed by the publisher in no category this walk reads: <ids>` | the publisher holds communiques this walk cannot reach. Read the publisher's category menu, add the category to `rso.CATEGORIES`, and if it can hold air communiques to `poland.WARNINGS_URLS` |
 | `[UNVOUCHED] the all-categories scope was not read, so the walk cannot be compared` | the canary was refused; nothing was compared |
 | `[UNVOUCHED] N address(es) refused, so a communique the walk lacks cannot be placed` | a category was refused, so a missing communique may be in it rather than in an unknown one |
+| `[UNVOUCHED] the all-categories scope does not list N communique(s) the walk read in categories it covers, so it cannot vouch for the walk` | the canary is blind to rows the walk holds: a truncated or reorganised scope, or a record element the parser cannot read (F204). Read the scope's address by hand before anything else |
 
-On any of the last three no address of the run gets a read row: each gets a
+On any of the last four no address of the run gets a read row: each gets a
 refusal carrying the line and the fetch's own duration, the lists and rows are
 still written, and the run exits 3. The composer takes each address's list at
 that address's own read, so a list written by such a run is never shown; the
@@ -499,12 +500,18 @@ clears, because a snapshot compared against nothing cannot say what ended.
 `--snapshot` file is written after each poll the store accepted, atomically,
 with the moment it describes; the next process reads it back only while it is
 younger than 360 seconds - three cycles of the timer. Older, missing,
-unreadable, or stamped by a clock that ran backwards, it licenses nothing:
+unreadable, or stamped by a clock that ran backwards, it licenses no diff:
 the gap means the observation was interrupted, and a gap is not an all-clear
-on either side of a restart. Which of those happened is printed, not
-swallowed - the summary line carries `snapshot=fresh(118s)`, `stale`,
-`missing`, `corrupt` or `disabled`, and a stale or corrupt snapshot adds a
-line saying clears were withheld this run. Two more lines to know:
+on either side of a restart. What the gap does license is the read after it
+(D-066): every alarm the store holds open from the API that this read does not
+list is closed, dated by this read, and the run prints `closed N alarm(s) the
+API no longer lists, dated by this read after a stale snapshot`. Which of
+those happened is printed, not swallowed - the summary line carries
+`snapshot=fresh(118s)`, `stale`, `missing`, `corrupt` or `disabled`, and a
+stale or corrupt snapshot adds a line saying the diff was withheld. A body
+that is not the alerts list - an error envelope, `{}`, a list in which no
+region record reads - is `[UNREACHABLE]` with "body is not the alerts list",
+exit 3, and clears nothing (F204). Two more lines to know:
 `[NO-SNAPSHOT]` on every run shaped like production (`--store` without
 `--snapshot`), because the failure it names is invisible on the map - alerts
 raise normally and simply never end; and `[SNAPSHOT-UNWRITTEN]` when the

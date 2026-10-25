@@ -4,7 +4,7 @@ What may be claimed, what was measured, and every defect this repository has
 found in itself.
 
 ```
-Document:  docs/METHODOLOGY.md, version 2.77
+Document:  docs/METHODOLOGY.md, version 2.78
 Audience:  a contributor deciding what a number is allowed to mean, and anyone
            auditing whether this repository is as careful as it says
 Companion: FOUNDATIONS (the assumptions), MECHANISMS (how each control works),
@@ -4800,6 +4800,46 @@ reads the delegating pairs out of `mavo/cli.py`'s imports, reads each module's
 `add_argument` literals, and fails on a flag the subcommand does not accept.
 One direction only, deliberately: a subcommand may add an option its module
 lacks, and `attempts` may yet want one.
+
+### F204, 0.63.0.0. Seven controls a review of 2026-10-25 found broken, three of them for three reviews running
+
+Found by the full review of 0.62.0.0 and 4.93.0.0 (`docs/reviews/0.63.0.0.md`,
+and the operator's `REVIEW-0.62.0.0-4.93.0.0.md`), every finding reproduced in
+the review's session and re-run by its lead. Four were carried from the review
+of 2026-10-08 and had shipped twice since:
+
+- **An alarm that ended inside an API gap stood for good** (P-1, critical).
+  D-066. Mutant and attack A21, threat row MT20.
+- **A well-formed body that was not the alerts list cleared the map** (P-2).
+  `{}`, `null`, an error envelope or a body in which no region record reads
+  parsed to no alerts. Now refused; a readable record beside an unreadable one
+  is still counted as F138 settled. A22, MT11.
+- **A redirect carried the API key to whatever host it named** (P-3). A
+  request with credentials now follows a redirect only to its own origin.
+- **The publish loop died on three unguarded callables** (P-4): the liveness
+  read, `compose`, the run log. Each now degrades the cycle and is said once
+  on stderr; the loop goes on.
+
+Three were new:
+
+- **A reassurance inside an alert read as its all-clear** (P-5, and its
+  register half N-1). D-067. A25, MT2.
+- **The canary of 0.62.0.0 vouched for a walk it could not see** (N-F7). A
+  feed that renamed its record element parsed as empty everywhere, canary
+  included, and the walk exited 0 with nothing stored: F203's observable,
+  with the new control green. A renamed record is now counted unreadable, and
+  a scope that does not list what the walk read in the categories it covers
+  vouches for nothing. A23, A24, MT19.
+- **A blind cycle published counted zeros** (X-1), while the site has read
+  nulls under `blind` since its 4.91.0.0 (D-S95). A26, MT2.
+
+**Class.** Two: a control covers a shape, not a subject (the canary covered
+a category the walk did not know, not a scope that saw nothing; the shape
+check covered unparseable JSON, not parseable JSON of the wrong shape); and
+debts that a review names but no gate holds, which ship again. The review also
+found `mavo/analysis.py` and `mavo/timeline.py` with no mutant in the harness:
+A27, A28 and A29 are their first. **Reopen condition:** any of the seven
+reproduced again on a later tree.
 
 ### F203, 0.62.0.0. RCB's air alerts moved to a category the walk did not know, and every read of the rest succeeded
 

@@ -39,6 +39,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from mavo.areas import AreaRef, AreaTable, oblast_slug
 from mavo.levels import Horizon, LevelIndex, LevelReader, Listed, word_rank
@@ -1125,7 +1126,7 @@ def compose(
     valid_for_s: int = DEFAULT_VALID_FOR_S,
     trailing_days: int = DEFAULT_TRAILING_DAYS,
     history_days: Sequence[int] = HISTORY_WINDOWS_DAYS,
-    sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...]]
+    sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...] | None]
     | None = None,
     poland: Callable[[datetime], PolandBlocks] | None = None,
     strike: Callable[[datetime], Block] | None = None,
@@ -1504,11 +1505,20 @@ def to_contract(report: Report) -> dict[str, object]:
             if report.stream is not None
             else _empty_block(report, STREAM_WINDOW_S)
         ),
-        "counts_24h": {
-            "west": report.counts_24h[0],
-            "rest": report.counts_24h[1],
-            "total": sum(report.counts_24h),
-        },
+        # X-1 of the 2026-10-25 review, the producer's half of D-S95. A blind
+        # cycle counted nothing it can stand behind - the store unread, or no
+        # observation young enough to date - and until 0.63.0.0 wrote three
+        # literal zeros, the site's most-read number as a measurement nobody
+        # took. Nulls under `blind` only, the one shape the site accepts them in.
+        "counts_24h": (
+            {"west": None, "rest": None, "total": None}
+            if report.feed_state is FeedState.BLIND
+            else {
+                "west": report.counts_24h[0],
+                "rest": report.counts_24h[1],
+                "total": sum(report.counts_24h),
+            }
+        ),
     }
     # D-053. Additive against v3, like `sources`, and per key rather than as
     # one block: the consumer reads `pl_warnings` and `pl_airspace` separately
@@ -1742,6 +1752,27 @@ class PublishReport:
         return base
 
 
+def _disable_log(failure: Exception) -> None:
+    """Say once that the run log stopped, and stop it (F204, the review's P-4).
+
+    The run log is an observer like `on_cycle`: ENOSPC, a vanished directory
+    or a failed rotation ended the loop with a traceback while the file it
+    observes was still being written. It is dropped, not retried.
+    """
+    print(f"[RUNLOG-DISABLED] {failure}; publishing continues without the run log",
+          file=sys.stderr, flush=True)
+
+
+def _guarded_line(log: RunLog, *args: Any, **fields: Any) -> RunLog | None:
+    """`log.line(...)`, returning the log to keep using, or None once it failed."""
+    try:
+        log.line(*args, **fields)
+    except Exception as failure:  # noqa: BLE001
+        _disable_log(failure)
+        return None
+    return log
+
+
 def publish(
     load: Callable[[], Iterable[ThreatEvent]],
     path: Path,
@@ -1759,7 +1790,7 @@ def publish(
     feed_path: Path | None = None,
     history_path: Path | None = None,
     history_days: Sequence[int] = HISTORY_WINDOWS_DAYS,
-    sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...]]
+    sources: Callable[[EventStamps, datetime], tuple[FeedLiveness, ...] | None]
     | None = None,
     poland: Callable[[datetime], PolandBlocks] | None = None,
     strike: Callable[[datetime], Block] | None = None,
@@ -1822,7 +1853,13 @@ def publish(
     try:
         while max_cycles is None or cycles < max_cycles:
             cycles += 1
-            cycle_id = log.cycle_id() if log is not None else ""
+            cycle_id = ""
+            if log is not None:
+                try:
+                    cycle_id = log.cycle_id()
+                except Exception as failure:  # noqa: BLE001
+                    _disable_log(failure)
+                    log = None
             horizon: Horizon | None = None
             if levels is not None:
                 try:
@@ -1853,11 +1890,20 @@ def publish(
                     index = levels.live(horizon)
                 except Exception as failure:  # noqa: BLE001
                     print(f"[LEVELS-FAILED] {failure}", file=sys.stderr, flush=True)
-            report = compose(
-                events, as_of=clock(), table=table, valid_for_s=valid_for_s, levels=index,
-                history_days=history_days, sources=sources, poland=poland,
-                strike=strike, strike_history=strike_history, rcb_recent=rcb_recent,
-            )
+            try:
+                report = compose(
+                    events, as_of=clock(), table=table, valid_for_s=valid_for_s,
+                    levels=index, history_days=history_days, sources=sources,
+                    poland=poland, strike=strike, strike_history=strike_history,
+                    rcb_recent=rcb_recent,
+                )
+            except Exception as failure:  # noqa: BLE001
+                # F204 (P-4). A cycle that cannot compose still publishes:
+                # the blind picture, with the cause on stderr, rather than a
+                # traceback that leaves the last file standing as current.
+                print(f"[COMPOSE-FAILED] {failure}", file=sys.stderr, flush=True)
+                events, replayed = [], False
+                report = compose([], as_of=clock(), table=table, valid_for_s=valid_for_s)
             if report.feed_state is FeedState.BLIND:
                 blind += 1
             elif report.feed_state is FeedState.DEGRADED:
@@ -1905,8 +1951,8 @@ def publish(
             # a store, it does not poll, so it has no window to have missed and
             # a zero here would be a measurement nobody took.
             if log is not None:
-                log.line(
-                    "publish", "publish.cycle", cycle=cycle_id,
+                log = _guarded_line(
+                    log, "publish", "publish.cycle", cycle=cycle_id,
                     feed_state=report.feed_state.value,
                     as_of=report.as_of.isoformat(timespec="seconds"),
                     western_active=len(report.western_active),
@@ -1943,8 +1989,8 @@ def publish(
                 waited = pick(interval_s - spread, interval_s + spread)
                 intervals.append(waited)
                 if log is not None:
-                    log.line(
-                        "publish", "publish.interval", cycle=cycle_id,
+                    log = _guarded_line(
+                        log, "publish", "publish.interval", cycle=cycle_id,
                         base_s=interval_s, jitter=jitter, waited_s=round(waited, 3),
                     )
                 sleep(waited)

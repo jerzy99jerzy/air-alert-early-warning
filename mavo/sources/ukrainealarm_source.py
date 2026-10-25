@@ -135,6 +135,26 @@ def _load_snapshot(
     return "fresh", age, previous, oblasts
 
 
+def _shape_problem(payload: object) -> str | None:
+    """Why `payload` is not the alerts list, or None when it is (F204).
+
+    A list, and when it is not empty, at least one region record in it that is
+    an object whose `activeAlerts` is a list. `parse_alerts` is lenient by
+    design - it counts a record it cannot read rather than refusing it (F138) -
+    and that leniency stays for a record among readable ones. It is wrong for
+    the document: a body in which no record reads said nothing about the sky,
+    and taken as `[]` it cleared every open alarm.
+    """
+    if not isinstance(payload, list):
+        return f"top level is {type(payload).__name__}, not a list"
+    if payload and not any(
+        isinstance(region, dict) and isinstance(region.get("activeAlerts"), list)
+        for region in payload
+    ):
+        return f"none of its {len(payload)} region record(s) carries an activeAlerts list"
+    return None
+
+
 def _resolve(areas: AreaTable, alert: ApiAlert) -> tuple[str, str] | None:
     """`(area_id, oblast)`, or `("", "")` when the register declines, or None.
 
@@ -262,13 +282,23 @@ class UkrainealarmSource:
         #: again costs nothing and handing over a changed one is what
         #: records the escalation. Empty until the first successful poll.
         self.levels: tuple[LevelEvent, ...] = ()
+        #: The moment of the last successful poll: the observation any clear
+        #: derived from it is dated by, including one written against the
+        #: store after a gap (D-066).
+        self.polled_at: datetime | None = None
+
+    @property
+    def current_keys(self) -> frozenset[tuple[str, ThreatKind]]:
+        """`(area_id, kind)` the last successful poll saw alerting; empty before one."""
+        return frozenset(self._previous or ())
 
     def poll(self) -> Sequence[ThreatEvent]:
         """Transitions since the previous successful poll.
 
-        Raises only when the source is unreachable, never on its content: a
-        malformed body yields no events and leaves the previous snapshot
-        untouched, so a hostile payload cannot clear the map either.
+        Raises when the source is unreachable and when the body is not the
+        alerts list, never otherwise on its content. Both refusals leave the
+        previous snapshot untouched, so neither a malformed body nor a
+        well-formed one of the wrong shape can clear the map (F204).
         """
         body = self._transport.fetch(
             f"{self._base}/alerts",
@@ -281,6 +311,18 @@ class UkrainealarmSource:
             raise SourceUnavailable(
                 f"{self._base}/alerts: malformed JSON ({malformed})"
             ) from malformed
+        # F204. `[]` is the one shape that means "nothing alerting". Anything
+        # else that parses but is not the list of region records - an error
+        # envelope, `{}`, `null`, a re-wrapped list, a region whose alert list
+        # was renamed - used to parse to no alerts at all and clear every
+        # open alarm under a fresh snapshot, which is the API's quiet sky
+        # manufactured from a body that said nothing of the kind.
+        problem = _shape_problem(payload)
+        if problem is not None:
+            raise SourceUnavailable(
+                f"{self._base}/alerts: body is not the alerts list ({problem})"
+            )
+        self.polled_at = now
 
         current: dict[tuple[str, ThreatKind], datetime] = {}
         oblast_of: dict[tuple[str, ThreatKind], str] = {}

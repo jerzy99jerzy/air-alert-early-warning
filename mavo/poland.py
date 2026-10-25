@@ -189,9 +189,14 @@ NOT_A_THREAT_TERMS: tuple[str, ...] = (
 #: is the publisher's own sentence from that pair. `brak zagrożenia` is not a
 #: term on purpose: it will appear one day inside a notice that *raises* an
 #: alert ("na razie brak zagrożenia dla ..."), and reading it as an all-clear
-#: would end an alert on the strength of a reassurance.
+#: would end an alert on the strength of a reassurance. The bare verb
+#: `zakończono` was a term until 0.63.0.0 and is not one for the same reason
+#: (F204, D-067): "Atak powietrzny. Zakończono ewakuację szkół." read as an
+#: all-clear and ended every earlier threat on its voivodeships, in the live
+#: picture and in the 48-hour register both. Only the publisher's measured
+#: sentence stays; a new term needs its own measured sentence.
 ALL_CLEAR_TITLE_TERMS: tuple[str, ...] = ("odwołan",)
-ALL_CLEAR_BODY_TERMS: tuple[str, ...] = ("zakończył się atak", "zakończono")
+ALL_CLEAR_BODY_TERMS: tuple[str, ...] = ("zakończył się atak",)
 
 #: A drill word negated where it stands does not exclude (F178).
 #: `ćwiczeni` is matched as a substring, so "To nie są ćwiczenia", the sentence

@@ -313,6 +313,15 @@ def parse_page(payload: bytes) -> Page:
                 fields={name: _text(node.find(name)) for name in _TEXT_FIELDS},
             )
         )
+    # F204 (the review's N-F7). A record the publisher renamed - `<item>` where
+    # `<news>` stood - parsed as no record at all, so a whole feed drifting
+    # one tag read as a quiet page and the canary vouched for it with nothing
+    # in hand. A child of the list that carries an `<id>` and is not a `<news>`
+    # is a record this parser cannot read, and it is counted as one.
+    unreadable += sum(
+        1 for child in root
+        if child.tag not in ("news", "pagination_info") and child.find("id") is not None
+    )
     return Page(
         communiques=tuple(items),
         items_on_page=on_page,
@@ -421,6 +430,26 @@ def page_url(category: str, page: int = 1) -> str:
             f"({', '.join(CATEGORIES)}); read {CATEGORIES_URL} before adding one"
         )
     return PAGE_URL.format(category=category, page=page)
+
+
+#: The one category `wszystkie` is measured to leave out (2026-08-22, above).
+#: Every other category's rows are rows the scope must list.
+SCOPE_OMITS: frozenset[str] = frozenset({"stany-wod"})
+
+
+def unseen_by_scope(scope: Page, walked_in_scope: Iterable[str]) -> tuple[str, ...]:
+    """Communiques the walk returned in categories the scope covers that it does not list.
+
+    F204 (the review's N-F7), the other half of `unwalked`. That one asks
+    whether the publisher holds something the walk did not read; this one
+    asks whether the canary saw what the walk saw. A canary blind to rows the
+    walk holds - a scope truncated, emptied, or reorganised - vouched for
+    everything by comparing nothing, and a vouch is only worth the rows behind
+    it. One row added between the two reads lands here for one run, which is
+    the safe direction.
+    """
+    listed = {item.id for item in scope.communiques}
+    return tuple(dict.fromkeys(ident for ident in walked_in_scope if ident not in listed))
 
 
 def unwalked(scope: Page, walked: Iterable[str]) -> tuple[str, ...]:

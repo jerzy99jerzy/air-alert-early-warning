@@ -342,6 +342,13 @@ def check_contract() -> list[str]:
     counts = payload.get("counts_24h")
     if not isinstance(counts, dict):
         problems.append("counts_24h must be an object")
+    elif payload.get("state") == "blind":
+        # D-S95 / X-1: uncounted is three nulls, and only under blind.
+        if any(counts.get(key) is not None for key in ("west", "rest", "total")):
+            problems.append("a blind cycle must write counts_24h as three nulls")
+    elif any(not isinstance(counts.get(key), int) or isinstance(counts.get(key), bool)
+             for key in ("west", "rest", "total")):
+        problems.append("counts_24h outside blind must be three integers")
     elif counts.get("total") != counts.get("west", 0) + counts.get("rest", 0):
         problems.append("counts_24h total does not equal west plus rest")
 

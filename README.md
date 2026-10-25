@@ -3,10 +3,10 @@
 # air-alert-early-warning
 
 [![CI](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml/badge.svg)](https://github.com/jerzy99jerzy/air-alert-early-warning/actions/workflows/ci.yml)
-[![tests 1265](https://img.shields.io/badge/tests-1265-brightgreen)](tests/)
-[![coverage 96.74%](https://img.shields.io/badge/coverage-96.74%25-brightgreen)](Makefile)
-[![harness 19 attacks, 18 mutation-verified](https://img.shields.io/badge/harness-19%20attacks%2C%2018%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
-[![defects logged 178](https://img.shields.io/badge/defects%20logged-178-informational)](docs/METHODOLOGY.md)
+[![tests 1305](https://img.shields.io/badge/tests-1305-brightgreen)](tests/)
+[![coverage 96.81%](https://img.shields.io/badge/coverage-96.81%25-brightgreen)](Makefile)
+[![harness 28 attacks, 27 mutation-verified](https://img.shields.io/badge/harness-28%20attacks%2C%2027%20mutation--verified-brightgreen)](tests/harness/CATALOGUE.md)
+[![defects logged 179](https://img.shields.io/badge/defects%20logged-179-informational)](docs/METHODOLOGY.md)
 [![runtime dependencies 0](https://img.shields.io/badge/runtime%20dependencies-0-blue)](pyproject.toml)
 [![python 3.11 | 3.14](https://img.shields.io/badge/python-3.11%20%7C%203.14-blue)](pyproject.toml)
 [![licence Apache-2.0](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
@@ -873,10 +873,10 @@ reading as authoritative. They are now a gate failure rather than a typo.
 
 | | Files | Lines |
 | --- | --- | --- |
-| Package `mavo/` | 34 | 17,929 |
-| Tests | 83 | 22,172 |
-| Tools | 28 | 8,538 |
-| Documentation | 82 | 39,791 |
+| Package `mavo/` | 34 | 18,176 |
+| Tests | 84 | 22,838 |
+| Tools | 28 | 8,622 |
+| Documentation | 83 | 40,101 |
 
 **Documentation outweighs the package by more than two to one**, and that ratio is
 deliberate rather than accidental. The product of this project is a measurement,
@@ -887,13 +887,13 @@ confidence interval attached.
 | --- | --- |
 | Runtime dependencies | **0** |
 | Development dependencies | 4 (pytest, pytest-cov, ruff, mypy) |
-| Tests | 1265, of which 19 are scripted attacks |
-| Coverage | 96.74% against a floor of 95, a ratchet that is never lowered |
-| Mutation-verified controls | 18 of 19 attacks; the one without a mutation is printed as unverified on every run |
-| Threat-model rows | 19, each with a control or a named acceptance |
-| Defects logged with their class | 178, the count pinned against the log itself |
-| Decisions recorded with reopen conditions | 61, counted from the log itself |
-| Releases | 169 in the changelog; tags are fewer and some are cumulative (A11) |
+| Tests | 1305, of which 28 are scripted attacks |
+| Coverage | 96.81% against a floor of 95, a ratchet that is never lowered |
+| Mutation-verified controls | 27 of 28 attacks; the one without a mutation is printed as unverified on every run |
+| Threat-model rows | 20, each with a control or a named acceptance |
+| Defects logged with their class | 179, the count pinned against the log itself |
+| Decisions recorded with reopen conditions | 63, counted from the log itself |
+| Releases | 170 in the changelog; tags are fewer and some are cumulative (A11) |
 | Corpus | 61,041 posts, contiguous, digest recorded, held outside the tree |
 
 ## Documentation

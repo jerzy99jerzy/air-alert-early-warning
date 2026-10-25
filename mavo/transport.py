@@ -278,6 +278,37 @@ class _BoundedHTTPSHandler(urllib.request.HTTPSHandler):
         )
 
 
+class RedirectRefused(Exception):
+    """A redirect that would carry credentials to another origin (F204)."""
+
+
+def _origin(url: str) -> tuple[str, str]:
+    parts = urllib.parse.urlsplit(url)
+    return parts.scheme.lower(), parts.netloc.lower()
+
+
+class _GuardedRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """urllib's redirect handler, refusing to carry `Authorization` off its origin.
+
+    F204. The default handler copies every header but the two content ones
+    onto the redirected request, whatever host the `Location` names and
+    whatever its scheme, so a single 302 from anything able to answer for the
+    API sent the key in clear to a host of its choosing. A request without
+    credentials follows redirects as before; one with them follows a redirect
+    only to the same scheme, host and port.
+    """
+
+    def redirect_request(
+        self, req: urllib.request.Request, fp: Any, code: int, msg: str,
+        headers: Any, newurl: str,
+    ) -> urllib.request.Request | None:
+        if req.has_header("Authorization") and _origin(newurl) != _origin(req.full_url):
+            raise RedirectRefused(
+                f"{code} to another origin refused for a request carrying credentials"
+            )
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def _open(
     request: urllib.request.Request,
     timeout_s: float,
@@ -287,7 +318,8 @@ def _open(
     """Perform the request under one deadline. The seam the tests replace."""
     record = progress if progress is not None else _Progress()
     opener = urllib.request.build_opener(
-        _BoundedHTTPHandler(deadline, record), _BoundedHTTPSHandler(deadline, record)
+        _BoundedHTTPHandler(deadline, record), _BoundedHTTPSHandler(deadline, record),
+        _GuardedRedirectHandler(),
     )
     return opener.open(request, timeout=timeout_s)
 

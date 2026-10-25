@@ -1,7 +1,7 @@
 # DECISIONS
 
 ```
-Document:  docs/DECISIONS.md, version 2.40
+Document:  docs/DECISIONS.md, version 2.41
 Audience:  a contributor about to propose something that was already rejected,
            and anyone asking why an obvious approach was not taken
 Companion: MECHANISMS (decisions at the level of one mechanism), FOUNDATIONS
@@ -2377,7 +2377,7 @@ operator noticed it by eye. The new address answered 200 with communique
    under the previous walk's read, and the walk that says "cannot vouch"
    published what it could not `[measured by the release's review, its D1]`.
 
-**What it costs.** One request more per run, 1440 a day at the host's 60 s.
+**What it costs.** Two requests more per run, the sixth category and the canary, 2,880 a day at the host's 60 s. (Said as one and 1,440 until 0.63.0.0, the count before the canary; corrected by the review of 2026-10-25.)
 A refusal of any one address now withholds every read of its run, where
 before it withheld its own: one run's lists go unvouched, which ages nothing
 past the hour ceiling or the register's 30-minute threshold unless it
@@ -2407,6 +2407,71 @@ credentials for (thread DOLiZK-ZK.052.49.2026(2)) replaces this reading,
 which makes the category question the publisher's schema rather than a page
 walk.
 
+
+## D-066. A gap licenses a clear dated by the first read after it
+
+Date: 2026-10-25. Status: adopted. Amends D-040 (the snapshot and its ceiling)
+and D-041 (what `reconcile` closes). Defect: F204, the review's P-1.
+
+**What happened.** A snapshot older than `SNAPSHOT_MAX_AGE_S` withholds the
+diff, because a gap in observation is not an all-clear. The run then saved the
+list it had just read, so the next diff was taken against the shorter list,
+and an alarm that ended inside the gap was in neither: nothing ever closed it.
+`compose` folds with no age ceiling and `reconcile` closed channel ghosts
+only, so the alarm stood in the store, and on the map under `feed=ok`, until
+the same area's next alarm of the same kind ended. Reproduced end to end
+through the command on 0.60.0.0 and again on 0.62.0.0, three reviews running;
+the 0.52.0.0 install's nineteen-minute gap `[measured, DEPLOYMENT]` was this
+shape, and any API alarm that ended inside it was never closed.
+
+**The rule.** The rule before said a gap licenses nothing. It licenses one
+thing: the read after it is an observation, and an alarm that read does not
+list is not alerting now. So after a `missing`, `corrupt` or `stale` snapshot,
+`collect-api` closes every alarm whose newest stored row is an API ACTIVE (the
+collector's or `reconcile`'s unmasking row) and which its own read does not
+list. The clear is dated by that read, never by anything inside the gap,
+because the record cannot say when between the two observations the alarm
+ended; `provenance` is INFERENCE and `raw_fields` names the reason and the
+snapshot state. A row ingested after the read began is not touched. `reconcile`
+closes an API ghost a fresh snapshot omits when the row was stored before the
+snapshot was taken, which is how the phantoms already on record are found.
+
+**What it costs.** One replay of the store per gap, about a second at the
+production store's size `[measured, the analysis unit's replay]`; gaps are
+rare. An alarm that ended early inside a long gap is drawn until the read
+after it, which is the honest end of what was observed.
+
+**Rejected.** An age ceiling in `compose`: it would end an alarm by the clock,
+and silence is not an all-clear on either side. A clear dated by the snapshot's
+`saved_at`: it claims the alarm ended at the last moment it was seen standing.
+
+**Reopen if:** an API alarm stands in the store that the API has not listed
+across two fresh reads; or the API starts to publish ends.
+
+## D-067. An all-clear's body term is a sentence the publisher wrote, never a bare verb
+
+Date: 2026-10-25. Status: adopted. Amends D-055 (what ends an RCB air alert).
+Defect: F204, the review's P-5.
+
+**What happened.** `ALL_CLEAR_BODY_TERMS` held the measured sentence
+`zakończył się atak` and the bare verb `zakończono`. "Atak powietrzny.
+Zakończono ewakuację szkół." classified as an all-clear: it painted nothing
+and ended every earlier threat on its voivodeships, and the forty-eight-hour
+register published it as an all-clear and ended the standing alert with RCB's
+own clock `[measured on constructed text, 0.62.0.0]`. Whether RCB writes such
+a sentence is `[not established]`; that the term would read it so is measured.
+
+**The rule.** The bare verb is gone; the measured sentence stays. A new body
+term is admitted with a sentence the publisher measurably wrote and with a
+positive and a negative fixture.
+
+**Not decided here.** The review's P-9 and P-10 (an exclusion that wins over
+the whole text; a clearance written only in the body) need the wording RCB
+uses when it edits a lubelskie record in place, read from `communiques` on the
+host, before any term is chosen.
+
+**Reopen if:** RCB is measured ending an alert with a body sentence no term
+recognises, or raising one with a sentence a term reads as an end.
 ## D-064. Weeks set against weeks: one file computes every choice the analysis page offers, and a minute the record did not see counts nowhere
 
 Date: 2026-10-18. Status: adopted. The consumer's D-S97 draws it.

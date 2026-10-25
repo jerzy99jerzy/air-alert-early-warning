@@ -468,3 +468,234 @@ def test_a20_a_scope_with_an_address_nobody_read_is_not_read_as_quiet(
     warnings, _cleared = poland.warnings_blocks(store, moment)
     assert warnings.published
     assert warnings.value is None, "half a list of nothing read as a whole one"
+
+
+# -- 0.63.0.0: the 2026-10-25 review (F204, D-066, D-067) --------------------
+
+
+def _api_regions(names: list[str]) -> str:
+    import json
+
+    began = (datetime.now(UTC) - timedelta(hours=1)).isoformat()
+    return json.dumps([
+        {"regionId": str(1000 + i), "regionName": name,
+         "activeAlerts": [{"regionId": str(1000 + i), "regionType": "District",
+                           "type": "AIR", "lastUpdate": began}]}
+        for i, name in enumerate(names)
+    ])
+
+
+def test_a21_an_alarm_that_ended_inside_a_gap_does_not_stand_for_ever(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """MT20. Two alarms stand, the host misses six minutes, one ends inside them.
+
+    The first read after the gap no longer lists it. Before 0.63.0.0 nothing
+    ever closed it: the stale snapshot withheld the diff and the next one was
+    taken against the shorter list. The attack runs the product's command
+    twice and reads the store's fold.
+    """
+    import contextlib
+    import io
+    import json
+
+    from mavo import cli
+    from mavo.sources.ukrainealarm_source import UkrainealarmSource
+
+    body = {"text": _api_regions(["Львівський район", "Луцький район"])}
+
+    class Feed:
+        def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
+            return body["text"]
+
+    class Injected(UkrainealarmSource):
+        def __init__(self, key: str, **kw: object) -> None:
+            kw["transport"] = Feed()
+            super().__init__(key, **kw)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(cli, "UkrainealarmSource", Injected)
+    monkeypatch.setattr(cli, "read_key", lambda path=None: "key")
+    store, snapshot = tmp_path / "events", tmp_path / "snapshot.json"
+    args = ["collect-api", "--store", str(store), "--snapshot", str(snapshot)]
+    with contextlib.redirect_stdout(io.StringIO()):
+        cli.main(args)
+        saved = json.loads(snapshot.read_text())
+        saved["saved_at"] = (datetime.fromisoformat(saved["saved_at"])
+                             - timedelta(seconds=400)).isoformat()
+        snapshot.write_text(json.dumps(saved))
+        body["text"] = _api_regions(["Львівський район"])
+        cli.main(args)
+        cli.main(args)
+    standing = [key for key, event in EventStore(store).newest_by_area_kind().items()
+                if event.state is AlertState.ACTIVE]
+    assert [area for area, _kind in standing] == ["UA46060000000042587"], (
+        f"an alarm that ended inside the gap still stands: {standing}")
+
+
+def test_a22_a_body_that_is_not_the_list_is_not_a_quiet_sky() -> None:
+    """MT11. An error envelope that parses as JSON, sent while an alarm stands.
+
+    The API's quiet sky is `[]` and nothing else. `{"message": ...}` used to
+    read as no alerts and clear every open alarm under a fresh snapshot.
+    """
+    from mavo.errors import SourceUnavailable
+    from mavo.sources.ukrainealarm_source import UkrainealarmSource
+
+    body = {"text": _api_regions(["Львівський район"])}
+
+    class Feed:
+        def fetch(self, url: str, headers: dict[str, str] | None = None) -> str:
+            return body["text"]
+
+    source = UkrainealarmSource("key", transport=Feed())
+    source.poll()
+    body["text"] = '{"message": "Unauthorized"}'
+    with pytest.raises(SourceUnavailable):
+        cleared = source.poll()
+        pytest.fail(f"an error envelope read as a quiet sky: {cleared}")
+
+
+def test_a23_a_feed_renamed_one_tag_is_not_a_quiet_country(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """MT19. The publisher renames its record element and every address answers.
+
+    `<item>` where `<news>` stood parsed as no record at all, in every
+    category and in the canary, so the canary vouched for an empty walk.
+    """
+    from mavo import poland
+    from mavo.cli import main
+    from mavo.sources import rso
+
+    renamed = ('<newses><pagination_info totalItems="1" itemsPerPage="20"/><item>'
+               '<id>23441700</id><title>ALERT RCB</title><shortcut>UWAGA! Rosyjski atak '
+               'powietrzny na terenie Ukrainy.</shortcut><valid_to>2099-01-01 00:00:00'
+               '</valid_to><provinces><province slug="lubelskie">Lubelskie</province>'
+               '</provinces></item></newses>')
+    pages = {rso.ALL_SCOPE_URL: renamed}
+    pages.update({rso.page_url(category, 0): renamed for category in rso.CATEGORIES})
+    monkeypatch.setattr("mavo.cli.UrllibTransport", lambda: _rso_feed(pages))
+    path = tmp_path / "events"
+    assert main(["rso", "--store", str(path)]) == 3
+    warnings, _cleared = poland.warnings_blocks(EventStore(path), datetime.now(UTC))
+    assert warnings.published
+    assert warnings.value is None, "a renamed feed read as a quiet country"
+
+
+def test_a24_a_canary_blind_to_the_walk_does_not_vouch_for_it(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """MT19. The partial scope answers empty while `ogolne` holds a communique.
+
+    A scope that sees nothing vouched for everything by comparing nothing:
+    the canary must have seen what the walk read in the categories it covers.
+    """
+    from mavo.cli import main
+    from mavo.sources import rso
+
+    one = ('<newses><pagination_info totalItems="1" itemsPerPage="20"/><news>'
+           '<id>23441700</id><title>komunikat</title></news></newses>')
+    pages = {rso.ALL_SCOPE_URL: "<newses></newses>", rso.page_url("ogolne", 0): one}
+    monkeypatch.setattr("mavo.cli.UrllibTransport", lambda: _rso_feed(pages))
+    assert main(["rso", "--store", str(tmp_path / "events")]) == 3
+
+
+def test_a25_a_reassurance_inside_an_alert_is_not_its_all_clear() -> None:
+    """MT2. The alert itself says something ended, and the ambiguity read as safety.
+
+    "Zakończono ewakuację szkół" inside an air alert was the bare verb
+    `zakończono`, and the communique read as an all-clear.
+    """
+    from mavo.poland import classify
+
+    verdict = classify("Alert RCB", "Atak powietrzny. Zakończono ewakuację szkół.")
+    assert verdict is not None and verdict[0] == "threat", f"read as {verdict}"
+
+
+def test_a26_a_blind_cycle_does_not_publish_a_counted_zero(tmp_path: Path) -> None:
+    """MT2. The store cannot be read and the day's count goes out as 0 transitions.
+
+    Unknown is three nulls, the one shape the site reads as "not counted".
+    """
+    import json
+
+    from mavo.report import compose, write_contract
+
+    payload = json.loads(write_contract(compose([], as_of=T0), tmp_path / "s.json").read_text())
+    assert payload["state"] == "blind"
+    assert payload["counts_24h"] == {"west": None, "rest": None, "total": None}
+
+
+def _analysis_inputs(end: datetime, *, api_gap: tuple[datetime, datetime] | None = None,
+                     unread: list[dict[str, str]] | None = None) -> object:
+    from mavo.analysis import BandRaion, Inputs, window_start
+
+    start = window_start(end)
+    band = [BandRaion("UA46060000000042587", "Lvivskyi", "lviv", "Львівська", 16.0, 97.0)]
+    spans = []
+    moment, on = start, True
+    while moment < end:
+        step = min(end, moment + timedelta(hours=2))
+        if on:
+            spans.append(("UA80000000000000000", "active", moment, step))
+        on, moment = not on, step
+    reads = []
+    moment = start
+    while moment <= end:
+        reads.append(moment)
+        moment += timedelta(minutes=10)
+    return Inputs(
+        start=start, end=end, places={}, spans=spans, band=band,
+        api_since=start, channel_since=None,
+        api_gaps=[api_gap] if api_gap else [], channel_gaps=[],
+        rcb={"recorded_since": start.isoformat(), "unread": unread or [], "voivodeships": []},
+        rso_reads=tuple(reads), rso_silence_s=1800.0,
+    )
+
+
+def test_a27_an_unobserved_week_is_not_a_quiet_week() -> None:
+    """MT6. The pipe is down for a whole week and the analysis compares it.
+
+    A minute the record did not see counts in neither numerator nor
+    denominator (D-064), so a week without a record is unusable rather than a
+    week without alarms.
+    """
+    from mavo.analysis import analyse
+
+    end = datetime(2026, 10, 20, 19, 0, tzinfo=UTC)
+    monday = datetime(2026, 10, 12, 0, 0, tzinfo=UTC) - timedelta(hours=2)
+    out = analyse(_analysis_inputs(end, api_gap=(monday, monday + timedelta(days=7))))
+    week = out["weeks"][-2]  # type: ignore[index]
+    assert week["usable"] is False and week["values"]["episodes"] is None, week
+
+
+def test_a28_an_unread_rso_list_is_not_a_week_without_alerts() -> None:
+    """MT2. The RSO list was not read for a week, and the week reads as no alerts.
+
+    The register's unread stretch is a hole in RCB's denominator, never a zero.
+    """
+    from mavo.analysis import analyse
+
+    end = datetime(2026, 10, 20, 19, 0, tzinfo=UTC)
+    monday = datetime(2026, 10, 12, 0, 0, tzinfo=UTC) - timedelta(hours=2)
+    unread = [{"from": monday.isoformat(), "to": (monday + timedelta(days=7)).isoformat()}]
+    out = analyse(_analysis_inputs(end, unread=unread))
+    week = out["weeks"][-2]  # type: ignore[index]
+    assert week["values"]["rcb"] is None, f"an unread week counted {week['values']['rcb']}"
+
+
+def test_a29_a_rejected_walk_is_never_painted_on_the_slider(tmp_path: Path) -> None:
+    """MT19. A walk the canary rejected wrote an alert's list and no read.
+
+    The live map takes each address's list at its own read; the slider must
+    too, or the week repaints what the canary refused.
+    """
+    from mavo import poland, timeline
+    from mavo.sources import rso
+
+    store = EventStore(tmp_path / "events")
+    moment = poland.AIR_URL_SINCE + timedelta(days=2)
+    for url in poland.WARNINGS_URLS:
+        store.record_snapshot(rso.FEED, url, moment - timedelta(minutes=10), [])
+        store.record_read(rso.FEED, url, moment - timedelta(minutes=10), 0, 0)
+    store.record_snapshot(rso.FEED, poland.WARNINGS_URL, moment - timedelta(minutes=5),
+                          ["rejected"])
+    record = timeline.warnings_record(store, moment - timedelta(hours=1), moment)
+    assert record.members_at(moment) == [], "the slider painted a list the canary refused"

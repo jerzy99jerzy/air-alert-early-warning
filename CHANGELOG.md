@@ -16,6 +16,57 @@ were never published would be inventing history to satisfy a rule the rule does
 not ask for. Their entries stay below because the defects they record are real.
 The first tag after 0.4.0.0 is v0.5.2.0.
 
+## 0.63.0.0 - 2026-10-25
+
+**A full review of 0.62.0.0 found seven controls broken, and four of them had
+shipped twice since the review of 2026-10-08 named them** (F204). Every finding
+was reproduced in the review's session and re-run before it was repaired;
+`docs/reviews/0.63.0.0.md` carries them.
+
+- **An alarm that ended inside an API gap is closed by the read after it**
+  (D-066). A stale, corrupt or missing snapshot withheld the diff, the next
+  diff was taken against the shorter list, and the alarm stood in the store
+  and on the map until the same area's next alarm ended. `collect-api` now
+  closes, against its own read, every API alarm the store holds open that the
+  read does not list, dated by the read and marked `absent after observation
+  gap`; `reconcile` closes the API ghosts already on record. Threat row MT20,
+  attack A21.
+- **A body that is not the alerts list is refused, not read as `[]`.** An
+  error envelope, `{}`, `null`, or a list in which no region record reads used
+  to clear every open alarm. A readable record beside an unreadable one is
+  still counted as F138 settled. Attack A22.
+- **The API key no longer follows a redirect off its origin.** urllib's
+  handler copied `Authorization` onto any `Location`; a request with
+  credentials now follows a redirect to its own scheme, host and port only.
+- **The publish loop outlives the liveness read, `compose` and the run log.**
+  Each raised out of `report --watch` with a traceback and no PublishReport;
+  each now degrades its cycle (`sources: null`, a blind picture, no run log)
+  and says so once on stderr.
+- **"Zakończono ewakuację" inside an alert no longer ends it** (D-067). The
+  bare verb `zakończono` was an all-clear body term; only the measured
+  sentence stays. Attack A25.
+- **The canary is two-sided.** A feed that renamed `<news>` parsed as empty
+  in every address and in the canary, and the walk exited 0 having stored
+  nothing: F203's observable with the new control green. A record under a tag
+  the parser does not know is counted unreadable, and a scope that does not
+  list what the walk read in the categories it covers vouches for nothing.
+  Attacks A23 and A24.
+- **A blind cycle writes `counts_24h` as three nulls**, the shape `mavo-site`
+  has accepted under `blind` since 4.91.0.0 (D-S95); `contract_check` pins
+  both shapes. Attack A26.
+- **The analysis and the slider have mutants.** `mavo/analysis.py` and
+  `mavo/timeline.py` had none in the harness; A27 (an unobserved week is not
+  a quiet one), A28 (an unread RSO list is not a week without alerts) and A29
+  (a rejected walk is never painted on the slider) are their first. Harness:
+  27 of 27 killed.
+- **Documents.** `docs/DECISIONS.md` 2.41 (D-066, D-067, and D-065's cost
+  corrected: two requests more a run, not one), `docs/METHODOLOGY.md` 2.78
+  (F204), `docs/THREAT-MODEL.md` 2.10 (MT20; MT19 two-sided),
+  `docs/MANUAL.md` 3.22, `docs/DEPLOYMENT.md` 1.62 (the install and the one
+  `reconcile` it owes). **TODO**: T97, a gate for figures in prose; T98, the
+  RSO cadence the repository still declares as 900 s; T99, the running week
+  on the analysis page.
+
 ## 0.62.0.0 - 2026-10-23
 
 **RCB's air alerts moved to a category the walk did not read, and for two days

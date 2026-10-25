@@ -13,7 +13,10 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from mavo.areas import AreaTable
+from mavo.errors import SourceUnavailable
 from mavo.report import trailing_areas, trailing_counts
 from mavo.schema import AlertState, AreaRole, Provenance, ThreatEvent, ThreatKind
 from mavo.sources.ukrainealarm_source import UkrainealarmSource
@@ -128,7 +131,7 @@ class OneBody:
         return self._body
 
 
-def poll_with(body: list[dict[str, object]]) -> UkrainealarmSource:
+def poll_with(body: list[object]) -> UkrainealarmSource:
     return UkrainealarmSource(
         "key", areas=AreaTable.from_csv(), transport=OneBody(json.dumps(body))
     )
@@ -162,10 +165,18 @@ def test_a_sentinel_alert_on_a_named_region_is_counted_and_stored() -> None:
 
 
 def test_an_unreadable_region_is_counted_and_lands_nowhere() -> None:
-    source = poll_with(["garbage"])
+    """F138, beside a readable record. Alone it is not a body at all (F204)."""
+    source = poll_with(["garbage", region(LVIV, "ARTILLERY", "2026-08-30T11:00:00Z")])
     events = source.poll()
     assert source.unparsed == ("<unreadable region>",)
-    assert events == ()
+    assert len(events) == 1 and events[0].state is AlertState.ACTIVE
+
+
+def test_a_body_with_no_readable_region_is_refused() -> None:
+    """F204: read as `[]`, it cleared every open alarm under a fresh snapshot."""
+    source = poll_with(["garbage"])
+    with pytest.raises(SourceUnavailable, match="not the alerts list"):
+        source.poll()
 
 
 def test_a_missing_stamp_is_substituted_with_a_mark() -> None:

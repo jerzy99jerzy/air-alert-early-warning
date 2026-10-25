@@ -78,9 +78,11 @@ from mavo.sources.pansa import poll_once as pansa_poll_once
 from mavo.sources.rso import ALL_SCOPE_URL as RSO_ALL_SCOPE_URL
 from mavo.sources.rso import CATEGORIES as RSO_CATEGORIES
 from mavo.sources.rso import FEED as RSO_FEED
+from mavo.sources.rso import SCOPE_OMITS as RSO_SCOPE_OMITS
 from mavo.sources.rso import Page as RsoPage
 from mavo.sources.rso import page_url as rso_page_url
 from mavo.sources.rso import poll_once as rso_poll_once
+from mavo.sources.rso import unseen_by_scope as rso_unseen_by_scope
 from mavo.sources.rso import unwalked as rso_unwalked
 from mavo.sources.telegram import CHANNEL_URL, poll_once
 from mavo.sources.telegram import FEED as CHANNEL_FEED
@@ -460,6 +462,57 @@ def _cmd_latency(args: argparse.Namespace) -> int:
 
 
 
+#: Snapshot states after which `collect-api` closes, against its own read,
+#: the API alarms the store still holds open (D-066). `disabled` is not one:
+#: without a snapshot path there is no continuity to have lost.
+GAP_STATES = frozenset({"missing", "corrupt", "stale"})
+
+#: Sources whose ACTIVE rows an API read may close after a gap: the collector's
+#: own, and `reconcile`'s unmasking rows, which the API licensed (D-041).
+_API_OPENED = frozenset({"ukrainealarm", "reconcile"})
+
+
+def _clears_after_gap(
+    store: EventStore, source: UkrainealarmSource, events: Sequence[ThreatEvent]
+) -> tuple[ThreatEvent, ...]:
+    """CLEAR rows for API alarms the store holds open and this read does not list.
+
+    D-066. Dated by the read (`source.polled_at`), never by anything inside
+    the gap: the alarm was last seen standing before it and is seen absent
+    now, and the record cannot say when between the two it ended. A row
+    ingested after this read began is not touched, so an alarm another writer
+    opened meanwhile cannot be closed by a list that predates it.
+    """
+    moment = source.polled_at
+    if moment is None:
+        return ()
+    listed = source.current_keys
+    cleared_now = {(event.area_id, event.kind) for event in events
+                   if event.state is AlertState.CLEAR}
+    out = []
+    newest_rows = store.newest_by_area_kind()
+    for key in sorted(newest_rows, key=_key_order):
+        newest = newest_rows[key]
+        if (newest.source_id not in _API_OPENED or newest.state is not AlertState.ACTIVE
+                or key in listed or key in cleared_now or newest.ts_ingest > moment):
+            continue
+        out.append(ThreatEvent(
+            area_id=newest.area_id,
+            state=AlertState.CLEAR,
+            ts_source=moment,
+            ts_ingest=moment,
+            source_id=source.source_id,
+            kind=newest.kind,
+            provenance=Provenance.INFERENCE,
+            raw_fields={"api_region": newest.area_id,
+                        "reason": "absent after observation gap",
+                        "snapshot": source.snapshot_state,
+                        "opened_at": newest.ts_source.isoformat()},
+            oblast=newest.oblast,
+        ))
+    return tuple(out)
+
+
 def _cmd_collect_api(args: argparse.Namespace) -> int:
     """Poll the API once and record both the attempt and what it observed.
 
@@ -532,11 +585,12 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
           f"latency={fetch_s:.3f}s "
           f"snapshot={source.snapshot_state}{aged}")
     if source.snapshot_state in ("stale", "corrupt"):
-        # Withheld, and said so. Silently withholding clears would put a calm
-        # face on a degraded reading, which is the one rendering this project
-        # exists to refuse.
-        print(f"  snapshot {source.snapshot_state}: clears withheld this "
-              "run; a gap in observation is not an all-clear")
+        # The diff against the snapshot is withheld, and said so. What the
+        # store still holds open is closed below against this read (D-066),
+        # dated by it, never by the gap.
+        print(f"  snapshot {source.snapshot_state}: the diff is withheld; "
+              "alarms the store holds open and this read does not list are "
+              "closed as of this read")
     for name in source.unresolved:
         # Named, not counted only. A region the map cannot resolve is a finding
         # about the map, and a number alone cannot be acted on.
@@ -596,6 +650,19 @@ def _cmd_collect_api(args: argparse.Namespace) -> int:
             # level, and the store keeps only the ones it has not seen; zero
             # new rows on a quiet cycle is the ordinary reading (D-050).
             levels_new = store.append_levels(source.levels, read_at=started)
+            # D-066 (F204's sibling, the review's P-1). A gap withholds the
+            # snapshot diff, and the diff is the only thing that ever ends an
+            # API alarm, so an alarm that ended inside the gap used to stay
+            # ACTIVE in the store for good. The fresh list just read is an
+            # observation, so it licenses a clear dated by itself.
+            gap_clears = (
+                _clears_after_gap(store, source, events)
+                if source.snapshot_state in GAP_STATES else ()
+            )
+            if gap_clears:
+                print(f"  closed {len(gap_clears)} alarm(s) the API no longer lists, "
+                      f"dated by this read after a {source.snapshot_state} snapshot")
+                events = (*events, *gap_clears)
             # Before the append, and the order is the point: a row re-dated
             # after storage would already have lost to the clear it supersedes.
             redated = _redate_against_stored_clears(store, events, started)
@@ -702,11 +769,18 @@ def _cmd_reconcile(args: argparse.Namespace) -> int:
     # this command's reach entirely while the test asked about the area: the
     # area was present, so nothing about it was a ghost, and the stale row went
     # on holding the area's identity. Thirteen rows sat there on 2026-08-30.
+    # D-066. An API alarm the fresh snapshot omits is a ghost too: before
+    # 0.63.0.0 an alarm that ended inside an observation gap was never closed
+    # by anything, and this is how the ones already on record are found. Only
+    # a row stored before the snapshot was taken: one stored after it may be
+    # an alarm the snapshot is simply too old to list.
     ghosts = [
         newest[key] for key in sorted(newest, key=_key_order)
-        if newest[key].source_id == "telegram"
-        and newest[key].state is AlertState.ACTIVE
+        if newest[key].state is AlertState.ACTIVE
         and key not in live_keys
+        and (newest[key].source_id == "telegram"
+             or (newest[key].source_id in _API_OPENED
+                 and newest[key].ts_ingest <= saved_at))
     ]
     # The mirror population, per kind: a `(area, kind)` the fresh snapshot is
     # reporting right now whose newest stored row is a clear, or which has no
@@ -865,6 +939,7 @@ def _cmd_rso(args: argparse.Namespace) -> int:
     #: written; a run that cannot vouch for its lists records none of them.
     held_reads: list[tuple[str, datetime, int, int, float]] = []
     walked: set[str] = set()
+    walked_in_scope: set[str] = set()
     scope: RsoPage | None = None
     if canary:
         started = datetime.now(UTC)
@@ -935,6 +1010,8 @@ def _cmd_rso(args: argparse.Namespace) -> int:
                 print(f"[STORE-FAILED] {failure}")
                 return 7
         walked.update(item.id for item in page.communiques)
+        if not any(url == rso_page_url(category, 0) for category in RSO_SCOPE_OMITS):
+            walked_in_scope.update(item.id for item in page.communiques)
         seen += len(page.communiques)
         unreadable += page.unreadable
         print(f"read={len(page.communiques)} unreadable={page.unreadable} "
@@ -943,7 +1020,7 @@ def _cmd_rso(args: argparse.Namespace) -> int:
 
     vouched = True
     if canary:
-        reason = _rso_unvouched(scope, walked, refused)
+        reason = _rso_unvouched(scope, walked, refused, walked_in_scope)
         vouched = reason is None
         if store is not None:
             try:
@@ -973,7 +1050,8 @@ def _cmd_rso(args: argparse.Namespace) -> int:
     return 0
 
 
-def _rso_unvouched(scope: RsoPage | None, walked: set[str], refused: int) -> str | None:
+def _rso_unvouched(scope: RsoPage | None, walked: set[str], refused: int,
+                   walked_in_scope: set[str] | None = None) -> str | None:
     """Why a walk cannot vouch that its lists are the whole feed, or None when it can.
 
     Three ways (D-065): the canary was not read; an address was refused, so a
@@ -988,6 +1066,13 @@ def _rso_unvouched(scope: RsoPage | None, walked: set[str], refused: int) -> str
     if refused:
         return (f"[UNVOUCHED] {refused} address(es) refused, so a communique the walk lacks "
                 "cannot be placed")
+    blind = rso_unseen_by_scope(scope, walked_in_scope or ())
+    if blind:
+        # F204 (N-F7). Checked first: a canary that cannot see what the walk
+        # holds has nothing to vouch with, whatever it lists.
+        return (f"[UNVOUCHED] the all-categories scope does not list {len(blind)} "
+                "communique(s) the walk read in categories it covers, so it cannot "
+                "vouch for the walk")
     missing = rso_unwalked(scope, walked)
     if not missing:
         return None
@@ -1263,10 +1348,18 @@ def _cmd_report(args: argparse.Namespace) -> int:
         # table they are used to judge.
         def sources(
             stamps: EventStamps, moment: datetime
-        ) -> tuple[FeedLiveness, ...]:
-            return measure_liveness(
-                store, PRODUCTION_FEEDS, as_of=moment, events=stamps
-            )
+        ) -> tuple[FeedLiveness, ...] | None:
+            # F204 (the review's P-4). Guarded like its siblings below: a
+            # `database is locked` in the liveness read ended the loop with a
+            # traceback and no PublishReport. `None` goes out as
+            # `sources: null`, which the contract already reads as not looked.
+            try:
+                return measure_liveness(
+                    store, PRODUCTION_FEEDS, as_of=moment, events=stamps
+                )
+            except Exception as failure:  # noqa: BLE001
+                print(f"[SOURCES-FAILED] {failure}", file=sys.stderr, flush=True)
+                return None
 
         # D-053. The Polish keys, composed from the same store on the same
         # cycle. Guarded here rather than inside `publish`, because a failure

@@ -27,6 +27,15 @@ difference stated below.
 | A18 | MT18 | A red alarm ended by a read that has its page 1.5 s after asking, its all-clear stamped 0.8 s after asking, read 0.5 s after asking | The alarm, still open, publishes its `Red`; `level: null` beside an open red alarm fails |
 | A19 | MT19 | `mavo rso` against a feed whose partial scope lists an RCB alert in a category no address of the walk returns; every address answers | `pl_warnings` is `null` after the run; an empty list, read as no alert, fails |
 | A20 | MT19 | `ogolne` read fresh and empty after `AIR_URL_SINCE`, the air category never read | `pl_warnings` is `null`; the empty list `ogolne` alone gives fails |
+| A21 | MT20 | Two API alarms stand, the snapshot ages past the ceiling, one alarm ends inside the gap; `collect-api` three times | Only the alarm still listed stands in the store's fold; the ended one standing fails |
+| A22 | MT11 | `{"message": "Unauthorized"}` from the API while an alarm stands | `SourceUnavailable`; any clear derived from the body fails |
+| A23 | MT19 | `mavo rso` against a feed whose every address renamed `<news>` to `<item>` | Exit 3 and `pl_warnings` null; an empty list read as no alert fails |
+| A24 | MT19 | The partial scope answers empty while `ogolne` holds a communique | Exit 3; a walk vouched by a scope that saw nothing fails |
+| A25 | MT2 | An air alert whose body says "Zakończono ewakuację szkół" | Classified a threat; an all-clear fails |
+| A26 | MT2 | A cycle that cannot read the store | `counts_24h` three nulls; a counted zero fails |
+| A27 | MT6 | The API pipe down for a whole calendar week, through `analysis.analyse` | The week is unusable with null measures; a week of no alarms fails |
+| A28 | MT2 | The RSO list unread for a whole week, no alert in it | The week's RCB measure is null; a rate of zero fails |
+| A29 | MT19 | A walk the canary rejected wrote a list and no read; the slider asked at the next moment | The slider shows the list the last read vouched for; the rejected list fails |
 | A12 | MT13 | Two messages in the live footer-time order, exact timestamps asserted | Each event carries its own footer's timestamp; a one-message shift in either direction fails |
 
 ## The honest difference from `pirx`
